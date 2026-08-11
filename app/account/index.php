@@ -248,6 +248,23 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
             transition: all 0.2s;
         }
         .page-header-action:hover { box-shadow: 0 4px 16px rgba(242,202,80,0.35); transform: translateY(-1px); }
+        .page-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .page-header-action--ghost {
+            padding: 10px 0;
+            background: transparent;
+            color: #8f8f8f;
+            border: none;
+            box-shadow: none;
+        }
+        .page-header-action--ghost:hover {
+            color: #f2ca50;
+            box-shadow: none;
+            transform: none;
+        }
 
         .profile-hero {
             background: rgba(18,18,18,0.8);
@@ -682,7 +699,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     <p>Manage your public trading identity</p>
                 </div>
                 <div class="page-header-actions">
-                    <button class="page-header-action" onclick="window.location.href='/trading-floor'">View Profile</button>
+                    <button class="page-header-action page-header-action--ghost" onclick="window.location.href='/trading-floor#profile'">View Profile</button>
                     <button class="page-header-action" onclick="saveProfile()">Save Changes</button>
                 </div>
             </div>
