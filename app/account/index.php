@@ -684,33 +684,6 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 <button class="page-header-action" onclick="saveProfile()">Save Changes</button>
             </div>
 
-            <div class="profile-hero">
-                <div class="profile-avatar-wrap">
-                    <div class="profile-avatar-large"><?= strtoupper(substr($user_name,0,1)) ?></div>
-                    <div class="profile-avatar-edit">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="profile-info">
-                    <div class="profile-name"><?= htmlspecialchars($user_name) ?></div>
-                    <div class="profile-handle">@<?= strtolower(str_replace(' ','',htmlspecialchars($user_name))) ?> · 2Rich Capital Member</div>
-                    <div class="profile-bio-text" id="bioPreview">Trader. No bio yet — add one below.</div>
-                    <div class="profile-stats-row">
-                        <div class="profile-stat"><div class="profile-stat-value"><?= $total_trades ?></div><div class="profile-stat-label">Trades</div></div>
-                        <div class="profile-stat"><div class="profile-stat-value"><?= $win_rate ?>%</div><div class="profile-stat-label">Win Rate</div></div>
-                        <div class="profile-stat"><div class="profile-stat-value"><?= $total_trades > 0 ? ($avg_pnl >= 0 ? '+' : '') . number_format($avg_pnl, 2) . '%' : '—' ?></div><div class="profile-stat-label">Avg P&L</div></div>
-                    </div>
-                    <div class="profile-badge-row">
-                        <span class="profile-badge gold">2Rich Member</span>
-                        <?php if ($win_rate >= 60): ?><span class="profile-badge green">60%+ Win Rate</span><?php endif; ?>
-                        <?php if ($total_trades >= 10): ?><span class="profile-badge blue"><?= $total_trades ?>+ Trades</span><?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
             <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Edit Profile</span></div>
                 <div class="settings-card-body">
