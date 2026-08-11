@@ -1546,6 +1546,20 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         else if (feed) { feed.hidden = false; feed.style.display = 'block'; if (homeLink) homeLink.classList.add('active'); }
     }
 
+    function openFloorSectionFromHash() {
+        const hash = window.location.hash.replace('#', '').toLowerCase();
+        if (hash === 'profile') {
+            openFloorSection('profile');
+        } else if (hash === 'groups') {
+            openFloorSection('groups');
+        } else {
+            openFloorSection('home');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', openFloorSectionFromHash);
+    window.addEventListener('hashchange', openFloorSectionFromHash);
+
 
     async function bootFloorSignals(force = false) {
         if (floorSignalsState.loading) return;
