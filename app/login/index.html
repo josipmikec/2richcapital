@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2RICH CAPITAL - Log In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        /* ── Forgot Password Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: linear-gradient(135deg, #151515 0%, #0E0E0E 100%);
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            animation: modalIn 0.25s cubic-bezier(0.16,1,0.3,1);
+        }
+        .modal-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(242,202,80,0.3), transparent);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-close {
+            position: absolute;
+            top: 14px; right: 18px;
+            background: none; border: none;
+            color: #555;
+            font-size: 20px; cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .modal-close:hover { color: #F2CA50; }
+        .modal-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.12em;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .modal-heading {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px; font-weight: 600;
+            color: #f4f4f4;
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
+        }
+        .modal-subtitle {
+            font-size: 12px; font-weight: 500;
+            color: #666;
+            margin-bottom: 28px;
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+        }
+        .modal-label {
+            display: block;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #999;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .modal-input-wrap { position: relative; }
+        .modal-input-icon {
+            position: absolute;
+            left: 18px; top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            pointer-events: none;
+        }
+        .modal-input {
+            width: 100%;
+            padding: 16px 18px 16px 52px;
+            background: #0E0E0E;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            color: #f4f4f4;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px; font-weight: 500;
+            letter-spacing: 0.02em;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+        .modal-input:focus {
+            border-color: #F2CA50;
+            box-shadow: 0 0 0 3px rgba(242,202,80,0.1);
+            background: #111;
+        }
+        .modal-input::placeholder { color: #444; font-weight: 400; }
+        .modal-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 18px;
+            background: linear-gradient(135deg, #F2CA50 0%, #FFDB70 100%);
+            color: #0E0E0E;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px; font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(242,202,80,0.2);
+            transition: all 0.3s ease;
+        }
+        .modal-btn:hover {
+            background: linear-gradient(135deg, #FFDB70 0%, #F2CA50 100%);
+            box-shadow: 0 6px 24px rgba(242,202,80,0.4);
+            transform: translateY(-2px);
+        }
+        .modal-btn:active { transform: translateY(0); }
+        .modal-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .modal-error {
+            display: none;
+            font-size: 11px; font-weight: 500;
+            color: #ef4444;
+            margin-top: 10px;
+            letter-spacing: 0.02em;
+        }
+        .modal-success {
+            display: none;
+            text-align: center;
+            padding: 8px 0 4px;
+        }
+        .modal-success-icon { font-size: 36px; margin-bottom: 14px; }
+        .modal-success-title {
+            font-size: 16px; font-weight: 600;
+            color: #f4f4f4;
+            margin-bottom: 8px;
+        }
+        .modal-success-text {
+            font-size: 12px; font-weight: 500;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* ── Changelog Panel ── */
+        .changelog-panel {
+            position: fixed;
+            top: 0; right: -420px;
+            width: 400px;
+            height: 100vh;
+            background: #0a0a0a;
+            border-left: 1px solid #1a1a1a;
+            z-index: 999;
+            transition: right 0.4s cubic-bezier(0.16,1,0.3,1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .changelog-panel.open { right: 0; }
+        .changelog-panel-header {
+            padding: 28px 24px 20px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .changelog-panel-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.15em;
+            color: #999;
+            text-transform: uppercase;
+        }
+        .changelog-panel-close {
+            background: none; border: none;
+            color: #555;
+            cursor: pointer; font-size: 18px;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .changelog-panel-close:hover { color: #F2CA50; }
+        .changelog-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0 32px;
+        }
+        .changelog-body::-webkit-scrollbar { width: 4px; }
+        .changelog-body::-webkit-scrollbar-track { background: transparent; }
+        .changelog-body::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 2px; }
+        .changelog-entry {
+            padding: 20px 24px;
+            border-bottom: 1px solid #111;
+        }
+        .changelog-entry:last-child { border-bottom: none; }
+        .changelog-entry-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .changelog-version {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #F2CA50;
+            background: rgba(242,202,80,0.08);
+            padding: 3px 9px;
+            border-radius: 4px;
+            border: 1px solid rgba(242,202,80,0.15);
+        }
+        .changelog-date {
+            font-size: 10px; font-weight: 600;
+            color: #444;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .changelog-badge {
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.08em;
+            padding: 2px 7px;
+            border-radius: 3px;
+            margin-left: auto;
+            text-transform: uppercase;
+        }
+        .badge-latest {
+            background: rgba(242,202,80,0.1);
+            color: #F2CA50;
+            border: 1px solid rgba(242,202,80,0.2);
+        }
+        .changelog-items { list-style: none; padding: 0; margin: 0; }
+        .changelog-items li {
+            font-size: 12px; font-weight: 500;
+            color: #666;
+            padding: 5px 0;
+            padding-left: 16px;
+            position: relative;
+            line-height: 1.5;
+            letter-spacing: 0.02em;
+        }
+        .changelog-items li::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 11px;
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: #333;
+        }
+        .changelog-items li.feat::before { background: #4ade80; }
+        .changelog-items li.fix::before  { background: #F2CA50; }
+        .changelog-items li.imp::before  { background: #60a5fa; }
+
+        /* ── Version badge ── */
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #444;
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #1a1a1a;
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
+            user-select: none;
+            text-transform: uppercase;
+        }
+        .version-badge:hover {
+            color: #F2CA50;
+            border-color: rgba(242,202,80,0.3);
+            background: rgba(242,202,80,0.04);
+        }
+        .panel-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 998;
+        }
+        .panel-backdrop.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        
+        <div class="system-status">
+            <span class="status-dot"></span>
+            <span class="status-text">SYSTEM ONLINE</span>
+        </div>
+
+        <div class="login-card">
+            
+            <div class="login-header">
+                <img src="https://2rich.capital/wp-content/uploads/2026/05/2rich-trading-macro-research-desk.webp" alt="2RICH CAPITAL" class="brand-logo">
+            </div>
+
+            <h2 class="login-title">Log In</h2>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+            <form id="loginForm" action="../auth/login.php" method="POST">
+                
+                <div class="form-group">
+                    <label for="email">EMAIL</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                        </svg>
+                        <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="password">PASSWORD</label>
+                        <a href="#" class="forgot-link" id="forgotLink">FORGOT?</a>
+                    </div>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <input type="password" id="password" name="password" placeholder="••••••••••" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember" id="remember">
+                        <span class="checkbox-text">Remember me</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn">LOG IN &rarr;</button>
+            </form>
+
+            <div class="signup-section">
+                <p class="signup-text">Don't have an account?</p>
+                <a href="/register" class="signup-link">Sign up now</a>
+            </div>
+
+            <!-- Footer: 2RICH CAPITAL · © 2026 · version -->
+            <div class="login-footer">
+                <span class="footer-text">2RICH.CAPITAL</span>
+                <span class="footer-text">&copy; 2026</span>
+                <span class="version-badge" id="versionBadge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    v1.0.4
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotModal">
+        <div class="modal-box">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="forgotForm">
+                <p class="modal-title">Account Recovery</p>
+                <p class="modal-heading">Reset Password</p>
+                <p class="modal-subtitle">Enter your email and we'll send you a reset link valid for 1 hour.</p>
+                <label class="modal-label" for="resetEmail">Email</label>
+                <div class="modal-input-wrap">
+                    <svg class="modal-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                    </svg>
+                    <input type="email" class="modal-input" id="resetEmail" placeholder="your@email.com" autocomplete="email">
+                </div>
+                <p class="modal-error" id="resetError"></p>
+                <button class="modal-btn" id="resetSubmit">SEND RESET LINK &rarr;</button>
+            </div>
+            <div class="modal-success" id="forgotSuccess">
+                <div class="modal-success-icon">✉️</div>
+                <p class="modal-success-title">Check your inbox</p>
+                <p class="modal-success-text">A reset link has been sent.<br>Follow the instructions to set a new password.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changelog Panel -->
+    <div class="panel-backdrop" id="panelBackdrop"></div>
+    <div class="changelog-panel" id="changelogPanel">
+        <div class="changelog-panel-header">
+            <span class="changelog-panel-title">Dashboard Updates</span>
+            <button class="changelog-panel-close" id="changelogClose">&times;</button>
+        </div>
+        <div class="changelog-body">
+			<div class="changelog-entry">
+			    <div class="changelog-entry-header">
+			        <span class="changelog-version">v1.0.4</span>
+			        <span class="changelog-date">August 2026</span>
+			        <span class="changelog-badge badge-latest">Latest</span>
+			    </div>
+			    <ul class="changelog-items">
+			        <li class="feat">trading Floor improvements</li>
+			        <li class="feat">added group discovery and signals to the dashboard card</li>
+			        <li class="feat">added group creation flow</li>
+			        <li class="feat">added group workspaces</li>
+			        <li class="feat">added manual signal posting</li>
+			        <li class="feat">added group profile customizer in group settings</li>
+			        <li class="feat">improved signals interface and posting flow</li>
+			        <li class="feat">added automation settings to signals</li>
+			        <li class="feat">added group messaging interface</li>
+			    </ul>
+			</div>
+			<div class="changelog-entry">
+			    <div class="changelog-entry-header">
+			        <span class="changelog-version">v1.0.3</span>
+			        <span class="changelog-date">July 2026</span>
+			    </div>
+			    <ul class="changelog-items">
+			        <li class="feat">added MT5 Sync to MQL5 market</li>
+			        <li class="feat">MT5 sync UI polish</li>
+			    </ul>
+			</div>
+			<div class="changelog-entry">
+			    <div class="changelog-entry-header">
+			        <span class="changelog-version">v1.0.2</span>
+			        <span class="changelog-date">July 2026</span>
+			    </div>
+			    <ul class="changelog-items">
+			        <li class="feat">added MT5 Sync</li>
+					<li class="feat">added $PNL values</li>
+			        <li class="feat">general UI polish</li>
+			    </ul>
+			</div>
+			<div class="changelog-entry">
+			    <div class="changelog-entry-header">
+			        <span class="changelog-version">v1.0.1</span>
+			        <span class="changelog-date">June 2026</span>
+			    </div>
+			    <ul class="changelog-items">
+			        <li class="feat">dashboard layout improvements</li>
+			        <li class="feat">added Economic calendar</li>
+			        <li class="feat">general UI polish</li>
+			    </ul>
+			</div>
+            <div class="changelog-entry">
+                <div class="changelog-entry-header">
+                    <span class="changelog-version">v1.0.0</span>
+                    <span class="changelog-date">June 2026</span>
+                </div>
+                <ul class="changelog-items">
+                    <li class="feat">initial dashboard launch</li>
+                    <li class="feat">trading journal with custom columns</li>
+                    <li class="feat">news feed with real-time updates</li>
+                    <li class="feat">tradingView charting integration</li>
+                    <li class="feat">account management &amp; login system</li>
+                    <li class="feat">market data section</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // ── Login Form ──
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const errorDiv = document.getElementById('errorMessage');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'AUTHENTICATING...';
+            const formData = new FormData(this);
+            try {
+                const response = await fetch('../auth/login.php', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error('Server error: ' + response.status);
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) throw new Error('Server returned invalid response');
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    errorDiv.textContent = data.message || 'Login failed. Please try again.';
+                    errorDiv.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'LOG IN →';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error: ' + error.message;
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'LOG IN →';
+            }
+        });
+
+        // ── Forgot Password Modal ──
+        const forgotLink    = document.getElementById('forgotLink');
+        const forgotModal   = document.getElementById('forgotModal');
+        const modalClose    = document.getElementById('modalClose');
+        const resetSubmit   = document.getElementById('resetSubmit');
+        const resetEmail    = document.getElementById('resetEmail');
+        const resetError    = document.getElementById('resetError');
+        const forgotForm    = document.getElementById('forgotForm');
+        const forgotSuccess = document.getElementById('forgotSuccess');
+
+        forgotLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            forgotModal.classList.add('active');
+            forgotForm.style.display = 'block';
+            forgotSuccess.style.display = 'none';
+            resetEmail.value = '';
+            resetError.style.display = 'none';
+            resetSubmit.disabled = false;
+            resetSubmit.textContent = 'SEND RESET LINK →';
+            setTimeout(() => resetEmail.focus(), 100);
+        });
+
+        modalClose.addEventListener('click', () => forgotModal.classList.remove('active'));
+        forgotModal.addEventListener('click', e => { if (e.target === forgotModal) forgotModal.classList.remove('active'); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { forgotModal.classList.remove('active'); closeChangelog(); } });
+
+        resetSubmit.addEventListener('click', async function() {
+            const email = resetEmail.value.trim();
+            if (!email || !email.includes('@')) {
+                resetError.textContent = 'Please enter a valid email address.';
+                resetError.style.display = 'block';
+                return;
+            }
+            resetError.style.display = 'none';
+            this.disabled = true;
+            this.textContent = 'SENDING...';
+            try {
+                await fetch('../auth/forgot-password.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+            } catch(e) {}
+            forgotForm.style.display = 'none';
+            forgotSuccess.style.display = 'block';
+        });
+
+        // ── Changelog Panel ──
+        const versionBadge   = document.getElementById('versionBadge');
+        const changelogPanel = document.getElementById('changelogPanel');
+        const changelogClose = document.getElementById('changelogClose');
+        const panelBackdrop  = document.getElementById('panelBackdrop');
+
+        function openChangelog()  { changelogPanel.classList.add('open');    panelBackdrop.classList.add('active'); }
+        function closeChangelog() { changelogPanel.classList.remove('open'); panelBackdrop.classList.remove('active'); }
+
+        versionBadge.addEventListener('click', openChangelog);
+        changelogClose.addEventListener('click', closeChangelog);
+        panelBackdrop.addEventListener('click', closeChangelog);
+    });
+    </script>
+</body>
+</html>

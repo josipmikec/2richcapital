@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2RICH CAPITAL - Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        /* ── Changelog Panel ── */
+        .changelog-panel {
+            position: fixed;
+            top: 0; right: -420px;
+            width: 400px;
+            height: 100vh;
+            background: #0a0a0a;
+            border-left: 1px solid #1a1a1a;
+            z-index: 999;
+            transition: right 0.4s cubic-bezier(0.16,1,0.3,1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .changelog-panel.open { right: 0; }
+        .changelog-panel-header {
+            padding: 28px 24px 20px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .changelog-panel-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.15em;
+            color: #999;
+            text-transform: uppercase;
+        }
+        .changelog-panel-close {
+            background: none; border: none;
+            color: #555;
+            cursor: pointer; font-size: 18px;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .changelog-panel-close:hover { color: #F2CA50; }
+        .changelog-body {
+            flex: 1; overflow-y: auto;
+            padding: 8px 0 32px;
+        }
+        .changelog-body::-webkit-scrollbar { width: 4px; }
+        .changelog-body::-webkit-scrollbar-track { background: transparent; }
+        .changelog-body::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 2px; }
+        .changelog-entry {
+            padding: 20px 24px;
+            border-bottom: 1px solid #111;
+        }
+        .changelog-entry:last-child { border-bottom: none; }
+        .changelog-entry-header {
+            display: flex; align-items: center;
+            gap: 10px; margin-bottom: 12px;
+        }
+        .changelog-version {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #F2CA50;
+            background: rgba(242,202,80,0.08);
+            padding: 3px 9px; border-radius: 4px;
+            border: 1px solid rgba(242,202,80,0.15);
+        }
+        .changelog-date {
+            font-size: 10px; font-weight: 600;
+            color: #444; letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .changelog-badge {
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.08em;
+            padding: 2px 7px; border-radius: 3px;
+            margin-left: auto; text-transform: uppercase;
+        }
+        .badge-latest {
+            background: rgba(242,202,80,0.1);
+            color: #F2CA50;
+            border: 1px solid rgba(242,202,80,0.2);
+        }
+        .changelog-items { list-style: none; padding: 0; margin: 0; }
+        .changelog-items li {
+            font-size: 12px; font-weight: 500;
+            color: #666;
+            padding: 5px 0 5px 16px;
+            position: relative; line-height: 1.5;
+            letter-spacing: 0.02em;
+        }
+        .changelog-items li::before {
+            content: ''; position: absolute;
+            left: 0; top: 11px;
+            width: 5px; height: 5px;
+            border-radius: 50%; background: #333;
+        }
+        .changelog-items li.feat::before { background: #4ade80; }
+        .changelog-items li.fix::before  { background: #F2CA50; }
+        .changelog-items li.imp::before  { background: #60a5fa; }
+
+        .version-badge {
+            display: inline-flex; align-items: center;
+            gap: 5px;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.1em; color: #444;
+            cursor: pointer;
+            padding: 3px 8px; border-radius: 4px;
+            border: 1px solid #1a1a1a;
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
+            user-select: none; text-transform: uppercase;
+        }
+        .version-badge:hover {
+            color: #F2CA50;
+            border-color: rgba(242,202,80,0.3);
+            background: rgba(242,202,80,0.04);
+        }
+        .panel-backdrop {
+            display: none; position: fixed;
+            inset: 0; z-index: 998;
+        }
+        .panel-backdrop.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        
+        <div class="system-status">
+            <span class="status-dot"></span>
+            <span class="status-text">SYSTEM ONLINE</span>
+        </div>
+
+        <div class="login-card">
+            
+            <div class="login-header">
+                <img src="https://2rich.capital/wp-content/uploads/2026/05/2rich-trading-macro-research-desk.webp" alt="2RICH CAPITAL" class="brand-logo">
+            </div>
+
+            <h2 class="login-title">Create Account</h2>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+
+            <form id="registerForm" action="../auth/register.php" method="POST">
+                
+                <div class="form-group">
+                    <label for="fullname">FULL NAME</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <input type="text" id="fullname" name="fullname" placeholder="John Doe" required autocomplete="name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">EMAIL ADDRESS</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                        </svg>
+                        <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">PASSWORD</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <input type="password" id="password" name="password" placeholder="Min. 8 characters" required minlength="8" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">CONFIRM PASSWORD</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required minlength="8" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">CREATE ACCOUNT &rarr;</button>
+            </form>
+
+            <div class="signup-section">
+                <p class="signup-text">Already have an account?</p>
+                <a href="/login" class="signup-link">Log in</a>
+            </div>
+
+            <!-- Footer: 2RICH CAPITAL · © 2026 · version -->
+            <div class="login-footer">
+                <span class="footer-text">2RICH.CAPITAL</span>
+                <span class="footer-text">&copy; 2026</span>
+                <span class="version-badge" id="versionBadge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    v1.0.4
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changelog Panel -->
+    <div class="panel-backdrop" id="panelBackdrop"></div>
+    <div class="changelog-panel" id="changelogPanel">
+        <div class="changelog-panel-header">
+            <span class="changelog-panel-title">Dashboard Updates</span>
+            <button class="changelog-panel-close" id="changelogClose">&times;</button>
+        </div>
+        <div class="changelog-body">
+			<div class="changelog-entry">
+			    <div class="changelog-entry-header">
+			        <span class="changelog-version">v1.0.4</span>
+			        <span class="changelog-date">August 2026</span>
+			        <span class="changelog-badge badge-latest">Latest</span>
+			    </div>
+			    <ul class="changelog-items">
+			        <li class="feat">trading Floor improvements</li>
+			        <li class="feat">added group discovery and signals to the dashboard card</li>
+			        <li class="feat">added group creation flow</li>
+			        <li class="feat">added group workspaces</li>
+			        <li class="feat">added manual signal posting</li>
+			        <li class="feat">added group profile customizer in group settings</li>
+			        <li class="feat">improved signals interface and posting flow</li>
+			        <li class="feat">added automation settings to signals</li>
+			        <li class="feat">added group messaging interface</li>
+			    </ul>
+			</div>
+			<div class="changelog-entry">
+			    <div class="changelog-entry-header">
+			        <span class="changelog-version">v1.0.3</span>
+			        <span class="changelog-date">July 2026</span>
+			    </div>
+			    <ul class="changelog-items">
+			        <li class="feat">added MT5 Sync to MQL5 market</li>
+			        <li class="feat">MT5 sync UI polish</li>
+			    </ul>
+			</div>
+			<div class="changelog-entry">
+			    <div class="changelog-entry-header">
+			        <span class="changelog-version">v1.0.2</span>
+			        <span class="changelog-date">July 2026</span>
+			    </div>
+			    <ul class="changelog-items">
+			        <li class="feat">added MT5 Sync</li>
+					<li class="feat">added $PNL values</li>
+			        <li class="feat">general UI polish</li>
+			    </ul>
+			</div>
+			<div class="changelog-entry">
+			    <div class="changelog-entry-header">
+			        <span class="changelog-version">v1.0.1</span>
+			        <span class="changelog-date">June 2026</span>
+			    </div>
+			    <ul class="changelog-items">
+			        <li class="feat">dashboard layout improvements</li>
+			        <li class="feat">added Economic calendar</li>
+			        <li class="feat">general UI polish</li>
+			    </ul>
+			</div>
+            <div class="changelog-entry">
+                <div class="changelog-entry-header">
+                    <span class="changelog-version">v1.0.0</span>
+                    <span class="changelog-date">June 2026</span>
+                </div>
+                <ul class="changelog-items">
+                    <li class="feat">initial dashboard launch</li>
+                    <li class="feat">trading journal with custom columns</li>
+                    <li class="feat">news feed with real-time updates</li>
+                    <li class="feat">tradingView charting integration</li>
+                    <li class="feat">account management &amp; login system</li>
+                    <li class="feat">market data section</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // ── Register Form ──
+        const registerForm = document.getElementById('registerForm');
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const errorDiv   = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            const submitBtn  = this.querySelector('button[type="submit"]');
+            const password        = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+                return;
+            }
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'CREATING ACCOUNT...';
+            const formData = new FormData(this);
+            try {
+                const response = await fetch('../auth/register.php', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error('Server error: ' + response.status);
+                const ct = response.headers.get('content-type');
+                if (!ct || !ct.includes('application/json')) throw new Error('Server returned invalid response');
+                const data = await response.json();
+                if (data.success) {
+                    successDiv.textContent = data.message || 'Account created! Redirecting to login...';
+                    successDiv.style.display = 'block';
+                    setTimeout(() => { window.location.href = '/login'; }, 2000);
+                } else {
+                    errorDiv.textContent = data.message || 'Registration failed. Please try again.';
+                    errorDiv.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'CREATE ACCOUNT →';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error: ' + error.message;
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'CREATE ACCOUNT →';
+            }
+        });
+
+        // ── Changelog Panel ──
+        const versionBadge   = document.getElementById('versionBadge');
+        const changelogPanel = document.getElementById('changelogPanel');
+        const changelogClose = document.getElementById('changelogClose');
+        const panelBackdrop  = document.getElementById('panelBackdrop');
+
+        function openChangelog()  { changelogPanel.classList.add('open');    panelBackdrop.classList.add('active'); }
+        function closeChangelog() { changelogPanel.classList.remove('open'); panelBackdrop.classList.remove('active'); }
+
+        versionBadge.addEventListener('click', openChangelog);
+        changelogClose.addEventListener('click', closeChangelog);
+        panelBackdrop.addEventListener('click', closeChangelog);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChangelog(); });
+    });
+    </script>
+</body>
+</html>

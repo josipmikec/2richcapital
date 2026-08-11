@@ -1,0 +1,861 @@
+/* ==========================================
+   MARKET DATA — Page-specific styles
+   Depends on: assets/css/dashboard.css
+   ========================================== */
+
+/* ==========================================
+   PAGE HEADER
+   ========================================== */
+
+.md-page-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #1a1a1a;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.md-page-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #F2CA50 0%, #f4f4f4 50%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.md-page-subtitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.md-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+  padding: 7px 14px;
+  border: 1px solid #1e1e1e;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.02);
+}
+
+.md-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F2CA50;
+  animation: md-live-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes md-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+/* ==========================================
+   TAB NAV
+   ========================================== */
+
+.md-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #1a1a1a;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.md-tabs::-webkit-scrollbar { display: none; }
+
+.md-tab {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: "Montserrat", sans-serif;
+  color: #3a3a3a;
+  padding: 10px 16px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.md-tab:hover  { color: #888; }
+.md-tab.active { color: #F2CA50; border-bottom-color: #F2CA50; }
+
+/* ==========================================
+   TAB PANE
+   ========================================== */
+
+.md-pane        { display: none; }
+.md-pane.active { display: block; }
+
+/* ==========================================
+   PLACEHOLDER / COMING SOON SECTION
+   ========================================== */
+
+.md-placeholder {
+  background: linear-gradient(135deg, rgba(21,21,21,0.8) 0%, rgba(14,14,14,0.6) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #1a1a1a;
+  border-radius: 16px;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.md-placeholder::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(242,202,80,0.35), transparent);
+}
+
+.md-placeholder-glow {
+  position: absolute;
+  top: -30%; right: -15%;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(242,202,80,0.07) 0%, transparent 70%);
+  pointer-events: none;
+  animation: md-glow-pulse 8s ease-in-out infinite;
+}
+
+@keyframes md-glow-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
+@keyframes md-glow-breathe {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1;   }
+}
+
+.md-placeholder-inner {
+  text-align: center;
+  max-width: 480px;
+  padding: 60px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.md-placeholder-icon {
+  color: #F2CA50;
+  opacity: 0.4;
+  margin: 0 auto 32px;
+  filter: drop-shadow(0 0 24px rgba(242,202,80,0.25));
+  animation: md-float-icon 6s ease-in-out infinite;
+  width: 64px; height: 64px;
+}
+
+@keyframes md-float-icon {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.md-placeholder-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #F2CA50 0%, #FFDB70 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 14px;
+}
+
+.md-placeholder-desc {
+  font-size: 13px;
+  line-height: 1.85;
+  color: #666;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================
+   FEATURE LIST
+   ========================================== */
+
+.md-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.md-feature-card {
+  background: rgba(18,18,18,0.85);
+  border: 1px solid #1a1a1a;
+  border-radius: 12px;
+  padding: 20px 18px;
+  transition: border-color 0.2s;
+}
+
+.md-feature-card:hover { border-color: #252525; }
+
+.md-feature-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #F2CA50;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.md-feature-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ccc;
+  margin-bottom: 6px;
+}
+
+.md-feature-desc {
+  font-size: 11px;
+  font-weight: 400;
+  color: #555;
+  line-height: 1.7;
+}
+
+/* ==========================================
+   PAGE HEADER RIGHT
+   ========================================== */
+
+.md-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.md-symbol-select-wrap { position: relative; }
+
+.md-symbol-select {
+  appearance: none;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  color: #ccc;
+  font-family: "Montserrat", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 7px 32px 7px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%23555' stroke-width='1.5'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.md-symbol-select:hover { border-color: #2a2a2a; }
+.md-symbol-select:focus { outline: none; border-color: #F2CA50; }
+.md-symbol-select option { background: #111; color: #ccc; }
+
+.md-interval-wrap {
+  display: flex;
+  gap: 2px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.md-interval-btn {
+  font-family: "Montserrat", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #444;
+  background: none;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 9px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.md-interval-btn:hover  { color: #888; }
+.md-interval-btn.active { color: #F2CA50; background: rgba(242,202,80,0.08); }
+
+/* ==========================================
+   CHART CONTAINER
+   ========================================== */
+
+.md-chart-wrap {
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+#tv_chart_container { width: 100%; height: 560px; }
+
+/* ==========================================
+   FEED CONTROLS BAR
+   ========================================== */
+
+.md-feed-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #111;
+  border-bottom: 1px solid #1e1e1e;
+  flex-wrap: wrap;
+}
+
+.md-feed-controls .md-symbol-select-wrap { margin: 0; }
+.md-feed-controls .md-interval-wrap      { margin: 0; }
+.md-feed-controls .md-live-badge         { margin: 0; }
+
+/* ==========================================
+   CALENDAR CARD
+   ========================================== */
+
+.md-calendar-card {
+  background: linear-gradient(180deg, rgba(18,18,18,0.96) 0%, rgba(10,10,10,0.98) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+  margin-bottom: 22px;
+}
+
+/* ==========================================
+   CALENDAR HEADER — two-row layout
+   ========================================== */
+
+.md-calendar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+/* Row 1: range pills flush left, controls flush far right */
+.md-cal-header-row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Row 2: event count + updated timestamp, same baseline */
+.md-cal-header-row2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Event count */
+.md-cal-event-count {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: #666;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Updated timestamp — overrides the old .md-cal-meta block rule */
+.md-cal-header-row2 .md-cal-meta {
+  display: inline;
+  justify-content: unset;
+  align-items: unset;
+  margin-bottom: 0;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #444;
+  white-space: nowrap;
+}
+
+/* Controls group — pushed to far right via margin-left: auto */
+.md-calendar-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Thin vertical divider */
+.md-cal-header-divider {
+  width: 1px;
+  height: 16px;
+  background: #2a2a2a;
+  flex-shrink: 0;
+}
+
+/* Range pills group */
+.md-cal-range-pills {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.md-cal-range-pills .md-cal-filter-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+/* ==========================================
+   REFRESH BUTTON
+   ========================================== */
+
+.md-cal-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #555;
+  padding: 7px 13px;
+  border: 1px solid #1e1e1e;
+  border-radius: 20px;
+  background: none;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.md-cal-refresh-btn:hover { color: #F2CA50; border-color: rgba(242,202,80,0.3); }
+
+/* ==========================================
+   WEEK SWITCHER TABS
+   ========================================== */
+
+.md-week-tabs {
+  display: flex;
+  gap: 2px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.md-week-tab {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.md-week-tab.active {
+  background: #222;
+  color: #e5e5e5;
+}
+
+.md-week-tab:hover:not(.active) { color: #aaa; }
+
+/* ==========================================
+   TIMEZONE SWITCHER
+   ========================================== */
+
+.md-tz-switcher {
+  display: flex;
+  gap: 2px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.md-tz-btn {
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.md-tz-btn.active {
+  background: #222;
+  color: #e5e5e5;
+}
+
+.md-tz-btn:hover:not(.active) { color: #aaa; }
+
+/* ==========================================
+   CAL ERROR STATE BADGE
+   ========================================== */
+
+#calRefreshBadge.cal-error .md-live-dot {
+  background: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.25) !important;
+  animation: none;
+}
+
+/* ==========================================
+   FILTER TOGGLE BUTTON
+   ========================================== */
+
+.md-cal-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 6px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.md-cal-filter-toggle.is-active,
+.md-cal-filter-toggle:hover {
+  background: #1a1a1a;
+  border-color: #3a3a3a;
+  color: #ccc;
+}
+
+.md-cal-filter-toggle svg { flex-shrink: 0; }
+
+/* ==========================================
+   FILTERS TOOLBAR
+   ========================================== */
+
+.md-cal-filters {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.md-cal-filters.is-open { display: flex; }
+
+.md-cal-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.md-cal-filter-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3a3a3a;
+  min-width: 52px;
+  flex-shrink: 0;
+}
+
+.md-cal-filter-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.md-cal-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #444;
+  padding: 5px 11px;
+  border: 1px solid #1e1e1e;
+  border-radius: 20px;
+  background: none;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.md-cal-filter-btn:hover { color: #888; border-color: #2a2a2a; }
+.md-cal-filter-btn.active {
+  color: #F2CA50;
+  border-color: rgba(242,202,80,0.3);
+  background: rgba(242,202,80,0.06);
+}
+
+/* Impact dots in filter buttons */
+.md-impact-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.md-impact-dot.high   { background: #ef4444; }
+.md-impact-dot.medium { background: #f59e0b; }
+.md-impact-dot.low    { background: #6b7280; }
+
+/* ==========================================
+   CALENDAR LIST
+   ========================================== */
+
+.md-calendar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Day group */
+.md-cal-day-group { margin-bottom: 8px; }
+
+.md-cal-day-header {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2a2a2a;
+  padding: 10px 0 8px;
+  border-bottom: 1px solid #151515;
+  margin-bottom: 4px;
+}
+
+.md-calendar-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s;
+}
+
+.md-calendar-item:last-child { border-bottom: none; }
+
+.md-cal-item-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.md-cal-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Impact pill */
+.md-impact-pill {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+.md-impact-pill.high   { color: #ef4444; border-color: rgba(239,68,68,0.25);  background: rgba(239,68,68,0.08); }
+.md-impact-pill.medium { color: #f59e0b; border-color: rgba(245,158,11,0.25); background: rgba(245,158,11,0.08); }
+.md-impact-pill.low    { color: #6b7280; border-color: rgba(107,114,128,0.2); background: rgba(107,114,128,0.06); }
+
+.md-calendar-time {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.3;
+}
+
+.md-calendar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.md-calendar-currency {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(247,208,79,0.10);
+  color: rgba(247,208,79,0.9);
+  border: 1px solid rgba(247,208,79,0.12);
+}
+
+.md-calendar-event-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.4;
+}
+
+/* Stats row */
+.md-calendar-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.md-cal-stat {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.55);
+}
+
+.md-calendar-label {
+  color: rgba(255,255,255,0.25);
+  margin-right: 4px;
+  font-weight: 500;
+}
+
+/* Actual value colours */
+.md-cal-stat.actual-beat   { color: #22c55e; }
+.md-cal-stat.actual-miss   { color: #ef4444; }
+.md-cal-stat.actual-inline { color: rgba(255,255,255,0.6); }
+
+/* Pending actual */
+.md-cal-pending {
+  color: #3a3a3a;
+  font-style: italic;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
+/* Empty / loading states */
+.md-calendar-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  padding: 32px 0;
+}
+
+.md-calendar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 0;
+  color: #2a2a2a;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.md-cal-retry {
+  font-family: "Montserrat", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #F2CA50;
+  background: none;
+  border: 1px solid rgba(242,202,80,0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.md-cal-retry:hover { opacity: 0.7; }
+
+/* Spinner */
+@keyframes md-spin { to { transform: rotate(360deg); } }
+
+.md-cal-spinner {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid rgba(255,255,255,0.08);
+  border-top-color: #F2CA50;
+  border-radius: 50%;
+  animation: md-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 900px) {
+  .md-features { grid-template-columns: 1fr 1fr; }
+  .md-page-header { flex-direction: column; align-items: flex-start; }
+  #tv_chart_container { height: 420px; }
+  .md-header-right { gap: 8px; }
+}
+
+@media (max-width: 768px) {
+  .md-calendar-card { padding: 18px; border-radius: 16px; }
+  .md-calendar-header { flex-direction: column; align-items: flex-start; }
+  .md-calendar-header-right { flex-wrap: wrap; gap: 6px; margin-left: 0; }
+  .md-cal-item-left { min-width: 60px; }
+  .md-week-tabs { order: -1; }
+  .md-tz-switcher { order: -1; }
+}
+
+@media (max-width: 600px) {
+  .md-features { grid-template-columns: 1fr; }
+  .md-tabs { gap: 2px; }
+  .md-tab { padding: 8px 12px; font-size: 0.7rem; }
+  .md-placeholder-inner { padding: 40px 20px; }
+  .md-placeholder-title { font-size: 16px; }
+  .md-placeholder-desc { font-size: 12px; }
+  #tv_chart_container { height: 320px; }
+  .md-interval-wrap { display: none; }
+  .md-cal-filter-group { flex-direction: column; align-items: flex-start; }
+  .md-calendar-item { flex-direction: column; gap: 8px; }
+  .md-cal-item-left { flex-direction: row; align-items: center; min-width: unset; }
+  .md-tz-switcher .md-tz-btn { padding: 4px 7px; font-size: 9px; }
+}

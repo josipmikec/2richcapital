@@ -1,0 +1,451 @@
+/* ============================================================
+   form.css — Log New Trade Form Styles
+   2RICH CAPITAL — Institutional Grade Trading
+   ============================================================ */
+
+/* ── PAGE LAYOUT ─────────────────────────────────────────── */
+
+.form-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    margin-top: 12px;
+    background: linear-gradient(135deg, #F2CA50 0%, #f4f4f4 50%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: #777;
+    letter-spacing: 0.02em;
+}
+
+/* ── BACK BUTTON ─────────────────────────────────────────── */
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 16px;
+    font-family: Montserrat, sans-serif;
+    transition: color 0.2s ease;
+}
+
+.back-btn:hover {
+    color: #F2CA50;
+}
+
+.back-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ── FORM WRAPPER ─────────────────────────────────────────── */
+
+.trade-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 860px;
+}
+
+/* ── FORM SECTION CARD ───────────────────────────────────── */
+
+.form-section {
+    background: linear-gradient(135deg, rgba(21, 21, 21, 0.8) 0%, rgba(14, 14, 14, 0.6) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid #1a1a1a;
+    border-radius: 12px;
+    padding: 28px 28px 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(242, 202, 80, 0.3), transparent);
+}
+
+/* ── SECTION TITLE ───────────────────────────────────────── */
+
+.section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #F2CA50;
+    margin-bottom: 22px;
+}
+
+/* ── DIVIDER (entry / exit split inside merged section) ──── */
+
+.section-divider {
+    border: none;
+    border-top: 1px solid #1e1e1e;
+    margin: 20px 0 22px;
+}
+
+/* ── FORM GRID ───────────────────────────────────────────── */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px 20px;
+}
+
+/* ── FORM GROUP ──────────────────────────────────────────── */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.form-group label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #888;
+}
+
+.form-group small {
+    font-size: 12px;
+    color: #555;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+}
+
+/* ── INPUTS & SELECTS ────────────────────────────────────── */
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+    background: #0d0d0d;
+    border: 1px solid #252525;
+    border-radius: 8px;
+    color: #f4f4f4;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: Montserrat, sans-serif;
+    padding: 11px 14px;
+    min-height: 44px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-group input[type="date"] {
+    color-scheme: dark;
+}
+
+.form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.form-group textarea {
+    min-height: 110px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+/* Focus states */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #F2CA50;
+    box-shadow: 0 0 0 3px rgba(242, 202, 80, 0.1);
+}
+
+/* Placeholder */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #3a3a3a;
+    font-weight: 400;
+}
+
+/* Select option colors */
+.form-group select option {
+    background: #111;
+    color: #f4f4f4;
+}
+
+/* ── CHECKBOX GROUP ──────────────────────────────────────── */
+
+.checkbox-group {
+    justify-content: flex-start;
+    padding-top: 22px; /* align with input fields */
+}
+
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #ccc;
+    min-height: 44px;
+    user-select: none;
+}
+
+.checkbox-label span {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ccc;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    background: #0d0d0d;
+    border: 1px solid #333;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    background: #F2CA50;
+    border-color: #F2CA50;
+}
+
+.checkbox-label input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid #0E0E0E;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+}
+
+.checkbox-label input[type="checkbox"]:focus {
+    outline: none;
+    border-color: #F2CA50;
+    box-shadow: 0 0 0 3px rgba(242, 202, 80, 0.1);
+}
+
+/* ── FORM ACTIONS (bottom bar) ───────────────────────────── */
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 8px;
+}
+
+.btn-primary-form,
+.btn-secondary-form {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 14px 28px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-family: Montserrat, sans-serif;
+    white-space: nowrap;
+    border: none;
+}
+
+.btn-primary-form {
+    background: linear-gradient(135deg, #F2CA50 0%, #FFDB70 100%);
+    color: #0E0E0E;
+    box-shadow: 0 4px 16px rgba(242, 202, 80, 0.2);
+}
+
+.btn-primary-form:hover {
+    background: linear-gradient(135deg, #FFDB70 0%, #F2CA50 100%);
+    box-shadow: 0 6px 24px rgba(242, 202, 80, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-primary-form svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.btn-secondary-form {
+    background: transparent;
+    color: #F2CA50;
+    border: 1px solid rgba(242, 202, 80, 0.35);
+}
+
+.btn-secondary-form:hover {
+    background: rgba(242, 202, 80, 0.08);
+    border-color: #F2CA50;
+    box-shadow: 0 4px 16px rgba(242, 202, 80, 0.15);
+    transform: translateY(-2px);
+}
+
+/* ── FORM MESSAGE (success / error feedback) ─────────────── */
+
+.form-message {
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+}
+
+.form-message.success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+}
+
+.form-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .form-section {
+        padding: 20px 16px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-primary-form,
+    .btn-secondary-form {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .checkbox-group {
+        padding-top: 0;
+    }
+}
+
+/* ── LABEL TOOLTIP ───────────────────────────────────────── */
+
+.label-with-tooltip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.info-icon {
+    color: #555;
+    cursor: default;
+    transition: color 0.2s ease;
+    display: block;
+}
+
+.tooltip-wrap:hover .info-icon {
+    color: #F2CA50;
+}
+
+.tooltip-popup {
+    position: absolute;
+    bottom: calc(100% + 7px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e1e1e;
+    border: 1px solid #2e2e2e;
+    color: #ccc;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    padding: 7px 11px;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+}
+
+/* Small arrow pointing down */
+.tooltip-popup::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #2e2e2e;
+}
+
+.tooltip-wrap:hover .tooltip-popup {
+    opacity: 1;
+}
