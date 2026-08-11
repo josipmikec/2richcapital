@@ -1290,7 +1290,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     <div class="right-user-name"><?= htmlspecialchars($user_name) ?></div>
                     <div class="right-user-email"><?= htmlspecialchars($user_email) ?></div>
                 </div>
-                <button class="right-switch-btn" onclick="window.location.href='/account'">Account</button>
+                <button class="right-switch-btn" onclick="openFloorSection('profile')">Profile</button>
             </div>
 
             <p class="right-section-label">Suggested For You</p>
