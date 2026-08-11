@@ -156,8 +156,8 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         .profile-social-box-value { font-size:22px; font-weight:800; color:#f3f3f3; line-height:1; }
         .profile-social-box-label { margin-top:6px; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#666b73; }
         .profile-highlights { display:flex; gap:12px; margin-top:18px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
-        .profile-profile-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; width:auto; margin-left:0; margin-right:0; justify-content:flex-start; }
-        .profile-action-btn { flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; min-width:0; padding:9px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.05); background:#131313; color:#bfc3ca; font-size:10px; font-weight:700; letter-spacing:0.01em; text-transform:none; transition:background 0.2s,border-color 0.2s,color 0.2s,transform 0.2s; width:auto; }
+        .profile-profile-actions { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; width:100%; max-width:430px; margin-left:0; margin-right:0; justify-content:flex-start; }
+        .profile-action-btn { flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; min-width:0; padding:9px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.05); background:#131313; color:#bfc3ca; font-size:10px; font-weight:700; letter-spacing:0.01em; text-transform:none; transition:background 0.2s,border-color 0.2s,color 0.2s,transform 0.2s; }
         .profile-action-btn:hover { background:#171717; border-color:rgba(255,255,255,0.10); color:#e8e8e8; transform:translateY(-1px); }
         .profile-action-btn.secondary { background:#141414; border-color:rgba(255,255,255,0.06); color:#c8ccd2; }
         .profile-action-btn.secondary:hover { background:#181818; border-color:rgba(255,255,255,0.10); color:#ededed; }
