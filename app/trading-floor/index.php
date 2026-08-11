@@ -156,7 +156,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         .profile-social-box-value { font-size:22px; font-weight:800; color:#f3f3f3; line-height:1; }
         .profile-social-box-label { margin-top:6px; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#666b73; }
         .profile-highlights { display:flex; gap:12px; margin-top:18px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
-        .profile-profile-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:nowrap; width:100%; max-width:200px; margin-left:0; margin-right:0; justify-content:flex-start; }
+        .profile-profile-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:nowrap; width:100%; max-width:360px; margin-left:0; margin-right:0; justify-content:flex-start; }
         .profile-action-btn { flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; min-width:0; padding:9px 16px; border-radius:999px; border:1px solid rgba(255,255,255,0.05); background:#131313; color:#bfc3ca; font-size:10px; font-weight:700; letter-spacing:0.01em; text-transform:none; transition:background 0.2s,border-color 0.2s,color 0.2s,transform 0.2s; }
         .profile-action-btn:hover { background:#171717; border-color:rgba(255,255,255,0.10); color:#e8e8e8; transform:translateY(-1px); }
         .profile-action-btn.secondary { background:#141414; border-color:rgba(255,255,255,0.06); color:#c8ccd2; }
@@ -1030,7 +1030,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 </div>
 
                 <div class="profile-profile-actions">
-                    <a class="profile-action-btn secondary" href="https://app.2rich.capital/account/">Edit Profile</a>
+                    <a class="profile-action-btn secondary" href="https://app.2rich.capital/account/" style="text-decoration:none;">Edit Profile</a>
                     <button class="profile-action-btn" type="button" data-profile-action="view-archive">View Archive</button>
                 </div>
 
@@ -1048,7 +1048,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <button type="button" class="profile-tab active" data-profile-tab="posts">Posts</button>
                         <button type="button" class="profile-tab" data-profile-tab="trades">Trades</button>
                         <button type="button" class="profile-tab" data-profile-tab="saved">Saved</button>
-                        <button type="button" class="profile-tab" data-profile-tab="archive">Archive</button>
+                        <!-- Archive tab removed from default tabs. Archive panel will be shown only when user clicks View Archive -->
                     </div>
                 </div>
 
@@ -1526,12 +1526,48 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         });
     });
 
-    // View Archive action: open the profile and switch to the archive tab
+    // View Archive action: open the profile and switch to the archive tab (archive tab is hidden in tabs by default)
     document.querySelectorAll('[data-profile-action="view-archive"]').forEach((btn) => {
         btn.addEventListener('click', () => {
             try { openFloorSection('profile'); } catch (e) {}
-            const tabButton = document.querySelector('[data-profile-tab="archive"]');
+            // Ensure archive tab exists (create if removed from tab list)
+            let tabButton = document.querySelector('[data-profile-tab="archive"]');
+            const tabList = document.querySelector('.profile-tab-list');
+            if (!tabButton && tabList) {
+                // create a hidden-then-active archive tab button
+                tabButton = document.createElement('button');
+                tabButton.type = 'button';
+                tabButton.className = 'profile-tab';
+                tabButton.dataset.profileTab = 'archive';
+                tabButton.textContent = 'Archive';
+                tabList.appendChild(tabButton);
+                tabButton.addEventListener('click', () => {
+                    document.querySelectorAll('[data-profile-tab]').forEach((tab) => tab.classList.toggle('active', tab === tabButton));
+                    document.querySelectorAll('[data-profile-panel]').forEach((panel) => panel.classList.toggle('active', panel.dataset.profilePanel === 'archive'));
+                });
+            }
+            // activate the archive tab programmatically
             if (tabButton) tabButton.click();
+
+            // add a 'Back to profile' button inside archive panel if not present
+            const archivePanel = document.querySelector('[data-profile-panel="archive"]');
+            if (archivePanel && !archivePanel.querySelector('.archive-back-btn')) {
+                const backBtn = document.createElement('button');
+                backBtn.className = 'group-ghost-btn archive-back-btn';
+                backBtn.textContent = 'Back to profile';
+                backBtn.style.marginBottom = '12px';
+                backBtn.addEventListener('click', () => {
+                    // return to posts tab
+                    const postsTab = document.querySelector('[data-profile-tab="posts"]');
+                    if (postsTab) postsTab.click();
+                    // remove the archive tab from the tab list
+                    const archiveTab = document.querySelector('[data-profile-tab="archive"]');
+                    if (archiveTab && archiveTab.parentElement) archiveTab.parentElement.removeChild(archiveTab);
+                    // hide the archive panel
+                    archivePanel.classList.remove('active');
+                });
+                archivePanel.insertBefore(backBtn, archivePanel.firstChild);
+            }
         });
     });
 
