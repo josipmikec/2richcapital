@@ -824,7 +824,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
 		    gap: 12px;
 		    padding: 11px 13px;
 		    border-radius: 10px;
-		    color: rgba(224,224,224,0.72);
+		    color: rgba(224,224,224,0.67);
 		    text-decoration: none;
 		    cursor: pointer;
 		    overflow: hidden;
