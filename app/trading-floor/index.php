@@ -175,6 +175,12 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         .profile-feed-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:18px; }
         .profile-tab-panel { display:none; margin-top:18px; }
         .profile-tab-panel.active { display:block; }
+        .profile-archive-mode .profile-hero,
+        .profile-archive-mode .profile-profile-actions,
+        .profile-archive-mode .profile-highlights,
+        .profile-archive-mode .profile-tabs {
+            display:none !important;
+        }
         .profile-trades-panel { display:grid; gap:18px; }
         .profile-stats-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; }
         .profile-stat-card { background:#121212; border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:18px; }
@@ -1521,8 +1527,10 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
     document.querySelectorAll('[data-profile-tab]').forEach((button) => {
         button.addEventListener('click', () => {
             const target = button.dataset.profileTab;
+            const profileSection = document.getElementById('floor-profile-panel');
             document.querySelectorAll('[data-profile-tab]').forEach((tab) => tab.classList.toggle('active', tab === button));
             document.querySelectorAll('[data-profile-panel]').forEach((panel) => panel.classList.toggle('active', panel.dataset.profilePanel === target));
+            if (profileSection) profileSection.classList.toggle('profile-archive-mode', target === 'archive');
         });
     });
 
@@ -1557,9 +1565,11 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 backBtn.textContent = 'Back to profile';
                 backBtn.style.marginBottom = '12px';
                 backBtn.addEventListener('click', () => {
+                    const profileSection = document.getElementById('floor-profile-panel');
                     // return to posts tab
                     const postsTab = document.querySelector('[data-profile-tab="posts"]');
                     if (postsTab) postsTab.click();
+                    if (profileSection) profileSection.classList.remove('profile-archive-mode');
                     // remove the archive tab from the tab list
                     const archiveTab = document.querySelector('[data-profile-tab="archive"]');
                     if (archiveTab && archiveTab.parentElement) archiveTab.parentElement.removeChild(archiveTab);
