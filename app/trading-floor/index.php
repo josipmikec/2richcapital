@@ -1538,31 +1538,26 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         });
     });
 
-    // View Archive action: open the profile and switch to the archive tab (archive tab is hidden in tabs by default)
+    // View Archive action: open the profile and show archive-only mode
     document.querySelectorAll('[data-profile-action="view-archive"]').forEach((btn) => {
         btn.addEventListener('click', () => {
             try { openFloorSection('profile'); } catch (e) {}
-            // Ensure archive tab exists (create if removed from tab list)
-            let tabButton = document.querySelector('[data-profile-tab="archive"]');
-            const tabList = document.querySelector('.profile-tab-list');
-            if (!tabButton && tabList) {
-                // create a hidden-then-active archive tab button
-                tabButton = document.createElement('button');
-                tabButton.type = 'button';
-                tabButton.className = 'profile-tab';
-                tabButton.dataset.profileTab = 'archive';
-                tabButton.textContent = 'Archive';
-                tabList.appendChild(tabButton);
-                tabButton.addEventListener('click', () => {
-                    document.querySelectorAll('[data-profile-tab]').forEach((tab) => tab.classList.toggle('active', tab === tabButton));
-                    document.querySelectorAll('[data-profile-panel]').forEach((panel) => panel.classList.toggle('active', panel.dataset.profilePanel === 'archive'));
-                });
-            }
-            // activate the archive tab programmatically
-            if (tabButton) tabButton.click();
-
-            // add a 'Back to profile' button inside archive panel if not present
+            const profileSection = document.getElementById('floor-profile-panel');
             const archivePanel = document.querySelector('[data-profile-panel="archive"]');
+            const postsTab = document.querySelector('[data-profile-tab="posts"]');
+            const tradesTab = document.querySelector('[data-profile-tab="trades"]');
+            const savedTab = document.querySelector('[data-profile-tab="saved"]');
+
+            if (profileSection) profileSection.classList.add('profile-archive-mode');
+
+            [postsTab, tradesTab, savedTab].forEach((tab) => {
+                if (tab) tab.classList.remove('active');
+            });
+
+            document.querySelectorAll('[data-profile-panel]').forEach((panel) => {
+                panel.classList.toggle('active', panel.dataset.profilePanel === 'archive');
+            });
+
             if (archivePanel && !archivePanel.querySelector('.archive-back-btn')) {
                 const backBtn = document.createElement('button');
                 backBtn.className = 'group-ghost-btn archive-back-btn';
@@ -1570,15 +1565,12 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 backBtn.style.marginBottom = '12px';
                 backBtn.addEventListener('click', () => {
                     const profileSection = document.getElementById('floor-profile-panel');
-                    // return to posts tab
                     const postsTab = document.querySelector('[data-profile-tab="posts"]');
-                    if (postsTab) postsTab.click();
                     if (profileSection) profileSection.classList.remove('profile-archive-mode');
-                    // remove the archive tab from the tab list
-                    const archiveTab = document.querySelector('[data-profile-tab="archive"]');
-                    if (archiveTab && archiveTab.parentElement) archiveTab.parentElement.removeChild(archiveTab);
-                    // hide the archive panel
-                    archivePanel.classList.remove('active');
+                    document.querySelectorAll('[data-profile-panel]').forEach((panel) => {
+                        panel.classList.toggle('active', panel.dataset.profilePanel === 'posts');
+                    });
+                    if (postsTab) postsTab.classList.add('active');
                 });
                 archivePanel.insertBefore(backBtn, archivePanel.firstChild);
             }
