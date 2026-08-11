@@ -824,13 +824,13 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
 		    gap: 12px;
 		    padding: 11px 13px;
 		    border-radius: 10px;
-		    color: #3a3a3a;
+		    color: rgba(224,224,224,0.72);
 		    text-decoration: none;
 		    cursor: pointer;
 		    overflow: hidden;
 		    white-space: nowrap;
 		    width: 46px;
-		    transition: color 0.2s ease, background 0.2s ease, width 0.25s cubic-bezier(0.16,1,0.3,1);
+		    transition: color 0.2s ease, background 0.2s ease, width 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s ease;
 		}
 		.tf-left-link svg { flex-shrink: 0; }
 		.tf-left-link span {
@@ -850,6 +850,11 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
 		}
 		.tf-left-links-col:hover .tf-left-link span {
 		    opacity: 1;
+		}
+		.tf-left-link.active {
+		    color: #F2CA50 !important;
+		    background: rgba(242,202,80,0.10) !important;
+		    box-shadow: inset 0 0 0 1px rgba(242,202,80,0.16);
 		}
 		/* Directly hovered item gets gold accent */
 		.tf-left-link:hover {
@@ -943,7 +948,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         </aside>
 
         <aside class="tf-left-links-col">
-            <a class="tf-left-link" onclick="openFloorSection('home')" title="Home">
+            <a class="tf-left-link active" data-floor-nav="home" onclick="openFloorSection('home')" title="Home">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>
                 <span>Home</span>
             </a>
@@ -951,14 +956,14 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                 <span>Create</span>
             </a>
-            <a class="tf-left-link" id="groupsNavLink" href="javascript:void(0)" onclick="openFloorSection('groups'); return false;" title="Groups">
+            <a class="tf-left-link" data-floor-nav="groups" id="groupsNavLink" href="javascript:void(0)" onclick="openFloorSection('groups'); return false;" title="Groups">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 <span>GROUPS</span>
             </a>
             <a class="tf-left-link" title="Notifications"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Notifications</span></a>
             <a class="tf-left-link" onclick="document.getElementById('dmPanel').classList.add('open')" title="Messages"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messages</span></a>
             <a class="tf-left-link" title="Saved"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Saved</span></a>
-            <a class="tf-left-link" onclick="openFloorSection('profile')" title="Profile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+            <a class="tf-left-link" data-floor-nav="profile" onclick="openFloorSection('profile')" title="Profile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
         </aside>
         <!-- Search Overlay -->
         <div class="search-overlay" id="searchOverlay">
@@ -1536,9 +1541,9 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         const profile = document.getElementById('floor-profile-panel');
         const groups = document.getElementById('floor-groups-panel');
         [feed, profile, groups].forEach(el => { if (el) el.hidden = true; el.style.display = 'none'; });
-        const homeLink = document.querySelector('.tf-left-link[onclick="openFloorSection(\'home\')"]');
-        const groupsLink = document.querySelector('.tf-left-link[onclick="openFloorSection(\'groups\')"]');
-        const profileLink = document.querySelector('.tf-left-link[onclick="openFloorSection(\'profile\')"]');
+        const homeLink = document.querySelector('[data-floor-nav="home"]');
+        const groupsLink = document.querySelector('[data-floor-nav="groups"]');
+        const profileLink = document.querySelector('[data-floor-nav="profile"]');
         [homeLink, groupsLink, profileLink].forEach(el => { if (el) el.classList.remove('active'); });
         if (app) app.classList.toggle('profile-mode', section === 'profile');
         if (section === 'profile' && profile) { profile.hidden = false; profile.style.display = 'block'; if (profileLink) profileLink.classList.add('active'); }
