@@ -1026,7 +1026,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
 
                 <div class="profile-profile-actions">
                     <a class="profile-action-btn secondary" href="https://app.2rich.capital/account/">Edit Profile</a>
-                    <button class="profile-action-btn" type="button">View Archive</button>
+                    <button class="profile-action-btn" type="button" data-profile-action="view-archive">View Archive</button>
                 </div>
 
                 <div class="profile-highlights">
@@ -1043,6 +1043,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <button type="button" class="profile-tab active" data-profile-tab="posts">Posts</button>
                         <button type="button" class="profile-tab" data-profile-tab="trades">Trades</button>
                         <button type="button" class="profile-tab" data-profile-tab="saved">Saved</button>
+                        <button type="button" class="profile-tab" data-profile-tab="archive">Archive</button>
                     </div>
                 </div>
 
@@ -1128,6 +1129,14 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <div class="profile-post-thumb"><span class="post-meta-badge">Saved</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1d2228,#111317 45%,#36414d);display:grid;place-items:center;color:#fff;font-size:20px;font-weight:700;">Macro</div></div>
                         <div class="profile-post-thumb"><span class="post-meta-badge">Saved</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#241d16,#15110d 45%,#4a3820);display:grid;place-items:center;color:#fff;font-size:20px;font-weight:700;">Gold</div></div>
                         <div class="profile-post-thumb"><span class="post-meta-badge">Saved</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1b2119,#10140f 45%,#314232);display:grid;place-items:center;color:#fff;font-size:20px;font-weight:700;">FX</div></div>
+                    </div>
+                </div>
+
+                <div class="profile-tab-panel" data-profile-panel="archive">
+                    <div class="profile-feed-grid">
+                        <div class="profile-post-thumb"><span class="post-meta-badge">Archived</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#2b2b2f,#1a1a1d 45%,#3b3b3f);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;">Archived Post 1</div></div>
+                        <div class="profile-post-thumb"><span class="post-meta-badge">Archived</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#241f1c,#12100f 45%,#4a403c);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;">Archived Post 2</div></div>
+                        <div class="profile-post-thumb"><span class="post-meta-badge">Archived</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#152224,#0d1312 45%,#243a33);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;">Archived Post 3</div></div>
                     </div>
                 </div>
         </section>
@@ -1509,6 +1518,15 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
             const target = button.dataset.profileTab;
             document.querySelectorAll('[data-profile-tab]').forEach((tab) => tab.classList.toggle('active', tab === button));
             document.querySelectorAll('[data-profile-panel]').forEach((panel) => panel.classList.toggle('active', panel.dataset.profilePanel === target));
+        });
+    });
+
+    // View Archive action: open the profile and switch to the archive tab
+    document.querySelectorAll('[data-profile-action="view-archive"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            try { openFloorSection('profile'); } catch (e) {}
+            const tabButton = document.querySelector('[data-profile-tab="archive"]');
+            if (tabButton) tabButton.click();
         });
     });
 
