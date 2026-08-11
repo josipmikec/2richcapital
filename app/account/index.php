@@ -681,7 +681,10 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     <h2>Profile</h2>
                     <p>Manage your public trading identity</p>
                 </div>
-                <button class="page-header-action" onclick="saveProfile()">Save Changes</button>
+                <div class="page-header-actions">
+                    <button class="page-header-action" onclick="window.location.href='/trading-floor'">View Profile</button>
+                    <button class="page-header-action" onclick="saveProfile()">Save Changes</button>
+                </div>
             </div>
 
             <div class="settings-card">
