@@ -15,23 +15,63 @@ require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
 
 // ─────────────────────────────────────────────
+// Profile persistence logic
+// ─────────────────────────────────────────────
+$profile_table = $wpdb->prefix . 'rich_user_profiles';
+$profile_row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$profile_table} WHERE user_id = %d LIMIT 1", $user_id), ARRAY_A);
+$profile_display_name = $profile_row['display_name'] ?? $user_name;
+$profile_handle = $profile_row['trading_handle'] ?? '@' . strtolower(str_replace(' ','',$user_name));
+$profile_bio = $profile_row['bio'] ?? '';
+$profile_primary_market = $profile_row['primary_market'] ?? '';
+$profile_trading_style = $profile_row['trading_style'] ?? '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['profile_form_action']) && $_POST['profile_form_action'] === 'save_profile') {
+    if (!isset($_POST['profile_nonce']) || !wp_verify_nonce($_POST['profile_nonce'], 'save_profile')) {
+        $mt5_flash = ['type' => 'error', 'message' => 'Security check failed.'];
+    } else {
+        $display_name = sanitize_text_field($_POST['display_name'] ?? $user_name);
+        $trading_handle = sanitize_text_field($_POST['trading_handle'] ?? '');
+        $bio = sanitize_text_field($_POST['bio'] ?? '');
+        $primary_market = sanitize_text_field($_POST['primary_market'] ?? '');
+        $trading_style = sanitize_text_field($_POST['trading_style'] ?? '');
+
+        if ($trading_handle === '') {
+            $trading_handle = '@' . strtolower(str_replace(' ','', $display_name));
+        }
+        if (strpos($trading_handle, '@') !== 0) {
+            $trading_handle = '@' . ltrim($trading_handle, '@');
+        }
+
+        $existing_profile_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$profile_table} WHERE user_id = %d LIMIT 1", $user_id));
+        $profile_data = [
+            'user_id' => $user_id,
+            'display_name' => $display_name,
+            'trading_handle' => $trading_handle,
+            'bio' => $bio,
+            'primary_market' => $primary_market,
+            'trading_style' => $trading_style,
+            'updated_at' => current_time('mysql')
+        ];
+        if ($existing_profile_id) {
+            $wpdb->update($profile_table, $profile_data, ['id' => (int)$existing_profile_id]);
+        } else {
+            $profile_data['created_at'] = current_time('mysql');
+            $wpdb->insert($profile_table, $profile_data);
+        }
+
+        $_SESSION['user_name'] = $display_name;
+        $profile_display_name = $display_name;
+        $profile_handle = $trading_handle;
+        $profile_bio = $bio;
+        $profile_primary_market = $primary_market;
+        $profile_trading_style = $trading_style;
+        $mt5_flash = ['type' => 'success', 'message' => 'Profile saved.'];
+    }
+}
+
+// ─────────────────────────────────────────────
 // MT5 connection panel logic
 // ─────────────────────────────────────────────
-$conn_table = $wpdb->prefix . 'rich_mt5_connections';
-$mt5_conn = null;
-$new_plain_api_key = '';
-$mt5_flash = ['type' => '', 'message' => ''];
-$journals_table = $wpdb->prefix . 'rich_journals';
-
-// Fetch user’s journals for MT5 routing dropdown
-$user_journals = $wpdb->get_results(
-    $wpdb->prepare(
-        "SELECT id, name FROM {$journals_table} WHERE user_id = %d ORDER BY created_at ASC",
-        $user_id
-    ),
-    ARRAY_A
-);
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['mt5_form_action'])) {
     if (!isset($_POST['rich_mt5_nonce']) || !wp_verify_nonce($_POST['rich_mt5_nonce'], 'rich_mt5_manage')) {
         $mt5_flash = ['type' => 'error', 'message' => 'Security check failed.'];
@@ -707,14 +747,17 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
             <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Edit Profile</span></div>
                 <div class="settings-card-body">
-                    <div class="settings-row">
+                    <form method="post" id="profileSaveForm">
+                        <?php wp_nonce_field('save_profile', 'profile_nonce'); ?>
+                        <input type="hidden" name="profile_form_action" value="save_profile">
+                        <div class="settings-row">
                         <div class="settings-field">
                             <label class="settings-label">Display Name</label>
-                            <input type="text" class="settings-input" id="displayName" value="<?= htmlspecialchars($user_name) ?>" placeholder="Your name">
+                            <input type="text" class="settings-input" id="displayName" value="<?= htmlspecialchars($profile_display_name) ?>" placeholder="Your name">
                         </div>
                         <div class="settings-field">
                             <label class="settings-label">Trading Handle</label>
-                            <input type="text" class="settings-input" id="tradingHandle" value="@<?= strtolower(str_replace(' ','',htmlspecialchars($user_name))) ?>" placeholder="@handle">
+                            <input type="text" class="settings-input" id="tradingHandle" value="<?= htmlspecialchars($profile_handle) ?>" placeholder="@handle">
                         </div>
                     </div>
                     <div class="settings-field">
