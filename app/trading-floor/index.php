@@ -178,7 +178,11 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         .profile-archive-mode .profile-hero,
         .profile-archive-mode .profile-profile-actions,
         .profile-archive-mode .profile-highlights,
-        .profile-archive-mode .profile-tabs {
+        .profile-archive-mode .profile-tabs,
+        .dashboard-container.profile-mode #floor-profile-panel.profile-archive-mode .profile-hero,
+        .dashboard-container.profile-mode #floor-profile-panel.profile-archive-mode .profile-profile-actions,
+        .dashboard-container.profile-mode #floor-profile-panel.profile-archive-mode .profile-highlights,
+        .dashboard-container.profile-mode #floor-profile-panel.profile-archive-mode .profile-tabs {
             display:none !important;
         }
         .profile-trades-panel { display:grid; gap:18px; }
