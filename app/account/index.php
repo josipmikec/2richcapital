@@ -669,7 +669,6 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
     <main class="main-content">
         <div class="account-tab-nav">
             <button class="account-tab active" data-section="profile" onclick="switchSection('profile')">Profile</button>
-            <button class="account-tab" data-section="stats" onclick="switchSection('stats')">Trading Stats</button>
             <button class="account-tab" data-section="preferences" onclick="switchSection('preferences')">Preferences</button>
             <button class="account-tab" data-section="notifications" onclick="switchSection('notifications')">Notifications</button>
             <button class="account-tab" data-section="security" onclick="switchSection('security')">Security</button>
@@ -761,83 +760,6 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <div class="settings-input-hint">Email is managed through your WordPress account.</div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="account-section" id="section-stats">
-            <div class="page-header">
-                <div class="page-header-left">
-                    <h2>Trading Stats</h2>
-                    <p>Performance overview from your journal</p>
-                </div>
-                <button class="page-header-action" onclick="window.location.href='/journal'">Open Journal</button>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-card-label">Total Trades</div>
-                    <div class="stat-card-value gold"><?= $total_trades ?></div>
-                    <div class="stat-card-sub"><?= $wins ?> wins · <?= $losses ?> losses</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-label">Win Rate</div>
-                    <div class="stat-card-value <?= $win_rate >= 50 ? 'positive' : 'negative' ?>"><?= $win_rate ?>%</div>
-                    <div class="stat-card-sub"><?= $win_rate >= 55 ? 'Above average' : ($win_rate >= 45 ? 'Average' : 'Below average') ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-label">Average P&L</div>
-                    <div class="stat-card-value <?= $avg_pnl >= 0 ? 'positive' : 'negative' ?>">
-                        <?= $total_trades > 0 ? ($avg_pnl >= 0 ? '+' : '') . number_format($avg_pnl, 2) . '%' : '—' ?>
-                    </div>
-                    <div class="stat-card-sub">Per closed trade</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-label">Best Trade</div>
-                    <div class="stat-card-value positive">
-                        <?= $best_trade > 0 ? '+' . number_format($best_trade, 2) . '%' : '—' ?>
-                    </div>
-                    <div class="stat-card-sub">All time high</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-label">Wins</div>
-                    <div class="stat-card-value positive"><?= $wins ?></div>
-                    <div class="stat-card-sub">Profitable trades</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-label">Losses</div>
-                    <div class="stat-card-value negative"><?= $losses ?></div>
-                    <div class="stat-card-sub">Losing trades</div>
-                </div>
-            </div>
-
-            <div class="section-card">
-                <div class="section-card-header">
-                    <span class="section-card-title">Recent Activity</span>
-                    <button class="section-card-link" onclick="window.location.href='/journal'">View All →</button>
-                </div>
-                <?php if (empty($recent_trades)): ?>
-                <div style="padding:40px;text-align:center;color:#444;font-size:12px;font-weight:600;">
-                    No trades logged yet. <a href="/journal" style="color:#F2CA50;text-decoration:none;">Add your first trade →</a>
-                </div>
-                <?php else: ?>
-                <?php foreach ($recent_trades as $t):
-                    $pnl = $t->profit_loss_pct !== null ? (float)$t->profit_loss_pct : null;
-                    $outcome = strtolower($t->outcome ?? '');
-                    $dir = strtolower($t->direction ?? '');
-                ?>
-                <div class="activity-row">
-                    <span class="activity-symbol"><?= htmlspecialchars($t->symbol) ?></span>
-                    <span class="activity-dir <?= $dir ?>"><?= strtoupper($dir) ?></span>
-                    <span class="activity-outcome <?= $outcome === 'win' ? 'win' : ($outcome === 'loss' ? 'loss' : 'be') ?>">
-                        <?= strtoupper($t->outcome ?? 'BE') ?>
-                    </span>
-                    <span class="activity-pnl <?= $pnl !== null && $pnl >= 0 ? 'pos' : 'neg' ?>">
-                        <?= $pnl !== null ? ($pnl >= 0 ? '+' : '') . number_format($pnl, 2) . '%' : '—' ?>
-                    </span>
-                    <span class="activity-date"><?= date('d M Y', strtotime($t->entry_date)) ?></span>
-                </div>
-                <?php endforeach; ?>
-                <?php endif; ?>
             </div>
         </div>
 
@@ -1279,7 +1201,7 @@ function openSectionFromHash() {
     const hash = window.location.hash.replace('#', '').toLowerCase();
     if (!hash) return;
 
-    const validSections = ['profile', 'stats', 'preferences', 'notifications', 'security', 'mt5'];
+    const validSections = ['profile', 'preferences', 'notifications', 'security', 'mt5'];
     if (validSections.includes(hash)) {
         switchSection(hash);
     }
