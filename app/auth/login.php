@@ -7,7 +7,15 @@ require_once 'session-config.php';
 
 // Load WordPress
 define('WP_USE_THEMES', false);
-require_once('../../wp-load.php');
+$wp_load = dirname(__DIR__, 2) . '/wp-load.php';
+if (!file_exists($wp_load)) {
+    ob_end_clean();
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Server bootstrap missing']);
+    exit;
+}
+require_once $wp_load;
 
 // Clear any accidental output
 ob_end_clean();

@@ -4,13 +4,12 @@
 
 if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
-	    'lifetime' => 0,
-	    'path'     => '/',
-	    'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-	    'httponly' => true,
-	    'samesite' => 'Lax',
-	]);
-
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
 
     ini_set('session.use_strict_mode', 1);
     ini_set('session.gc_maxlifetime', 3600);  // 1 hour
@@ -18,7 +17,9 @@ if (session_status() === PHP_SESSION_NONE) {
     // Custom session name to avoid conflicts
     session_name('TWORICH_SESSION');
 
-    session_start();
+    if (!headers_sent()) {
+        session_start();
+    }
 }
 
 // Generate CSRF token once per session
