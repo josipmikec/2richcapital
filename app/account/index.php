@@ -52,20 +52,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['profile_form_action'
             'trading_style' => $trading_style,
             'updated_at' => current_time('mysql')
         ];
+        $save_ok = false;
+        $save_mode = $existing_profile_id ? 'update' : 'insert';
         if ($existing_profile_id) {
-            $wpdb->update($profile_table, $profile_data, ['id' => (int)$existing_profile_id]);
+            $save_ok = ($wpdb->update($profile_table, $profile_data, ['id' => (int)$existing_profile_id]) !== false);
         } else {
             $profile_data['created_at'] = current_time('mysql');
-            $wpdb->insert($profile_table, $profile_data);
+            $save_ok = ($wpdb->insert($profile_table, $profile_data) !== false);
         }
 
-        $_SESSION['user_name'] = $display_name;
-        $profile_display_name = $display_name;
-        $profile_handle = $trading_handle;
-        $profile_bio = $bio;
-        $profile_primary_market = $primary_market;
-        $profile_trading_style = $trading_style;
-        $mt5_flash = ['type' => 'success', 'message' => 'Profile saved.'];
+        if (!$save_ok) {
+            $mt5_flash = [
+                'type' => 'error',
+                'message' => 'Profile save failed. Debug: table=' . $profile_table . '; user_id=' . (int)$user_id . '; mode=' . $save_mode . '; db_error=' . ($wpdb->last_error ?: 'none')
+            ];
+        } else {
+            $_SESSION['user_name'] = $display_name;
+            $profile_display_name = $display_name;
+            $profile_handle = $trading_handle;
+            $profile_bio = $bio;
+            $profile_primary_market = $primary_market;
+            $profile_trading_style = $trading_style;
+            $mt5_flash = ['type' => 'success', 'message' => 'Profile saved. Debug: table=' . $profile_table . '; user_id=' . (int)$user_id . '; mode=' . $save_mode];
+        }
     }
 }
 
