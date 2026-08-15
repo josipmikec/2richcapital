@@ -13,6 +13,7 @@ $user_id    = $_SESSION['user_id']    ?? 0;
 define('WP_USE_THEMES', false);
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
+$conn_table = $wpdb->prefix . 'rich_mt5_connections';
 
 // ─────────────────────────────────────────────
 // Profile persistence logic
