@@ -30,7 +30,15 @@ if ($method === 'GET') {
         exit;
     }
     $staff = $wpdb->get_results($wpdb->prepare(
-        "SELECT m.id, m.user_id, m.role, m.status, m.access_type, m.approved_at, u.display_name, u.user_email
+        "SELECT m.id, m.user_id, m.role, m.status, m.access_type, m.approved_at,
+                COALESCE(
+                    (SELECT rp.display_name FROM {$wpdb->prefix}rich_user_profiles rp WHERE rp.user_id = m.user_id LIMIT 1),
+                    NULLIF(u.display_name, ''),
+                    NULLIF(u.user_nicename, ''),
+                    NULLIF(u.user_login, ''),
+                    CONCAT('User #', m.user_id)
+                ) AS display_name,
+                u.user_email
          FROM {$memberships_table} m
          LEFT JOIN {$users_table} u ON u.ID = m.user_id
          WHERE m.group_id = %d
