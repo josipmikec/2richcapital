@@ -19,6 +19,21 @@ $user_id = (int) $_SESSION['user_id'];
 $messages_table = $wpdb->prefix . 'rich_signal_group_messages';
 $memberships_table = $wpdb->prefix . 'rich_signal_memberships';
 $groups_table = $wpdb->prefix . 'rich_signal_groups';
+$profile_table = $wpdb->prefix . 'rich_user_profiles';
+
+function rich_group_messages_resolve_display_name($wpdb, $profile_table, $fallback_name, $user_id) {
+    $profile_name = $wpdb->get_var($wpdb->prepare(
+        "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+        (int) $user_id
+    ));
+    if (is_string($profile_name) && trim($profile_name) !== '') {
+        return $profile_name;
+    }
+    if (is_string($fallback_name) && trim($fallback_name) !== '') {
+        return $fallback_name;
+    }
+    return 'User #' . (int) $user_id;
+}
 
 $ensure_table = "CREATE TABLE IF NOT EXISTS {$messages_table} (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -69,6 +84,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     ), ARRAY_A);
 
     $messages = array_reverse($messages ?: []);
+    $messages = array_map(static function ($item) use ($wpdb, $profile_table) {
+        $item['author_name'] = rich_group_messages_resolve_display_name(
+            $wpdb,
+            $profile_table,
+            $item['author_name'] ?? '',
+            $item['user_id'] ?? 0
+        );
+        return $item;
+    }, $messages);
     echo json_encode(['success' => true, 'messages' => $messages]);
     exit;
 }
@@ -130,6 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $message_id = (int) $wpdb->insert_id;
     $author = wp_get_current_user();
+    $author_fallback_name = $author && $author->exists() ? ($author->display_name ?: $author->user_login) : ('User #' . $user_id);
 
     echo json_encode([
         'success' => true,
@@ -138,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'id' => $message_id,
             'group_id' => $group_id,
             'user_id' => $user_id,
-            'author_name' => $author && $author->exists() ? ($author->display_name ?: $author->user_login) : ('User #' . $user_id),
+            'author_name' => rich_group_messages_resolve_display_name($wpdb, $profile_table, $author_fallback_name, $user_id),
             'message' => $message,
             'created_at' => current_time('mysql'),
         ]

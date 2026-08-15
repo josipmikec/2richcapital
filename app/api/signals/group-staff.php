@@ -20,6 +20,21 @@ $memberships_table = $wpdb->prefix . 'rich_signal_memberships';
 $users_table = $wpdb->users;
 $groups_table = $wpdb->prefix . 'rich_signal_groups';
 $audit_table = $wpdb->prefix . 'rich_signal_group_audit_log';
+$profile_table = $wpdb->prefix . 'rich_user_profiles';
+
+function rich_resolve_profile_display_name($wpdb, $profile_table, $fallback_name, $user_id) {
+    $profile_name = $wpdb->get_var($wpdb->prepare(
+        "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+        (int) $user_id
+    ));
+    if (is_string($profile_name) && trim($profile_name) !== '') {
+        return $profile_name;
+    }
+    if (is_string($fallback_name) && trim($fallback_name) !== '') {
+        return $fallback_name;
+    }
+    return 'User #' . (int) $user_id;
+}
 
 if ($method === 'GET') {
     $group_id = (int) ($_GET['group_id'] ?? 0);
@@ -37,6 +52,15 @@ if ($method === 'GET') {
          ORDER BY FIELD(m.role, 'owner','admin','analyst','member'), m.id ASC",
         $group_id
     ), ARRAY_A);
+    $staff = array_map(static function ($member) use ($wpdb, $profile_table) {
+        $member['display_name'] = rich_resolve_profile_display_name(
+            $wpdb,
+            $profile_table,
+            $member['display_name'] ?? '',
+            $member['user_id'] ?? 0
+        );
+        return $member;
+    }, $staff ?: []);
     echo json_encode(['success' => true, 'staff' => $staff ?: []]);
     exit;
 }
