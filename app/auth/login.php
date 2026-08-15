@@ -57,6 +57,15 @@ try {
         exit;
     }
     
+    // Resolve preferred display name from app profile first, then fall back to WordPress user fields
+    global $wpdb;
+    $profiles_table = $wpdb->prefix . 'rich_user_profiles';
+    $profile_display_name = $wpdb->get_var($wpdb->prepare(
+        "SELECT display_name FROM {$profiles_table} WHERE user_id = %d LIMIT 1",
+        $user->ID
+    ));
+    $resolved_display_name = $profile_display_name ?: ($user->display_name ?: $user->user_login);
+
     // Clear any existing session data first
     $_SESSION = array();
     
@@ -66,7 +75,7 @@ try {
     // Set new session data
     $_SESSION['user_id'] = $user->ID;
     $_SESSION['user_email'] = $user->user_email;
-    $_SESSION['user_name'] = $user->display_name ?: $user->user_login;
+    $_SESSION['user_name'] = $resolved_display_name;
     $_SESSION['user_login'] = $user->user_login;
     $_SESSION['login_time'] = time();
     $_SESSION['authenticated'] = true;
