@@ -821,8 +821,8 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Trade Defaults</span></div>
                 <div class="settings-card-body">
-                    <?php if (!empty($profile_flash['message'])): ?>
-                    <div class="settings-input-hint" style="margin-bottom:12px;color:<?= $profile_flash['type']==='success' ? '#4ade80' : '#f87171' ?>;"><?= htmlspecialchars($profile_flash['message']) ?></div>
+                    <?php if (!empty($mt5_flash['message'])): ?>
+                    <div class="settings-input-hint" style="margin-bottom:12px;color:<?= $mt5_flash['type']==='success' ? '#4ade80' : '#f87171' ?>;"><?= htmlspecialchars($mt5_flash['message']) ?></div>
                     <?php endif; ?>
                     <div class="settings-row">
                         <div class="settings-field">
