@@ -85,12 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $messages = array_reverse($messages ?: []);
     $messages = array_map(static function ($item) use ($wpdb, $profile_table) {
-        $item['author_name'] = rich_group_messages_resolve_display_name(
-            $wpdb,
-            $profile_table,
-            $item['author_name'] ?? '',
-            $item['user_id'] ?? 0
-        );
+        $profile_name = $wpdb->get_var($wpdb->prepare(
+            "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+            (int) $item['user_id']
+        ));
+        $item['_debug'] = [
+            'wp_author_name' => $item['author_name'] ?? '',
+            'profile_display_name' => is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : null,
+            'final_author_name' => is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : ($item['author_name'] ?? ('User #' . (int) $item['user_id']))
+        ];
+        $item['author_name'] = $item['_debug']['final_author_name'];
         return $item;
     }, $messages);
     echo json_encode(['success' => true, 'messages' => $messages]);
@@ -155,6 +159,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $message_id = (int) $wpdb->insert_id;
     $author = wp_get_current_user();
     $author_fallback_name = $author && $author->exists() ? ($author->display_name ?: $author->user_login) : ('User #' . $user_id);
+    $profile_name = $wpdb->get_var($wpdb->prepare(
+        "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+        $user_id
+    ));
+    $final_author_name = is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : $author_fallback_name;
 
     echo json_encode([
         'success' => true,
@@ -163,7 +172,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'id' => $message_id,
             'group_id' => $group_id,
             'user_id' => $user_id,
-            'author_name' => rich_group_messages_resolve_display_name($wpdb, $profile_table, $author_fallback_name, $user_id),
+            'author_name' => $final_author_name,
+            '_debug' => [
+                'wp_author_name' => $author_fallback_name,
+                'profile_display_name' => is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : null,
+                'final_author_name' => $final_author_name
+            ],
             'message' => $message,
             'created_at' => current_time('mysql'),
         ]

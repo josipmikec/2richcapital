@@ -53,12 +53,16 @@ if ($method === 'GET') {
         $group_id
     ), ARRAY_A);
     $staff = array_map(static function ($member) use ($wpdb, $profile_table) {
-        $member['display_name'] = rich_resolve_profile_display_name(
-            $wpdb,
-            $profile_table,
-            $member['display_name'] ?? '',
-            $member['user_id'] ?? 0
-        );
+        $profile_name = $wpdb->get_var($wpdb->prepare(
+            "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+            (int) $member['user_id']
+        ));
+        $member['_debug'] = [
+            'wp_display_name' => $member['display_name'] ?? '',
+            'profile_display_name' => is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : null,
+            'final_display_name' => is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : ($member['display_name'] ?? ('User #' . (int) $member['user_id']))
+        ];
+        $member['display_name'] = $member['_debug']['final_display_name'];
         return $member;
     }, $staff ?: []);
     echo json_encode(['success' => true, 'staff' => $staff ?: []]);
