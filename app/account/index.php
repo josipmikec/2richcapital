@@ -808,15 +808,12 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 </div>
             </div>
 
-            <div class="settings-card">
+                <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Trade Defaults</span></div>
                 <div class="settings-card-body">
                     <?php if (!empty($profile_flash['message'])): ?>
-                    <div class="settings-input-hint" style="margin-bottom:12px;color:<?= $profile_flash['type']==='success' ? '#4ade80' : '#f87171' ?>;">\<?= htmlspecialchars($profile_flash['message']) ?></div>
+                    <div class="settings-input-hint" style="margin-bottom:12px;color:<?= $profile_flash['type']==='success' ? '#4ade80' : '#f87171' ?>;"><?= htmlspecialchars($profile_flash['message']) ?></div>
                     <?php endif; ?>
-                    <form method="post" id="profileSaveForm">
-                        <?php wp_nonce_field('save_profile', 'profile_nonce'); ?>
-                        <input type="hidden" name="profile_form_action" value="save_profile">
                     <div class="settings-row">
                         <div class="settings-field">
                             <label class="settings-label">Default Stop Distance (%)</label>
