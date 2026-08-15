@@ -57,13 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    $profiles_table = $wpdb->prefix . 'rich_user_profiles';
     $messages = $wpdb->get_results($wpdb->prepare(
         "SELECT m.id, m.group_id, m.user_id, m.message, m.created_at,
-                COALESCE(NULLIF(p.display_name, ''), NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', m.user_id)) AS author_name
+                COALESCE(NULLIF((SELECT rp.display_name FROM {$wpdb->prefix}rich_user_profiles rp WHERE rp.user_id = m.user_id LIMIT 1), ''), NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', m.user_id)) AS author_name
          FROM {$messages_table} m
          LEFT JOIN {$wpdb->users} u ON u.ID = m.user_id
-         LEFT JOIN {$profiles_table} p ON p.user_id = m.user_id
          WHERE m.group_id = %d AND m.is_deleted = 0
          ORDER BY m.created_at DESC, m.id DESC
          LIMIT 50",
