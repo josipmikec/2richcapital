@@ -753,40 +753,40 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <div class="settings-row">
                         <div class="settings-field">
                             <label class="settings-label">Display Name</label>
-                            <input type="text" class="settings-input" id="displayName" value="<?= htmlspecialchars($profile_display_name) ?>" placeholder="Your name">
+                            <input type="text" class="settings-input" id="displayName" name="display_name" value="<?= htmlspecialchars($profile_display_name) ?>" placeholder="Your name">
                         </div>
                         <div class="settings-field">
                             <label class="settings-label">Trading Handle</label>
-                            <input type="text" class="settings-input" id="tradingHandle" value="<?= htmlspecialchars($profile_handle) ?>" placeholder="@handle">
+                            <input type="text" class="settings-input" id="tradingHandle" name="trading_handle" value="<?= htmlspecialchars($profile_handle) ?>" placeholder="@handle">
                         </div>
                     </div>
                     <div class="settings-field">
                         <label class="settings-label">Bio</label>
-                        <input type="text" class="settings-input" id="userBio" placeholder="e.g. Forex trader · SMC · NY Session specialist" maxlength="120" oninput="document.getElementById('bioPreview').textContent=this.value||'Trader. No bio yet — add one below.'">
+                        <input type="text" class="settings-input" id="userBio" name="bio" value="<?= htmlspecialchars($profile_bio) ?>" placeholder="e.g. Forex trader · SMC · NY Session specialist" maxlength="120" oninput="document.getElementById('bioPreview').textContent=this.value||'Trader. No bio yet — add one below.'">
                         <div class="settings-input-hint">Max 120 characters. Shows on your Trading Floor profile.</div>
                     </div>
                     <div class="settings-row">
                         <div class="settings-field">
                             <label class="settings-label">Primary Market</label>
-                            <select class="settings-input" id="primaryMarket">
+                            <select class="settings-input" id="primaryMarket" name="primary_market">
                                 <option value="">Select market...</option>
-                                <option>Forex</option>
-                                <option>Crypto</option>
-                                <option>Indices</option>
-                                <option>Commodities</option>
-                                <option>Futures</option>
-                                <option>Stocks</option>
+                                <option <?= $profile_primary_market==='Forex' ? 'selected' : '' ?>>Forex</option>
+                                <option <?= $profile_primary_market==='Crypto' ? 'selected' : '' ?>>Crypto</option>
+                                <option <?= $profile_primary_market==='Indices' ? 'selected' : '' ?>>Indices</option>
+                                <option <?= $profile_primary_market==='Commodities' ? 'selected' : '' ?>>Commodities</option>
+                                <option <?= $profile_primary_market==='Futures' ? 'selected' : '' ?>>Futures</option>
+                                <option <?= $profile_primary_market==='Stocks' ? 'selected' : '' ?>>Stocks</option>
                             </select>
                         </div>
                         <div class="settings-field">
                             <label class="settings-label">Trading Style</label>
-                            <select class="settings-input" id="tradingStyle">
+                            <select class="settings-input" id="tradingStyle" name="trading_style">
                                 <option value="">Select style...</option>
-                                <option>Scalper</option>
-                                <option>Day Trader</option>
-                                <option>Swing Trader</option>
-                                <option>Position Trader</option>
-                                <option>Algorithmic</option>
+                                <option <?= $profile_trading_style==='Scalper' ? 'selected' : '' ?>>Scalper</option>
+                                <option <?= $profile_trading_style==='Day Trader' ? 'selected' : '' ?>>Day Trader</option>
+                                <option <?= $profile_trading_style==='Swing Trader' ? 'selected' : '' ?>>Swing Trader</option>
+                                <option <?= $profile_trading_style==='Position Trader' ? 'selected' : '' ?>>Position Trader</option>
+                                <option <?= $profile_trading_style==='Algorithmic' ? 'selected' : '' ?>>Algorithmic</option>
                             </select>
                         </div>
                     </div>
@@ -796,6 +796,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <div class="settings-input-hint">Email is managed through your WordPress account.</div>
                     </div>
                 </div>
+                    </form>
             </div>
         </div>
 
@@ -810,6 +811,12 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
             <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Trade Defaults</span></div>
                 <div class="settings-card-body">
+                    <?php if (!empty($profile_flash['message'])): ?>
+                    <div class="settings-input-hint" style="margin-bottom:12px;color:<?= $profile_flash['type']==='success' ? '#4ade80' : '#f87171' ?>;">\<?= htmlspecialchars($profile_flash['message']) ?></div>
+                    <?php endif; ?>
+                    <form method="post" id="profileSaveForm">
+                        <?php wp_nonce_field('save_profile', 'profile_nonce'); ?>
+                        <input type="hidden" name="profile_form_action" value="save_profile">
                     <div class="settings-row">
                         <div class="settings-field">
                             <label class="settings-label">Default Stop Distance (%)</label>
@@ -1281,17 +1288,10 @@ function savePreferences() {
 }
 
 function saveProfile() {
-    const btn = document.querySelector('.page-header-action');
-    const orig = btn.textContent;
-    btn.textContent = 'Saved';
-    btn.style.background = 'rgba(74,222,128,0.15)';
-    btn.style.color = '#4ade80';
-    setTimeout(() => {
-        btn.textContent = orig;
-        btn.style.background = '';
-        btn.style.color = '';
-    }, 2000);
+    const form = document.getElementById('profileSaveForm');
+    if (form) form.submit();
 }
+
 
 function checkPasswordStrength(val) {
     const wrap = document.getElementById('passStrength');
