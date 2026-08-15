@@ -749,7 +749,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 </div>
                 <div class="page-header-actions">
                     <button class="page-header-action page-header-action--ghost" onclick="window.location.href='/trading-floor#profile'">View Profile</button>
-                    <button class="page-header-action" onclick="saveProfile()">Save Changes</button>
+                    <button class="page-header-action" type="submit" form="profileSaveForm">Save Changes</button>
                 </div>
             </div>
 
