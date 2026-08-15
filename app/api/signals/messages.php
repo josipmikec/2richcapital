@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $messages = $wpdb->get_results($wpdb->prepare(
         "SELECT m.id, m.group_id, m.user_id, m.message, m.created_at,
-                COALESCE(NULLIF((SELECT rp.display_name FROM {$wpdb->prefix}rich_user_profiles rp WHERE rp.user_id = m.user_id LIMIT 1), ''), NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', m.user_id)) AS author_name
+                COALESCE(NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', m.user_id)) AS author_name
          FROM {$messages_table} m
          LEFT JOIN {$wpdb->users} u ON u.ID = m.user_id
          WHERE m.group_id = %d AND m.is_deleted = 0
@@ -129,15 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $message_id = (int) $wpdb->insert_id;
-    $profiles_table = $wpdb->prefix . 'rich_user_profiles';
-    $profile_display_name = $wpdb->get_var($wpdb->prepare(
-        "SELECT display_name FROM {$profiles_table} WHERE user_id = %d LIMIT 1",
-        $user_id
-    ));
-    if (empty($profile_display_name)) {
-        $author = wp_get_current_user();
-        $profile_display_name = $author && $author->exists() ? ($author->display_name ?: $author->user_login) : ('User #' . $user_id);
-    }
+    $author = wp_get_current_user();
 
     echo json_encode([
         'success' => true,
@@ -146,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'id' => $message_id,
             'group_id' => $group_id,
             'user_id' => $user_id,
-            'author_name' => $profile_display_name,
+            'author_name' => $author && $author->exists() ? ($author->display_name ?: $author->user_login) : ('User #' . $user_id),
             'message' => $message,
             'created_at' => current_time('mysql'),
         ]
