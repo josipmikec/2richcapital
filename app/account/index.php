@@ -28,7 +28,7 @@ $profile_trading_style = $profile_row['trading_style'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['profile_form_action']) && $_POST['profile_form_action'] === 'save_profile') {
     if (!isset($_POST['profile_nonce']) || !wp_verify_nonce($_POST['profile_nonce'], 'save_profile')) {
-        $mt5_flash = ['type' => 'error', 'message' => 'Security check failed.'];
+        $profile_flash = ['type' => 'error', 'message' => 'Security check failed.'];
     } else {
         $display_name = sanitize_text_field($_POST['display_name'] ?? $user_name);
         $trading_handle = sanitize_text_field($_POST['trading_handle'] ?? '');
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['profile_form_action'
             if ($wpdb->last_error) {
                 error_log('Profile save failed for user ' . (int)$user_id . ' (' . $save_mode . '): ' . $wpdb->last_error);
             }
-            $mt5_flash = ['type' => 'error', 'message' => 'Profile save failed. Please try again.'];
+            $profile_flash = ['type' => 'error', 'message' => 'Profile save failed. Please try again.'];
         } else {
             $_SESSION['user_name'] = $display_name;
             $profile_display_name = $display_name;
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['profile_form_action'
             $profile_bio = $bio;
             $profile_primary_market = $primary_market;
             $profile_trading_style = $trading_style;
-            $mt5_flash = ['type' => 'success', 'message' => 'Profile saved.'];
+            $profile_flash = ['type' => 'success', 'message' => 'Profile saved.'];
         }
     }
 }
@@ -757,6 +757,9 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
             <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Edit Profile</span></div>
                 <div class="settings-card-body">
+                    <?php if (!empty($profile_flash['message'])): ?>
+                    <div class="settings-input-hint" style="margin-bottom:12px;color:<?= $profile_flash['type']==='success' ? '#4ade80' : '#f87171' ?>;"><?= htmlspecialchars($profile_flash['message']) ?></div>
+                    <?php endif; ?>
                     <form method="post" id="profileSaveForm">
                         <?php wp_nonce_field('save_profile', 'profile_nonce'); ?>
                         <input type="hidden" name="profile_form_action" value="save_profile">
@@ -821,9 +824,6 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Trade Defaults</span></div>
                 <div class="settings-card-body">
-                    <?php if (!empty($mt5_flash['message'])): ?>
-                    <div class="settings-input-hint" style="margin-bottom:12px;color:<?= $mt5_flash['type']==='success' ? '#4ade80' : '#f87171' ?>;"><?= htmlspecialchars($mt5_flash['message']) ?></div>
-                    <?php endif; ?>
                     <div class="settings-row">
                         <div class="settings-field">
                             <label class="settings-label">Default Stop Distance (%)</label>
