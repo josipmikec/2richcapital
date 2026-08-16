@@ -59,12 +59,44 @@ if (!function_exists('rich_feature_table')) {
     }
 }
 
+if (!function_exists('rich_feature_table_candidates')) {
+    function rich_feature_table_candidates($wpdb) {
+        $primary = rich_feature_table($wpdb);
+        $candidates = [$primary];
+
+        $fallbacks = [
+            'wp_rich_feature_flags',
+            'rich_feature_flags',
+        ];
+
+        foreach ($fallbacks as $table_name) {
+            if (!in_array($table_name, $candidates, true)) {
+                $candidates[] = $table_name;
+            }
+        }
+
+        return $candidates;
+    }
+}
+
+if (!function_exists('rich_find_feature_table')) {
+    function rich_find_feature_table($wpdb) {
+        foreach (rich_feature_table_candidates($wpdb) as $table_name) {
+            $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name));
+            if ($exists === $table_name) {
+                return $table_name;
+            }
+        }
+        return rich_feature_table($wpdb);
+    }
+}
+
 if (!function_exists('rich_get_feature_row')) {
     function rich_get_feature_row($key) {
         rich_feature_require_wp();
         global $wpdb;
         if (!$wpdb) return null;
-        $table = rich_feature_table($wpdb);
+        $table = rich_find_feature_table($wpdb);
         return $wpdb->get_row($wpdb->prepare(
             "SELECT flag_key, label, is_enabled, allowed_roles FROM {$table} WHERE flag_key = %s LIMIT 1",
             rich_normalize_feature_key($key)
@@ -173,6 +205,7 @@ if (!function_exists('rich_feature_bootstrap')) {
         ) {$charset};";
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
+        $table = rich_find_feature_table($wpdb);
         $defaults = [
             ['dashboard', 'Dashboard', 'Main member dashboard'],
             ['trading-floor', 'Trading Floor', 'Public trading profile and groups'],
