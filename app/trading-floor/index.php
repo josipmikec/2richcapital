@@ -1220,6 +1220,11 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         'db_host' => defined('DB_HOST') ? DB_HOST : null,
                         'table_count' => isset($wpdb) ? $wpdb->get_var("SELECT COUNT(*) FROM " . rich_find_feature_table($wpdb)) : null,
                     ],
+                    'sql_debug' => isset($wpdb) ? [
+                        'single_row_sql' => $wpdb->prepare("SELECT flag_key, label, is_enabled, allowed_roles FROM " . rich_find_feature_table($wpdb) . " WHERE flag_key = %s LIMIT 1", 'trading-floor'),
+                        'single_row' => $wpdb->get_row($wpdb->prepare("SELECT flag_key, label, is_enabled, allowed_roles FROM " . rich_find_feature_table($wpdb) . " WHERE flag_key = %s LIMIT 1", 'trading-floor'), ARRAY_A),
+                        'last_error' => $wpdb->last_error,
+                    ] : null,
                 ], JSON_PRETTY_PRINT)); ?>
             </div>
             <?php endif; ?>
