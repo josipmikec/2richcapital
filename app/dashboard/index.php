@@ -2,8 +2,11 @@
 require_once '../auth/session-config.php';
 require_once '../auth/db.php'; // provides $pdo
 
-define('WP_USE_THEMES', false);
+if (!defined('WP_USE_THEMES')) {
+    define('WP_USE_THEMES', false);
+}
 require_once dirname(__DIR__, 2) . '/wp-load.php';
+require_once '../auth/feature-flags.php';
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     header('Location: https://app.2rich.capital/login/');

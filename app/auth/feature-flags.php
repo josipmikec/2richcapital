@@ -18,6 +18,41 @@ if (!function_exists('rich_feature_require_wp')) {
     }
 }
 
+if (!function_exists('rich_normalize_feature_key')) {
+    function rich_normalize_feature_key($key) {
+        $key = strtolower(trim((string)$key));
+        $key = preg_replace('/[^a-z0-9\-_]+/', '-', $key);
+        return trim((string)$key, '-_');
+    }
+}
+
+if (!function_exists('rich_feature_roles')) {
+    function rich_feature_roles() {
+        rich_feature_require_wp();
+        $roles = [];
+        if (function_exists('wp_roles')) {
+            $wp_roles = wp_roles();
+            if ($wp_roles && !empty($wp_roles->roles)) {
+                foreach ($wp_roles->roles as $role_key => $role_data) {
+                    $roles[$role_key] = $role_data['name'] ?? $role_key;
+                }
+            }
+        }
+        return $roles;
+    }
+}
+
+if (!function_exists('rich_user_role_keys')) {
+    function rich_user_role_keys($user_id = 0) {
+        rich_feature_require_wp();
+        $user_id = (int)($user_id ?: ($_SESSION['user_id'] ?? 0));
+        if ($user_id <= 0) return [];
+        $user = get_userdata($user_id);
+        if (!$user || empty($user->roles) || !is_array($user->roles)) return [];
+        return array_values(array_map('sanitize_key', $user->roles));
+    }
+}
+
 if (!function_exists('rich_feature_table')) {
     function rich_feature_table($wpdb) {
         return $wpdb->prefix . 'rich_feature_flags';
@@ -41,11 +76,18 @@ if (!function_exists('rich_feature_enabled')) {
         global $wpdb;
         if (!$wpdb) return (bool)$default;
         $table = rich_feature_table($wpdb);
-        $value = $wpdb->get_var($wpdb->prepare(
-            "SELECT is_enabled FROM {$table} WHERE flag_key = %s LIMIT 1",
-            sanitize_key($key)
-        ));
-        return $value === null ? (bool)$default : (bool)((int)$value);
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT is_enabled, allowed_roles FROM {$table} WHERE flag_key = %s LIMIT 1",
+            rich_normalize_feature_key($key)
+        ), ARRAY_A);
+        if (!$row) return (bool)$default;
+        if ((int)($row['is_enabled'] ?? 0) !== 1) return false;
+        $allowed_roles = trim((string)($row['allowed_roles'] ?? ''));
+        if ($allowed_roles === '') return true;
+        $allowed = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $allowed_roles))));
+        if (!$allowed) return true;
+        $user_roles = rich_user_role_keys();
+        return count(array_intersect($allowed, $user_roles)) > 0;
     }
 }
 
@@ -71,6 +113,7 @@ if (!function_exists('rich_feature_bootstrap')) {
             label varchar(160) NOT NULL,
             description varchar(255) NOT NULL DEFAULT '',
             is_enabled tinyint(1) NOT NULL DEFAULT 1,
+            allowed_roles text NULL,
             updated_by bigint(20) unsigned NULL,
             updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id), UNIQUE KEY flag_key (flag_key)

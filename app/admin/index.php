@@ -18,20 +18,63 @@ rich_feature_bootstrap();
 global $wpdb;
 $table = rich_feature_table($wpdb);
 $flash = '';
+$roles = rich_feature_roles();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_POST['admin_nonce']) || !wp_verify_nonce($_POST['admin_nonce'], 'rich_admin_features')) {
         $flash = 'Security check failed.';
     } else {
-        $key = sanitize_key($_POST['flag_key'] ?? '');
-        $enabled = !empty($_POST['is_enabled']) ? 1 : 0;
-        if ($key !== '') {
-            $wpdb->update($table, ['is_enabled' => $enabled, 'updated_by' => (int)$_SESSION['user_id']], ['flag_key' => $key], ['%d','%d'], ['%s']);
-            $flash = $enabled ? 'Feature enabled.' : 'Feature disabled.';
+        $action = sanitize_key($_POST['feature_action'] ?? '');
+
+        if ($action === 'toggle') {
+            $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
+            $enabled = !empty($_POST['is_enabled']) ? 1 : 0;
+            if ($key !== '') {
+                $wpdb->update($table, ['is_enabled' => $enabled, 'updated_by' => (int)$_SESSION['user_id']], ['flag_key' => $key], ['%d','%d'], ['%s']);
+                $flash = $enabled ? 'Feature enabled.' : 'Feature disabled.';
+            }
+        }
+
+        if ($action === 'roles') {
+            $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
+            $selected_roles = isset($_POST['allowed_roles']) && is_array($_POST['allowed_roles']) ? array_values(array_intersect(array_map('sanitize_key', $_POST['allowed_roles']), array_keys($roles))) : [];
+            $wpdb->update($table, ['allowed_roles' => implode(',', $selected_roles), 'updated_by' => (int)$_SESSION['user_id']], ['flag_key' => $key], ['%s','%d'], ['%s']);
+            $flash = 'Role visibility updated.';
+        }
+
+        if ($action === 'create') {
+            $key = rich_normalize_feature_key($_POST['new_flag_key'] ?? '');
+            $label = trim((string)($_POST['new_label'] ?? ''));
+            $description = trim((string)($_POST['new_description'] ?? ''));
+            if ($key === '' || $label === '') {
+                $flash = 'Feature key and label are required.';
+            } else {
+                $created = $wpdb->insert($table, [
+                    'flag_key' => $key,
+                    'label' => $label,
+                    'description' => $description,
+                    'is_enabled' => 1,
+                    'allowed_roles' => '',
+                    'updated_by' => (int)$_SESSION['user_id'],
+                ], ['%s','%s','%s','%d','%s','%d']);
+                $flash = $created ? 'Feature added.' : 'Feature key already exists or could not be created.';
+            }
+        }
+
+        if ($action === 'delete') {
+            $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
+            if ($key !== '' && !in_array($key, ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups'], true)) {
+                $wpdb->delete($table, ['flag_key' => $key], ['%s']);
+                $flash = 'Feature removed.';
+            } else {
+                $flash = 'Core features cannot be removed.';
+            }
         }
     }
 }
+
 $flags = $wpdb->get_results("SELECT * FROM {$table} ORDER BY label ASC", ARRAY_A);
+$core_flags = ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups'];
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Control Panel · 2RICH</title><style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0e0e0e;color:#f1f1f1;font:15px/1.5 Inter,system-ui,sans-serif}.shell{max-width:1000px;margin:0 auto;padding:48px 24px}.eyebrow{color:#f2ca50;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:30px}.head h1{margin:8px 0 0;font-size:34px;letter-spacing:-.03em}.head p{margin:8px 0 0;color:#8b9098}.back{color:#c9d8ff;text-decoration:none}.flash{margin-bottom:18px;padding:12px 16px;border:1px solid rgba(242,202,80,.28);border-radius:10px;background:rgba(242,202,80,.09);color:#ffe082}.list{display:grid;gap:10px}.row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 20px;border:1px solid #242424;border-radius:14px;background:#151515}.label{font-weight:750}.description{margin-top:3px;color:#777d86;font-size:13px}.status{display:flex;align-items:center;gap:12px;color:#8b9098;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.switch{position:relative;width:48px;height:28px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;border-radius:999px;background:#303030;cursor:pointer;transition:.2s}.slider:before{content:'';position:absolute;width:20px;height:20px;left:4px;top:4px;border-radius:50%;background:#888;transition:.2s}.switch input:checked+.slider{background:#b18b24}.switch input:checked+.slider:before{transform:translateX(20px);background:#fff3b1}@media(max-width:600px){.head{align-items:start;flex-direction:column}.row{align-items:flex-start}.status{flex-direction:column-reverse;gap:6px}}
-</style></head><body><main class="shell"><div class="head"><div><div class="eyebrow">2RICH INTERNAL</div><h1>Admin Control Panel</h1><p>Manage pages and feature availability without a code deployment.</p></div><a class="back" href="/dashboard/">Back to dashboard</a></div><?php if ($flash): ?><div class="flash"><?php echo esc_html($flash); ?></div><?php endif; ?><div class="list"><?php foreach ($flags as $flag): ?><form class="row" method="post"><div><div class="label"><?php echo esc_html($flag['label']); ?></div><div class="description"><?php echo esc_html($flag['description']); ?></div></div><div class="status"><span><?php echo (int)$flag['is_enabled'] ? 'On' : 'Off'; ?></span><label class="switch"><input type="hidden" name="flag_key" value="<?php echo esc_attr($flag['flag_key']); ?>"><input type="hidden" name="admin_nonce" value="<?php echo esc_attr(wp_create_nonce('rich_admin_features')); ?>"><input type="checkbox" name="is_enabled" value="1" <?php checked((int)$flag['is_enabled'],1); ?> onchange="this.form.submit()"><span class="slider"></span></label></div></form><?php endforeach; ?></div></main></body></html>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0e0e0e;color:#f1f1f1;font:15px/1.5 Inter,system-ui,sans-serif}.shell{max-width:1100px;margin:0 auto;padding:48px 24px}.eyebrow{color:#f2ca50;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:30px}.head h1{margin:8px 0 0;font-size:34px;letter-spacing:-.03em}.head p{margin:8px 0 0;color:#8b9098}.back{color:#c9d8ff;text-decoration:none}.flash{margin-bottom:18px;padding:12px 16px;border:1px solid rgba(242,202,80,.28);border-radius:10px;background:rgba(242,202,80,.09);color:#ffe082}.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}.panel{border:1px solid #242424;border-radius:16px;background:#151515;padding:18px 18px 16px}.panel h2{margin:0 0 14px;font-size:18px}.list{display:grid;gap:12px}.row{padding:16px;border:1px solid #242424;border-radius:14px;background:#111}.row-top{display:flex;justify-content:space-between;gap:16px;align-items:start}.label{font-weight:750}.meta{margin-top:3px;color:#777d86;font-size:13px}.status{display:flex;align-items:center;gap:12px;color:#8b9098;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.switch{position:relative;width:48px;height:28px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;border-radius:999px;background:#303030;cursor:pointer;transition:.2s}.slider:before{content:'';position:absolute;width:20px;height:20px;left:4px;top:4px;border-radius:50%;background:#888;transition:.2s}.switch input:checked+.slider{background:#b18b24}.switch input:checked+.slider:before{transform:translateX(20px);background:#fff3b1}.roles{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.role-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #2c2c2c;border-radius:999px;background:#171717;color:#babec5;font-size:12px}.role-pill input{accent-color:#f2ca50}.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}.small-btn,.danger-btn,.save-btn{border:1px solid #2c2c2c;border-radius:10px;background:#191919;color:#f1f1f1;padding:9px 12px;cursor:pointer}.danger-btn{color:#ffb8b8;border-color:#4a2a2a;background:#1b1212}.save-btn{background:#b18b24;border-color:#b18b24;color:#111;font-weight:800}.field{display:grid;gap:8px;margin-bottom:12px}.field label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#8b9098;font-weight:800}.field input,.field textarea{width:100%;border:1px solid #2a2a2a;background:#101010;color:#f1f1f1;border-radius:10px;padding:12px 13px}.helper{color:#777d86;font-size:13px;margin-top:-2px;margin-bottom:12px}@media(max-width:900px){.grid{grid-template-columns:1fr}.head{align-items:start;flex-direction:column}}@media(max-width:600px){.row-top,.actions{flex-direction:column;align-items:start}}
+</style></head><body><main class="shell"><div class="head"><div><div class="eyebrow">2RICH INTERNAL</div><h1>Admin Control Panel</h1><p>Manage app features, create new flags, and limit visibility by role.</p></div><a class="back" href="/dashboard/">Back to dashboard</a></div><?php if ($flash): ?><div class="flash"><?php echo esc_html($flash); ?></div><?php endif; ?><div class="grid"><section class="panel"><h2>Feature toggles</h2><div class="list"><?php foreach ($flags as $flag): $selected_roles = array_filter(array_map('trim', explode(',', (string)($flag['allowed_roles'] ?? '')))); ?><div class="row"><div class="row-top"><div><div class="label"><?php echo esc_html($flag['label']); ?></div><div class="meta"><code><?php echo esc_html($flag['flag_key']); ?></code><?php if (!empty($flag['description'])): ?> · <?php echo esc_html($flag['description']); ?><?php endif; ?></div></div><form class="status" method="post"><span><?php echo (int)$flag['is_enabled'] ? 'On' : 'Off'; ?></span><input type="hidden" name="feature_action" value="toggle"><input type="hidden" name="flag_key" value="<?php echo esc_attr($flag['flag_key']); ?>"><input type="hidden" name="admin_nonce" value="<?php echo esc_attr(wp_create_nonce('rich_admin_features')); ?>"><label class="switch"><input type="checkbox" name="is_enabled" value="1" <?php checked((int)$flag['is_enabled'],1); ?> onchange="this.form.submit()"><span class="slider"></span></label></form></div><form method="post"><input type="hidden" name="feature_action" value="roles"><input type="hidden" name="flag_key" value="<?php echo esc_attr($flag['flag_key']); ?>"><input type="hidden" name="admin_nonce" value="<?php echo esc_attr(wp_create_nonce('rich_admin_features')); ?>"><div class="roles"><?php foreach ($roles as $role_key => $role_name): ?><label class="role-pill"><input type="checkbox" name="allowed_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $selected_roles, true)); ?>><?php echo esc_html($role_name); ?></label><?php endforeach; ?></div><div class="actions"><button class="small-btn" type="submit">Save role visibility</button><?php if (!in_array($flag['flag_key'], $core_flags, true)): ?><button class="danger-btn" type="submit" name="feature_action" value="delete" onclick="return confirm('Remove this feature flag?');">Remove feature</button><?php else: ?><span class="meta">Core feature</span><?php endif; ?></div></form></div><?php endforeach; ?></div></section><aside class="panel"><h2>Add feature</h2><div class="helper">Create a reusable flag for a page, module, or hidden app section.</div><form method="post"><input type="hidden" name="feature_action" value="create"><input type="hidden" name="admin_nonce" value="<?php echo esc_attr(wp_create_nonce('rich_admin_features')); ?>"><div class="field"><label for="new_label">Feature label</label><input id="new_label" name="new_label" type="text" placeholder="Mentor Room"></div><div class="field"><label for="new_flag_key">Feature key</label><input id="new_flag_key" name="new_flag_key" type="text" placeholder="mentor-room"></div><div class="field"><label for="new_description">Description</label><textarea id="new_description" name="new_description" rows="4" placeholder="Private room for mentor streams and notes."></textarea></div><button class="save-btn" type="submit">Add feature</button></form></aside></div></main></body></html>
