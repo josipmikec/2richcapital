@@ -197,7 +197,7 @@ if (!function_exists('rich_feature_bootstrap')) {
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         foreach ($tables as $table) {
-            $sql = "CREATE TABLE IF NOT EXISTS {$table} (
+            $sql = "CREATE TABLE {$table} (
                 id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 flag_key varchar(100) NOT NULL,
                 label varchar(160) NOT NULL,
