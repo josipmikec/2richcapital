@@ -1212,6 +1212,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     'wpdb_prefix' => isset($wpdb) ? $wpdb->prefix : null,
                     'candidate_tables' => isset($wpdb) ? rich_feature_table_candidates($wpdb) : [],
                     'resolved_table' => isset($wpdb) ? rich_find_feature_table($wpdb) : null,
+                    'resolved_table_rows' => isset($wpdb) ? $wpdb->get_results("SELECT flag_key, is_enabled, allowed_roles FROM " . rich_find_feature_table($wpdb) . " ORDER BY flag_key ASC", ARRAY_A) : [],
                 ], JSON_PRETTY_PRINT)); ?>
             </div>
             <?php endif; ?>
