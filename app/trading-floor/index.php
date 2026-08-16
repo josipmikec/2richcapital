@@ -7,6 +7,11 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     exit;
 }
 
+$rich_debug_row = rich_get_feature_row('trading-floor');
+$rich_debug_user_id = (int)($_SESSION['user_id'] ?? 0);
+$rich_debug_roles = rich_user_role_keys($rich_debug_user_id);
+$rich_debug_is_staff = rich_is_staff($rich_debug_user_id);
+
 rich_feature_guard('trading-floor', 'Trading Floor');
 $user_name  = $_SESSION['user_name']  ?? 'Member';
 $user_email = $_SESSION['user_email'] ?? '';
@@ -1194,6 +1199,19 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
 
 <!-- Middle Feed -->
         <main class="tf-feed-col" id="feedCol">
+            <?php if ($rich_debug_is_staff): ?>
+            <div style="margin: 0 0 16px; padding: 12px 14px; border: 1px solid rgba(242,202,80,0.35); border-radius: 12px; background: rgba(242,202,80,0.08); color: #f5deb0; font: 12px/1.5 monospace; white-space: pre-wrap; word-break: break-word;">
+                <?php echo htmlspecialchars(json_encode([
+                    'feature' => 'trading-floor',
+                    'row_found' => !empty($rich_debug_row),
+                    'row' => $rich_debug_row,
+                    'session_user_id' => $rich_debug_user_id,
+                    'roles' => $rich_debug_roles,
+                    'is_staff' => $rich_debug_is_staff,
+                    'feature_enabled_for_user' => rich_feature_enabled('trading-floor', true, $rich_debug_user_id),
+                ], JSON_PRETTY_PRINT)); ?>
+            </div>
+            <?php endif; ?>
 
             <!-- Stories -->
             <div class="stories-row">
