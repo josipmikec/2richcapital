@@ -17,6 +17,7 @@ if (!rich_is_staff()) {
 rich_feature_bootstrap();
 global $wpdb;
 $table = rich_feature_table($wpdb);
+$resolved_table = rich_find_feature_table($wpdb);
 $flash = '';
 $roles = rich_feature_roles();
 
@@ -30,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
             $enabled = !empty($_POST['is_enabled']) ? 1 : 0;
             if ($key !== '') {
-                $wpdb->update($table, ['is_enabled' => $enabled, 'updated_by' => (int)$_SESSION['user_id']], ['flag_key' => $key], ['%d','%d'], ['%s']);
+                $wpdb->update($resolved_table, ['is_enabled' => $enabled, 'updated_by' => (int)$_SESSION['user_id']], ['flag_key' => $key], ['%d','%d'], ['%s']);
                 $flash = $enabled ? 'Feature enabled.' : 'Feature disabled.';
             }
         }
@@ -38,14 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'roles') {
             $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
             $selected_roles = isset($_POST['allowed_roles']) && is_array($_POST['allowed_roles']) ? array_values(array_intersect(array_map('sanitize_key', $_POST['allowed_roles']), array_keys($roles))) : [];
-            $wpdb->update($table, ['allowed_roles' => implode(',', $selected_roles), 'updated_by' => (int)$_SESSION['user_id']], ['flag_key' => $key], ['%s','%d'], ['%s']);
+            $wpdb->update($resolved_table, ['allowed_roles' => implode(',', $selected_roles), 'updated_by' => (int)$_SESSION['user_id']], ['flag_key' => $key], ['%s','%d'], ['%s']);
             $flash = 'Role visibility updated.';
         }
 
         if ($action === 'delete') {
             $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
             if ($key !== '' && !in_array($key, ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups'], true)) {
-                $wpdb->delete($table, ['flag_key' => $key], ['%s']);
+                $wpdb->delete($resolved_table, ['flag_key' => $key], ['%s']);
                 $flash = 'Feature removed.';
             } else {
                 $flash = 'Core features cannot be removed.';
@@ -54,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$flags = $wpdb->get_results("SELECT * FROM {$table} ORDER BY label ASC", ARRAY_A);
+$flags = $wpdb->get_results("SELECT * FROM {$resolved_table} ORDER BY label ASC", ARRAY_A);
 $core_flags = ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups'];
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Control Panel · 2RICH</title><style>
 :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0e0e0e;color:#f1f1f1;font:15px/1.5 Inter,system-ui,sans-serif}.shell{max-width:1100px;margin:0 auto;padding:48px 24px}.eyebrow{color:#f2ca50;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:30px}.head h1{margin:8px 0 0;font-size:34px;letter-spacing:-.03em}.head p{margin:8px 0 0;color:#8b9098}.back{color:#c9d8ff;text-decoration:none}.flash{margin-bottom:18px;padding:12px 16px;border:1px solid rgba(242,202,80,.28);border-radius:10px;background:rgba(242,202,80,.09);color:#ffe082}.grid{display:grid;grid-template-columns:1fr;gap:18px;align-items:start}.panel{border:1px solid #242424;border-radius:16px;background:#151515;padding:18px 18px 16px}.panel h2{margin:0 0 14px;font-size:18px}.list{display:grid;gap:12px}.row{padding:16px;border:1px solid #242424;border-radius:14px;background:#111}.row-top{display:flex;justify-content:space-between;gap:16px;align-items:start}.label{font-weight:750}.meta{margin-top:3px;color:#777d86;font-size:13px}.status{display:flex;align-items:center;gap:12px;color:#8b9098;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.switch{position:relative;width:48px;height:28px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;border-radius:999px;background:#303030;cursor:pointer;transition:.2s}.slider:before{content:'';position:absolute;width:20px;height:20px;left:4px;top:4px;border-radius:50%;background:#888;transition:.2s}.switch input:checked+.slider{background:#b18b24}.switch input:checked+.slider:before{transform:translateX(20px);background:#fff3b1}.roles{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.role-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #2c2c2c;border-radius:999px;background:#171717;color:#babec5;font-size:12px}.role-pill input{accent-color:#f2ca50}.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}.small-btn,.danger-btn{border:1px solid #2c2c2c;border-radius:10px;background:#191919;color:#f1f1f1;padding:9px 12px;cursor:pointer}.danger-btn{color:#ffb8b8;border-color:#4a2a2a;background:#1b1212}@media(max-width:900px){.head{align-items:start;flex-direction:column}}@media(max-width:600px){.row-top,.actions{flex-direction:column;align-items:start}}
