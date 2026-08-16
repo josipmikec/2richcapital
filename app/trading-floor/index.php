@@ -7,11 +7,6 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     exit;
 }
 
-$rich_debug_row = rich_get_feature_row('trading-floor');
-$rich_debug_user_id = (int)($_SESSION['user_id'] ?? 0);
-$rich_debug_roles = rich_user_role_keys($rich_debug_user_id);
-$rich_debug_is_staff = rich_is_staff($rich_debug_user_id);
-
 rich_feature_guard('trading-floor', 'Trading Floor');
 $user_name  = $_SESSION['user_name']  ?? 'Member';
 $user_email = $_SESSION['user_email'] ?? '';
