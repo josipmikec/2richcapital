@@ -14,6 +14,7 @@ define('WP_USE_THEMES', false);
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
 $conn_table = $wpdb->prefix . 'rich_mt5_connections';
+$new_plain_api_key = '';
 
 // ─────────────────────────────────────────────
 // Profile persistence logic
