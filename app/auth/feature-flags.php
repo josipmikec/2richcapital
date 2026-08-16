@@ -190,22 +190,27 @@ if (!function_exists('rich_feature_bootstrap')) {
         rich_feature_require_wp();
         global $wpdb;
         if (!$wpdb) return;
-        $table = rich_feature_table($wpdb);
+
         $charset = $wpdb->get_charset_collate();
-        $sql = "CREATE TABLE IF NOT EXISTS {$table} (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            flag_key varchar(100) NOT NULL,
-            label varchar(160) NOT NULL,
-            description varchar(255) NOT NULL DEFAULT '',
-            is_enabled tinyint(1) NOT NULL DEFAULT 1,
-            allowed_roles text NULL,
-            updated_by bigint(20) unsigned NULL,
-            updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id), UNIQUE KEY flag_key (flag_key)
-        ) {$charset};";
+        $tables = rich_feature_table_candidates($wpdb);
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta($sql);
-        $table = rich_find_feature_table($wpdb);
+
+        foreach ($tables as $table) {
+            $sql = "CREATE TABLE IF NOT EXISTS {$table} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                flag_key varchar(100) NOT NULL,
+                label varchar(160) NOT NULL,
+                description varchar(255) NOT NULL DEFAULT '',
+                is_enabled tinyint(1) NOT NULL DEFAULT 1,
+                allowed_roles text NULL,
+                updated_by bigint(20) unsigned NULL,
+                updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id), UNIQUE KEY flag_key (flag_key)
+            ) {$charset};";
+            dbDelta($sql);
+        }
+
         $defaults = [
             ['dashboard', 'Dashboard', 'Main member dashboard'],
             ['trading-floor', 'Trading Floor', 'Public trading profile and groups'],
@@ -214,11 +219,14 @@ if (!function_exists('rich_feature_bootstrap')) {
             ['mt5-sync', 'MT5 Sync', 'MetaTrader connection and sync'],
             ['signals-groups', 'Signals Groups', 'Signals and group messaging'],
         ];
-        foreach ($defaults as $item) {
-            $wpdb->query($wpdb->prepare(
-                "INSERT IGNORE INTO {$table} (flag_key,label,description,is_enabled) VALUES (%s,%s,%s,1)",
-                $item[0], $item[1], $item[2]
-            ));
+
+        foreach ($tables as $table) {
+            foreach ($defaults as $item) {
+                $wpdb->query($wpdb->prepare(
+                    "INSERT IGNORE INTO {$table} (flag_key,label,description,is_enabled) VALUES (%s,%s,%s,1)",
+                    $item[0], $item[1], $item[2]
+                ));
+            }
         }
     }
 }
