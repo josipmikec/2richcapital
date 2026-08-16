@@ -3,6 +3,21 @@
  * Feature flags and staff access helpers.
  */
 
+if (!function_exists('rich_feature_require_wp')) {
+    function rich_feature_require_wp() {
+        if (function_exists('get_userdata') && function_exists('get_role')) {
+            return;
+        }
+        if (!defined('WP_USE_THEMES')) {
+            define('WP_USE_THEMES', false);
+        }
+        $wp_load = dirname(__DIR__, 2) . '/wp-load.php';
+        if (file_exists($wp_load)) {
+            require_once $wp_load;
+        }
+    }
+}
+
 if (!function_exists('rich_feature_table')) {
     function rich_feature_table($wpdb) {
         return $wpdb->prefix . 'rich_feature_flags';
@@ -11,6 +26,7 @@ if (!function_exists('rich_feature_table')) {
 
 if (!function_exists('rich_is_staff')) {
     function rich_is_staff($user_id = 0) {
+        rich_feature_require_wp();
         $user_id = (int)($user_id ?: ($_SESSION['user_id'] ?? 0));
         if ($user_id <= 0) return false;
         $user = get_userdata($user_id);
@@ -21,7 +37,9 @@ if (!function_exists('rich_is_staff')) {
 
 if (!function_exists('rich_feature_enabled')) {
     function rich_feature_enabled($key, $default = true) {
+        rich_feature_require_wp();
         global $wpdb;
+        if (!$wpdb) return (bool)$default;
         $table = rich_feature_table($wpdb);
         $value = $wpdb->get_var($wpdb->prepare(
             "SELECT is_enabled FROM {$table} WHERE flag_key = %s LIMIT 1",
@@ -42,7 +60,9 @@ if (!function_exists('rich_feature_guard')) {
 
 if (!function_exists('rich_feature_bootstrap')) {
     function rich_feature_bootstrap() {
+        rich_feature_require_wp();
         global $wpdb;
+        if (!$wpdb) return;
         $table = rich_feature_table($wpdb);
         $charset = $wpdb->get_charset_collate();
         $sql = "CREATE TABLE IF NOT EXISTS {$table} (
@@ -76,10 +96,10 @@ if (!function_exists('rich_feature_bootstrap')) {
 
 if (!function_exists('rich_grant_feature_capability')) {
     function rich_grant_feature_capability() {
+        rich_feature_require_wp();
+        if (!function_exists('get_role')) return;
         $role = get_role('administrator');
         if ($role) $role->add_cap('rich_manage_features');
     }
 }
-
-rich_grant_feature_capability();
 ?>
