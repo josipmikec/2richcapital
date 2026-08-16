@@ -1213,6 +1213,13 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     'candidate_tables' => isset($wpdb) ? rich_feature_table_candidates($wpdb) : [],
                     'resolved_table' => isset($wpdb) ? rich_find_feature_table($wpdb) : null,
                     'resolved_table_rows' => isset($wpdb) ? $wpdb->get_results("SELECT flag_key, is_enabled, allowed_roles FROM " . rich_find_feature_table($wpdb) . " ORDER BY flag_key ASC", ARRAY_A) : [],
+                    'runtime' => [
+                        '__FILE__' => __FILE__,
+                        'wp_load_path' => dirname(__DIR__, 2) . '/wp-load.php',
+                        'db_name' => defined('DB_NAME') ? DB_NAME : null,
+                        'db_host' => defined('DB_HOST') ? DB_HOST : null,
+                        'table_count' => isset($wpdb) ? $wpdb->get_var("SELECT COUNT(*) FROM " . rich_find_feature_table($wpdb)) : null,
+                    ],
                 ], JSON_PRETTY_PRINT)); ?>
             </div>
             <?php endif; ?>
