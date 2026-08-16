@@ -1077,6 +1077,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <div class="widget-blank"></div>
                     </div>
                 </div>
+                <?php endif; ?>
 
             </div>
 
@@ -1123,7 +1124,6 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <button class="modal-close" onclick="closeColumnManager()" aria-label="Close settings">&times;</button>
                 </div>
-                <?php endif; ?>
             </div>
 
             <div class="settings-tabs" role="tablist" aria-label="Dashboard settings sections">
