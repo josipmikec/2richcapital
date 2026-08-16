@@ -659,6 +659,15 @@ try {
                     </svg>
                     <span>Account</span>
                 </li>
+                <?php if (rich_is_staff()): ?>
+                <li class="menu-item" onclick="window.location.href='/admin'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path>
+                        <path d="M9.5 12l1.5 1.5 3.5-3.5"></path>
+                    </svg>
+                    <span>Admin</span>
+                </li>
+                <?php endif; ?>
             </ul>
         </aside>
 
