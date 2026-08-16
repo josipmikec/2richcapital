@@ -147,6 +147,39 @@ if (!function_exists('rich_feature_enabled')) {
     }
 }
 
+if (!function_exists('rich_card_visible')) {
+    function rich_card_visible($card_id, $user_id = 0) {
+        $card_id = rich_normalize_feature_key($card_id);
+        $flag_key = 'card-' . $card_id;
+        $row = rich_get_feature_row($flag_key);
+        
+        if (!$row) {
+            return true;
+        }
+        
+        if ((int)($row['is_enabled'] ?? 0) !== 1) {
+            return false;
+        }
+        
+        $allowed_roles = trim((string)($row['allowed_roles'] ?? ''));
+        if ($allowed_roles === '') {
+            return true;
+        }
+        
+        $allowed = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $allowed_roles))));
+        if (!$allowed) {
+            return true;
+        }
+        
+        $user_roles = rich_user_role_keys($user_id);
+        if (!$user_roles) {
+            return false;
+        }
+        
+        return count(array_intersect($allowed, $user_roles)) > 0;
+    }
+}
+
 if (!function_exists('rich_feature_guard')) {
     function rich_feature_guard($key, $label = 'This feature', $user_id = 0) {
         $user_id = (int)($user_id ?: ($_SESSION['user_id'] ?? 0));
@@ -218,6 +251,16 @@ if (!function_exists('rich_feature_bootstrap')) {
             ['market-data', 'Market Data', 'Charts and live market data'],
             ['mt5-sync', 'MT5 Sync', 'MetaTrader connection and sync'],
             ['signals-groups', 'Signals Groups', 'Signals and group messaging'],
+            ['card-market', 'Market Card', 'Market overview card on dashboard'],
+            ['card-signals', 'Signals Card', 'Signals card on dashboard'],
+            ['card-news', 'News Card', 'News card on dashboard'],
+            ['card-classroom', 'Classroom Card', 'Classroom card on dashboard'],
+            ['card-strategies', 'Strategies Card', 'Strategies card on dashboard'],
+            ['card-trades', 'Trades Card', 'Trades card on dashboard'],
+            ['card-mentors', 'Mentors Card', 'Mentors card on dashboard'],
+            ['card-ai', 'AI Card', 'AI card on dashboard'],
+            ['card-chat', 'Chat Card', 'Chat card on dashboard'],
+            ['card-journal', 'Journal Card', 'Journal card on dashboard'],
         ];
 
         foreach ($tables as $table) {

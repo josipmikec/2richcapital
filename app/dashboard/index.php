@@ -8,6 +8,8 @@ if (!defined('WP_USE_THEMES')) {
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 require_once '../auth/feature-flags.php';
 
+rich_feature_bootstrap();
+
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     header('Location: https://app.2rich.capital/login/');
     exit;
@@ -15,6 +17,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
 
 $user_name  = $_SESSION['user_name']  ?? 'Member';
 $user_email = $_SESSION['user_email'] ?? '';
+$user_id    = $_SESSION['user_id']    ?? 0;
 
 // ── Load saved dashboard layout for this user (server-side, no flash) ──
 $_dashboard_default_order = ['market','signals','news','classroom','strategies','trades','mentors','ai','chat','journal'];
@@ -69,6 +72,14 @@ try {
     }
 } catch (Throwable $__e) {
     $mt5_connection_token = '';
+}
+
+// ── Filter visible cards based on feature flags ──
+$visible_cards = [];
+foreach ($_dashboard_initial_order as $card_id) {
+    if (rich_card_visible($card_id, $user_id)) {
+        $visible_cards[] = $card_id;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -690,6 +701,7 @@ try {
 
             <div class="widget-grid" id="widgetGrid">
 
+                <?php if (in_array('market', $visible_cards)): ?>
                 <div class="widget widget-market" data-card-id="market">
                     <div class="widget-tabs">
                         <button class="wtab active">Market</button>
@@ -745,6 +757,7 @@ try {
 					    </button>
 					</div>
                 </div>
+                <?php endif; ?>
 
                 <div class="widget widget-signals" data-card-id="signals">
                     <div class="widget-tabs">
