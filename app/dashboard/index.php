@@ -702,6 +702,15 @@ foreach ($_dashboard_initial_order as $card_id) {
             <div class="widget-grid" id="widgetGrid">
 
                 <?php if (in_array('market', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-market', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-market" data-card-id="market">
                     <div class="widget-tabs">
                         <button class="wtab active">Market</button>
@@ -760,6 +769,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('signals', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-signals', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-signals" data-card-id="signals">
                     <div class="widget-tabs">
                         <button class="wtab wtab-tooltip" id="signalsTabDiscovery" onclick="switchSignalsTab('discovery')" data-tooltip="Browse verified analyst groups. Join free communities instantly or subscribe to unlock premium desks.">Discovery</button>
@@ -797,6 +815,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('news', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-news', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-news" data-card-id="news">
                     <div class="widget-tabs">
                         <button class="wtab active">News</button>
@@ -827,6 +854,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('classroom', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-classroom', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-classroom" data-card-id="classroom">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'class-pane')">Classroom</button>
@@ -868,6 +904,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('strategies', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-strategies', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-strategies" data-card-id="strategies">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'strat-pane')">Strategies</button>
@@ -893,6 +938,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('trades', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-trades', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-trades" data-card-id="trades">
 				    <div class="widget-tabs">
 				        <button class="wtab active" onclick="switchTab(this,'live-pane')">My Live Trades</button>
