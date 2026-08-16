@@ -1,11 +1,13 @@
 <?php
 require_once '../auth/session-config.php';
+require_once '../auth/feature-flags.php';
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     header('Location: https://app.2rich.capital/login/');
     exit;
 }
 
+rich_feature_guard('trading-floor', 'Trading Floor');
 $user_name  = $_SESSION['user_name']  ?? 'Member';
 $user_email = $_SESSION['user_email'] ?? '';
 $user_id    = $_SESSION['user_id']    ?? 0;
