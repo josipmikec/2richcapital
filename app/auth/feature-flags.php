@@ -71,7 +71,7 @@ if (!function_exists('rich_is_staff')) {
 }
 
 if (!function_exists('rich_feature_enabled')) {
-    function rich_feature_enabled($key, $default = true) {
+    function rich_feature_enabled($key, $default = true, $user_id = 0) {
         rich_feature_require_wp();
         global $wpdb;
         if (!$wpdb) return (bool)$default;
@@ -86,14 +86,20 @@ if (!function_exists('rich_feature_enabled')) {
         if ($allowed_roles === '') return true;
         $allowed = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $allowed_roles))));
         if (!$allowed) return true;
-        $user_roles = rich_user_role_keys();
+        $user_roles = rich_user_role_keys($user_id);
         return count(array_intersect($allowed, $user_roles)) > 0;
     }
 }
 
 if (!function_exists('rich_feature_guard')) {
-    function rich_feature_guard($key, $label = 'This feature') {
-        if (rich_feature_enabled($key, true) || rich_is_staff()) return;
+    function rich_feature_guard($key, $label = 'This feature', $user_id = 0) {
+        $user_id = (int)($user_id ?: ($_SESSION['user_id'] ?? 0));
+        if (rich_is_staff($user_id)) {
+            return;
+        }
+        if (rich_feature_enabled($key, true, $user_id)) {
+            return;
+        }
         http_response_code(503);
         ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?php echo esc_html($label); ?></title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0e0e0e;color:#f1f1f1;font:16px system-ui,sans-serif}.card{max-width:460px;padding:36px;border:1px solid #292929;border-radius:18px;background:#151515;text-align:center}p{color:#989da5;line-height:1.6}</style></head><body><main class="card"><h1><?php echo esc_html($label); ?> is temporarily unavailable</h1><p>We are making updates. Please check back soon.</p></main></body></html><?php
         exit;
