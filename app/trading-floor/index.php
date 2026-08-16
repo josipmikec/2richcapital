@@ -158,6 +158,12 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         .profile-member-badge-text { opacity:0; max-width:0; overflow:hidden; font-size:8px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#ffe082; text-shadow: 0 1px 0 rgba(0,0,0,0.16); transition: opacity 0.16s ease, max-width 0.2s ease, margin-left 0.2s ease; }
         .profile-member-badge:hover .profile-member-badge-text { opacity:1; max-width:92px; margin-left:3px; }
         .profile-bio-text { font-size: 14px; font-weight: 500; color: #8b9098; margin-top: 12px; line-height: 1.55; max-width: 460px; }
+        .profile-identity-badges { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:14px; margin-bottom:2px; }
+        .profile-identity-badge { display:inline-flex; align-items:center; gap:6px; min-height:24px; padding:4px 10px; border:1px solid rgba(242,202,80,0.28); border-radius:999px; background:linear-gradient(180deg, rgba(242,202,80,0.16), rgba(242,202,80,0.07)); color:#ffe082; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 12px rgba(0,0,0,0.14); font-size:10px; font-weight:750; letter-spacing:.04em; text-transform:uppercase; }
+        .profile-identity-badge::before { content:'◆'; font-size:7px; color:#f2ca50; }
+        .profile-identity-badge--style { border-color:rgba(151,185,255,0.28); background:linear-gradient(180deg, rgba(151,185,255,0.15), rgba(151,185,255,0.06)); color:#c8d9ff; }
+        .profile-identity-badge--style::before { color:#97b9ff; }
+        .profile-identity-badges + .profile-bio-text { margin-top:10px; }
         .profile-identity-grid { display:grid; gap:16px; margin-top:18px; }
         .profile-section-card { background: rgba(18,18,18,0.82); border: 1px solid #1a1a1a; border-radius: 14px; padding: 18px; }
         .profile-section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
@@ -1037,20 +1043,20 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                                 <span class="profile-member-badge-text">2RICH VERIFIED</span>
                             </span>
                         </div>
-                        <div class="profile-name"><?php echo htmlspecialchars($profile_display_name); ?> · LIVE TEST</div>
+                        <div class="profile-name"><?php echo htmlspecialchars($profile_display_name); ?></div>
                         <div class="profile-stats-row profile-stats-inline">
                             <div class="profile-stat"><div class="profile-stat-value"><?php echo (int)$total_trades; ?></div><div class="profile-stat-label">Trades</div></div>
                             <div class="profile-stat"><div class="profile-stat-value"><?php echo htmlspecialchars((string)$win_rate); ?>%</div><div class="profile-stat-label">Win Rate</div></div>
                             <div class="profile-stat"><div class="profile-stat-value">128</div><div class="profile-stat-label">Followers</div></div>
                             <div class="profile-stat"><div class="profile-stat-value">74</div><div class="profile-stat-label">Following</div></div>
                         </div>
-                        <div class="profile-bio-text" id="bioPreview"><?php echo htmlspecialchars($profile_bio !== '' ? $profile_bio : 'Trader. No bio yet — add one below.'); ?></div>
                         <?php if ($profile_primary_market !== '' || $profile_trading_style !== ''): ?>
-                        <div class="profile-badge-row">
-                            <?php if ($profile_primary_market !== ''): ?><span class="profile-badge green"><?php echo htmlspecialchars($profile_primary_market); ?></span><?php endif; ?>
-                            <?php if ($profile_trading_style !== ''): ?><span class="profile-badge"><?php echo htmlspecialchars($profile_trading_style); ?></span><?php endif; ?>
+                        <div class="profile-identity-badges">
+                            <?php if ($profile_primary_market !== ''): ?><span class="profile-identity-badge"><?php echo htmlspecialchars($profile_primary_market); ?></span><?php endif; ?>
+                            <?php if ($profile_trading_style !== ''): ?><span class="profile-identity-badge profile-identity-badge--style"><?php echo htmlspecialchars($profile_trading_style); ?></span><?php endif; ?>
                         </div>
                         <?php endif; ?>
+                        <div class="profile-bio-text" id="bioPreview"><?php echo htmlspecialchars($profile_bio !== '' ? $profile_bio : 'Trader. No bio yet — add one below.'); ?></div>
                     </div>
                 </div>
 
