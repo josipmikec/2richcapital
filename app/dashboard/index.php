@@ -759,6 +759,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 </div>
                 <?php endif; ?>
 
+                <?php if (in_array('signals', $visible_cards)): ?>
                 <div class="widget widget-signals" data-card-id="signals">
                     <div class="widget-tabs">
                         <button class="wtab wtab-tooltip" id="signalsTabDiscovery" onclick="switchSignalsTab('discovery')" data-tooltip="Browse verified analyst groups. Join free communities instantly or subscribe to unlock premium desks.">Discovery</button>
@@ -793,7 +794,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
+                <?php if (in_array('news', $visible_cards)): ?>
                 <div class="widget widget-news" data-card-id="news">
                     <div class="widget-tabs">
                         <button class="wtab active">News</button>
@@ -821,7 +824,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
+                <?php if (in_array('classroom', $visible_cards)): ?>
                 <div class="widget widget-classroom" data-card-id="classroom">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'class-pane')">Classroom</button>
@@ -860,7 +865,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <div class="widget-blank"></div>
                     </div>
                 </div>
+                <?php endif; ?>
 
+                <?php if (in_array('strategies', $visible_cards)): ?>
                 <div class="widget widget-strategies" data-card-id="strategies">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'strat-pane')">Strategies</button>
@@ -883,7 +890,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <button class="widget-action">Run Backtest <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                     </div>
                 </div>
+                <?php endif; ?>
 
+                <?php if (in_array('trades', $visible_cards)): ?>
                 <div class="widget widget-trades" data-card-id="trades">
 				    <div class="widget-tabs">
 				        <button class="wtab active" onclick="switchTab(this,'live-pane')">My Live Trades</button>
@@ -977,7 +986,9 @@ foreach ($_dashboard_initial_order as $card_id) {
 				        </button>
 				    </div>
 				</div>
+                <?php endif; ?>
 
+                <?php if (in_array('mentors', $visible_cards)): ?>
                 <div class="widget widget-mentors" data-card-id="mentors">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'ment-pane')">Mentors</button>
@@ -1009,7 +1020,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <button class="widget-action">Book a Session <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                     </div>
                 </div>
+                <?php endif; ?>
 
+                <?php if (in_array('ai', $visible_cards)): ?>
                 <div class="widget widget-ai" data-card-id="ai">
                     <div class="widget-tabs">
                         <button class="wtab active">AI Chat</button>
@@ -1022,7 +1035,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <div class="widget-blank"></div>
                     </div>
                 </div>
+                <?php endif; ?>
 
+                <?php if (in_array('chat', $visible_cards)): ?>
                 <div class="widget widget-chat" data-card-id="chat">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'chat-pane')">Chat</button>
@@ -1045,7 +1060,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <button class="widget-action">Open Messages <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                     </div>
                 </div>
+                <?php endif; ?>
 
+                <?php if (in_array('journal', $visible_cards)): ?>
                 <div class="widget widget-journal" data-card-id="journal">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'journal-pane')">Journal</button>
@@ -1106,6 +1123,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <button class="modal-close" onclick="closeColumnManager()" aria-label="Close settings">&times;</button>
                 </div>
+                <?php endif; ?>
             </div>
 
             <div class="settings-tabs" role="tablist" aria-label="Dashboard settings sections">
