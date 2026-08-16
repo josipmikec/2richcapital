@@ -63,10 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['profile_form_action'
         }
 
         if (!$save_ok) {
-            $mt5_flash = [
-                'type' => 'error',
-                'message' => 'Profile save failed. Debug: table=' . $profile_table . '; user_id=' . (int)$user_id . '; mode=' . $save_mode . '; db_error=' . ($wpdb->last_error ?: 'none')
-            ];
+            if ($wpdb->last_error) {
+                error_log('Profile save failed for user ' . (int)$user_id . ' (' . $save_mode . '): ' . $wpdb->last_error);
+            }
+            $mt5_flash = ['type' => 'error', 'message' => 'Profile save failed. Please try again.'];
         } else {
             $_SESSION['user_name'] = $display_name;
             $profile_display_name = $display_name;
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['profile_form_action'
             $profile_bio = $bio;
             $profile_primary_market = $primary_market;
             $profile_trading_style = $trading_style;
-            $mt5_flash = ['type' => 'success', 'message' => 'Profile saved. Debug: table=' . $profile_table . '; user_id=' . (int)$user_id . '; mode=' . $save_mode];
+            $mt5_flash = ['type' => 'success', 'message' => 'Profile saved.'];
         }
     }
 }
