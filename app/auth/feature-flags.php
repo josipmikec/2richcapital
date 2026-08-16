@@ -59,6 +59,19 @@ if (!function_exists('rich_feature_table')) {
     }
 }
 
+if (!function_exists('rich_get_feature_row')) {
+    function rich_get_feature_row($key) {
+        rich_feature_require_wp();
+        global $wpdb;
+        if (!$wpdb) return null;
+        $table = rich_feature_table($wpdb);
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT flag_key, label, is_enabled, allowed_roles FROM {$table} WHERE flag_key = %s LIMIT 1",
+            rich_normalize_feature_key($key)
+        ), ARRAY_A);
+    }
+}
+
 if (!function_exists('rich_is_staff')) {
     function rich_is_staff($user_id = 0) {
         rich_feature_require_wp();
@@ -66,29 +79,17 @@ if (!function_exists('rich_is_staff')) {
         if ($user_id <= 0) return false;
 
         $user = get_userdata($user_id);
-        $session_roles = rich_user_role_keys($user_id);
+        if (!$user) return false;
 
-        if ($user) {
-            if (user_can($user, 'manage_options') || user_can($user, 'rich_manage_features')) {
-                return true;
-            }
-            return in_array('administrator', $session_roles, true);
-        }
-
-        return in_array('administrator', $session_roles, true);
+        return user_can($user, 'manage_options')
+            || user_can($user, 'rich_manage_features')
+            || in_array('administrator', (array)$user->roles, true);
     }
 }
 
 if (!function_exists('rich_feature_enabled')) {
     function rich_feature_enabled($key, $default = true, $user_id = 0) {
-        rich_feature_require_wp();
-        global $wpdb;
-        if (!$wpdb) return (bool)$default;
-        $table = rich_feature_table($wpdb);
-        $row = $wpdb->get_row($wpdb->prepare(
-            "SELECT is_enabled, allowed_roles FROM {$table} WHERE flag_key = %s LIMIT 1",
-            rich_normalize_feature_key($key)
-        ), ARRAY_A);
+        $row = rich_get_feature_row($key);
         if (!$row) return (bool)$default;
 
         if ((int)($row['is_enabled'] ?? 0) !== 1) {
@@ -96,10 +97,14 @@ if (!function_exists('rich_feature_enabled')) {
         }
 
         $allowed_roles = trim((string)($row['allowed_roles'] ?? ''));
-        if ($allowed_roles === '') return true;
+        if ($allowed_roles === '') {
+            return true;
+        }
 
         $allowed = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $allowed_roles))));
-        if (!$allowed) return true;
+        if (!$allowed) {
+            return true;
+        }
 
         $user_roles = rich_user_role_keys($user_id);
         if (!$user_roles) {
@@ -113,14 +118,36 @@ if (!function_exists('rich_feature_enabled')) {
 if (!function_exists('rich_feature_guard')) {
     function rich_feature_guard($key, $label = 'This feature', $user_id = 0) {
         $user_id = (int)($user_id ?: ($_SESSION['user_id'] ?? 0));
+        $row = rich_get_feature_row($key);
+
+        if (!$row) {
+            return;
+        }
 
         if (rich_is_staff($user_id)) {
             return;
         }
 
-        if (!rich_feature_enabled($key, true, $user_id)) {
+        if ((int)($row['is_enabled'] ?? 0) !== 1) {
             http_response_code(503);
             ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?php echo esc_html($label); ?></title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0e0e0e;color:#f1f1f1;font:16px system-ui,sans-serif}.card{max-width:460px;padding:36px;border:1px solid #292929;border-radius:18px;background:#151515;text-align:center}p{color:#989da5;line-height:1.6}</style></head><body><main class="card"><h1><?php echo esc_html($label); ?> is temporarily unavailable</h1><p>We are making updates. Please check back soon.</p></main></body></html><?php
+            exit;
+        }
+
+        $allowed_roles = trim((string)($row['allowed_roles'] ?? ''));
+        if ($allowed_roles === '') {
+            return;
+        }
+
+        $allowed = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $allowed_roles))));
+        if (!$allowed) {
+            return;
+        }
+
+        $user_roles = rich_user_role_keys($user_id);
+        if (!$user_roles || count(array_intersect($allowed, $user_roles)) === 0) {
+            http_response_code(403);
+            ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?php echo esc_html($label); ?></title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0e0e0e;color:#f1f1f1;font:16px system-ui,sans-serif}.card{max-width:460px;padding:36px;border:1px solid #292929;border-radius:18px;background:#151515;text-align:center}p{color:#989da5;line-height:1.6}</style></head><body><main class="card"><h1><?php echo esc_html($label); ?> is not available for your account</h1><p>Please contact support if you believe this is a mistake.</p></main></body></html><?php
             exit;
         }
     }
