@@ -2,6 +2,9 @@
 require_once '../auth/session-config.php';
 require_once '../auth/db.php'; // provides $pdo
 
+define('WP_USE_THEMES', false);
+require_once dirname(__DIR__, 2) . '/wp-load.php';
+
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     header('Location: https://app.2rich.capital/login/');
     exit;
