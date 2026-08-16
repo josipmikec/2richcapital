@@ -1043,6 +1043,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('mentors', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-mentors', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-mentors" data-card-id="mentors">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'ment-pane')">Mentors</button>
@@ -1077,6 +1086,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('ai', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-ai', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-ai" data-card-id="ai">
                     <div class="widget-tabs">
                         <button class="wtab active">AI Chat</button>
@@ -1092,6 +1110,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('chat', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-chat', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-chat" data-card-id="chat">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'chat-pane')">Chat</button>
@@ -1117,6 +1144,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <?php endif; ?>
 
                 <?php if (in_array('journal', $visible_cards)): ?>
+                <?php
+                $overlay = rich_feature_overlay('card-journal', $user_id);
+                if ($overlay): ?>
+                <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div style="text-align:center;padding:24px;max-width:280px;">
+                        <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="widget widget-journal" data-card-id="journal">
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'journal-pane')">Journal</button>
