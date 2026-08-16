@@ -12,7 +12,9 @@ $user_name  = $_SESSION['user_name']  ?? 'Member';
 $user_email = $_SESSION['user_email'] ?? '';
 $user_id    = $_SESSION['user_id']    ?? 0;
 
-define('WP_USE_THEMES', false);
+if (!defined('WP_USE_THEMES')) {
+    define('WP_USE_THEMES', false);
+}
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
 
