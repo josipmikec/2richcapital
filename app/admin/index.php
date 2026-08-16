@@ -43,13 +43,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $flash = 'Role visibility updated.';
         }
 
+        if ($action === 'overlay') {
+            $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
+            $overlay_enabled = !empty($_POST['is_overlay_enabled']) ? 1 : 0;
+            $overlay_message = sanitize_text_field($_POST['overlay_message'] ?? 'This feature is temporarily unavailable.');
+            if ($key !== '') {
+                $wpdb->update($resolved_table, ['is_overlay_enabled' => $overlay_enabled, 'overlay_message' => $overlay_message, 'updated_by' => (int)$_SESSION['user_id']], ['flag_key' => $key], ['%d','%s','%d'], ['%s']);
+                $flash = $overlay_enabled ? 'Overlay enabled.' : 'Overlay disabled.';
+            }
+        }
+
         if ($action === 'delete') {
             $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
-            if ($key !== '' && !in_array($key, ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups'], true)) {
+            if ($key !== '' && !in_array($key, ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups','card-market','card-signals','card-news','card-classroom','card-strategies','card-trades','card-mentors','card-ai','card-chat','card-journal'], true)) {
                 $wpdb->delete($resolved_table, ['flag_key' => $key], ['%s']);
                 $flash = 'Feature removed.';
             } else {
-                $flash = 'Core features cannot be removed.';
+                $flash = 'Core feature cannot be removed.';
             }
         }
     }

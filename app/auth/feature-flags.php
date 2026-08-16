@@ -147,6 +147,23 @@ if (!function_exists('rich_feature_enabled')) {
     }
 }
 
+if (!function_exists('rich_feature_overlay')) {
+    function rich_feature_overlay($key, $user_id = 0) {
+        $row = rich_get_feature_row($key);
+        if (!$row) return null;
+
+        if ((int)($row['is_overlay_enabled'] ?? 0) !== 1) {
+            return null;
+        }
+
+        $message = trim((string)($row['overlay_message'] ?? 'This feature is temporarily unavailable.'));
+        return [
+            'enabled' => true,
+            'message' => $message !== '' ? $message : 'This feature is temporarily unavailable.',
+        ];
+    }
+}
+
 if (!function_exists('rich_card_visible')) {
     function rich_card_visible($card_id, $user_id = 0) {
         $card_id = rich_normalize_feature_key($card_id);
@@ -237,6 +254,8 @@ if (!function_exists('rich_feature_bootstrap')) {
                 description varchar(255) NOT NULL DEFAULT '',
                 is_enabled tinyint(1) NOT NULL DEFAULT 1,
                 allowed_roles text NULL,
+                is_overlay_enabled tinyint(1) NOT NULL DEFAULT 0,
+                overlay_message varchar(255) NOT NULL DEFAULT 'This feature is temporarily unavailable.',
                 updated_by bigint(20) unsigned NULL,
                 updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (id), UNIQUE KEY flag_key (flag_key)
