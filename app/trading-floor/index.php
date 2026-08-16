@@ -14,6 +14,18 @@ define('WP_USE_THEMES', false);
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
 
+$profile_table = $wpdb->prefix . 'rich_user_profiles';
+$profile_row = $wpdb->get_row($wpdb->prepare(
+    "SELECT display_name, trading_handle, bio, primary_market, trading_style FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+    $user_id
+), ARRAY_A) ?: [];
+$profile_display_name = $profile_row['display_name'] ?? $user_name;
+$profile_handle = trim((string)($profile_row['trading_handle'] ?? ''));
+$profile_handle = $profile_handle !== '' ? ltrim($profile_handle, '@') : strtolower(str_replace(' ', '', $profile_display_name));
+$profile_bio = trim((string)($profile_row['bio'] ?? ''));
+$profile_primary_market = trim((string)($profile_row['primary_market'] ?? ''));
+$profile_trading_style = trim((string)($profile_row['trading_style'] ?? ''));
+
 $total_trades = (int) $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d", $user_id
 ));
@@ -1019,23 +1031,26 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     </div>
                     <div class="profile-info">
                         <div class="profile-handle-row">
-                            <div class="profile-handle">@<?php echo strtolower(str_replace(' ','',htmlspecialchars($user_name))); ?></div>
+                            <div class="profile-handle">@<?php echo htmlspecialchars($profile_handle); ?></div>
                             <span class="profile-member-badge" title="2RICH VERIFIED" aria-label="2RICH VERIFIED">
                                 <span class="profile-member-badge-icon">✓</span>
                                 <span class="profile-member-badge-text">2RICH VERIFIED</span>
                             </span>
                         </div>
-                        <div class="profile-name"><?php echo htmlspecialchars($user_name); ?> · LIVE TEST</div>
+                        <div class="profile-name"><?php echo htmlspecialchars($profile_display_name); ?> · LIVE TEST</div>
                         <div class="profile-stats-row profile-stats-inline">
                             <div class="profile-stat"><div class="profile-stat-value"><?php echo (int)$total_trades; ?></div><div class="profile-stat-label">Trades</div></div>
                             <div class="profile-stat"><div class="profile-stat-value"><?php echo htmlspecialchars((string)$win_rate); ?>%</div><div class="profile-stat-label">Win Rate</div></div>
                             <div class="profile-stat"><div class="profile-stat-value">128</div><div class="profile-stat-label">Followers</div></div>
                             <div class="profile-stat"><div class="profile-stat-value">74</div><div class="profile-stat-label">Following</div></div>
                         </div>
-                        <div class="profile-bio-text" id="bioPreview">Trader. No bio yet — add one below.</div>
+                        <div class="profile-bio-text" id="bioPreview"><?php echo htmlspecialchars($profile_bio !== '' ? $profile_bio : 'Trader. No bio yet — add one below.'); ?></div>
+                        <?php if ($profile_primary_market !== '' || $profile_trading_style !== ''): ?>
                         <div class="profile-badge-row">
-                            <?php if ($win_rate >= 60): ?><span class="profile-badge green">60%+ Win Rate</span><?php endif; ?>
+                            <?php if ($profile_primary_market !== ''): ?><span class="profile-badge green"><?php echo htmlspecialchars($profile_primary_market); ?></span><?php endif; ?>
+                            <?php if ($profile_trading_style !== ''): ?><span class="profile-badge"><?php echo htmlspecialchars($profile_trading_style); ?></span><?php endif; ?>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
