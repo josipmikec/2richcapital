@@ -1209,6 +1209,9 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     'roles' => $rich_debug_roles,
                     'is_staff' => $rich_debug_is_staff,
                     'feature_enabled_for_user' => rich_feature_enabled('trading-floor', true, $rich_debug_user_id),
+                    'wpdb_prefix' => isset($wpdb) ? $wpdb->prefix : null,
+                    'candidate_tables' => isset($wpdb) ? rich_feature_table_candidates($wpdb) : [],
+                    'resolved_table' => isset($wpdb) ? rich_find_feature_table($wpdb) : null,
                 ], JSON_PRETTY_PRINT)); ?>
             </div>
             <?php endif; ?>
