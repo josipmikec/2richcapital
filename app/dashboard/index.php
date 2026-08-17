@@ -81,6 +81,7 @@ foreach ($_dashboard_initial_order as $card_id) {
         $visible_cards[] = $card_id;
     }
 }
+$dashboard_layout_cards = $visible_cards;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -99,9 +100,9 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    display: none;
 		    position: fixed;
 		    inset: 0;
-		    background: rgba(0,0,0,0.8);
-		    backdrop-filter: blur(8px);
-		    -webkit-backdrop-filter: blur(8px);
+		    background: rgba(8, 10, 14, 0.34);
+		    backdrop-filter: blur(18px) saturate(150%);
+		    -webkit-backdrop-filter: blur(18px) saturate(150%);
 		    z-index: 1000;
 		    align-items: center;
 		    justify-content: center;
@@ -116,8 +117,8 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    to { opacity: 1; }
 		}
 		.dashboard-settings-panel {
-		    background: linear-gradient(135deg, #1a1a1a 0%, #0E0E0E 100%);
-		    border: 1px solid #2a2a2a;
+		    background: linear-gradient(180deg, rgba(24, 30, 40, 0.70) 0%, rgba(16, 20, 28, 0.58) 100%);
+		    border: 1px solid rgba(255,255,255,0.10);
 		    border-radius: 16px;
 		    width: 100%;
 		    max-width: 560px;
