@@ -1114,9 +1114,10 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-chat', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
-                        <div style="text-align:center;padding:24px;max-width:280px;">
-                            <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(255,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:9999;border-radius:inherit;">
+                        <div style="text-align:center;padding:24px;max-width:280px;color:#fff;">
+                            <div style="font-size:18px;font-weight:800;margin-bottom:8px;">OVERLAY ACTIVE</div>
+                            <div style="font-size:14px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
                     <?php endif; ?>
