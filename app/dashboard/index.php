@@ -2058,7 +2058,7 @@ foreach ($_dashboard_initial_order as $card_id) {
         async function saveOrder(order) {
             const normalized = normalizeOrder(order);
             try {
-                const res = await fetch(window.location.origin + '/app/api/dashboard/save-layout.php', {
+                const res = await fetch('../api/dashboard/save-layout.php', {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
@@ -2075,7 +2075,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 		
 		async function loadOrder() {
 		    try {
-		        const res  = await fetch(window.location.origin + '/app/api/dashboard/load-layout.php', { credentials: 'include' });
+		        const res  = await fetch('../api/dashboard/load-layout.php', { credentials: 'include' });
 		        const data = await res.json();
 		        if (data.success && Array.isArray(data.order)) {
 		            const saved   = data.order.filter(id => DEFAULT_ORDER.includes(id));
