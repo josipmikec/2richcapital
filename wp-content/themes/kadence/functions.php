@@ -67,6 +67,23 @@ if ( ! function_exists( 'tworich_research_respond_to_preflight' ) ) {
 
 add_action( 'init', 'tworich_research_respond_to_preflight', 0 );
 
+if ( ! function_exists( 'tworich_research_allow_http_origins' ) ) {
+    function tworich_research_allow_http_origins( $origins ) {
+        $extra_origins = array(
+            'https://app.2rich.capital',
+            'https://2rich.capital',
+            'https://app.2rich.test',
+            'http://app.2rich.test',
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+        );
+
+        return array_values( array_unique( array_merge( $origins, $extra_origins ) ) );
+    }
+}
+
+add_filter( 'allowed_http_origins', 'tworich_research_allow_http_origins' );
+
 if ( ! function_exists( 'tworich_research_get_remote_json' ) ) {
     function tworich_research_get_remote_json( $url ) {
         $response = wp_remote_get( $url );
