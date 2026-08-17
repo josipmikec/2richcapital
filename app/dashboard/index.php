@@ -2050,16 +2050,28 @@ foreach ($_dashboard_initial_order as $card_id) {
             journal:    'Journal'
         };
 
+        function normalizeOrder(order) {
+            const unique = [...new Set((Array.isArray(order) ? order : []).filter(id => DEFAULT_ORDER.includes(id)))];
+            return [...unique, ...DEFAULT_ORDER.filter(id => !unique.includes(id))];
+        }
+
         async function saveOrder(order) {
-		    try {
-		        await fetch('/api/dashboard/save-layout.php', {
-		            method: 'POST',
-		            credentials: 'include',
-		            headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
-		            body: JSON.stringify({ order })
-		        });
-		    } catch(e) { console.error('Failed to save dashboard layout', e); }
-		}
+            const normalized = normalizeOrder(order);
+            try {
+                const res = await fetch('/api/dashboard/save-layout.php', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
+                    body: JSON.stringify({ order: normalized })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || data.success === false) throw new Error(data.message || 'Save failed');
+                return true;
+            } catch(e) {
+                console.error('Failed to save dashboard layout', e);
+                return false;
+            }
+        }
 		
 		async function loadOrder() {
 		    try {
@@ -2261,12 +2273,16 @@ foreach ($_dashboard_initial_order as $card_id) {
         };
 
         // applyDashboardOrder — was: saveOrder(newOrder); applyOrderToGrid(newOrder);
-		window.applyDashboardOrder = async function () {
-		    const newOrder = getSettingsOrder();
-		    await saveOrder(newOrder);
-		    applyOrderToGrid(newOrder);
-		    closeDashboardSettings();
-		};
+        window.applyDashboardOrder = async function () {
+            const newOrder = normalizeOrder(getSettingsOrder());
+            const saved = await saveOrder(newOrder);
+            if (!saved) {
+                alert('Could not save your dashboard layout. Please try again.');
+                return;
+            }
+            applyOrderToGrid(newOrder);
+            closeDashboardSettings();
+        };
 
         window.resetDashboardOrder = function () {
             buildSettingsList([...DEFAULT_ORDER]);
