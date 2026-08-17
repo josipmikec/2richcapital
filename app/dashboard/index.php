@@ -99,9 +99,9 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    display: none;
 		    position: fixed;
 		    inset: 0;
-		    background: rgba(0,0,0,0.8);
-		    backdrop-filter: blur(8px);
-		    -webkit-backdrop-filter: blur(8px);
+		    background: rgba(8, 10, 14, 0.42);
+		    backdrop-filter: blur(18px) saturate(155%);
+		    -webkit-backdrop-filter: blur(18px) saturate(155%);
 		    z-index: 1000;
 		    align-items: center;
 		    justify-content: center;
@@ -116,8 +116,8 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    to { opacity: 1; }
 		}
 		.dashboard-settings-panel {
-		    background: linear-gradient(135deg, #1a1a1a 0%, #0E0E0E 100%);
-		    border: 1px solid #2a2a2a;
+		    background: linear-gradient(180deg, rgba(22, 26, 34, 0.64) 0%, rgba(16, 20, 28, 0.52) 100%);
+		    border: 1px solid rgba(255,255,255,0.10);
 		    border-radius: 16px;
 		    width: 100%;
 		    max-width: 560px;
@@ -127,8 +127,10 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    display: flex;
 		    flex-direction: column;
 		    gap: 24px;
-		    box-shadow: 0 16px 64px rgba(0,0,0,0.6);
+		    box-shadow: 0 16px 64px rgba(0,0,0,0.24);
 		    position: relative;
+		    backdrop-filter: blur(22px) saturate(145%);
+		    -webkit-backdrop-filter: blur(22px) saturate(145%);
 		}
 		.dashboard-settings-panel::before {
 		    content: '';
