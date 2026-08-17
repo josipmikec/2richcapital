@@ -36,17 +36,36 @@ call_user_func( 'Kadence\kadence' );
 
 if ( ! function_exists( 'tworich_research_send_cors_headers' ) ) {
     function tworich_research_send_cors_headers() {
-        $allowed_origin = 'https://app.2rich.capital';
+        $allowed_origins = array(
+            'https://app.2rich.capital',
+            'https://2rich.capital',
+            'https://app.2rich.test',
+            'http://app.2rich.test',
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+        );
 
-        if ( isset( $_SERVER['HTTP_ORIGIN'] ) && $_SERVER['HTTP_ORIGIN'] === $allowed_origin ) {
-            header( 'Access-Control-Allow-Origin: ' . $allowed_origin );
+        if ( isset( $_SERVER['HTTP_ORIGIN'] ) && in_array( $_SERVER['HTTP_ORIGIN'], $allowed_origins, true ) ) {
+            header( 'Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN'] );
             header( 'Access-Control-Allow-Credentials: true' );
             header( 'Access-Control-Allow-Methods: GET, OPTIONS' );
-            header( 'Access-Control-Allow-Headers: Content-Type, X-Requested-With' );
+            header( 'Access-Control-Allow-Headers: Content-Type, X-Requested-With, X-WP-Nonce' );
             header( 'Vary: Origin' );
         }
     }
 }
+
+if ( ! function_exists( 'tworich_research_respond_to_preflight' ) ) {
+    function tworich_research_respond_to_preflight() {
+        tworich_research_send_cors_headers();
+        if ( isset( $_SERVER['REQUEST_METHOD'] ) && 'OPTIONS' === $_SERVER['REQUEST_METHOD'] ) {
+            status_header( 204 );
+            exit;
+        }
+    }
+}
+
+add_action( 'init', 'tworich_research_respond_to_preflight', 0 );
 
 if ( ! function_exists( 'tworich_research_get_remote_json' ) ) {
     function tworich_research_get_remote_json( $url ) {
