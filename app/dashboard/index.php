@@ -76,12 +76,9 @@ try {
 
 // ── Filter visible cards based on feature flags ──
 $visible_cards = [];
-$unavailable_cards = [];
 foreach ($_dashboard_initial_order as $card_id) {
     if (rich_card_visible($card_id, $user_id)) {
         $visible_cards[] = $card_id;
-    } else {
-        $unavailable_cards[] = $card_id;
     }
 }
 ?>
@@ -102,9 +99,9 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    display: none;
 		    position: fixed;
 		    inset: 0;
-		    background: rgba(8, 10, 14, 0.70);
-		    backdrop-filter: blur(24px) saturate(140%);
-		    -webkit-backdrop-filter: blur(24px) saturate(140%);
+		    background: rgba(0,0,0,0.8);
+		    backdrop-filter: blur(8px);
+		    -webkit-backdrop-filter: blur(8px);
 		    z-index: 1000;
 		    align-items: center;
 		    justify-content: center;
@@ -119,8 +116,8 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    to { opacity: 1; }
 		}
 		.dashboard-settings-panel {
-		    background: linear-gradient(180deg, rgba(22, 26, 34, 0.94) 0%, rgba(16, 20, 28, 0.90) 100%);
-		    border: 1px solid rgba(255,255,255,0.08);
+		    background: linear-gradient(135deg, #1a1a1a 0%, #0E0E0E 100%);
+		    border: 1px solid #2a2a2a;
 		    border-radius: 16px;
 		    width: 100%;
 		    max-width: 560px;
