@@ -14,7 +14,8 @@ if (empty($_SESSION['user_id']) || empty($_SESSION['authenticated'])) {
 
 // CSRF check
 $incoming_csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-if (empty($incoming_csrf) || !hash_equals($_SESSION['csrf_token'] ?? '', $incoming_csrf)) {
+$session_csrf = $_SESSION['csrf_token'] ?? '';
+if ($incoming_csrf === '' || $session_csrf === '' || !hash_equals($session_csrf, $incoming_csrf)) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'CSRF token mismatch']);
     exit;
@@ -47,20 +48,33 @@ if (!$pdo) {
     exit;
 }
 
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 $uid         = (int)$_SESSION['user_id'];
 $layout_json = json_encode($order);
 
 // Upsert: insert or update on duplicate user_id
 try {
-    $stmt = $pdo->prepare("
-    INSERT INTO user_dashboard_layouts (user_id, layout_order, updated_at)
-    VALUES (?, ?, NOW())
-    ON DUPLICATE KEY UPDATE layout_order = VALUES(layout_order), updated_at = NOW()
-");
-    $stmt->execute([$uid, $layout_json]);
+    $pdo->beginTransaction();
 
+    $check = $pdo->prepare('SELECT id FROM user_dashboard_layouts WHERE user_id = ? LIMIT 1');
+    $check->execute([$uid]);
+    $existing = $check->fetchColumn();
+
+    if ($existing) {
+        $stmt = $pdo->prepare('UPDATE user_dashboard_layouts SET layout_order = ?, updated_at = NOW() WHERE user_id = ?');
+        $stmt->execute([$layout_json, $uid]);
+    } else {
+        $stmt = $pdo->prepare('INSERT INTO user_dashboard_layouts (user_id, layout_order, updated_at) VALUES (?, ?, NOW())');
+        $stmt->execute([$uid, $layout_json]);
+    }
+
+    $pdo->commit();
     echo json_encode(['success' => true, 'saved_order' => $order]);
 } catch (Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     http_response_code(500);
     echo json_encode([
         'success' => false,

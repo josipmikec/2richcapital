@@ -76,12 +76,14 @@ try {
 
 // ── Filter visible cards based on feature flags ──
 $visible_cards = [];
+$unavailable_cards = [];
 foreach ($_dashboard_initial_order as $card_id) {
     if (rich_card_visible($card_id, $user_id)) {
         $visible_cards[] = $card_id;
+    } else {
+        $unavailable_cards[] = $card_id;
     }
 }
-$dashboard_layout_cards = $visible_cards;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -100,9 +102,9 @@ $dashboard_layout_cards = $visible_cards;
 		    display: none;
 		    position: fixed;
 		    inset: 0;
-		    background: rgba(8, 10, 14, 0.34);
-		    backdrop-filter: blur(18px) saturate(150%);
-		    -webkit-backdrop-filter: blur(18px) saturate(150%);
+		    background: rgba(8, 10, 14, 0.70);
+		    backdrop-filter: blur(24px) saturate(140%);
+		    -webkit-backdrop-filter: blur(24px) saturate(140%);
 		    z-index: 1000;
 		    align-items: center;
 		    justify-content: center;
@@ -117,8 +119,8 @@ $dashboard_layout_cards = $visible_cards;
 		    to { opacity: 1; }
 		}
 		.dashboard-settings-panel {
-		    background: linear-gradient(180deg, rgba(24, 30, 40, 0.70) 0%, rgba(16, 20, 28, 0.58) 100%);
-		    border: 1px solid rgba(255,255,255,0.10);
+		    background: linear-gradient(180deg, rgba(22, 26, 34, 0.94) 0%, rgba(16, 20, 28, 0.90) 100%);
+		    border: 1px solid rgba(255,255,255,0.08);
 		    border-radius: 16px;
 		    width: 100%;
 		    max-width: 560px;
