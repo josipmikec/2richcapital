@@ -306,24 +306,30 @@ body {
 
 .widget-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
-  grid-template-areas:
-    "market news signals classroom"
-    "strategies strategies trades mentors"
-    "ai chat journal journal";
+  grid-auto-flow: dense;
+  align-items: start;
 }
 
-.widget-market     { grid-area: market; }
-.widget-signals    { grid-area: signals; }
-.widget-news       { grid-area: news; }
-.widget-classroom  { grid-area: classroom; }
-.widget-strategies { grid-area: strategies; }
-.widget-trades     { grid-area: trades; }
-.widget-mentors    { grid-area: mentors; }
-.widget-ai         { grid-area: ai; }
-.widget-chat       { grid-area: chat; }
-.widget-journal    { grid-area: journal; }
+/* Let enabled widgets reflow into available cells when cards are disabled. */
+.widget-market,
+.widget-signals,
+.widget-news,
+.widget-classroom,
+.widget-strategies,
+.widget-trades,
+.widget-mentors,
+.widget-ai,
+.widget-chat,
+.widget-journal {
+  grid-area: auto;
+}
+
+.widget-strategies,
+.widget-journal {
+  grid-column: span 2;
+}
 
 
 .widget {
@@ -995,20 +1001,15 @@ body {
 
 @media (max-width: 1200px) {
   .widget-grid {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
+    grid-auto-flow: dense;
   }
 
-  .widget-market     { grid-column: 1; grid-row: 1; }
-  .widget-news       { grid-column: 2; grid-row: 1; }
-  .widget-signals    { grid-column: 1 / 3; grid-row: 2; }
-  .widget-classroom  { grid-column: 3; grid-row: 1 / 3; }
-  .widget-strategies { grid-column: 1 / 3; grid-row: 3; }
-  .widget-trades     { grid-column: 1; grid-row: 4; }
-  .widget-mentors    { grid-column: 2; grid-row: 4; }
-  .widget-ai         { grid-column: 3; grid-row: 4; }
-  .widget-chat       { grid-column: 1; grid-row: 5; }
-  .widget-journal    { grid-column: 2 / 4; grid-row: 5; }
+  .widget-strategies,
+  .widget-journal {
+    grid-column: span 2;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -1018,21 +1019,16 @@ body {
 
 @media (max-width: 900px) {
   .widget-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+    grid-auto-flow: dense;
   }
 
-  .widget-market     { grid-column: 1; grid-row: 1; }
-  .widget-news       { grid-column: 2; grid-row: 1; }
-  .widget-signals    { grid-column: 1 / 3; grid-row: 2; }
-  .widget-classroom  { grid-column: 1 / 3; grid-row: 3; }
-  .widget-strategies { grid-column: 1 / 3; grid-row: 4; }
-  .widget-trades     { grid-column: 1; grid-row: 5; }
-  .widget-mentors    { grid-column: 2; grid-row: 5; }
-  .widget-ai         { grid-column: 1; grid-row: 6; }
-  .widget-chat       { grid-column: 2; grid-row: 6; }
-  .widget-journal    { grid-column: 1 / 3; grid-row: 7; }
-}
+  .widget-strategies,
+  .widget-journal {
+    grid-column: span 2;
+  }
+
 
 @media (max-width: 768px) {
   .dashboard-container {
