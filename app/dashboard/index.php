@@ -1391,13 +1391,13 @@ foreach ($_dashboard_initial_order as $card_id) {
 	    var defaultPrevOCText  = "– / –";
 	    var defaultPctText     = "0.00%";
 	
-	    var WP_AJAX_BASE = window.location.origin + "/wp-admin/admin-ajax.php";
+	    var WP_AJAX_BASE = <?php echo json_encode(rtrim(site_url(), "/") . "/wp-admin/admin-ajax.php"); ?>;
 	
 	    function updateLivePrice() {
 	        var url = WP_AJAX_BASE + "?action=tworich_research_quote";
 	
 	        fetch(url)
-	            .then(function(res) { return res.json(); })
+	            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url); return res.json(); })
 	            .then(function(data) {
 	                if (!data) return;
 	                if (data.error) return;
@@ -1427,7 +1427,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 
 	
 	        fetch(url)
-	            .then(function(res) { return res.json(); })
+	            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url); return res.json(); })
 	            .then(function(data) {
 	                if (!data) return;
 	                if (data.error) return;
@@ -1520,10 +1520,10 @@ foreach ($_dashboard_initial_order as $card_id) {
 	    }
 	
 	    function loadSma200() {
-	        var url = "/wp-admin/admin-ajax.php?action=tworich_research_sma200";
+	        var url = WP_AJAX_BASE + "?action=tworich_research_sma200";
 	
 	        fetch(url)
-	            .then(function(res) { return res.json(); })
+	            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url); return res.json(); })
 	            .then(function(data) {
 	                if (!data) return;
 	                if (data.error) return;
@@ -1541,10 +1541,10 @@ foreach ($_dashboard_initial_order as $card_id) {
 	    }
 	
 	    function loadRsiDaily() {
-	        var url = "/wp-admin/admin-ajax.php?action=tworich_research_rsi";
+	        var url = WP_AJAX_BASE + "?action=tworich_research_rsi";
 	
 	        fetch(url)
-	            .then(function(res) { return res.json(); })
+	            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url); return res.json(); })
 	            .then(function(data) {
 	                if (!data) return;
 	                if (data.error) return;
