@@ -98,7 +98,7 @@ if (!function_exists('rich_get_feature_row')) {
         if (!$wpdb) return null;
         $table = rich_find_feature_table($wpdb);
         return $wpdb->get_row($wpdb->prepare(
-            "SELECT flag_key, label, is_enabled, allowed_roles FROM {$table} WHERE flag_key = %s LIMIT 1",
+            "SELECT flag_key, label, is_enabled, allowed_roles, is_overlay_enabled, overlay_message FROM {$table} WHERE flag_key = %s LIMIT 1",
             rich_normalize_feature_key($key)
         ), ARRAY_A);
     }
