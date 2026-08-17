@@ -362,7 +362,8 @@ body {
   gap: 2px;
   padding: 10px 14px 0;
   border-bottom: 1px solid #1a1a1a;
-  overflow-x: auto;
+  overflow: visible;
+  flex-wrap: wrap;
   scrollbar-width: none;
   flex-shrink: 0;
 }
