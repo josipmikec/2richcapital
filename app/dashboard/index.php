@@ -99,9 +99,9 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    display: none;
 		    position: fixed;
 		    inset: 0;
-		    background: rgba(8, 10, 14, 0.42);
-		    backdrop-filter: blur(18px) saturate(155%);
-		    -webkit-backdrop-filter: blur(18px) saturate(155%);
+		    background: rgba(0,0,0,0.8);
+		    backdrop-filter: blur(8px);
+		    -webkit-backdrop-filter: blur(8px);
 		    z-index: 1000;
 		    align-items: center;
 		    justify-content: center;
@@ -116,8 +116,8 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    to { opacity: 1; }
 		}
 		.dashboard-settings-panel {
-		    background: linear-gradient(180deg, rgba(22, 26, 34, 0.64) 0%, rgba(16, 20, 28, 0.52) 100%);
-		    border: 1px solid rgba(255,255,255,0.10);
+		    background: linear-gradient(135deg, #1a1a1a 0%, #0E0E0E 100%);
+		    border: 1px solid #2a2a2a;
 		    border-radius: 16px;
 		    width: 100%;
 		    max-width: 560px;
@@ -127,10 +127,8 @@ foreach ($_dashboard_initial_order as $card_id) {
 		    display: flex;
 		    flex-direction: column;
 		    gap: 24px;
-		    box-shadow: 0 16px 64px rgba(0,0,0,0.24);
+		    box-shadow: 0 16px 64px rgba(0,0,0,0.6);
 		    position: relative;
-		    backdrop-filter: blur(22px) saturate(145%);
-		    -webkit-backdrop-filter: blur(22px) saturate(145%);
 		}
 		.dashboard-settings-panel::before {
 		    content: '';
@@ -708,7 +706,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-market', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -775,7 +773,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-signals', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -821,7 +819,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-news', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -860,7 +858,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-classroom', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -910,7 +908,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-strategies', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -944,7 +942,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-trades', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -1049,7 +1047,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-mentors', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -1092,7 +1090,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-ai', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -1116,7 +1114,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-chat', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
@@ -1150,7 +1148,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php
                     $overlay = rich_feature_overlay('card-journal', $user_id);
                     if ($overlay): ?>
-                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
+                    <div class="card-overlay" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit;">
                         <div style="text-align:center;padding:24px;max-width:280px;">
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
