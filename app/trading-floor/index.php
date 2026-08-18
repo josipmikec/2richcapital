@@ -1660,11 +1660,17 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
     }
 
     function openFloorSectionFromHash() {
-        const hash = window.location.hash.replace('#', '').toLowerCase();
-        if (hash === 'profile') {
+        const rawHash = window.location.hash.replace(/^#/, '');
+        const hash = rawHash.toLowerCase();
+        const requestedGroup = new URLSearchParams(rawHash.replace(/&/g, '&')).get('group');
+        if (hash.startsWith('profile')) {
             openFloorSection('profile');
-        } else if (hash === 'groups') {
+        } else if (hash.startsWith('groups')) {
             openFloorSection('groups');
+            if (requestedGroup) {
+                window.__requestedTradingGroupId = String(requestedGroup);
+                if (typeof bootFloorSignals === 'function') bootFloorSignals();
+            }
         } else {
             openFloorSection('home');
         }
@@ -1713,7 +1719,16 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
             floorSignalsState.memberships = Array.isArray(membershipsData.memberships) ? membershipsData.memberships : [];
             floorSignalsState.myDrafts = Array.isArray(groupsData.my_drafts) ? groupsData.my_drafts.map(normalizeSignalGroup) : [];
             floorSignalsState.requests = Array.isArray(groupsData.requests) ? groupsData.requests : [];
-            if (!floorSignalsState.activeGroupId && floorSignalsState.groups.length) {
+            const requestedGroupId = String(window.__requestedTradingGroupId || '');
+            const requestedGroup = requestedGroupId && floorSignalsState.groups.find(group => String(group.id) === requestedGroupId);
+            if (requestedGroup) {
+                floorSignalsState.activeGroupId = requestedGroup.id;
+                floorSignalsState.activeView = 'workspace';
+                floorSignalsState.activeWorkspaceTab = 'room';
+                floorSignalsState.groupMembers = await loadGroupMembers(requestedGroup.id);
+                await Promise.all([loadGroupMessages(requestedGroup.id), loadGroupSignalFeed(requestedGroup.id)]);
+                window.__requestedTradingGroupId = '';
+            } else if (!floorSignalsState.activeGroupId && floorSignalsState.groups.length) {
                 floorSignalsState.activeGroupId = floorSignalsState.groups[0].id;
             }
             floorSignalsState.booted = true;

@@ -1317,7 +1317,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             state.innerHTML = `<select class="dashboard-group-chat-switcher" aria-label="Select joined group">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>`;
             state.hidden = false;
             state.querySelector('select').addEventListener('change', e => selectGroup(e.target.value));
-            composer.hidden = false; meta.hidden = false; meta.innerHTML = `Members: <span>${escapeHtml(group.member_count || 0)}</span>`; setCta('Visit Group', `/trading-floor#groups`, true);
+            composer.hidden = false; meta.hidden = false; meta.innerHTML = `Members: <span>${escapeHtml(group.member_count || 0)}</span>`; setCta('Visit Group', `/trading-floor#groups&group=${encodeURIComponent(String(group.id))}`, true);
             await loadMessages();
         }
         async function init() {
