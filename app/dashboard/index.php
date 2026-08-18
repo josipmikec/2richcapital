@@ -1181,12 +1181,8 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <button class="wtab" onclick="switchTab(this,'planner-pane')">Planner</button>
                     </div>
                     <div class="widget-body" id="journal-pane">
-                        <p class="widget-header">Journal</p>
                         <div class="dashboard-journal-card" id="dashboardJournalCard">
-                            <div>
-                                <div class="dashboard-journal-card-label">Default Journal</div>
-                                <div class="dashboard-journal-card-name" id="dashboardJournalName">Loading journal...</div>
-                            </div>
+                            <div class="dashboard-journal-card-name" id="dashboardJournalName">Loading journal...</div>
                             <div class="dashboard-journal-stats" aria-live="polite">
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalTotalTrades">—</span><span class="dashboard-journal-stat-label">Trades</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalWinRate">—</span><span class="dashboard-journal-stat-label">Win Rate</span></div>
