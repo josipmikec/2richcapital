@@ -1329,3 +1329,17 @@ body {
 .dashboard-group-chat-send:hover { color: #ffe38a; background: rgba(242,202,80,0.08); }
 .dashboard-group-chat-send:active { transform: translateY(1px); }
 .dashboard-group-chat-send:disabled { opacity: 0.45; cursor: wait; }
+
+/* Chat card vertical rhythm */
+#chat-pane { padding: 14px 18px 16px; gap: 6px; }
+#chat-pane .widget-header { margin-bottom: 2px; }
+#chat-pane .dashboard-group-chat-state { flex: 0 0 auto; }
+#chat-pane .dashboard-group-chat-switcher { margin-bottom: 2px; }
+#chat-pane .dashboard-group-chat-messages { flex: 0 0 auto; height: 190px; min-height: 0; margin: 0; }
+#chat-pane .dashboard-group-chat-footer { flex: 0 0 auto; margin-top: 0; padding-top: 2px; gap: 5px; }
+#chat-pane .dashboard-group-chat-meta { margin: 0; line-height: 1.2; }
+#chat-pane .dashboard-group-chat-composer { gap: 6px; }
+#chat-pane .dashboard-group-chat-composer input { height: 44px; padding: 0 12px; font-size: 12px; }
+#chat-pane .dashboard-group-chat-send { flex-basis: 40px; width: 40px; min-width: 40px; height: 40px; border: 1px solid rgba(242,202,80,0.24); background: rgba(242,202,80,0.07); border-radius: 10px; }
+#chat-pane .dashboard-group-chat-send:hover { background: rgba(242,202,80,0.16); border-color: rgba(242,202,80,0.48); }
+#chat-pane #dashboardGroupChatCta { margin-top: 0; }
