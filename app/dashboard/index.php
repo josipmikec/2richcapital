@@ -1182,7 +1182,19 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <div class="widget-body" id="journal-pane">
                         <p class="widget-header">Journal</p>
-                        <div class="widget-blank"></div>
+                        <div class="dashboard-journal-card" id="dashboardJournalCard">
+                            <div>
+                                <div class="dashboard-journal-card-label">Default Journal</div>
+                                <div class="dashboard-journal-card-name" id="dashboardJournalName">Loading journal...</div>
+                            </div>
+                            <div class="dashboard-journal-stats" aria-live="polite">
+                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalTotalTrades">—</span><span class="dashboard-journal-stat-label">Trades</span></div>
+                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalWinRate">—</span><span class="dashboard-journal-stat-label">Win Rate</span></div>
+                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalAvgPL">—</span><span class="dashboard-journal-stat-label">Avg P/L</span></div>
+                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalOpenTrades">—</span><span class="dashboard-journal-stat-label">Open</span></div>
+                            </div>
+                            <button class="widget-action dashboard-journal-cta" id="dashboardJournalCta" type="button">View all in Journal <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+                        </div>
                     </div>
                     <div class="widget-body" id="planner-pane" style="display:none">
                         <p class="widget-header">Planner</p>
@@ -1286,6 +1298,43 @@ foreach ($_dashboard_initial_order as $card_id) {
     </div>
 
 	<script>
+    (function () {
+        const nameEl = document.getElementById('dashboardJournalName');
+        const ctaEl = document.getElementById('dashboardJournalCta');
+        if (!nameEl || !ctaEl) return;
+        const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+        const loadJournalCard = async () => {
+            try {
+                const journalsResponse = await fetch('/api/journals/list.php', { credentials: 'include' });
+                const journalsData = await journalsResponse.json();
+                if (!journalsData.success || !Array.isArray(journalsData.journals) || !journalsData.journals.length) {
+                    nameEl.textContent = 'No journals yet';
+                    ctaEl.onclick = () => { window.location.href = '/journal/'; };
+                    return;
+                }
+                const journal = journalsData.journals.find(item => Number(item.is_default) === 1) || journalsData.journals[0];
+                const journalId = Number(journal.id || 0);
+                nameEl.textContent = journal.name || 'Default Journal';
+                ctaEl.onclick = () => { window.location.href = journalId ? `/journal/?journal_id=${encodeURIComponent(journalId)}` : '/journal/'; };
+                if (!journalId) return;
+                const statsResponse = await fetch(`/api/trades/stats.php?journal_id=${encodeURIComponent(journalId)}`, { credentials: 'include' });
+                const statsData = await statsResponse.json();
+                if (!statsData.success) return;
+                const stats = statsData.stats || {};
+                setText('dashboardJournalTotalTrades', stats.total_trades ?? 0);
+                setText('dashboardJournalWinRate', `${stats.win_rate ?? 0}%`);
+                const average = Number(stats.avg_profit_loss_pct ?? 0);
+                setText('dashboardJournalAvgPL', `${average >= 0 ? '+' : ''}${average}%`);
+                const avgEl = document.getElementById('dashboardJournalAvgPL');
+                if (avgEl) avgEl.classList.toggle('is-positive', average > 0), avgEl.classList.toggle('is-negative', average < 0);
+                setText('dashboardJournalOpenTrades', stats.open_trades ?? 0);
+            } catch (error) {
+                console.error('Dashboard journal card error:', error);
+                nameEl.textContent = 'Unable to load journal';
+            }
+        };
+        loadJournalCard();
+    })();
 	    function switchTab(btn, paneId) {
 	        const widget = btn.closest('.widget');
 	        widget.querySelectorAll('.wtab').forEach(t => t.classList.remove('active'));

@@ -1366,3 +1366,16 @@ body {
 #chat-pane .dashboard-group-chat-composer {
   margin-top: 10px;
 }
+
+
+/* Dashboard journal card */
+.dashboard-journal-card { display:flex; flex-direction:column; gap:12px; height:100%; }
+.dashboard-journal-card-label { color:#5d5d5d; font:700 9px/1 Montserrat,sans-serif; letter-spacing:.14em; text-transform:uppercase; margin-bottom:6px; }
+.dashboard-journal-card-name { color:#f3f3f3; font:700 18px/1.2 Montserrat,sans-serif; }
+.dashboard-journal-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.dashboard-journal-stat { background:rgba(255,255,255,.025); border:1px solid #242424; border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:5px; min-height:72px; }
+.dashboard-journal-stat-value { color:#f2ca50; font:700 20px/1 Montserrat,sans-serif; }
+.dashboard-journal-stat-value.is-positive { color:#7fd48d; }
+.dashboard-journal-stat-value.is-negative { color:#f08d8d; }
+.dashboard-journal-stat-label { color:#7b7b7b; font:600 10px/1.1 Montserrat,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+.dashboard-journal-cta { margin-top:auto; align-self:flex-start; }
