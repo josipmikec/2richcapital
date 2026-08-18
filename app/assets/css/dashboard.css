@@ -1361,3 +1361,8 @@ body {
 
 /* Member count removed from the compact dashboard chat footer. */
 #chat-pane .dashboard-group-chat-footer { gap: 10px; }
+
+/* Give the composer the same breathing room as the CTA. */
+#chat-pane .dashboard-group-chat-composer {
+  margin-top: 10px;
+}
