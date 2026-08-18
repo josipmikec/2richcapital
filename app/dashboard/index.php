@@ -826,7 +826,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <?php endif; ?>
                     <div class="widget-tabs news-widget-tabs">
-                        <button class="wtab active">News</button>
+                        <button class="wtab active">Live News Feed</button>
+                        <span class="news-feed-status" id="newsFeedStatus">
+                            <span class="news-dot disconnected"></span>
+                            <span class="news-status-text">Connecting...</span>
+                        </span>
                         <button class="news-popout-btn" onclick="openNewsWindow()" title="Open in new window">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <polyline points="15 3 21 3 21 9"></polyline>
