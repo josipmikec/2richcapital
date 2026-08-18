@@ -1180,6 +1180,13 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <div class="widget-body" id="journal-pane">
                         <div class="dashboard-journal-card" id="dashboardJournalCard">
                             <div class="dashboard-journal-card-name" id="dashboardJournalName">Loading journal...</div>
+                            <div class="dashboard-journal-curve-wrap" aria-hidden="true">
+                                <div class="dashboard-journal-curve-meta">
+                                    <span class="dashboard-journal-curve-label">Equity curve</span>
+                                    <span class="dashboard-journal-curve-caption" id="dashboardJournalCurveCaption">Last 10 trades</span>
+                                </div>
+                                <svg class="dashboard-journal-curve" id="dashboardJournalCurve" viewBox="0 0 120 40" preserveAspectRatio="none" role="img" aria-label="Equity curve based on last 10 trades"></svg>
+                            </div>
                             <div class="dashboard-journal-stats" aria-live="polite">
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalTotalTrades">—</span><span class="dashboard-journal-stat-label">Trades</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalWinRate">—</span><span class="dashboard-journal-stat-label">Win Rate</span></div>
@@ -1296,6 +1303,47 @@ foreach ($_dashboard_initial_order as $card_id) {
         const ctaEl = document.getElementById('dashboardJournalCta');
         if (!nameEl || !ctaEl) return;
         const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+        const renderJournalCurve = (trades) => {
+            const svg = document.getElementById('dashboardJournalCurve');
+            const caption = document.getElementById('dashboardJournalCurveCaption');
+            if (!svg) return;
+            const recent = (trades || [])
+                .filter(trade => trade && String(trade.status || '').toLowerCase() !== 'open')
+                .slice(0, 10)
+                .reverse();
+            const values = [];
+            let equity = 0;
+            recent.forEach(trade => {
+                const pl = Number(trade.profit_loss_pct ?? trade.profit_loss ?? 0) || 0;
+                equity += pl;
+                values.push(equity);
+            });
+            if (!recent.length || values.length < 2) {
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="currentColor" opacity="0.45" font-size="8">No closed trades yet</text>';
+                if (caption) caption.textContent = recent.length ? 'Not enough closed trades yet' : 'No closed trades yet';
+                return;
+            }
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const width = 120;
+            const height = 40;
+            const pad = 4;
+            const range = Math.max(1e-6, max - min);
+            const pts = values.map((v, i) => {
+                const x = pad + (i * (width - pad * 2)) / (values.length - 1);
+                const y = height - pad - ((v - min) / range) * (height - pad * 2);
+                return `${x.toFixed(2)},${y.toFixed(2)}`;
+            });
+            const last = values[values.length - 1];
+            const stroke = last >= 0 ? '#2f9d6d' : '#c85c5c';
+            const fill = last >= 0 ? 'rgba(47,157,109,0.12)' : 'rgba(200,92,92,0.12)';
+            svg.innerHTML = `
+                <path d="M 4 36 L ${pts.join(' L ')} L 116 36 Z" fill="${fill}"></path>
+                <polyline points="${pts.join(' ')}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            `;
+            if (caption) caption.textContent = `${recent.length} trades · ${last >= 0 ? '+' : ''}${last.toFixed(2)}%`;
+        };
+
         const loadJournalCard = async () => {
             try {
                 const journalsResponse = await fetch('/api/journals/list.php', { credentials: 'include' });
@@ -1321,6 +1369,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                 const avgEl = document.getElementById('dashboardJournalAvgPL');
                 if (avgEl) avgEl.classList.toggle('is-positive', average > 0), avgEl.classList.toggle('is-negative', average < 0);
                 setText('dashboardJournalOpenTrades', stats.open_trades ?? 0);
+                const curveResponse = await fetch(`/api/trades/list.php?journal_id=${encodeURIComponent(journalId)}&limit=10&order=DESC`, { credentials: 'include' });
+                const curveData = await curveResponse.json();
+                renderJournalCurve(Array.isArray(curveData.trades) ? curveData.trades : []);
             } catch (error) {
                 console.error('Dashboard journal card error:', error);
                 nameEl.textContent = 'Unable to load journal';
