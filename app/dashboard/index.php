@@ -91,7 +91,7 @@ foreach ($_dashboard_initial_order as $card_id) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css?v=<?php echo filemtime(__DIR__ . '/../assets/css/dashboard.css'); ?>">
     <link rel="stylesheet" href="../assets/css/column-manager.css">
     <style>
         /* ── Dashboard Settings Panel ───────────────────────────── */
