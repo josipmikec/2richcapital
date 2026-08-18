@@ -950,8 +950,6 @@ foreach ($_dashboard_initial_order as $card_id) {
 				    </div>
 				
 				    <div class="widget-body" id="live-pane">
-				        <p class="widget-header">Live Trades</p>
-				
 				        <!-- MT5 connection status -->
 				        <div class="trade-status-row">
 				            <span class="status-dot" id="dashMt5StatusDot"></span>
