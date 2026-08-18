@@ -1193,6 +1193,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalAvgPL">—</span><span class="dashboard-journal-stat-label">Avg P/L</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalOpenTrades">—</span><span class="dashboard-journal-stat-label">Open</span></div>
                             </div>
+                            <div class="dashboard-journal-insight" aria-live="polite">
+                                <div class="dashboard-journal-insight-heading">Performance snapshot</div>
+                                <div class="dashboard-journal-insight-grid">
+                                    <div><span id="dashboardJournalClosedTrades">—</span><small>Closed</small></div>
+                                    <div><span id="dashboardJournalNetPL">—</span><small>Net P/L</small></div>
+                                    <div><span id="dashboardJournalBestTrade">—</span><small>Best trade</small></div>
+                                    <div><span id="dashboardJournalWorstTrade">—</span><small>Worst trade</small></div>
+                                </div>
+                            </div>
                             <button class="widget-action dashboard-journal-cta" id="dashboardJournalCta" type="button">View all in Journal <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                         </div>
                     </div>
@@ -1349,7 +1358,25 @@ foreach ($_dashboard_initial_order as $card_id) {
             if (caption) caption.textContent = `${ordered.length} trades · ${last >= 0 ? '+' : ''}${last.toFixed(2)}%`;
         };
 
-        const loadJournalCard = async () => {
+        const renderJournalSnapshot = (trades) => {
+            const setSnapshot = (id, value, tone = '') => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = value;
+                el.classList.remove('is-positive', 'is-negative');
+                if (tone) el.classList.add(tone);
+            };
+            const closed = (trades || []).filter(trade => trade && String(trade.status || '').toLowerCase() !== 'open' && trade.exit_date);
+            const plValues = closed.map(trade => Number(trade.profit_loss_pct ?? trade.profit_loss ?? 0) || 0);
+            const net = plValues.reduce((sum, value) => sum + value, 0);
+            const best = plValues.length ? Math.max(...plValues) : 0;
+            const worst = plValues.length ? Math.min(...plValues) : 0;
+            setSnapshot('dashboardJournalClosedTrades', closed.length);
+            setSnapshot('dashboardJournalNetPL', `${net >= 0 ? '+' : ''}${net.toFixed(2)}%`, net > 0 ? 'is-positive' : net < 0 ? 'is-negative' : '');
+            setSnapshot('dashboardJournalBestTrade', `${best >= 0 ? '+' : ''}${best.toFixed(2)}%`, best > 0 ? 'is-positive' : '');
+            setSnapshot('dashboardJournalWorstTrade', `${worst >= 0 ? '+' : ''}${worst.toFixed(2)}%`, worst < 0 ? 'is-negative' : '');
+        };
+
             try {
                 const journalsResponse = await fetch('/api/journals/list.php', { credentials: 'include' });
                 const journalsData = await journalsResponse.json();
@@ -1376,7 +1403,9 @@ foreach ($_dashboard_initial_order as $card_id) {
                 setText('dashboardJournalOpenTrades', stats.open_trades ?? 0);
                 const curveResponse = await fetch(`/api/trades/list.php?journal_id=${encodeURIComponent(journalId)}&limit=10000&order=DESC`, { credentials: 'include' });
                 const curveData = await curveResponse.json();
-                renderJournalCurve(Array.isArray(curveData.trades) ? curveData.trades : []);
+                const curveTrades = Array.isArray(curveData.trades) ? curveData.trades : [];
+                renderJournalCurve(curveTrades);
+                renderJournalSnapshot(curveTrades);
             } catch (error) {
                 console.error('Dashboard journal card error:', error);
                 nameEl.textContent = 'Unable to load journal';
