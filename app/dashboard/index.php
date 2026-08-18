@@ -1376,9 +1376,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             setSnapshot('dashboardJournalBestTrade', `${best >= 0 ? '+' : ''}${best.toFixed(2)}%`, best > 0 ? 'is-positive' : '');
             setSnapshot('dashboardJournalWorstTrade', `${worst >= 0 ? '+' : ''}${worst.toFixed(2)}%`, worst < 0 ? 'is-negative' : '');
         };
-
-            try {
-                const journalsResponse = await fetch('/api/journals/list.php', { credentials: 'include' });
+        const loadJournalCard = async () => {
                 const journalsData = await journalsResponse.json();
                 if (!journalsData.success || !Array.isArray(journalsData.journals) || !journalsData.journals.length) {
                     nameEl.textContent = 'No journals yet';
