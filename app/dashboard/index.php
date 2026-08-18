@@ -841,12 +841,6 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </button>
                     </div>
                     <div class="widget-body news-widget-body">
-                        <div class="news-feed-header">
-                            <span class="news-feed-status" id="newsFeedStatus">
-                                <span class="news-dot disconnected"></span>
-                                <span class="news-status-text">Connecting...</span>
-                            </span>
-                        </div>
                         <div class="news-feed-list" id="newsFeedList">
                             <div class="news-feed-empty">Connecting to live feed...</div>
                         </div>
