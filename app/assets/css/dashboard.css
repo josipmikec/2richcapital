@@ -1321,3 +1321,11 @@ body {
 .dashboard-group-chat-messages { flex: 1 1 auto; min-height: 120px; margin-bottom: 0; }
 #chat-pane { gap: 10px; }
 #chat-pane .widget-header { margin-bottom: 4px; }
+
+/* Compact group chat footer */
+.dashboard-group-chat-messages { margin-bottom: -2px; }
+.dashboard-group-chat-footer { padding-top: 4px; gap: 8px; }
+.dashboard-group-chat-send { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 44px; width: 44px; min-width: 44px; height: 44px; padding: 0; color: #f2ca50; background: transparent; border: 0; border-radius: 8px; }
+.dashboard-group-chat-send:hover { color: #ffe38a; background: rgba(242,202,80,0.08); }
+.dashboard-group-chat-send:active { transform: translateY(1px); }
+.dashboard-group-chat-send:disabled { opacity: 0.45; cursor: wait; }
