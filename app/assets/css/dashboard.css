@@ -1429,3 +1429,7 @@ body {
 .widget-grid { grid-auto-rows: minmax(299px, auto); }
 @media (max-width: 1200px) { .widget-grid { grid-auto-rows: minmax(288px, auto); } }
 @media (max-width: 900px) { .widget-grid { grid-auto-rows: minmax(270px, auto); } }
+
+/* Compact the Live News Feed inner spacing by 50%. */
+.widget-news .news-feed-header { padding: 7px 8px 5px; }
+.widget-news .news-feed-list { padding: 4px 0; }
