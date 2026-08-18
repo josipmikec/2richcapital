@@ -2204,35 +2204,12 @@ foreach ($_dashboard_initial_order as $card_id) {
         function applyOrderToGrid(order) {
 		    const grid = document.getElementById('widgetGrid');
 		    if (!grid) return;
-		
-		    // Widgets that span 2 columns in the original layout
-		    const DOUBLE = ['classroom', 'strategies', 'journal'];
-		
-		    // Build rows: fill 4 columns per row, doubles take 2 slots
-		    const rows = [];
-		    let row = [], slots = 0;
-		
-		    order.forEach(id => {
-		        const span = DOUBLE.includes(id) ? 2 : 1;
-		        if (slots + span > 4) {
-		            // pad remaining slots with last item repeated (grid needs full rows)
-		            while (slots < 4) { row.push(row[row.length - 1] || id); slots++; }
-		            rows.push(row);
-		            row = []; slots = 0;
-		        }
-		        if (span === 2) {
-		            row.push(id); row.push(id);
-		        } else {
-		            row.push(id);
-		        }
-		        slots += span;
+		    const normalized = normalizeOrder(order);
+		    const nodesById = new Map(Array.from(grid.children).map(node => [node.dataset.cardId, node]));
+		    normalized.forEach(id => {
+		        const node = nodesById.get(id);
+		        if (node) grid.appendChild(node);
 		    });
-		    // flush last row
-		    while (slots < 4) { row.push(row[row.length - 1] || '.'); slots++; }
-		    rows.push(row);
-		
-		    const areas = rows.map(r => `"${r.join(' ')}"`).join('\n    ');
-		    grid.style.gridTemplateAreas = areas;
 		}
 
 
