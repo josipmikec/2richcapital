@@ -1131,7 +1131,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                             </div>
                         </div>
                         <?php endif; ?>
-                        <p class="widget-header">Joined Group Chat</p>
+                        <p class="widget-header">Group Chats</p>
                         <div id="dashboardGroupChatState" class="dashboard-group-chat-state">
                             <div class="widget-content-block"><p class="widget-content-text">Loading your joined trading group...</p></div>
                         </div>
@@ -1173,6 +1173,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </div>
                     </div>
                     <?php endif; ?>
+                    <?php $journal_planner_overlay = rich_feature_overlay('card-journal-planner', $user_id); ?>
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'journal-pane')">Journal</button>
                         <button class="wtab" onclick="switchTab(this,'planner-pane')">Planner</button>
@@ -1206,6 +1207,13 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </div>
                     </div>
                     <div class="widget-body" id="planner-pane" style="display:none">
+                        <?php if ($journal_planner_overlay): ?>
+                        <div class="card-overlay card-overlay-pane" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:20;border-radius:0 0 14px 14px;">
+                            <div style="text-align:center;padding:24px;max-width:280px;">
+                                <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($journal_planner_overlay['message']); ?></div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <p class="widget-header">Planner</p>
                         <div class="widget-blank"></div>
                     </div>
