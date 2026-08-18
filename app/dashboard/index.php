@@ -1377,6 +1377,14 @@ foreach ($_dashboard_initial_order as $card_id) {
             setSnapshot('dashboardJournalWorstTrade', `${worst >= 0 ? '+' : ''}${worst.toFixed(2)}%`, worst < 0 ? 'is-negative' : '');
         };
         const loadJournalCard = async () => {
+            const nameEl = document.getElementById('dashboardJournalName');
+            const ctaEl = document.getElementById('dashboardJournalCta');
+            const setText = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            };
+            try {
+                const journalsResponse = await fetch('/api/journals/list.php', { credentials: 'include' });
                 const journalsData = await journalsResponse.json();
                 if (!journalsData.success || !Array.isArray(journalsData.journals) || !journalsData.journals.length) {
                     nameEl.textContent = 'No journals yet';
