@@ -1358,3 +1358,6 @@ body {
 #chat-pane #dashboardGroupChatCta {
   margin-top: 3px;
 }
+
+/* Member count removed from the compact dashboard chat footer. */
+#chat-pane .dashboard-group-chat-footer { gap: 10px; }
