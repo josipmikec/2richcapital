@@ -1343,3 +1343,18 @@ body {
 #chat-pane .dashboard-group-chat-send { flex-basis: 40px; width: 40px; min-width: 40px; height: 40px; border: 1px solid rgba(242,202,80,0.24); background: rgba(242,202,80,0.07); border-radius: 10px; }
 #chat-pane .dashboard-group-chat-send:hover { background: rgba(242,202,80,0.16); border-color: rgba(242,202,80,0.48); }
 #chat-pane #dashboardGroupChatCta { margin-top: 0; }
+
+/* Fill the chat card while preserving a balanced footer rhythm. */
+#chat-pane .dashboard-group-chat-messages {
+  height: 270px;
+  max-height: 270px;
+}
+#chat-pane .dashboard-group-chat-footer {
+  gap: 9px;
+}
+#chat-pane .dashboard-group-chat-composer {
+  margin-bottom: 0;
+}
+#chat-pane #dashboardGroupChatCta {
+  margin-top: 3px;
+}
