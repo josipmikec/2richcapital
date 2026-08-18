@@ -345,13 +345,26 @@ body {
 
 
 .widget {
+  position: relative;
   background: rgba(18,18,18,0.85);
   border: 1px solid #1a1a1a;
   border-radius: 14px;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   transition: border-color 0.2s;
+}
+
+/* Keep rounded clipping on the card content, not on hover pop-outs. */
+.widget > .widget-tabs,
+.widget > .widget-body {
+  position: relative;
+  z-index: 1;
+}
+
+.widget > .widget-body {
+  overflow: hidden;
+  border-radius: 0 0 14px 14px;
 }
 
 .widget:hover { border-color: #252525; }
