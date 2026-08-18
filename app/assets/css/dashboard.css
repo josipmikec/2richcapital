@@ -1385,7 +1385,7 @@ body {
 .widget-grid { grid-auto-rows: minmax(332px, auto); }
 @media (max-width: 1200px) { .widget-grid { grid-auto-rows: minmax(320px, auto); } }
 @media (max-width: 900px) { .widget-grid { grid-auto-rows: minmax(300px, auto); } }
-.widget-body { padding: 7px 9px; }
+.widget-body { padding: 14px 18px; }
 .widget-action { margin-top: 10px; }
 .widget-journal .widget-body { min-height: 0; }
 .dashboard-journal-card { gap: 10px; }
@@ -1433,3 +1433,15 @@ body {
 /* Compact the Live News Feed inner spacing by 50%. */
 .widget-news .news-feed-header { padding: 7px 8px 5px; }
 .widget-news .news-feed-list { padding: 4px 0; }
+
+
+/* Restore a little breathing room above bottom-pinned CTAs. */
+.widget-body > .widget-action,
+.widget-body > button.widget-action,
+.widget-body > a.widget-action,
+.widget-signals .signals-state > .widget-action,
+.widget-journal .dashboard-journal-cta,
+.widget-market .market-pane-action {
+  margin-top: auto;
+  padding-bottom: 6px;
+}
