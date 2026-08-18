@@ -1180,6 +1180,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <div class="widget-body" id="journal-pane">
                         <div class="dashboard-journal-card" id="dashboardJournalCard">
                             <div class="dashboard-journal-card-name" id="dashboardJournalName">Loading journal...</div>
+                            <div class="dashboard-journal-insight" aria-live="polite">
+                                <div class="dashboard-journal-insight-heading">Performance snapshot</div>
+                                <div class="dashboard-journal-insight-grid">
+                                    <div><span id="dashboardJournalClosedTrades">—</span><small>Closed</small></div>
+                                    <div><span id="dashboardJournalNetPL">—</span><small>Net P/L</small></div>
+                                    <div><span id="dashboardJournalBestTrade">—</span><small>Best trade</small></div>
+                                    <div><span id="dashboardJournalWorstTrade">—</span><small>Worst trade</small></div>
+                                </div>
+                            </div>
                             <div class="dashboard-journal-curve-wrap" aria-hidden="true">
                                 <div class="dashboard-journal-curve-meta">
                                     <span class="dashboard-journal-curve-label">Equity curve</span>
