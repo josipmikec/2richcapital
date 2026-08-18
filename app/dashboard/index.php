@@ -1135,7 +1135,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <button id="dashboardGroupChatSend" class="widget-action" type="button">Send <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                         </div>
                         <div id="dashboardGroupChatMeta" class="widget-meta" hidden></div>
-                        <button id="dashboardGroupChatCta" class="widget-action" type="button" onclick="window.location.href='/trading-floor'" hidden>Choose a Group <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+                        <button id="dashboardGroupChatCta" class="widget-action" type="button" onclick="window.location.href='/trading-floor#groups'" hidden>Choose a Group <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                     </div>
                     <div class="widget-body" id="private-pane" style="display:none">
                         <p class="widget-header">Private Chats</p>

@@ -30,6 +30,13 @@ $profile_bio = trim((string)($profile_row['bio'] ?? ''));
 $profile_primary_market = trim((string)($profile_row['primary_market'] ?? ''));
 $profile_trading_style = trim((string)($profile_row['trading_style'] ?? ''));
 
+// Debug output is restricted to staff. Keep these variables defined for every request
+// so production/member views never emit PHP undefined-variable warnings.
+$rich_debug_row = null;
+$rich_debug_roles = [];
+$rich_debug_user_id = (int) $user_id;
+$rich_debug_is_staff = false;
+
 $total_trades = (int) $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d", $user_id
 ));
