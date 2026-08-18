@@ -1392,3 +1392,23 @@ body {
 .dashboard-journal-card-name { margin-bottom: 2px; }
 .dashboard-journal-stat { min-height: 66px; padding: 10px 12px; }
 .dashboard-journal-card-label { display: none; }
+
+
+/* Keep dashboard CTAs pinned to a consistent bottom edge. */
+.widget-body > .widget-action,
+.widget-body > button.widget-action,
+.widget-body > a.widget-action { margin-top: auto; }
+.widget-signals .widget-body,
+.widget-market .widget-body,
+.widget-news .widget-body,
+.widget-chat .widget-body,
+.widget-journal .widget-body,
+.widget-trades .widget-body { display: flex; flex-direction: column; }
+.widget-signals .signals-state,
+.widget-market .market-pane-body,
+.widget-news .news-feed,
+.widget-chat #dashboardGroupChatState,
+.widget-chat #dashboardGroupChatMessages,
+.widget-journal .dashboard-journal-card { flex: 1 1 auto; }
+.widget-journal .dashboard-journal-card { justify-content: flex-start; }
+.widget-journal .dashboard-journal-cta { margin-top: auto; }
