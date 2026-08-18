@@ -20,6 +20,7 @@ $table = rich_feature_table($wpdb);
 $resolved_table = rich_find_feature_table($wpdb);
 $wpdb->query("INSERT IGNORE INTO {$resolved_table} (flag_key,label,description,is_enabled) VALUES ('card-chat-group','Chat Group Tab','Joined group chat tab overlay on dashboard',1)");
 $wpdb->query("INSERT IGNORE INTO {$resolved_table} (flag_key,label,description,is_enabled) VALUES ('card-chat-private','Chat Private Tab','Private chats tab overlay on dashboard',1)");
+$wpdb->query("INSERT IGNORE INTO {$resolved_table} (flag_key,label,description,is_enabled) VALUES ('card-journal-planner','Journal Planner Tab','Planner overlay on journal dashboard card',1)");
 $resolved_table = rich_find_feature_table($wpdb);
 $flash = '';
 $roles = rich_feature_roles();
