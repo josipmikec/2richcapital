@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'delete') {
             $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
-            if ($key !== '' && !in_array($key, ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups','card-market','card-signals','card-news','card-classroom','card-strategies','card-trades','card-mentors','card-ai','card-chat','card-journal'], true)) {
+            if ($key !== '' && !in_array($key, ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups','card-market','card-signals','card-news','card-classroom','card-strategies','card-trades','card-mentors','card-ai','card-chat','card-chat-group','card-chat-private','card-journal'], true)) {
                 $wpdb->delete($resolved_table, ['flag_key' => $key], ['%s']);
                 $flash = 'Feature removed.';
             } else {

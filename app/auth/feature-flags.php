@@ -279,6 +279,8 @@ if (!function_exists('rich_feature_bootstrap')) {
             ['card-mentors', 'Mentors Card', 'Mentors card on dashboard'],
             ['card-ai', 'AI Card', 'AI card on dashboard'],
             ['card-chat', 'Chat Card', 'Chat card on dashboard'],
+            ['card-chat-group', 'Chat Group Tab', 'Joined group chat tab overlay on dashboard'],
+            ['card-chat-private', 'Chat Private Tab', 'Private chats tab overlay on dashboard'],
             ['card-journal', 'Journal Card', 'Journal card on dashboard'],
         ];
 
