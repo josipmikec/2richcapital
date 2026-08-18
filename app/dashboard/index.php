@@ -1130,12 +1130,14 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div class="widget-content-block"><p class="widget-content-text">Loading your joined trading group...</p></div>
                         </div>
                         <div id="dashboardGroupChatMessages" class="dashboard-group-chat-messages" aria-live="polite"></div>
-                        <div id="dashboardGroupChatComposer" class="dashboard-group-chat-composer" hidden>
-                            <input id="dashboardGroupChatInput" type="text" maxlength="1000" placeholder="Write a message..." aria-label="Write a group chat message">
-                            <button id="dashboardGroupChatSend" class="widget-action" type="button">Send <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+                        <div id="dashboardGroupChatFooter" class="dashboard-group-chat-footer" hidden>
+                            <div id="dashboardGroupChatMeta" class="widget-meta" hidden></div>
+                            <div id="dashboardGroupChatComposer" class="dashboard-group-chat-composer" hidden>
+                                <input id="dashboardGroupChatInput" type="text" maxlength="1000" placeholder="Write a message..." aria-label="Write a group chat message">
+                                <button id="dashboardGroupChatSend" class="widget-action" type="button">Send <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+                            </div>
+                            <button id="dashboardGroupChatCta" class="widget-action" type="button" onclick="window.location.href='/trading-floor#groups'" hidden>Choose a Group <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                         </div>
-                        <div id="dashboardGroupChatMeta" class="widget-meta" hidden></div>
-                        <button id="dashboardGroupChatCta" class="widget-action" type="button" onclick="window.location.href='/trading-floor#groups'" hidden>Choose a Group <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                     </div>
                     <div class="widget-body" id="private-pane" style="display:none">
                         <p class="widget-header">Private Chats</p>
@@ -1291,19 +1293,22 @@ foreach ($_dashboard_initial_order as $card_id) {
         const send = document.getElementById('dashboardGroupChatSend');
         const meta = document.getElementById('dashboardGroupChatMeta');
         const cta = document.getElementById('dashboardGroupChatCta');
+        const footer = document.getElementById('dashboardGroupChatFooter');
         if (!state || !messages) return;
 
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
         const time = value => { const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z')); return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); };
 
         function showState(html) { state.innerHTML = html; state.hidden = false; }
+        function setCta(label, href, visible) { cta.innerHTML = `${label} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`; cta.onclick = () => { window.location.href = href; }; cta.hidden = !visible; if (footer) footer.hidden = false; }
         function renderMessages(items) {
             messages.innerHTML = items.length ? items.map(item => `<div class="dashboard-group-chat-message"><div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${escapeHtml(item.author_name || 'Member')}</span><span>${escapeHtml(time(item.created_at))}</span></div><div class="dashboard-group-chat-message-text">${escapeHtml(item.message)}</div></div>`).join('') : '<div class="dashboard-group-chat-empty">No messages yet. Start the conversation.</div>';
             messages.scrollTop = messages.scrollHeight;
+            if (footer) footer.hidden = false;
         }
         async function loadMessages() {
             if (!selectedGroupId) return;
-            try { const r = await fetch(`${messagesUrl}?group_id=${encodeURIComponent(selectedGroupId)}`, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load messages'); renderMessages(data.messages || []); } catch (e) { showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
+            try { const r = await fetch(`${messagesUrl}?group_id=${encodeURIComponent(selectedGroupId)}`, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load messages'); renderMessages(data.messages || []); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
         }
         async function selectGroup(id) {
             selectedGroupId = Number(id);
@@ -1312,11 +1317,11 @@ foreach ($_dashboard_initial_order as $card_id) {
             state.innerHTML = `<select class="dashboard-group-chat-switcher" aria-label="Select joined group">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>`;
             state.hidden = false;
             state.querySelector('select').addEventListener('change', e => selectGroup(e.target.value));
-            composer.hidden = false; cta.hidden = true; meta.hidden = false; meta.innerHTML = `Members: <span>${escapeHtml(group.member_count || 0)}</span>`;
+            composer.hidden = false; meta.hidden = false; meta.innerHTML = `Members: <span>${escapeHtml(group.member_count || 0)}</span>`; setCta('Visit Group', `/trading-floor#groups`, true);
             await loadMessages();
         }
         async function init() {
-            try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); cta.hidden = false; meta.hidden = true; return; } await selectGroup(memberships[0].id); } catch (e) { showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
+            try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.hidden = true; meta.hidden = true; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
         }
         async function sendMessage() { const value = input.value.trim(); if (!value || !selectedGroupId) return; send.disabled = true; try { const r = await fetch(messagesUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:selectedGroupId, message:value})}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to send message'); input.value = ''; await loadMessages(); } catch(e) { showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); } finally { send.disabled = false; } }
         send.addEventListener('click', sendMessage); input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });

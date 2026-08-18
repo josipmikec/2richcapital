@@ -1315,3 +1315,9 @@ body {
 .dashboard-group-chat-composer input { min-width: 0; flex: 1; background: #141414; border: 1px solid #2b2b2b; border-radius: 7px; padding: 9px 10px; color: #eee; font: 500 11px Montserrat, sans-serif; }
 .dashboard-group-chat-composer .widget-action { flex-shrink: 0; }
 .dashboard-group-chat-empty { color: #888; font-size: 11px; line-height: 1.55; }
+
+.dashboard-group-chat-footer { display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding-top: 12px; }
+.dashboard-group-chat-composer { margin-top: 0; }
+.dashboard-group-chat-messages { flex: 1 1 auto; min-height: 120px; margin-bottom: 0; }
+#chat-pane { gap: 10px; }
+#chat-pane .widget-header { margin-bottom: 4px; }
