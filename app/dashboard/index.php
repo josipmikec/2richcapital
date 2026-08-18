@@ -1202,6 +1202,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalAvgPL">—</span><span class="dashboard-journal-stat-label">Avg P/L</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalOpenTrades">—</span><span class="dashboard-journal-stat-label">Open</span></div>
                             </div>
+                            <button class="widget-action dashboard-journal-cta" id="dashboardJournalCta" type="button">View all in Journal <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                         </div>
                     </div>
                     <div class="widget-body" id="planner-pane" style="display:none">
