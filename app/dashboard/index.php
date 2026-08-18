@@ -825,27 +825,25 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </div>
                     </div>
                     <?php endif; ?>
-                    <div class="widget-tabs">
+                    <div class="widget-tabs news-widget-tabs">
                         <button class="wtab active">News</button>
+                        <span class="news-feed-status" id="newsFeedStatus">
+                            <span class="news-dot disconnected"></span>
+                            <span class="news-status-text">Connecting...</span>
+                        </span>
+                        <button class="news-popout-btn" onclick="openNewsWindow()" title="Open in new window">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <polyline points="9 21 3 21 3 15"></polyline>
+                                <line x1="21" y1="3" x2="14" y2="10"></line>
+                                <line x1="3" y1="21" x2="10" y2="14"></line>
+                            </svg>
+                        </button>
                     </div>
                     <div class="widget-body news-widget-body">
-					<div class="news-feed-header">
-					    <span class="news-feed-title">Live News Feed</span>
-					    <div style="display:flex; align-items:center; gap:14px;">
-					        <span class="news-feed-status" id="newsFeedStatus">
-					            <span class="news-dot disconnected"></span>
-					            <span class="news-status-text">Connecting...</span>
-					        </span>
-					        <button class="news-popout-btn" onclick="openNewsWindow()" title="Open in new window">
-					            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-					                <polyline points="15 3 21 3 21 9"></polyline>
-					                <polyline points="9 21 3 21 3 15"></polyline>
-					                <line x1="21" y1="3" x2="14" y2="10"></line>
-					                <line x1="3" y1="21" x2="10" y2="14"></line>
-					            </svg>
-					        </button>
-					    </div>
-					</div>
+                        <div class="news-feed-header">
+                            <span class="news-feed-title">Live News Feed</span>
+                        </div>
                         <div class="news-feed-list" id="newsFeedList">
                             <div class="news-feed-empty">Connecting to live feed...</div>
                         </div>
