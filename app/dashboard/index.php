@@ -844,6 +844,10 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <div class="news-feed-list" id="newsFeedList">
                             <div class="news-feed-empty">Connecting to live feed...</div>
                         </div>
+                        <button class="widget-action news-calendar-action" type="button" onclick="window.location.href='/market-data#calendar'">
+                            View Calendar
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
                     </div>
                 </div>
                 <?php endif; ?>

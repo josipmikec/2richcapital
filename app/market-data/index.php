@@ -578,6 +578,12 @@ function switchTab(btn, paneId) {
     if (target) target.classList.add('active');
 }
 
+function openCalendarFromHash() {
+    if (window.location.hash !== '#calendar') return;
+    const calendarTab = document.querySelector('.md-tab[onclick*="tab-calendar"]');
+    if (calendarTab) switchTab(calendarTab, 'tab-calendar');
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ECONOMIC CALENDAR
 // ═══════════════════════════════════════════════════════════════════════════
