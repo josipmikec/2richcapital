@@ -1190,11 +1190,10 @@ foreach ($_dashboard_initial_order as $card_id) {
                                 <svg class="dashboard-journal-curve" id="dashboardJournalCurve" viewBox="0 0 120 40" preserveAspectRatio="none" role="img" aria-label="Equity curve based on all closed trades"></svg>
                             </div>
                             <div class="dashboard-journal-stats" aria-live="polite">
-                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalClosedTrades">—</span><span class="dashboard-journal-stat-label">Closed</span></div>
+                                <div class="dashboard-journal-stat dashboard-journal-stat-wide"><span class="dashboard-journal-stat-value" id="dashboardJournalTotalTrades">—</span><span class="dashboard-journal-stat-label">Trades / Closed</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalNetPL">—</span><span class="dashboard-journal-stat-label">Net P/L</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalBestTrade">—</span><span class="dashboard-journal-stat-label">Best Trade</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalWorstTrade">—</span><span class="dashboard-journal-stat-label">Worst Trade</span></div>
-                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalTotalTrades">—</span><span class="dashboard-journal-stat-label">Trades</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalWinRate">—</span><span class="dashboard-journal-stat-label">Win Rate</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalAvgPL">—</span><span class="dashboard-journal-stat-label">Avg P/L</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalOpenTrades">—</span><span class="dashboard-journal-stat-label">Open</span></div>
