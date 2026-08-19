@@ -1192,7 +1192,6 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div class="dashboard-journal-curve-wrap" aria-hidden="true">
                                 <div class="dashboard-journal-curve-meta">
                                     <span class="dashboard-journal-curve-label">Equity curve</span>
-                                    <span class="dashboard-journal-curve-caption" id="dashboardJournalCurveCaption">All trades</span>
                                 </div>
                                 <svg class="dashboard-journal-curve" id="dashboardJournalCurve" viewBox="0 0 120 40" preserveAspectRatio="none" role="img" aria-label="Equity curve based on all closed trades"></svg>
                             </div>
@@ -1321,7 +1320,6 @@ foreach ($_dashboard_initial_order as $card_id) {
         const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
         const renderJournalCurve = (trades) => {
             const svg = document.getElementById('dashboardJournalCurve');
-            const caption = document.getElementById('dashboardJournalCurveCaption');
             if (!svg) return;
             const closed = (trades || [])
                 .filter(trade => trade && String(trade.status || '').toLowerCase() !== 'open' && trade.exit_date);
@@ -1339,7 +1337,6 @@ foreach ($_dashboard_initial_order as $card_id) {
             });
             if (!ordered.length || values.length < 2) {
                 svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="currentColor" opacity="0.45" font-size="8">No closed trades yet</text>';
-                if (caption) caption.textContent = ordered.length ? 'Not enough closed trades yet' : 'No closed trades yet';
                 return;
             }
             const min = Math.min(0, ...values);
@@ -1362,7 +1359,6 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <path d="M ${pts[0]} L ${pts.slice(1).join(' L ')} L 116 ${zeroY.toFixed(2)} L 4 ${zeroY.toFixed(2)} Z" fill="${fill}"></path>
                 <polyline points="${pts.join(' ')}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
             `;
-            if (caption) caption.textContent = `${ordered.length} trades · ${last >= 0 ? '+' : ''}${last.toFixed(2)}%`;
         };
 
         const renderJournalSnapshot = (trades) => {
