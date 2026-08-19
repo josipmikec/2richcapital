@@ -1180,6 +1180,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <div class="widget-body" id="journal-pane">
                         <div class="dashboard-journal-card" id="dashboardJournalCard">
                             <div class="dashboard-journal-card-name" id="dashboardJournalName">Loading journal...</div>
+                            <div class="dashboard-journal-curve-divider" aria-hidden="true"></div>
                             <div class="dashboard-journal-curve-meta dashboard-journal-curve-meta-stats">
                                 <span class="dashboard-journal-curve-label">Equity curve</span>
                             </div>
