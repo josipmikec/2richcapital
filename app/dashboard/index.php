@@ -1185,19 +1185,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                                 <div class="dashboard-journal-curve-meta dashboard-journal-curve-meta-stats">
                                     <span class="dashboard-journal-curve-label">Equity curve</span>
                                 </div>
-                                <div class="dashboard-journal-insight" aria-live="polite">
-                                    <div class="dashboard-journal-insight-grid">
-                                        <div><span id="dashboardJournalClosedTrades">—</span><small>Closed</small></div>
-                                        <div><span id="dashboardJournalNetPL">—</span><small>Net P/L</small></div>
-                                        <div><span id="dashboardJournalBestTrade">—</span><small>Best trade</small></div>
-                                        <div><span id="dashboardJournalWorstTrade">—</span><small>Worst trade</small></div>
-                                    </div>
-                                </div>
                             </div>
                             <div class="dashboard-journal-curve-wrap" aria-hidden="true">
                                 <svg class="dashboard-journal-curve" id="dashboardJournalCurve" viewBox="0 0 120 40" preserveAspectRatio="none" role="img" aria-label="Equity curve based on all closed trades"></svg>
                             </div>
                             <div class="dashboard-journal-stats" aria-live="polite">
+                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalClosedTrades">—</span><span class="dashboard-journal-stat-label">Closed</span></div>
+                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalNetPL">—</span><span class="dashboard-journal-stat-label">Net P/L</span></div>
+                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalBestTrade">—</span><span class="dashboard-journal-stat-label">Best Trade</span></div>
+                                <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalWorstTrade">—</span><span class="dashboard-journal-stat-label">Worst Trade</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalTotalTrades">—</span><span class="dashboard-journal-stat-label">Trades</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalWinRate">—</span><span class="dashboard-journal-stat-label">Win Rate</span></div>
                                 <div class="dashboard-journal-stat"><span class="dashboard-journal-stat-value" id="dashboardJournalAvgPL">—</span><span class="dashboard-journal-stat-label">Avg P/L</span></div>
