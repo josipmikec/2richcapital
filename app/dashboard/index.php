@@ -1120,7 +1120,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php $chat_group_overlay = rich_feature_overlay('card-chat-group', $user_id); ?>
                     <?php $chat_private_overlay = rich_feature_overlay('card-chat-private', $user_id); ?>
                     <div class="widget-tabs">
-                        <button class="wtab active" onclick="switchTab(this,'chat-pane')">Chat</button>
+                        <button class="wtab active" onclick="switchTab(this,'chat-pane')">Group Chats</button>
                         <button class="wtab" onclick="switchTab(this,'private-pane')">Private Chats</button>
                     </div>
                     <div class="widget-body" id="chat-pane">
@@ -1131,7 +1131,6 @@ foreach ($_dashboard_initial_order as $card_id) {
                             </div>
                         </div>
                         <?php endif; ?>
-                        <p class="widget-header">Group Chats</p>
                         <div id="dashboardGroupChatState" class="dashboard-group-chat-state">
                             <div class="widget-content-block"><p class="widget-content-text">Loading your joined trading group...</p></div>
                         </div>
