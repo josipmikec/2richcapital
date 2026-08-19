@@ -1181,7 +1181,6 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <div class="dashboard-journal-card" id="dashboardJournalCard">
                             <div class="dashboard-journal-card-name" id="dashboardJournalName">Loading journal...</div>
                             <div class="dashboard-journal-insight" aria-live="polite">
-                                <div class="dashboard-journal-insight-heading">Performance snapshot</div>
                                 <div class="dashboard-journal-insight-grid">
                                     <div><span id="dashboardJournalClosedTrades">—</span><small>Closed</small></div>
                                     <div><span id="dashboardJournalNetPL">—</span><small>Net P/L</small></div>
