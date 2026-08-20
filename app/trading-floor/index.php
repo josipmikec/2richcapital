@@ -74,7 +74,7 @@ $profile_followers_count = '—';
 $profile_following_count = '—';
 $profile_visibility_label = $is_own_profile ? 'Public profile preview' : 'Public trader profile';
 
-$profile_section_note = $is_own_profile ? 'This is your public Trading Floor profile.' : 'You are viewing this trader\'s public profile.';
+$profile_section_note = $is_own_profile ? 'This is your public Trading Floor profile.' : "You are viewing this trader's public profile.";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -934,53 +934,6 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
     </style>
 </head>
 <body>
-    <div class="floor-section-card" style="margin: 24px;">
-        <div class="floor-section-header">
-            <div>
-                <div class="floor-kicker">Profile</div>
-                <h2 class="floor-profile-name"><?php echo htmlspecialchars($profile_display_name); ?> <span class="profile-member-badge"><span class="profile-member-badge-icon">✓</span><span class="profile-member-badge-text">Verified</span></span></h2>
-                <div class="floor-profile-email">@<?php echo htmlspecialchars($profile_handle); ?> · <?php echo htmlspecialchars($profile_primary_market ?: 'Market'); ?></div>
-                <div class="floor-profile-note"><?php echo htmlspecialchars($profile_section_note); ?></div>
-            </div>
-        </div>
-        <div class="profile-bio-line">
-            <div class="profile-bio-copy"><?php echo htmlspecialchars($profile_bio ?: 'Public Trading Floor profile'); ?></div>
-            <div class="profile-bio-separator">•</div>
-            <div class="profile-bio-copy"><?php echo htmlspecialchars($profile_trading_style ?: 'Style hidden'); ?></div>
-        </div>
-        <div class="profile-social-strip">
-            <?php foreach (($profile_stats ?? []) as $item): ?>
-                <div class="profile-social-box">
-                    <div class="profile-social-box-value"><?php echo htmlspecialchars((string)$item[1]); ?></div>
-                    <div class="profile-social-box-label"><?php echo htmlspecialchars($item[0]); ?></div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-        <div class="profile-inline-list" style="margin-top: 14px;">
-            <div class="profile-inline-item">
-                <div class="profile-inline-copy">
-                    <strong>Profile visibility</strong>
-                    <span><?php echo htmlspecialchars($profile_visibility_label); ?></span>
-                </div>
-                <div class="profile-inline-copy"><strong><?php echo htmlspecialchars((string)$profile_post_count); ?></strong><span>Posts</span></div>
-            </div>
-            <div class="profile-inline-item">
-                <div class="profile-inline-copy">
-                    <strong>Followers</strong>
-                    <span>Placeholder social graph until live wiring</span>
-                </div>
-                <div class="profile-inline-copy"><strong><?php echo htmlspecialchars((string)$profile_followers_count); ?></strong><span>Followers</span></div>
-            </div>
-            <div class="profile-inline-item">
-                <div class="profile-inline-copy">
-                    <strong>Following</strong>
-                    <span>Placeholder social graph until live wiring</span>
-                </div>
-                <div class="profile-inline-copy"><strong><?php echo htmlspecialchars((string)$profile_following_count); ?></strong><span>Following</span></div>
-            </div>
-        </div>
-    </div>
-
 
 
     <div class="dashboard-background"></div>
