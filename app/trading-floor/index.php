@@ -1122,12 +1122,16 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
 
                 <div class="profile-tab-panel active" data-profile-panel="posts">
                     <div class="profile-feed-grid">
-                        <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">2</div></div>
-                        <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#30201f,#191416 45%,#4b2b25);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">R</div></div>
-                        <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#191a20,#101114 45%,#3a3d45);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">T</div></div>
-                        <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#2a2416,#15120f 45%,#4a3a1c);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">+</div></div>
-                        <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1f1823,#120f16 45%,#44304b);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">FX</div></div>
-                        <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#14211b,#0e1411 45%,#294438);display:grid;place-items:center;color:#fff;font-size:22px;font-weight:700;">XAU</div></div>
+                        <?php if (!$is_own_profile): ?>
+                            <div class="profile-activity-empty" style="grid-column: 1 / -1;">Public posts from this trader will appear here.</div>
+                        <?php else: ?>
+                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">2</div></div>
+                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#30201f,#191416 45%,#4b2b25);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">R</div></div>
+                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#191a20,#101114 45%,#3a3d45);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">T</div></div>
+                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#2a2416,#15120f 45%,#4a3a1c);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">+</div></div>
+                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1f1823,#120f16 45%,#44304b);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">FX</div></div>
+                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#14211b,#0e1411 45%,#294438);display:grid;place-items:center;color:#fff;font-size:22px;font-weight:700;">XAU</div></div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
