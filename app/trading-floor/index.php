@@ -294,7 +294,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
             .profile-hero { padding:22px; gap:18px; flex-direction:column; align-items:flex-start; }
         }
         .profile-stats-row { display:flex; gap:18px; margin-top:10px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
-        .profile-stat { display:inline-flex; align-items:baseline; gap:6px; text-align:left; }
+        .profile-stat { display:inline-flex; align-items:baseline; gap:6px; text-align:left; border:0; padding:0; margin:0; background:transparent; font:inherit; color:inherit; }
         .profile-stat { cursor: pointer; }
         .profile-stat:hover .profile-stat-label { color: #F2CA50; }
         .social-list-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.68); padding: 20px; }
@@ -3490,4 +3490,3 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
 
 </body>
 </html>
-                
