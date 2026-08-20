@@ -33,6 +33,8 @@ $profile_display_name = $profile_row['display_name'] ?? ($viewed_user ? $viewed_
 $profile_handle = trim((string)($profile_row['trading_handle'] ?? ''));
 $profile_handle = $profile_handle !== '' ? ltrim($profile_handle, '@') : strtolower(str_replace(' ', '', $profile_display_name));
 $profile_bio = trim((string)($profile_row['bio'] ?? ''));
+$profile_primary_market = trim((string)($profile_row['primary_market'] ?? ''));
+$profile_trading_style = trim((string)($profile_row['trading_style'] ?? ''));
 $trader_results = $wpdb->get_results(
     "SELECT u.ID AS user_id,
             COALESCE(NULLIF(p.display_name, ''), NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', u.ID)) AS display_name,
@@ -1424,23 +1426,29 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 <button class="right-switch-btn" onclick="openFloorSection('profile')">Profile</button>
             </div>
 
-            <p class="right-section-label">Suggested For You</p>
+            <p class="right-section-label">Suggested</p>
             <div class="suggested-list">
-                <?php
-                $suggested = [
-                    ['init'=>'JB','name'=>'John Barrera','reason'=>'Followed by AlexT','color'=>'#be185d'],
-                    ['init'=>'LN','name'=>'Lia Ng','reason'=>'Top Forex trader','color'=>'#0e7490'],
-                    ['init'=>'PR','name'=>'Pavel Rossi','reason'=>'Similar trading style','color'=>'#15803d'],
-                    ['init'=>'YK','name'=>'Yuki Kato','reason'=>'Trending this week','color'=>'#b45309'],
-                    ['init'=>'FM','name'=>'Fatima Malik','reason'=>'High win rate','color'=>'#7c3aed'],
-                ];
-                foreach ($suggested as $s): ?>
+                <?php foreach ($trader_results as $t):
+                    $suggested_user_id = (int) ($t['user_id'] ?? 0);
+                    if ($suggested_user_id <= 0 || $suggested_user_id === (int) $user_id) { continue; }
+                    $suggested_name = trim((string) ($t['display_name'] ?? 'Trader'));
+                    $suggested_initials = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $suggested_name), 0, 2));
+                    if ($suggested_initials === '') { $suggested_initials = 'TR'; }
+                    $suggested_market = trim((string) ($t['primary_market'] ?? ''));
+                    $suggested_style = trim((string) ($t['trading_style'] ?? ''));
+                    $suggested_reason = implode(' · ', array_values(array_filter([$suggested_market, $suggested_style])));
+                    if ($suggested_reason === '') { $suggested_reason = 'View trader profile'; }
+                    $suggested_color = substr(md5((string) $suggested_user_id), 0, 6);
+                    $suggested_href = 'https://app.2rich.capital/trading-floor/?user_id=' . $suggested_user_id;
+                ?>
                 <div class="suggested-item">
-                    <div class="suggested-avatar" style="background:<?= $s['color'] ?>"><?= $s['init'] ?></div>
-                    <div class="suggested-info">
-                        <div class="suggested-name"><?= $s['name'] ?></div>
-                        <div class="suggested-reason"><?= $s['reason'] ?></div>
-                    </div>
+                    <a href="<?= htmlspecialchars($suggested_href) ?>" style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-decoration:none;color:inherit;">
+                        <div class="suggested-avatar" style="background:#<?= htmlspecialchars($suggested_color) ?>"><?= htmlspecialchars($suggested_initials) ?></div>
+                        <div class="suggested-info">
+                            <div class="suggested-name"><?= htmlspecialchars($suggested_name) ?></div>
+                            <div class="suggested-reason"><?= htmlspecialchars($suggested_reason) ?></div>
+                        </div>
+                    </a>
                     <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
                 </div>
                 <?php endforeach; ?>
