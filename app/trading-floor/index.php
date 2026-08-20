@@ -33,8 +33,18 @@ $profile_display_name = $profile_row['display_name'] ?? ($viewed_user ? $viewed_
 $profile_handle = trim((string)($profile_row['trading_handle'] ?? ''));
 $profile_handle = $profile_handle !== '' ? ltrim($profile_handle, '@') : strtolower(str_replace(' ', '', $profile_display_name));
 $profile_bio = trim((string)($profile_row['bio'] ?? ''));
-$profile_primary_market = trim((string)($profile_row['primary_market'] ?? ''));
-$profile_trading_style = trim((string)($profile_row['trading_style'] ?? ''));
+$trader_results = $wpdb->get_results(
+    "SELECT u.ID AS user_id,
+            COALESCE(NULLIF(p.display_name, ''), NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', u.ID)) AS display_name,
+            NULLIF(p.primary_market, '') AS primary_market,
+            NULLIF(p.trading_style, '') AS trading_style
+     FROM {$wpdb->users} u
+     LEFT JOIN {$profile_table} p ON p.user_id = u.ID
+     WHERE u.ID > 0
+     ORDER BY display_name ASC
+     LIMIT 100",
+    ARRAY_A
+) ?: [];
 
 // Debug output is restricted to staff. Keep these variables defined for every request
 // so production/member views never emit PHP undefined-variable warnings.
@@ -1041,27 +1051,29 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 </svg>
                 <input type="text" class="search-input" placeholder="Search traders, symbols..." id="searchInput">
             </div>
-            <p class="search-section-label">Top Traders</p>
+            <p class="search-section-label">All Traders</p>
             <div id="searchResults">
-                <?php
-                $traders = [
-                    ['init'=>'AT','full'=>'Alex Thompson','reason'=>'Forex · 68% win rate','color'=>'#7c3aed'],
-                    ['init'=>'SK','full'=>'Sara Kovač','reason'=>'Crypto · 71% win rate','color'=>'#059669'],
-                    ['init'=>'MR','full'=>'Mike Rivera','reason'=>'Futures · 65% win rate','color'=>'#dc2626'],
-                    ['init'=>'CL','full'=>'Chen Li','reason'=>'Indices · 74% win rate','color'=>'#0284c7'],
-                    ['init'=>'DM','full'=>'Dina Müller','reason'=>'Commodities · 62% win rate','color'=>'#d97706'],
-                ];
-                foreach ($traders as $idx => $t):
-                    $profile_user_id = 1001 + $idx;
+                <?php foreach ($trader_results as $t):
+                    $profile_user_id = (int) ($t['user_id'] ?? 0);
+                    if ($profile_user_id <= 0) { continue; }
+                    $display_name = trim((string) ($t['display_name'] ?? 'Trader'));
+                    $avatar_initials = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $display_name), 0, 2));
+                    if ($avatar_initials === '') { $avatar_initials = 'TR'; }
+                    $market = trim((string) ($t['primary_market'] ?? ''));
+                    $style = trim((string) ($t['trading_style'] ?? ''));
+                    $reason_parts = array_values(array_filter([$market, $style]));
+                    $reason = !empty($reason_parts) ? implode(' · ', $reason_parts) : 'View public trader profile';
                     $profile_href = 'https://app.2rich.capital/trading-floor/?user_id=' . $profile_user_id;
+                    $color_seed = substr(md5((string) $profile_user_id), 0, 6);
                 ?>
                 <a class="search-result-item" href="<?= htmlspecialchars($profile_href) ?>" style="text-decoration:none; color:inherit;">
-                    <div class="search-result-avatar" style="background:<?= $t['color'] ?>"><?= $t['init'] ?></div>
+                    <div class="search-result-avatar" style="background:#<?= htmlspecialchars($color_seed) ?>"><?= htmlspecialchars($avatar_initials) ?></div>
                     <div>
-                        <div class="search-result-name"><?= $t['full'] ?></div>
-                        <div class="search-result-sub"><?= $t['reason'] ?></div>
+                        <div class="search-result-name"><?= htmlspecialchars($display_name) ?></div>
+                        <div class="search-result-sub"><?= htmlspecialchars($reason) ?></div>
                     </div>
                 </a>
+                <?php endforeach; ?>
                 <?php endforeach; ?>
             </div>
         </div>
