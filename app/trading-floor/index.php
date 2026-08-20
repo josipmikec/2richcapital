@@ -1407,8 +1407,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 <button type="button" class="profile-action-btn secondary" style="margin-top:16px;" onclick="openFloorSection('profile')">Open Profile</button>
             </div>
             <?php endif; ?>
-            <?php foreach ($posts as $idx => $p):
-            ?>
+            <?php foreach ($posts as $idx => $p): ?>
             <div class="post-card">
                 <div class="post-header">
                     <div class="post-avatar" style="background:linear-gradient(135deg,<?= $p['color'] ?>,<?= $p['color'] ?>99);"><?= $p['init'] ?></div>
