@@ -11,6 +11,8 @@ rich_feature_guard('trading-floor', 'Trading Floor');
 $user_name  = $_SESSION['user_name']  ?? 'Member';
 $user_email = $_SESSION['user_email'] ?? '';
 $user_id    = $_SESSION['user_id']    ?? 0;
+$view_user_id = isset($_GET['user_id']) ? (int) $_GET['user_id'] : $user_id;
+$is_own_profile = $view_user_id === $user_id;
 
 if (!defined('WP_USE_THEMES')) {
     define('WP_USE_THEMES', false);
@@ -21,9 +23,10 @@ global $wpdb;
 $profile_table = $wpdb->prefix . 'rich_user_profiles';
 $profile_row = $wpdb->get_row($wpdb->prepare(
     "SELECT display_name, trading_handle, bio, primary_market, trading_style FROM {$profile_table} WHERE user_id = %d LIMIT 1",
-    $user_id
+    $view_user_id
 ), ARRAY_A) ?: [];
-$profile_display_name = $profile_row['display_name'] ?? $user_name;
+$viewed_user = get_userdata($view_user_id);
+$profile_display_name = $profile_row['display_name'] ?? ($viewed_user ? $viewed_user->display_name : $user_name);
 $profile_handle = trim((string)($profile_row['trading_handle'] ?? ''));
 $profile_handle = $profile_handle !== '' ? ltrim($profile_handle, '@') : strtolower(str_replace(' ', '', $profile_display_name));
 $profile_bio = trim((string)($profile_row['bio'] ?? ''));
@@ -38,7 +41,7 @@ $rich_debug_user_id = (int) $user_id;
 $rich_debug_is_staff = false;
 
 $total_trades = (int) $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(*) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d", $user_id
+    "SELECT COUNT(*) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d", $view_user_id
 ));
 $wins = (int) $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d AND outcome = 'WIN'", $user_id
@@ -47,10 +50,10 @@ $losses = (int) $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d AND outcome = 'LOSS'", $user_id
 ));
 $avg_pnl = (float) $wpdb->get_var($wpdb->prepare(
-    "SELECT AVG(profit_loss_pct) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d AND profit_loss_pct IS NOT NULL", $user_id
+    "SELECT AVG(profit_loss_pct) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d AND profit_loss_pct IS NOT NULL", $view_user_id
 ));
 $best_trade = (float) $wpdb->get_var($wpdb->prepare(
-    "SELECT MAX(profit_loss_pct) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d", $user_id
+    "SELECT MAX(profit_loss_pct) FROM {$wpdb->prefix}rich_trades WHERE user_id = %d", $view_user_id
 ));
 $win_rate = $total_trades > 0 ? round(($wins / $total_trades) * 100, 1) : 0;
 $recent_trades = $wpdb->get_results($wpdb->prepare(
@@ -58,8 +61,20 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
      FROM {$wpdb->prefix}rich_trades
      WHERE user_id = %d
      ORDER BY entry_date DESC LIMIT 6",
-    $user_id
+    $view_user_id
 ));
+$profile_stats = [
+    ['Trades', $total_trades],
+    ['Win Rate', $win_rate . '%'],
+    ['Followers', '—'],
+    ['Following', '—'],
+];
+$profile_post_count = 0;
+$profile_followers_count = '—';
+$profile_following_count = '—';
+$profile_visibility_label = $is_own_profile ? 'Public profile preview' : 'Public trader profile';
+
+$profile_section_note = $is_own_profile ? 'This is your public Trading Floor profile.' : 'You are viewing this trader\'s public profile.';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -919,6 +934,54 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
     </style>
 </head>
 <body>
+    <div class="floor-section-card" style="margin: 24px;">
+        <div class="floor-section-header">
+            <div>
+                <div class="floor-kicker">Profile</div>
+                <h2 class="floor-profile-name"><?php echo htmlspecialchars($profile_display_name); ?> <span class="profile-member-badge"><span class="profile-member-badge-icon">✓</span><span class="profile-member-badge-text">Verified</span></span></h2>
+                <div class="floor-profile-email">@<?php echo htmlspecialchars($profile_handle); ?> · <?php echo htmlspecialchars($profile_primary_market ?: 'Market'); ?></div>
+                <div class="floor-profile-note"><?php echo htmlspecialchars($profile_section_note); ?></div>
+            </div>
+        </div>
+        <div class="profile-bio-line">
+            <div class="profile-bio-copy"><?php echo htmlspecialchars($profile_bio ?: 'Public Trading Floor profile'); ?></div>
+            <div class="profile-bio-separator">•</div>
+            <div class="profile-bio-copy"><?php echo htmlspecialchars($profile_trading_style ?: 'Style hidden'); ?></div>
+        </div>
+        <div class="profile-social-strip">
+            <?php foreach (($profile_stats ?? []) as $item): ?>
+                <div class="profile-social-box">
+                    <div class="profile-social-box-value"><?php echo htmlspecialchars((string)$item[1]); ?></div>
+                    <div class="profile-social-box-label"><?php echo htmlspecialchars($item[0]); ?></div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="profile-inline-list" style="margin-top: 14px;">
+            <div class="profile-inline-item">
+                <div class="profile-inline-copy">
+                    <strong>Profile visibility</strong>
+                    <span><?php echo htmlspecialchars($profile_visibility_label); ?></span>
+                </div>
+                <div class="profile-inline-copy"><strong><?php echo htmlspecialchars((string)$profile_post_count); ?></strong><span>Posts</span></div>
+            </div>
+            <div class="profile-inline-item">
+                <div class="profile-inline-copy">
+                    <strong>Followers</strong>
+                    <span>Placeholder social graph until live wiring</span>
+                </div>
+                <div class="profile-inline-copy"><strong><?php echo htmlspecialchars((string)$profile_followers_count); ?></strong><span>Followers</span></div>
+            </div>
+            <div class="profile-inline-item">
+                <div class="profile-inline-copy">
+                    <strong>Following</strong>
+                    <span>Placeholder social graph until live wiring</span>
+                </div>
+                <div class="profile-inline-copy"><strong><?php echo htmlspecialchars((string)$profile_following_count); ?></strong><span>Following</span></div>
+            </div>
+        </div>
+    </div>
+
+
 
     <div class="dashboard-background"></div>
 
