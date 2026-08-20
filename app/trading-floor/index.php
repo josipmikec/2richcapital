@@ -1754,17 +1754,18 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
     });
 
     function openFloorSection(section) {
-        if (section === 'home') {
-            const homeUrl = new URL(window.location.href);
-            homeUrl.searchParams.delete('user_id');
-            if (window.history && window.history.replaceState) {
-                window.history.replaceState({}, document.title, homeUrl.pathname + homeUrl.search + homeUrl.hash);
-            }
-        }
         const app = document.querySelector('.dashboard-container');
         const feed = document.getElementById('feedCol');
         const profile = document.getElementById('floor-profile-panel');
         const groups = document.getElementById('floor-groups-panel');
+        if (section === 'home') {
+            const homeUrl = new URL(window.location.href);
+            homeUrl.searchParams.delete('user_id');
+            homeUrl.hash = '';
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, homeUrl.pathname + homeUrl.search);
+            }
+        }
         [feed, profile, groups].forEach(el => { if (el) el.hidden = true; el.style.display = 'none'; });
         const homeLink = document.querySelector('[data-floor-nav="home"]');
         const groupsLink = document.querySelector('[data-floor-nav="groups"]');
@@ -1803,10 +1804,11 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         event.preventDefault();
         const profileUrl = new URL(window.location.href);
         profileUrl.searchParams.delete('user_id');
+        profileUrl.hash = 'profile';
         if (window.history && window.history.replaceState) {
-            window.history.replaceState({}, document.title, profileUrl.pathname + profileUrl.search + '#profile');
+            window.history.replaceState({}, document.title, profileUrl.pathname + profileUrl.search + profileUrl.hash);
         }
-        openFloorSection('profile');
+        window.location.reload();
     });
 
 
