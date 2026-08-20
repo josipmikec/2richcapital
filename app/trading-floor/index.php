@@ -10,8 +10,11 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
 rich_feature_guard('trading-floor', 'Trading Floor');
 $user_name  = $_SESSION['user_name']  ?? 'Member';
 $user_email = $_SESSION['user_email'] ?? '';
-$user_id    = $_SESSION['user_id']    ?? 0;
+$user_id    = (int) ($_SESSION['user_id'] ?? 0);
 $view_user_id = isset($_GET['user_id']) ? (int) $_GET['user_id'] : $user_id;
+if ($view_user_id <= 0) {
+    $view_user_id = $user_id;
+}
 $is_own_profile = $view_user_id === $user_id;
 
 if (!defined('WP_USE_THEMES')) {
