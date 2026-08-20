@@ -1802,16 +1802,19 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         });
     });
 
+    const FOLLOW_TARGET_USER_ID = <?php echo json_encode((int) $view_user_id); ?>;
+    const FOLLOW_CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
+
     document.querySelectorAll('[data-profile-action="follow"]').forEach((btn) => {
         btn.addEventListener('click', async () => {
-            const targetUserId = <?php echo (int) $view_user_id; ?>;
+            const targetUserId = FOLLOW_TARGET_USER_ID;
             const following = btn.dataset.following === '1';
             const originalText = btn.textContent;
             btn.disabled = true;
             try {
                 const response = await fetch('./../api/social/follow.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?> },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': FOLLOW_CSRF_TOKEN },
                     body: JSON.stringify({ user_id: targetUserId, action: following ? 'unfollow' : 'follow' })
                 });
                 const result = await response.json();
