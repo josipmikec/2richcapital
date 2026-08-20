@@ -295,7 +295,18 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         }
         .profile-stats-row { display:flex; gap:18px; margin-top:10px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
         .profile-stat { display:inline-flex; align-items:baseline; gap:6px; text-align:left; }
-        .profile-stat-value { font-size: 14px; font-weight: 800; color: #F2CA50; line-height:1; }
+        .profile-stat { cursor: pointer; }
+        .profile-stat:hover .profile-stat-label { color: #F2CA50; }
+        .social-list-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.68); padding: 20px; }
+        .social-list-modal.open { display: flex; }
+        .social-list-dialog { width: min(420px, 100%); max-height: 80vh; overflow: auto; background: #171717; border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 20px; }
+        .social-list-head { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 16px; }
+        .social-list-title { font-size: 18px; font-weight: 800; color: #f5f5f5; }
+        .social-list-close { color:#aaa; font-size:22px; cursor:pointer; }
+        .social-list-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.08); }
+        .social-list-avatar { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; color:#111; font-size:12px; font-weight:800; }
+        .social-list-name { color:#f5f5f5; font-weight:700; text-decoration:none; }
+        .social-list-empty { color:#8d929b; padding:18px 0; }
         .profile-stat-label { font-size: 14px; font-weight: 500; color: #8b9098; letter-spacing: 0; text-transform: none; margin-top: 0; line-height:1.2; }
         .profile-badge-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
         .profile-badge {
@@ -1103,8 +1114,8 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                         <div class="profile-stats-row profile-stats-inline">
                             <div class="profile-stat"><div class="profile-stat-value"><?php echo (int)$total_trades; ?></div><div class="profile-stat-label">Trades</div></div>
                             <div class="profile-stat"><div class="profile-stat-value"><?php echo htmlspecialchars((string)$win_rate); ?>%</div><div class="profile-stat-label">Win Rate</div></div>
-                            <div class="profile-stat"><div class="profile-stat-value"><?php echo htmlspecialchars((string)$profile_followers_count); ?></div><div class="profile-stat-label">Followers</div></div>
-                            <div class="profile-stat"><div class="profile-stat-value"><?php echo htmlspecialchars((string)$profile_following_count); ?></div><div class="profile-stat-label">Following</div></div>
+                            <button type="button" class="profile-stat" data-social-list="followers" data-user-id="<?php echo (int)$view_user_id; ?>"><div class="profile-stat-value" data-followers-count><?php echo htmlspecialchars((string)$profile_followers_count); ?></div><div class="profile-stat-label">Followers</div></button>
+                            <button type="button" class="profile-stat" data-social-list="following" data-user-id="<?php echo (int)$view_user_id; ?>"><div class="profile-stat-value" data-following-count data-own-following-count="<?php echo $is_own_profile ? '1' : '0'; ?>"><?php echo htmlspecialchars((string)$profile_following_count); ?></div><div class="profile-stat-label">Following</div></button>
                         </div>
                         <div class="profile-bio-line" id="bioPreview">
                             <span class="profile-bio-copy"><?php echo htmlspecialchars($profile_bio !== '' ? $profile_bio : 'Trader. No bio yet — add one below.'); ?></span>
@@ -1676,9 +1687,61 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         </div>
     </div>
 
+    <div class="social-list-modal" id="socialListModal" aria-hidden="true">
+        <div class="social-list-dialog" role="dialog" aria-modal="true" aria-labelledby="socialListTitle">
+            <div class="social-list-head">
+                <div class="social-list-title" id="socialListTitle">Followers</div>
+                <button type="button" class="social-list-close" data-social-list-close aria-label="Close">×</button>
+            </div>
+            <div id="socialListBody"><div class="social-list-empty">Loading…</div></div>
+        </div>
+    </div>
     <script>
+    document.querySelectorAll('[data-social-list]').forEach((stat) => {
+        stat.addEventListener('click', async () => {
+            const modal = document.getElementById('socialListModal');
+            const body = document.getElementById('socialListBody');
+            const title = document.getElementById('socialListTitle');
+            if (!modal || !body || !title) return;
+            const listType = stat.dataset.socialList === 'following' ? 'following' : 'followers';
+            const userId = Number(stat.dataset.userId || 0);
+            title.textContent = listType === 'following' ? 'Following' : 'Followers';
+            body.innerHTML = '<div class="social-list-empty">Loading…</div>';
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            try {
+                const response = await fetch(`./../api/social/list.php?user_id=${encodeURIComponent(userId)}&type=${listType}`, { credentials: 'include' });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'Unable to load list');
+                if (!Array.isArray(result.users) || result.users.length === 0) {
+                    body.innerHTML = '<div class="social-list-empty">No users yet.</div>';
+                    return;
+                }
+                body.innerHTML = result.users.map((user) => {
+                    const name = String(user.display_name || 'Trader');
+                    const initials = name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'TR';
+                    const color = String(user.color || 'F2CA50').replace('#', '');
+                    return `<div class="social-list-row"><div class="social-list-avatar" style="background:#${color}">${initials}</div><a class="social-list-name" href="./?user_id=${encodeURIComponent(user.user_id)}">${name}</a></div>`;
+                }).join('');
+            } catch (error) {
+                body.innerHTML = '<div class="social-list-empty">Unable to load this list.</div>';
+                console.error(error);
+            }
+        });
+    });
+
+    document.querySelector('[data-social-list-close]')?.addEventListener('click', () => {
+        const modal = document.getElementById('socialListModal');
+        if (modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); }
+    });
+    document.getElementById('socialListModal')?.addEventListener('click', (event) => {
+        if (event.target.id === 'socialListModal') {
+            event.currentTarget.classList.remove('open');
+            event.currentTarget.setAttribute('aria-hidden', 'true');
+        }
+    });
+
     document.querySelectorAll('[data-profile-tab]').forEach((button) => {
-        button.addEventListener('click', () => {
             const target = button.dataset.profileTab;
             const profileSection = document.getElementById('floor-profile-panel');
             document.querySelectorAll('[data-profile-tab]').forEach((tab) => tab.classList.toggle('active', tab === button));
