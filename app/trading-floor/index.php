@@ -70,8 +70,16 @@ $profile_stats = [
     ['Following', '—'],
 ];
 $profile_post_count = 0;
-$profile_followers_count = '—';
-$profile_following_count = '—';
+$profile_followers_count = 0;
+$profile_following_count = 0;
+$profile_follow_state = false;
+if (!$is_own_profile) {
+    $social_table = $wpdb->prefix . 'rich_user_follows';
+    $wpdb->query("CREATE TABLE IF NOT EXISTS {$social_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, follower_id BIGINT UNSIGNED NOT NULL, following_id BIGINT UNSIGNED NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY follower_following (follower_id, following_id), KEY following_idx (following_id), KEY follower_idx (follower_id)) {$wpdb->get_charset_collate()}");
+    $profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
+    $profile_following_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE follower_id = %d", $view_user_id));
+    $profile_follow_state = (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$social_table} WHERE follower_id = %d AND following_id = %d LIMIT 1", $user_id, $view_user_id));
+}
 $profile_visibility_label = $is_own_profile ? 'Public profile preview' : 'Public trader profile';
 
 $profile_section_note = $is_own_profile ? 'This is your public Trading Floor profile.' : "You are viewing this trader's public profile.";
@@ -1096,8 +1104,8 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                     <?php if ($is_own_profile): ?>
                         <a class="profile-action-btn secondary" href="https://app.2rich.capital/account/" style="text-decoration:none;">Edit Profile</a>
                     <?php else: ?>
-                        <button class="profile-action-btn secondary" type="button" data-profile-action="follow">Follow</button>
-                        <button class="profile-action-btn" type="button" data-profile-action="message">Message</button>
+                        <button class="profile-action-btn secondary<?php echo $profile_follow_state ? ' following' : ''; ?>" type="button" data-profile-action="follow" data-following="<?php echo $profile_follow_state ? '1' : '0'; ?>"><?php echo $profile_follow_state ? 'Following' : 'Follow'; ?></button>
+                        <button class="profile-action-btn" type="button" data-profile-action="message" data-profile-name="<?php echo htmlspecialchars($profile_display_name, ENT_QUOTES); ?>">Message</button>
                     <?php endif; ?>
                     <button class="profile-action-btn" type="button" data-profile-action="view-archive">View Archive</button>
                 </div>
@@ -1629,7 +1637,26 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         });
     });
 
-    // View Archive action: open the profile and show archive-only mode
+    document.querySelectorAll('[data-profile-action="follow"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const following = btn.dataset.following === '1';
+            btn.dataset.following = following ? '0' : '1';
+            btn.textContent = following ? 'Follow' : 'Following';
+            btn.classList.toggle('following', !following);
+        });
+    });
+
+    document.querySelectorAll('[data-profile-action="message"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const panel = document.getElementById('dmPanel');
+            if (!panel) return;
+            const title = panel.querySelector('.dm-panel-title');
+            const name = btn.dataset.profileName || 'Trader';
+            if (title) title.lastChild.textContent = ` Message ${name}`;
+            panel.classList.add('open');
+        });
+    });
+
     document.querySelectorAll('[data-profile-action="view-archive"]').forEach((btn) => {
         btn.addEventListener('click', () => {
             try { openFloorSection('profile'); } catch (e) {}
