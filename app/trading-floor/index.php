@@ -1074,7 +1074,6 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                     </div>
                 </a>
                 <?php endforeach; ?>
-                <?php endforeach; ?>
             </div>
         </div>
 
