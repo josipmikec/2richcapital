@@ -1314,50 +1314,92 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                     <span class="story-name">Your Story</span>
                 </div>
                 <?php
-                $stories = [
-                    ['init'=>'AT','name'=>'AlexT','time'=>'2h','color'=>'#7c3aed','symbol'=>'XAUUSD','pnl'=>'+2.4%','win'=>true,'dir'=>'LONG'],
-                    ['init'=>'SK','name'=>'SaraK','time'=>'4h','color'=>'#059669','symbol'=>'BTCUSD','pnl'=>'+1.8%','win'=>true,'dir'=>'LONG'],
-                    ['init'=>'MR','name'=>'MikeR','time'=>'6h','color'=>'#dc2626','symbol'=>'NAS100','pnl'=>'-0.7%','win'=>false,'dir'=>'SHORT'],
-                    ['init'=>'CL','name'=>'ChenL','time'=>'8h','color'=>'#0284c7','symbol'=>'EURUSD','pnl'=>'+3.1%','win'=>true,'dir'=>'LONG'],
-                    ['init'=>'DM','name'=>'DinaM','time'=>'11h','color'=>'#d97706','symbol'=>'XAGUSD','pnl'=>'+1.2%','win'=>true,'dir'=>'LONG'],
-                    ['init'=>'JB','name'=>'JohnB','time'=>'14h','color'=>'#be185d','symbol'=>'US30','pnl'=>'+0.9%','win'=>true,'dir'=>'LONG'],
-                    ['init'=>'LN','name'=>'LiaNg','time'=>'18h','color'=>'#0e7490','symbol'=>'GBPUSD','pnl'=>'-1.1%','win'=>false,'dir'=>'SHORT'],
-                ];
-                foreach ($stories as $i => $s): ?>
-                <div class="story-item" onclick="openStory(<?= $i ?>)">
+                $story_users = $wpdb->get_results($wpdb->prepare(
+                    "SELECT u.ID AS user_id,
+                            COALESCE(NULLIF(p.display_name, ''), NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', u.ID)) AS display_name,
+                            NULLIF(p.primary_market, '') AS primary_market,
+                            MAX(t.entry_date) AS latest_trade_at
+                     FROM {$wpdb->users} u
+                     LEFT JOIN {$profile_table} p ON p.user_id = u.ID
+                     LEFT JOIN {$wpdb->prefix}rich_trades t ON t.user_id = u.ID
+                     INNER JOIN {$social_table} f ON f.following_id = u.ID AND f.follower_id = %d
+                     WHERE u.ID <> %d
+                     GROUP BY u.ID, display_name, primary_market
+                     ORDER BY latest_trade_at DESC, display_name ASC
+                     LIMIT 12",
+                    $user_id,
+                    $user_id
+                ), ARRAY_A) ?: [];
+                if (!$story_users) {
+                    $story_users = array_values(array_filter($trader_results, static function ($t) use ($user_id) {
+                        return (int) ($t['user_id'] ?? 0) !== (int) $user_id;
+                    }));
+                    $story_users = array_slice($story_users, 0, 8);
+                }
+                foreach ($story_users as $i => $story_user):
+                    $story_user_id = (int) ($story_user['user_id'] ?? 0);
+                    $story_name = trim((string) ($story_user['display_name'] ?? 'Trader'));
+                    $story_clean = preg_replace('/[^A-Za-z0-9]/', '', $story_name);
+                    $story_initials = strtoupper(substr($story_clean ?: 'TR', 0, 2));
+                    $story_color = '#' . substr(md5((string) $story_user_id), 0, 6);
+                    $story_market = trim((string) ($story_user['primary_market'] ?? ''));
+                    $story_time = !empty($story_user['latest_trade_at']) ? human_time_diff(strtotime($story_user['latest_trade_at']), current_time('timestamp')) : 'recent';
+                    $story_href = 'https://app.2rich.capital/trading-floor/?user_id=' . $story_user_id;
+                ?>
+                <div class="story-item" onclick="window.location.href='<?= htmlspecialchars($story_href, ENT_QUOTES) ?>'">
                     <div class="story-ring unseen" style="position:relative;">
-                        <div class="story-avatar" style="color:<?= $s['color'] ?>;"><?= $s['init'] ?></div>
-                        <span class="story-timer"><?= $s['time'] ?></span>
+                        <div class="story-avatar" style="color:<?= htmlspecialchars($story_color) ?>;"><?= htmlspecialchars($story_initials) ?></div>
+                        <span class="story-timer"><?= htmlspecialchars($story_time) ?></span>
                     </div>
-                    <span class="story-name"><?= $s['name'] ?></span>
+                    <span class="story-name"><?= htmlspecialchars($story_name) ?></span>
                 </div>
                 <?php endforeach; ?>
             </div>
 
             <!-- Posts -->
             <?php
-            $posts = [
-                ['init'=>'AT','author'=>'Alex Thompson','badge'=>'FOREX TRADER','time'=>'35m ago','color'=>'#7c3aed',
-                 'symbol'=>'XAUUSD','dir'=>'LONG','pnl'=>'+2.43%','win'=>true,
-                 'entry'=>'2318.50','exit'=>'2374.90','rr'=>'3.2R','session'=>'NY',
-                 'caption'=>'<strong>Clean MSS on Gold</strong> — waited for the London open pullback, got the confirmation at 2318 with heavy order flow. Held for the full NY session run. Closed at 2374.',
-                 'tags'=>['#XAUUSD','#SmartMoney','#NYSession','#OrderFlow'],'likes'=>47,'comments'=>12],
-                ['init'=>'SK','author'=>'Sara Kovač','badge'=>'CRYPTO ANALYST','time'=>'2h ago','color'=>'#059669',
-                 'symbol'=>'BTCUSD','dir'=>'LONG','pnl'=>'+1.82%','win'=>true,
-                 'entry'=>'67,420','exit'=>'68,650','rr'=>'2.8R','session'=>'ASIA',
-                 'caption'=>'<strong>BTC daily demand respected.</strong> Textbook FVG fill at the 67.4k zone. Asia session accumulation confirmed before the push. Patience paid off again.',
-                 'tags'=>['#Bitcoin','#BTCUSD','#AsiaSession','#FVG'],'likes'=>83,'comments'=>21],
-                ['init'=>'MR','author'=>'Mike Rivera','badge'=>'FUTURES PRO','time'=>'5h ago','color'=>'#dc2626',
-                 'symbol'=>'NAS100','dir'=>'SHORT','pnl'=>'-0.72%','win'=>false,
-                 'entry'=>'19,840','exit'=>'19,984','rr'=>'-0.9R','session'=>'NY',
-                 'caption'=>'Took the short too early at the resistance. Market pushed through my stop. Lesson: wait for the daily close confirmation before entering on intraday structure.',
-                 'tags'=>['#NAS100','#Lesson','#ShortTrade','#RiskManagement'],'likes'=>34,'comments'=>28],
-                ['init'=>'CL','author'=>'Chen Li','badge'=>'INDICES TRADER','time'=>'8h ago','color'=>'#0284c7',
-                 'symbol'=>'EURUSD','dir'=>'LONG','pnl'=>'+3.10%','win'=>true,
-                 'entry'=>'1.0845','exit'=>'1.0978','rr'=>'4.1R','session'=>'LONDON',
-                 'caption'=>'<strong>Best trade of the week.</strong> EUR/USD weekly demand at 1.0845 held perfectly. London session momentum + ECB hawkish tone = clean run to weekly highs.',
-                 'tags'=>['#EURUSD','#LondonSession','#Forex','#WeeklyDemand'],'likes'=>102,'comments'=>31],
-            ];
+            $feed_trade_rows = $wpdb->get_results($wpdb->prepare(
+                "SELECT t.user_id, t.symbol, t.direction, t.outcome, t.profit_loss_pct, t.entry_date,
+                        COALESCE(NULLIF(p.display_name, ''), NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', u.ID)) AS display_name,
+                        NULLIF(p.trading_style, '') AS trading_style,
+                        CASE WHEN f.follower_id IS NOT NULL THEN 1 ELSE 0 END AS is_followed
+                 FROM {$wpdb->prefix}rich_trades t
+                 INNER JOIN {$wpdb->users} u ON u.ID = t.user_id
+                 LEFT JOIN {$profile_table} p ON p.user_id = t.user_id
+                 LEFT JOIN {$social_table} f ON f.following_id = t.user_id AND f.follower_id = %d
+                 WHERE t.user_id <> %d
+                 ORDER BY is_followed DESC, t.entry_date DESC
+                 LIMIT 12",
+                $user_id,
+                $user_id
+            ), ARRAY_A) ?: [];
+            $posts = [];
+            foreach ($feed_trade_rows as $trade_row) {
+                $trade_user_id = (int) ($trade_row['user_id'] ?? 0);
+                $trade_author = trim((string) ($trade_row['display_name'] ?? 'Trader'));
+                $trade_clean = preg_replace('/[^A-Za-z0-9]/', '', $trade_author);
+                $trade_init = strtoupper(substr($trade_clean ?: 'TR', 0, 2));
+                $trade_color = '#' . substr(md5((string) $trade_user_id), 0, 6);
+                $trade_symbol = strtoupper(trim((string) ($trade_row['symbol'] ?? 'MARKET')));
+                $trade_dir = strtoupper(trim((string) ($trade_row['direction'] ?? 'LONG')));
+                $trade_pnl_value = (float) ($trade_row['profit_loss_pct'] ?? 0);
+                $trade_win = strtoupper((string) ($trade_row['outcome'] ?? '')) === 'WIN' || $trade_pnl_value >= 0;
+                $trade_time = !empty($trade_row['entry_date']) ? human_time_diff(strtotime($trade_row['entry_date']), current_time('timestamp')) . ' ago' : 'recent';
+                $trade_style = trim((string) ($trade_row['trading_style'] ?? ''));
+                $trade_badge = $trade_style !== '' ? strtoupper($trade_style) : ($trade_row['is_followed'] ? 'FOLLOWING' : 'TRADING FLOOR');
+                $posts[] = [
+                    'init' => $trade_init, 'author' => $trade_author, 'badge' => $trade_badge, 'time' => $trade_time, 'color' => $trade_color,
+                    'symbol' => $trade_symbol, 'dir' => $trade_dir, 'pnl' => ($trade_pnl_value >= 0 ? '+' : '') . number_format($trade_pnl_value, 2) . '%', 'win' => $trade_win,
+                    'entry' => '—', 'exit' => '—', 'rr' => '—', 'session' => 'LIVE',
+                    'caption' => '<strong>' . htmlspecialchars($trade_symbol, ENT_QUOTES) . ' trade update.</strong> ' . htmlspecialchars($trade_author, ENT_QUOTES) . ' shared a ' . htmlspecialchars($trade_dir, ENT_QUOTES) . ' position from the Trading Floor.',
+                    'tags' => ['#' . preg_replace('/[^A-Za-z0-9]/', '', $trade_symbol), $trade_row['is_followed'] ? '#Following' : '#Discover'],
+                    'likes' => 0, 'comments' => 0,
+                ];
+            }
+            if (!$posts) {
+                $posts = [];
+            }
+
             foreach ($posts as $idx => $p):
             ?>
             <div class="post-card">
