@@ -1056,7 +1056,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         <section class="floor-section" id="floor-profile-panel" hidden>
                 <div class="profile-hero">
                     <div class="profile-avatar-wrap">
-                        <div class="profile-avatar-large"><?php echo strtoupper(substr($user_name,0,1)); ?></div>
+                        <div class="profile-avatar-large"><?php echo strtoupper(substr($profile_display_name ?: $user_name,0,1)); ?></div>
                         <div class="profile-avatar-edit">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -1076,8 +1076,8 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                         <div class="profile-stats-row profile-stats-inline">
                             <div class="profile-stat"><div class="profile-stat-value"><?php echo (int)$total_trades; ?></div><div class="profile-stat-label">Trades</div></div>
                             <div class="profile-stat"><div class="profile-stat-value"><?php echo htmlspecialchars((string)$win_rate); ?>%</div><div class="profile-stat-label">Win Rate</div></div>
-                            <div class="profile-stat"><div class="profile-stat-value">128</div><div class="profile-stat-label">Followers</div></div>
-                            <div class="profile-stat"><div class="profile-stat-value">74</div><div class="profile-stat-label">Following</div></div>
+                            <div class="profile-stat"><div class="profile-stat-value"><?php echo htmlspecialchars((string)$profile_followers_count); ?></div><div class="profile-stat-label">Followers</div></div>
+                            <div class="profile-stat"><div class="profile-stat-value"><?php echo htmlspecialchars((string)$profile_following_count); ?></div><div class="profile-stat-label">Following</div></div>
                         </div>
                         <div class="profile-bio-line" id="bioPreview">
                             <span class="profile-bio-copy"><?php echo htmlspecialchars($profile_bio !== '' ? $profile_bio : 'Trader. No bio yet — add one below.'); ?></span>
@@ -1093,7 +1093,12 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 </div>
 
                 <div class="profile-profile-actions">
-                    <a class="profile-action-btn secondary" href="https://app.2rich.capital/account/" style="text-decoration:none;">Edit Profile</a>
+                    <?php if ($is_own_profile): ?>
+                        <a class="profile-action-btn secondary" href="https://app.2rich.capital/account/" style="text-decoration:none;">Edit Profile</a>
+                    <?php else: ?>
+                        <button class="profile-action-btn secondary" type="button" data-profile-action="follow">Follow</button>
+                        <button class="profile-action-btn" type="button" data-profile-action="message">Message</button>
+                    <?php endif; ?>
                     <button class="profile-action-btn" type="button" data-profile-action="view-archive">View Archive</button>
                 </div>
 
