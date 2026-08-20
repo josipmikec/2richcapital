@@ -1122,11 +1122,11 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 <div class="profile-profile-actions">
                     <?php if ($is_own_profile): ?>
                         <a class="profile-action-btn secondary" href="https://app.2rich.capital/account/" style="text-decoration:none;">Edit Profile</a>
+                        <button class="profile-action-btn" type="button" data-profile-action="view-archive">View Archive</button>
                     <?php else: ?>
                         <button class="profile-action-btn secondary<?php echo $profile_follow_state ? ' following' : ''; ?>" type="button" data-profile-action="follow" data-following="<?php echo $profile_follow_state ? '1' : '0'; ?>"><?php echo $profile_follow_state ? 'Following' : 'Follow'; ?></button>
                         <button class="profile-action-btn" type="button" data-profile-action="message" data-profile-name="<?php echo htmlspecialchars($profile_display_name, ENT_QUOTES); ?>">Message</button>
                     <?php endif; ?>
-                    <button class="profile-action-btn" type="button" data-profile-action="view-archive">View Archive</button>
                 </div>
 
                 <div class="profile-highlights">
@@ -1142,8 +1142,9 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                     <div class="profile-tab-list">
                         <button type="button" class="profile-tab active" data-profile-tab="posts">Posts</button>
                         <button type="button" class="profile-tab" data-profile-tab="trades">Trades</button>
-                        <button type="button" class="profile-tab" data-profile-tab="saved">Saved</button>
-                        <!-- Archive tab removed from default tabs. Archive panel will be shown only when user clicks View Archive -->
+                        <?php if ($is_own_profile): ?>
+                            <button type="button" class="profile-tab" data-profile-tab="saved">Saved</button>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -1228,6 +1229,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                     </div>
                 </div>
 
+                <?php if ($is_own_profile): ?>
                 <div class="profile-tab-panel" data-profile-panel="saved">
                     <div class="profile-feed-grid">
                         <div class="profile-post-thumb"><span class="post-meta-badge">Saved</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1d2228,#111317 45%,#36414d);display:grid;place-items:center;color:#fff;font-size:20px;font-weight:700;">Macro</div></div>
@@ -1243,6 +1245,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                         <div class="profile-post-thumb"><span class="post-meta-badge">Archived</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#152224,#0d1312 45%,#243a33);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;">Archived Post 3</div></div>
                     </div>
                 </div>
+                <?php endif; ?>
         </section>
 
         <section class="floor-section" id="floor-groups-panel" hidden>
