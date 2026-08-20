@@ -88,11 +88,11 @@ $profile_post_count = 0;
 $profile_followers_count = 0;
 $profile_following_count = 0;
 $profile_follow_state = false;
+$social_table = $wpdb->prefix . 'rich_user_follows';
+$wpdb->query("CREATE TABLE IF NOT EXISTS {$social_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, follower_id BIGINT UNSIGNED NOT NULL, following_id BIGINT UNSIGNED NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY follower_following (follower_id, following_id), KEY following_idx (following_id), KEY follower_idx (follower_id)) {$wpdb->get_charset_collate()}");
+$profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
+$profile_following_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE follower_id = %d", $view_user_id));
 if (!$is_own_profile) {
-    $social_table = $wpdb->prefix . 'rich_user_follows';
-    $wpdb->query("CREATE TABLE IF NOT EXISTS {$social_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, follower_id BIGINT UNSIGNED NOT NULL, following_id BIGINT UNSIGNED NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY follower_following (follower_id, following_id), KEY following_idx (following_id), KEY follower_idx (follower_id)) {$wpdb->get_charset_collate()}");
-    $profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
-    $profile_following_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE follower_id = %d", $view_user_id));
     $profile_follow_state = (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$social_table} WHERE follower_id = %d AND following_id = %d LIMIT 1", $user_id, $view_user_id));
 }
 $profile_visibility_label = $is_own_profile ? 'Public profile preview' : 'Public trader profile';
@@ -1432,8 +1432,17 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
             <p class="right-section-label">Suggested For You</p>
             <div class="suggested-list">
                 <?php
-                $suggested_pool = array_values(array_filter($trader_results, static function ($t) use ($user_id) {
-                    return (int) ($t['user_id'] ?? 0) > 0 && (int) $t['user_id'] !== (int) $user_id;
+                $suggested_pool = array_values(array_filter($trader_results, static function ($t) use ($user_id, $wpdb, $social_table) {
+                    $candidate_user_id = (int) ($t['user_id'] ?? 0);
+                    if ($candidate_user_id <= 0 || $candidate_user_id === (int) $user_id) {
+                        return false;
+                    }
+                    $already_following = (int) $wpdb->get_var($wpdb->prepare(
+                        "SELECT COUNT(*) FROM {$social_table} WHERE follower_id = %d AND following_id = %d",
+                        $user_id,
+                        $candidate_user_id
+                    ));
+                    return $already_following === 0;
                 }));
                 $suggested_count = count($suggested_pool);
                 if ($suggested_count > 6) {
@@ -1698,6 +1707,10 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 const statValues = document.querySelectorAll('.profile-stat-value');
                 if (statValues[2] && typeof result.followers !== 'undefined') statValues[2].textContent = result.followers;
                 if (statValues[3] && typeof result.following !== 'undefined') statValues[3].textContent = result.following;
+                const ownProfileFollowingStat = document.querySelector('[data-own-following-count]');
+                if (ownProfileFollowingStat && typeof result.current_user_following !== 'undefined') {
+                    ownProfileFollowingStat.textContent = result.current_user_following;
+                }
             } catch (error) {
                 btn.textContent = originalText;
                 console.error(error);
@@ -1723,8 +1736,17 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 const result = await response.json();
                 if (!response.ok || !result.success) throw new Error(result.message || 'Unable to update follow state');
                 btn.dataset.following = result.is_following ? '1' : '0';
-                btn.textContent = result.is_following ? 'Following' : 'Follow';
-                btn.classList.toggle('following', result.is_following);
+                if (result.is_following) {
+                    const suggestedItem = btn.closest('.suggested-item');
+                    if (suggestedItem) suggestedItem.remove();
+                } else {
+                    btn.textContent = 'Follow';
+                    btn.classList.remove('following');
+                }
+                const ownProfileFollowingStat = document.querySelector('[data-own-following-count]');
+                if (ownProfileFollowingStat && typeof result.current_user_following !== 'undefined') {
+                    ownProfileFollowingStat.textContent = result.current_user_following;
+                }
             } catch (error) {
                 btn.textContent = originalText;
                 console.error(error);
