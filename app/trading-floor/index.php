@@ -294,9 +294,12 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
             .profile-hero { padding:22px; gap:18px; flex-direction:column; align-items:flex-start; }
         }
         .profile-stats-row { display:flex; gap:18px; margin-top:10px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
-        .profile-stat { display:inline-flex; align-items:baseline; gap:6px; text-align:left; border:0; padding:0; margin:0; background:transparent; font:inherit; color:inherit; }
-        .profile-stat { cursor: pointer; }
-        .profile-stat:hover .profile-stat-label { color: #F2CA50; }
+        .profile-stat { display:inline-flex; align-items:baseline; gap:6px; text-align:left; border:0; padding:0; margin:0; background:transparent; font:inherit; color:inherit; appearance:none; -webkit-appearance:none; box-shadow:none; }
+        .profile-stat-value { font-size: 28px; font-weight: 800; color: #F2CA50; line-height:1; }
+        .profile-stat-label { font-size: 14px; font-weight: 500; color: #8b9098; letter-spacing: 0; text-transform: none; margin-top: 0; line-height:1.2; }
+        .profile-stat:hover .profile-stat-value,
+        .profile-stat:focus-visible .profile-stat-value { color:#f7d86d; }
+
         .social-list-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.68); padding: 20px; }
         .social-list-modal.open { display: flex; }
         .social-list-dialog { width: min(420px, 100%); max-height: 80vh; overflow: auto; background: #171717; border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 20px; }
