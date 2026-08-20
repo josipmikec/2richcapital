@@ -1428,9 +1428,22 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
 
             <p class="right-section-label">Suggested</p>
             <div class="suggested-list">
-                <?php foreach ($trader_results as $t):
+                <?php
+                $suggested_pool = array_values(array_filter($trader_results, static function ($t) use ($user_id) {
+                    return (int) ($t['user_id'] ?? 0) > 0 && (int) $t['user_id'] !== (int) $user_id;
+                }));
+                $suggested_count = count($suggested_pool);
+                if ($suggested_count > 6) {
+                    $rotation_seed = (int) floor(time() / 30);
+                    $rotation_offset = $rotation_seed % $suggested_count;
+                    $suggested_pool = array_merge(
+                        array_slice($suggested_pool, $rotation_offset),
+                        array_slice($suggested_pool, 0, $rotation_offset)
+                    );
+                }
+                $suggested_pool = array_slice($suggested_pool, 0, 6);
+                foreach ($suggested_pool as $t):
                     $suggested_user_id = (int) ($t['user_id'] ?? 0);
-                    if ($suggested_user_id <= 0 || $suggested_user_id === (int) $user_id) { continue; }
                     $suggested_name = trim((string) ($t['display_name'] ?? 'Trader'));
                     $suggested_initials = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $suggested_name), 0, 2));
                     if ($suggested_initials === '') { $suggested_initials = 'TR'; }
