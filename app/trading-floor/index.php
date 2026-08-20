@@ -1426,7 +1426,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 <button class="right-switch-btn" onclick="openFloorSection('profile')">Profile</button>
             </div>
 
-            <p class="right-section-label">Suggested</p>
+            <p class="right-section-label">Suggested For You</p>
             <div class="suggested-list">
                 <?php
                 $suggested_pool = array_values(array_filter($trader_results, static function ($t) use ($user_id) {
