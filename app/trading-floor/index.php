@@ -1742,6 +1742,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
     });
 
     document.querySelectorAll('[data-profile-tab]').forEach((button) => {
+        button.addEventListener('click', () => {
             const target = button.dataset.profileTab;
             const profileSection = document.getElementById('floor-profile-panel');
             document.querySelectorAll('[data-profile-tab]').forEach((tab) => tab.classList.toggle('active', tab === button));
