@@ -1802,7 +1802,8 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         });
     });
 
-    const FOLLOW_TARGET_USER_ID = <?php echo json_encode((int) $view_user_id); ?>;
+    const FOLLOW_TARGET_USER_ID = FOLLOW_TARGET_USER_ID_VALUE;
+    const FOLLOW_TARGET_USER_ID_VALUE = <?php echo json_encode((int) $view_user_id); ?>;
     const FOLLOW_CSRF_TOKEN = SIGNALS_CSRF_TOKEN;
 
     document.querySelectorAll('[data-profile-action="follow"]').forEach((btn) => {
