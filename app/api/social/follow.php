@@ -72,6 +72,14 @@ $payload = json_decode(file_get_contents('php://input'), true);
 if (!is_array($payload)) {
     $payload = $_POST;
 }
+if ($target_user_id <= 0) {
+    $target_user_id = isset($payload['user_id']) ? (int) $payload['user_id'] : 0;
+}
+if ($target_user_id <= 0 || $target_user_id === $current_user_id || !get_userdata($target_user_id)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Invalid target user']);
+    exit;
+}
 $action = ($payload['action'] ?? '') === 'unfollow' ? 'unfollow' : 'follow';
 
 if ($action === 'unfollow') {

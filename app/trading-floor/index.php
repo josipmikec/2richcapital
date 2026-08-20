@@ -1465,7 +1465,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                             <div class="suggested-reason"><?= htmlspecialchars($suggested_reason) ?></div>
                         </div>
                     </a>
-                    <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
+                    <button class="follow-btn" type="button" data-suggested-follow data-user-id="<?= (int) $suggested_user_id ?>">Follow</button>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -1698,6 +1698,33 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 const statValues = document.querySelectorAll('.profile-stat-value');
                 if (statValues[2] && typeof result.followers !== 'undefined') statValues[2].textContent = result.followers;
                 if (statValues[3] && typeof result.following !== 'undefined') statValues[3].textContent = result.following;
+            } catch (error) {
+                btn.textContent = originalText;
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-suggested-follow]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const targetUserId = Number(btn.dataset.userId || 0);
+            if (!targetUserId) return;
+            const following = btn.dataset.following === '1';
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            try {
+                const response = await fetch('./../api/social/follow.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?> },
+                    body: JSON.stringify({ user_id: targetUserId, action: following ? 'unfollow' : 'follow' })
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'Unable to update follow state');
+                btn.dataset.following = result.is_following ? '1' : '0';
+                btn.textContent = result.is_following ? 'Following' : 'Follow';
+                btn.classList.toggle('following', result.is_following);
             } catch (error) {
                 btn.textContent = originalText;
                 console.error(error);
