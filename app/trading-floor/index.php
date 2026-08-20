@@ -1638,11 +1638,31 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
     });
 
     document.querySelectorAll('[data-profile-action="follow"]').forEach((btn) => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
+            const targetUserId = <?php echo (int) $view_user_id; ?>;
             const following = btn.dataset.following === '1';
-            btn.dataset.following = following ? '0' : '1';
-            btn.textContent = following ? 'Follow' : 'Following';
-            btn.classList.toggle('following', !following);
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            try {
+                const response = await fetch('./../api/social/follow.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?> },
+                    body: JSON.stringify({ user_id: targetUserId, action: following ? 'unfollow' : 'follow' })
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'Unable to update follow state');
+                btn.dataset.following = result.is_following ? '1' : '0';
+                btn.textContent = result.is_following ? 'Following' : 'Follow';
+                btn.classList.toggle('following', result.is_following);
+                const statValues = document.querySelectorAll('.profile-stat-value');
+                if (statValues[2] && typeof result.followers !== 'undefined') statValues[2].textContent = result.followers;
+                if (statValues[3] && typeof result.following !== 'undefined') statValues[3].textContent = result.following;
+            } catch (error) {
+                btn.textContent = originalText;
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+            }
         });
     });
 
