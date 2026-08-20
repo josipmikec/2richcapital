@@ -1803,7 +1803,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
     });
 
     const FOLLOW_TARGET_USER_ID = <?php echo json_encode((int) $view_user_id); ?>;
-    const FOLLOW_CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
+    const FOLLOW_CSRF_TOKEN = SIGNALS_CSRF_TOKEN;
 
     document.querySelectorAll('[data-profile-action="follow"]').forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -1848,7 +1848,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
             try {
                 const response = await fetch('./../api/social/follow.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?> },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF_TOKEN },
                     body: JSON.stringify({ user_id: targetUserId, action: following ? 'unfollow' : 'follow' })
                 });
                 const result = await response.json();
@@ -3271,8 +3271,8 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
 
 
 
-    const SIGNALS_CSRF = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
-    const CURRENT_USER_ID = <?php echo json_encode((string)($_SESSION['user_id'] ?? '')); ?>;
+    const SIGNALS_CSRF = SIGNALS_CSRF_TOKEN;
+    const CURRENT_USER_ID = CURRENT_USER_ID_VALUE;
     const SIGNALS_API_BASE = window.location.origin + '/api/signals';
     function signalsUrl(path) {
         return `${SIGNALS_API_BASE}/${String(path).replace(/^\/+/, '')}`;
