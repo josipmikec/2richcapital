@@ -1773,7 +1773,10 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         const rawHash = window.location.hash.replace(/^#/, '');
         const hash = rawHash.toLowerCase();
         const requestedGroup = new URLSearchParams(rawHash.replace(/&/g, '&')).get('group');
-        if (hash.startsWith('profile')) {
+        const requestedUserId = new URLSearchParams(window.location.search).get('user_id');
+        if (requestedUserId && /^\d+$/.test(requestedUserId) && Number(requestedUserId) > 0) {
+            openFloorSection('profile');
+        } else if (hash.startsWith('profile')) {
             openFloorSection('profile');
         } else if (hash.startsWith('groups')) {
             openFloorSection('groups');
