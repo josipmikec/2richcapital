@@ -1400,7 +1400,14 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                 $posts = [];
             }
 
-            foreach ($posts as $idx => $p):
+            if (!$posts): ?>
+            <div class="feed-empty-state" style="padding:40px 24px;text-align:center;color:#8b9098;">
+                <div style="font-size:18px;font-weight:800;color:#f2f2f2;margin-bottom:8px;">Your feed is ready for its first signal</div>
+                <div style="font-size:13px;line-height:1.5;max-width:360px;margin:0 auto;">Follow a few traders or add your first trade to start building a personalized Trading Floor.</div>
+                <button type="button" class="profile-action-btn secondary" style="margin-top:16px;" onclick="openFloorSection('profile')">Open Profile</button>
+            </div>
+            <?php endif; ?>
+            <?php foreach ($posts as $idx => $p):
             ?>
             <div class="post-card">
                 <div class="post-header">
@@ -1444,7 +1451,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                     </div>
                 </div>
                 <div class="post-actions">
-                    <button class="post-action-btn" onclick="toggleLike(this)">
+                    <button class="post-action-btn" data-trade-id="<?= (int) ($p['trade_id'] ?? 0) ?>" onclick="toggleLike(this)">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                         </svg>
