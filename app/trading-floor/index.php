@@ -1028,7 +1028,7 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         </aside>
 
         <aside class="tf-left-links-col">
-            <a class="tf-left-link active" data-floor-nav="home" onclick="openFloorSection('home')" title="Home">
+            <a class="tf-left-link active" data-floor-nav="home" onclick="openFloorSection('home'); return false;" title="Home">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>
                 <span>Home</span>
             </a>
@@ -1754,6 +1754,13 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
     });
 
     function openFloorSection(section) {
+        if (section === 'home') {
+            const homeUrl = new URL(window.location.href);
+            homeUrl.searchParams.delete('user_id');
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, homeUrl.pathname + homeUrl.search + homeUrl.hash);
+            }
+        }
         const app = document.querySelector('.dashboard-container');
         const feed = document.getElementById('feedCol');
         const profile = document.getElementById('floor-profile-panel');
@@ -1791,6 +1798,16 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
 
     document.addEventListener('DOMContentLoaded', openFloorSectionFromHash);
     window.addEventListener('hashchange', openFloorSectionFromHash);
+
+    document.querySelector('[data-floor-nav="profile"]')?.addEventListener('click', (event) => {
+        event.preventDefault();
+        const profileUrl = new URL(window.location.href);
+        profileUrl.searchParams.delete('user_id');
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, profileUrl.pathname + profileUrl.search + '#profile');
+        }
+        openFloorSection('profile');
+    });
 
 
     async function bootFloorSignals(force = false) {
