@@ -21,7 +21,6 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
 
 global $wpdb;
 $current_user_id = (int) $_SESSION['user_id'];
-$target_user_id = isset($_REQUEST['user_id']) ? (int) $_REQUEST['user_id'] : 0;
 $table = $wpdb->prefix . 'rich_user_follows';
 
 $create_table_sql = "CREATE TABLE IF NOT EXISTS {$table} (
@@ -37,13 +36,13 @@ $create_table_sql = "CREATE TABLE IF NOT EXISTS {$table} (
 require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 dbDelta($create_table_sql);
 
-if ($target_user_id <= 0 || $target_user_id === $current_user_id || !get_userdata($target_user_id)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Invalid target user']);
-    exit;
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $target_user_id = isset($_GET['user_id']) ? (int) $_GET['user_id'] : 0;
+    if ($target_user_id <= 0 || $target_user_id === $current_user_id || !get_userdata($target_user_id)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid target user']);
+        exit;
+    }
     $is_following = (bool) $wpdb->get_var($wpdb->prepare(
         "SELECT id FROM {$table} WHERE follower_id = %d AND following_id = %d LIMIT 1",
         $current_user_id,
@@ -72,9 +71,7 @@ $payload = json_decode(file_get_contents('php://input'), true);
 if (!is_array($payload)) {
     $payload = $_POST;
 }
-if ($target_user_id <= 0) {
-    $target_user_id = isset($payload['user_id']) ? (int) $payload['user_id'] : 0;
-}
+$target_user_id = isset($payload['user_id']) ? (int) $payload['user_id'] : 0;
 if ($target_user_id <= 0 || $target_user_id === $current_user_id || !get_userdata($target_user_id)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid target user']);
