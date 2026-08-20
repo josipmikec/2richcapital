@@ -1048,14 +1048,17 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                     ['init'=>'CL','full'=>'Chen Li','reason'=>'Indices · 74% win rate','color'=>'#0284c7'],
                     ['init'=>'DM','full'=>'Dina Müller','reason'=>'Commodities · 62% win rate','color'=>'#d97706'],
                 ];
-                foreach ($traders as $t): ?>
-                <div class="search-result-item">
+                foreach ($traders as $idx => $t):
+                    $profile_user_id = 1001 + $idx;
+                    $profile_href = 'https://app.2rich.capital/trading-floor/?user_id=' . $profile_user_id;
+                ?>
+                <a class="search-result-item" href="<?= htmlspecialchars($profile_href) ?>" style="text-decoration:none; color:inherit;">
                     <div class="search-result-avatar" style="background:<?= $t['color'] ?>"><?= $t['init'] ?></div>
                     <div>
                         <div class="search-result-name"><?= $t['full'] ?></div>
                         <div class="search-result-sub"><?= $t['reason'] ?></div>
                     </div>
-                </div>
+                </a>
                 <?php endforeach; ?>
             </div>
         </div>
