@@ -170,8 +170,13 @@ if (!function_exists('tf_format_social_post')) {
         $post_type = 'trade';
     }
 
-    $symbol = strtoupper(sanitize_text_field($_POST['symbol'] ?? ''));
-    $direction = strtoupper(sanitize_text_field($_POST['direction'] ?? ''));
+    $layout_style = sanitize_key($_POST['layout_style'] ?? 'text');
+    $allowed_layouts = ['trade_card', 'analysis_card', 'image', 'text'];
+    if (!in_array($layout_style, $allowed_layouts, true)) {
+        $layout_style = $post_type === 'trade' ? 'trade_card' : 'analysis_card';
+    }
+
+
     $caption = trim(wp_kses_post($_POST['caption'] ?? ''));
     $rr_value = sanitize_text_field($_POST['rr_value'] ?? '');
     $pnl_value = isset($_POST['pnl_value']) && $_POST['pnl_value'] !== '' ? (float) $_POST['pnl_value'] : null;
@@ -236,6 +241,7 @@ if (!function_exists('tf_format_social_post')) {
     $inserted = $wpdb->insert($post_table, [
         'user_id' => $user_id,
         'post_type' => $post_type,
+        'layout_style' => $layout_style,
         'symbol' => $symbol ?: null,
         'direction' => $direction ?: null,
         'pnl_value' => $pnl_value,
@@ -246,7 +252,7 @@ if (!function_exists('tf_format_social_post')) {
         'image_urls' => $image_urls_json,
         'created_at' => current_time('mysql'),
         'updated_at' => current_time('mysql'),
-    ], ['%d','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s']);
+    ], ['%d','%s','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s']);
 
     if (!$inserted) {
         wp_send_json(['success' => false, 'message' => 'Database error while creating the post.']);
