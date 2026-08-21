@@ -425,7 +425,26 @@ $home_feed_posts = array_map(static function ($row) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        /* Create modal layout normalization */
+        /* Final Create-modal containment fix */
+        #createModal { position:fixed !important; inset:0 !important; z-index:10000 !important; display:none; align-items:center !important; justify-content:center !important; padding:20px !important; overflow-y:auto !important; }
+        #createModal.active { display:flex !important; }
+        #createModal > .create-modal { position:relative !important; flex:0 1 760px !important; width:100% !important; max-width:760px !important; height:auto !important; max-height:calc(100vh - 40px) !important; margin:0 !important; overflow:hidden !important; }
+        #createModal .create-modal-body { max-height:calc(100vh - 120px) !important; overflow-y:auto !important; overflow-x:hidden !important; }
+        #createModal #createPostForm { width:100% !important; max-width:100% !important; display:flex !important; flex-direction:column !important; gap:16px !important; }
+        #createModal .create-form-row { width:100% !important; display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:14px !important; }
+        #createModal .create-form-field { width:100% !important; min-width:0 !important; }
+        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea { display:block !important; width:100% !important; min-width:0 !important; max-width:100% !important; }
+        #createModal .create-layout-grid { display:grid !important; width:100% !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; }
+        #createModal .create-layout-option { display:flex !important; width:100% !important; min-width:0 !important; max-width:100% !important; }
+        #createModal .create-submit-btn { display:block !important; width:100% !important; max-width:100% !important; }
+        @media (max-width:640px) {
+            #createModal { padding:12px !important; }
+            #createModal > .create-modal { max-height:calc(100vh - 24px) !important; }
+            #createModal .create-modal-body { max-height:calc(100vh - 100px) !important; }
+            #createModal .create-form-row, #createModal .create-layout-grid { grid-template-columns:1fr !important; }
+        }
+
+
         #createModal { align-items:flex-start; justify-content:flex-start; padding:clamp(18px,4vw,48px); overflow-y:auto; }
         #createModal .create-modal { width:min(760px,calc(100vw - 36px)); max-height:calc(100vh - 36px); overflow-y:auto; margin:0 auto; box-sizing:border-box; }
         #createModal .create-modal-body { display:block; padding:22px 28px 28px; box-sizing:border-box; }
