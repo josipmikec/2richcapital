@@ -477,7 +477,20 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-highlight { min-width:70px; display:grid; justify-items:center; gap:7px; }
         .profile-highlight-ring { width:63px; height:63px; border-radius:50%; border:1px solid rgba(255,255,255,0.08); background:#101010; display:grid; place-items:center; }
         .profile-highlight-ring span { width:51px; height:51px; border-radius:50%; border:2px solid rgba(255,255,255,0.18); display:grid; place-items:center; color:#f3f3f3; font-size:19px; font-weight:700; }
-        .profile-highlight-label { font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#c3c7cf; text-align:center; }
+        .social-post-media { position:relative; margin-top:12px; height:var(--post-media-height,320px); overflow:hidden; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:#101216; }
+        .social-post-media-slide { display:none; position:absolute; inset:0; width:100%; height:100%; }
+        .social-post-media-slide.is-active { display:block; }
+        .social-post-media-slide img,
+        .social-post-media-slide video { display:block; width:100%; height:100%; object-fit:cover; }
+        .social-post-carousel-btn { position:absolute; top:50%; z-index:3; transform:translateY(-50%); display:grid; place-items:center; width:40px; height:40px; border:1px solid rgba(255,255,255,0.22); border-radius:50%; background:rgba(0,0,0,0.62); color:#fff; font-size:28px; line-height:1; cursor:pointer; }
+        .social-post-carousel-btn:hover { background:rgba(242,202,80,0.88); color:#111; }
+        .social-post-carousel-btn.prev { left:10px; }
+        .social-post-carousel-btn.next { right:10px; }
+        .social-post-carousel-count { position:absolute; right:12px; bottom:10px; z-index:3; padding:5px 8px; border-radius:999px; background:rgba(0,0,0,0.68); color:#fff; font-size:11px; font-weight:800; letter-spacing:0.04em; }
+        .social-post-carousel-dots { position:absolute; left:50%; bottom:10px; z-index:3; display:flex; gap:6px; transform:translateX(-50%); padding:5px 8px; border-radius:999px; background:rgba(0,0,0,0.5); }
+        .social-post-carousel-dot { width:8px; height:8px; padding:0; border:1px solid rgba(255,255,255,0.7); border-radius:50%; background:transparent; cursor:pointer; }
+        .social-post-carousel-dot.is-active { background:#f2ca50; border-color:#f2ca50; }
+        .social-post-text-only { min-height:92px; margin-top:12px; display:flex; align-items:center; justify-content:center; border:1px dashed rgba(242,202,80,0.32); border-radius:14px; background:linear-gradient(135deg,rgba(242,202,80,0.08),rgba(255,255,255,0.02)); color:#f2ca50; font-size:12px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; }
         .profile-tabs { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06); }
         .profile-tab-list { display:flex; gap:8px; flex-wrap:wrap; }
         .profile-tab { display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:0 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:#101010; color:#b7bcc5; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; }
@@ -3727,8 +3740,20 @@ $home_feed_posts = array_map(static function ($row) {
             const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
             return `<div class="social-post-media-slide${index === 0 ? ' is-active' : ''}" data-slide-index="${index}">${isVideo ? `<video src="${safeUrl}" controls muted playsinline></video>` : `<img src="${safeUrl}" alt="Post media ${index + 1}" loading="lazy">`}</div>`;
         }).join('');
-        const controls = urls.length > 1 ? `<button type="button" class="social-post-carousel-btn prev" aria-label="Previous media" onclick="movePostCarousel(this,-1)">‹</button><button type="button" class="social-post-carousel-btn next" aria-label="Next media" onclick="movePostCarousel(this,1)">›</button><div class="social-post-carousel-count">1 / ${urls.length}</div>` : '';
+        const controls = urls.length > 1 ? `<button type="button" class="social-post-carousel-btn prev" aria-label="Previous media" onclick="movePostCarousel(this,-1)">‹</button><button type="button" class="social-post-carousel-btn next" aria-label="Next media" onclick="movePostCarousel(this,1)">›</button><div class="social-post-carousel-count">1 / ${urls.length}</div><div class="social-post-carousel-dots">${urls.map((_, index) => `<button type="button" class="social-post-carousel-dot${index === 0 ? ' is-active' : ''}" aria-label="Show media ${index + 1}" onclick="goToPostCarouselSlide(this,${index})"></button>`).join('')}</div>` : '';
         return `<div class="social-post-media" style="--post-media-height:${height}px;" data-slide="0" data-total-slides="${urls.length}">${slides}${controls}</div>`;
+    }
+
+    function setPostCarouselSlide(media, index) {
+        if (!media) return;
+        const slides = Array.from(media.querySelectorAll('.social-post-media-slide'));
+        if (!slides.length) return;
+        index = Math.max(0, Math.min(index, slides.length - 1));
+        slides.forEach((slide, i) => slide.classList.toggle('is-active', i === index));
+        media.dataset.slide = String(index);
+        const count = media.querySelector('.social-post-carousel-count');
+        if (count) count.textContent = `${index + 1} / ${slides.length}`;
+        media.querySelectorAll('.social-post-carousel-dot').forEach((dot, i) => dot.classList.toggle('is-active', i === index));
     }
 
     function movePostCarousel(button, step) {
@@ -3736,12 +3761,12 @@ $home_feed_posts = array_map(static function ($row) {
         if (!media) return;
         const slides = Array.from(media.querySelectorAll('.social-post-media-slide'));
         if (!slides.length) return;
-        let index = Number(media.dataset.slide || 0);
-        index = (index + step + slides.length) % slides.length;
-        slides.forEach((slide, i) => slide.classList.toggle('is-active', i === index));
-        media.dataset.slide = String(index);
-        const count = media.querySelector('.social-post-carousel-count');
-        if (count) count.textContent = `${index + 1} / ${slides.length}`;
+        const index = (Number(media.dataset.slide || 0) + step + slides.length) % slides.length;
+        setPostCarouselSlide(media, index);
+    }
+
+    function goToPostCarouselSlide(button, index) {
+        setPostCarouselSlide(button.closest('.social-post-media'), index);
     }
 
     function renderSocialPostCard(post, compact = false) {
