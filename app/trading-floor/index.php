@@ -23,6 +23,110 @@ if (!defined('WP_USE_THEMES')) {
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
 
+if (isset($_POST['post_type']) && !isset($_POST['action'])) {
+    $user_id = (int) ($_SESSION['user_id'] ?? 0);
+    $post_table = $wpdb->prefix . 'rich_social_posts';
+
+    if (!function_exists('tf_format_social_post')) {
+        function tf_format_social_post($row, $fallback_name = 'Trader') {
+            $display_name = trim((string) ($row->display_name ?? ''));
+            if ($display_name === '') {
+                $display_name = trim((string) ($row->user_nicename ?? ''));
+            }
+            if ($display_name === '') {
+                $display_name = trim((string) ($row->user_login ?? ''));
+            }
+            if ($display_name === '') {
+                $display_name = $fallback_name;
+            }
+
+            $avatar_url = '';
+            if (!empty($row->user_id)) {
+                $avatar_url = get_avatar_url((int) $row->user_id, ['size' => 96]);
+            }
+
+            return [
+                'id' => (int) ($row->id ?? 0),
+                'user_id' => (int) ($row->user_id ?? 0),
+                'author_name' => $display_name,
+                'author_avatar' => $avatar_url ?: '',
+                'post_type' => sanitize_key($row->post_type ?? 'trade'),
+                'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
+                'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
+                'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
+                'rr_value' => trim((string) ($row->rr_value ?? '')),
+                'caption' => trim((string) ($row->caption ?? '')),
+                'image_url' => trim((string) ($row->image_url ?? '')),
+                'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
+                'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
+            ];
+        }
+    }
+
+    if (!$user_id) {
+        wp_send_json(['success' => false, 'message' => 'You must be logged in to post.']);
+    }
+
+    $post_type = sanitize_key($_POST['post_type'] ?? 'trade');
+    if (!in_array($post_type, ['trade', 'analysis'], true)) {
+        $post_type = 'trade';
+    }
+
+    $symbol = strtoupper(sanitize_text_field($_POST['symbol'] ?? ''));
+    $direction = strtoupper(sanitize_text_field($_POST['direction'] ?? ''));
+    $caption = trim(wp_kses_post($_POST['caption'] ?? ''));
+    $rr_value = sanitize_text_field($_POST['rr_value'] ?? '');
+    $pnl_value = isset($_POST['pnl_value']) && $_POST['pnl_value'] !== '' ? (float) $_POST['pnl_value'] : null;
+
+    if ($caption === '') {
+        wp_send_json(['success' => false, 'message' => 'Caption is required.']);
+    }
+    if ($post_type === 'trade' && $symbol === '') {
+        wp_send_json(['success' => false, 'message' => 'Symbol is required for trade posts.']);
+    }
+
+    $image_url = '';
+    $image_path = '';
+    if (!empty($_FILES['image']['name'])) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        $upload = wp_handle_upload($_FILES['image'], ['test_form' => false]);
+        if (!empty($upload['error'])) {
+            wp_send_json(['success' => false, 'message' => $upload['error']]);
+        }
+        $image_url = (string) ($upload['url'] ?? '');
+        $image_path = (string) ($upload['file'] ?? '');
+    }
+
+    $inserted = $wpdb->insert($post_table, [
+        'user_id' => $user_id,
+        'post_type' => $post_type,
+        'symbol' => $symbol ?: null,
+        'direction' => $direction ?: null,
+        'pnl_value' => $pnl_value,
+        'rr_value' => $rr_value ?: null,
+        'caption' => $caption,
+        'image_url' => $image_url ?: null,
+        'image_path' => $image_path ?: null,
+        'created_at' => current_time('mysql'),
+        'updated_at' => current_time('mysql'),
+    ], ['%d','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s']);
+
+    if (!$inserted) {
+        wp_send_json(['success' => false, 'message' => 'Database error while creating the post.']);
+    }
+
+    $row = $wpdb->get_row($wpdb->prepare(
+        "SELECT p.*, u.display_name, u.user_nicename, u.user_login
+         FROM {$post_table} p
+         LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+         WHERE p.id = %d
+         LIMIT 1",
+        (int) $wpdb->insert_id
+    ));
+
+    wp_send_json(['success' => true, 'post' => tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader')]);
+}
+
 $profile_table = $wpdb->prefix . 'rich_user_profiles';
 $profile_row = $wpdb->get_row($wpdb->prepare(
     "SELECT display_name, trading_handle, bio, primary_market, trading_style FROM {$profile_table} WHERE user_id = %d LIMIT 1",
@@ -3580,72 +3684,7 @@ $home_feed_posts = array_map(static function ($row) {
         if (status) status.textContent = '';
     }
 
-<?php
-if (isset($_POST['post_type']) && !isset($_POST['action'])) {
-    if (!$user_id) {
-        wp_send_json(['success' => false, 'message' => 'You must be logged in to post.']);
-    }
 
-    $post_type = sanitize_key($_POST['post_type'] ?? 'trade');
-    if (!in_array($post_type, ['trade', 'analysis'], true)) {
-        $post_type = 'trade';
-    }
-
-    $symbol = strtoupper(sanitize_text_field($_POST['symbol'] ?? ''));
-    $direction = strtoupper(sanitize_text_field($_POST['direction'] ?? ''));
-    $caption = trim(wp_kses_post($_POST['caption'] ?? ''));
-    $rr_value = sanitize_text_field($_POST['rr_value'] ?? '');
-    $pnl_value = isset($_POST['pnl_value']) && $_POST['pnl_value'] !== '' ? (float) $_POST['pnl_value'] : null;
-
-    if ($caption === '') {
-        wp_send_json(['success' => false, 'message' => 'Caption is required.']);
-    }
-    if ($post_type === 'trade' && $symbol === '') {
-        wp_send_json(['success' => false, 'message' => 'Symbol is required for trade posts.']);
-    }
-
-    $image_url = '';
-    $image_path = '';
-    if (!empty($_FILES['image']['name'])) {
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-        $upload = wp_handle_upload($_FILES['image'], ['test_form' => false]);
-        if (!empty($upload['error'])) {
-            wp_send_json(['success' => false, 'message' => $upload['error']]);
-        }
-        $image_url = (string) ($upload['url'] ?? '');
-        $image_path = (string) ($upload['file'] ?? '');
-    }
-
-    $inserted = $wpdb->insert($post_table, [
-        'user_id' => $user_id,
-        'post_type' => $post_type,
-        'symbol' => $symbol ?: null,
-        'direction' => $direction ?: null,
-        'pnl_value' => $pnl_value,
-        'rr_value' => $rr_value ?: null,
-        'caption' => $caption,
-        'image_url' => $image_url ?: null,
-        'image_path' => $image_path ?: null,
-        'created_at' => current_time('mysql'),
-        'updated_at' => current_time('mysql'),
-    ], ['%d','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s']);
-
-    if (!$inserted) {
-        wp_send_json(['success' => false, 'message' => 'Database error while creating the post.']);
-    }
-
-    $row = $wpdb->get_row($wpdb->prepare(
-        "SELECT p.*, u.display_name, u.user_nicename, u.user_login
-         FROM {$post_table} p
-         LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
-         WHERE p.id = %d
-         LIMIT 1",
-        (int) $wpdb->insert_id
-    ));
-
-    wp_send_json(['success' => true, 'post' => tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader')]);
-}
-?>
 
     const groupSignalModal = document.getElementById('groupSignalModal');
     if (groupSignalModal) {
