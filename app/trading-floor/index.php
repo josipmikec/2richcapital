@@ -1183,6 +1183,24 @@ $home_feed_posts = array_map(static function ($row) {
         .story-trade-detail { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; text-transform: uppercase; }
 
         /* ── Create modal ── */
+        /* Clean layout picker — scoped to Create only */
+        .create-layout-field { margin-bottom: 20px; }
+        .create-layout-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; width:100%; }
+        .create-layout-option { display:flex; align-items:center; gap:9px; min-width:0; min-height:74px; padding:9px; background:#101010; border:1px solid #292929; border-radius:10px; color:#d7d7d7; text-align:left; cursor:pointer; }
+        .create-layout-option:hover { border-color:#666; }
+        .create-layout-option.active { border-color:#F2CA50; background:rgba(242,202,80,.07); }
+        .create-layout-option > span:last-child { min-width:0; }
+        .create-layout-option b, .create-layout-option small { display:block; }
+        .create-layout-option b { margin-bottom:3px; color:#f2f2f2; font-size:11px; }
+        .create-layout-option small { color:#777; font-size:9px; line-height:1.3; overflow-wrap:anywhere; }
+        .create-layout-preview { display:flex; flex:0 0 64px; flex-direction:column; justify-content:center; gap:3px; width:64px; height:52px; padding:7px; border:1px solid #292929; border-radius:7px; background:#191919; overflow:hidden; }
+        .create-layout-preview strong { color:#f5f5f5; font-size:9px; }
+        .create-layout-preview em { color:#79d88c; font-size:8px; font-style:normal; font-weight:800; }
+        .create-layout-preview small { color:#777; font-size:7px; }
+        .create-layout-preview--image, .create-layout-preview--text { align-items:center; justify-content:center; }
+        .create-layout-preview--image strong, .create-layout-preview--text strong { color:#F2CA50; font-size:20px; line-height:1; }
+        @media (max-width:600px) { .create-layout-grid { grid-template-columns:1fr; } }
+
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
         .feed-post-modal { background:#151515; border:1px solid #1e1e1e; border-radius:20px; width:min(1080px, 94vw); max-height:88vh; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5); display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(320px, 420px); position:relative; }
@@ -1991,6 +2009,16 @@ $home_feed_posts = array_map(static function ($row) {
                     <button class="create-tab" id="tabAnalysis" onclick="switchCreateTab('analysis')">📈 Analysis</button>
                 </div>
                 <form id="createPostForm" enctype="multipart/form-data">
+                    <div class="create-form-field create-layout-field">
+                        <label class="create-form-label">Post layout</label>
+                        <input type="hidden" id="createLayoutStyle" name="layout_style" value="trade_card">
+                        <div class="create-layout-grid" role="radiogroup" aria-label="Choose post layout">
+                            <button type="button" class="create-layout-option active" data-layout="trade_card" role="radio" aria-checked="true"><span class="create-layout-preview"><strong>XAUUSD</strong><em>LONG</em><small>TRADE</small></span><span><b>Trade card</b><small>Structured setup</small></span></button>
+                            <button type="button" class="create-layout-option" data-layout="analysis_card" role="radio" aria-checked="false"><span class="create-layout-preview"><strong>MARKET</strong><em>THESIS</em><small>ANALYSIS</small></span><span><b>Analysis card</b><small>Market breakdown</small></span></button>
+                            <button type="button" class="create-layout-option" data-layout="image" role="radio" aria-checked="false"><span class="create-layout-preview create-layout-preview--image"><strong>◩</strong><small>IMAGE</small></span><span><b>Image post</b><small>Chart first</small></span></button>
+                            <button type="button" class="create-layout-option" data-layout="text" role="radio" aria-checked="false"><span class="create-layout-preview create-layout-preview--text"><strong>“</strong><small>TEXT</small></span><span><b>Text post</b><small>Idea first</small></span></button>
+                        </div>
+                    </div>
                     <div class="create-form-row">
                         <div class="create-form-field">
                             <label class="create-form-label">Symbol</label>
@@ -3783,6 +3811,34 @@ $home_feed_posts = array_map(static function ($row) {
     function toggleDM() { document.getElementById('dmPanel').classList.toggle('open'); }
 
     // Create modal
+    bindCreateLayouts();
+    let tfCreateType = 'trade';
+
+    function setCreateLayout(layout) {
+        const allowed = ['trade_card', 'analysis_card', 'image', 'text'];
+        const selected = allowed.includes(layout) ? layout : (tfCreateType === 'trade' ? 'trade_card' : 'analysis_card');
+        const input = document.getElementById('createLayoutStyle');
+        if (input) input.value = selected;
+        document.querySelectorAll('.create-layout-option').forEach(option => {
+            const active = option.dataset.layout === selected;
+            option.classList.toggle('active', active);
+            option.setAttribute('aria-checked', active ? 'true' : 'false');
+        });
+        const hideTradeFields = selected === 'image' || selected === 'text';
+        ['createSymbol','createDirection','createPnl','createRr'].forEach(id => {
+            const field = document.getElementById(id);
+            const wrapper = field && field.closest('.create-form-field');
+            if (wrapper) wrapper.style.display = hideTradeFields ? 'none' : '';
+            if (field && id === 'createSymbol') field.required = !hideTradeFields && tfCreateType === 'trade';
+        });
+    }
+
+    function bindCreateLayouts() {
+        document.querySelectorAll('.create-layout-option').forEach(option => {
+            option.addEventListener('click', () => setCreateLayout(option.dataset.layout));
+        });
+    }
+
     const tfAjaxEndpoint = <?php echo json_encode(admin_url('admin-ajax.php')); ?>;
     const tfFeedInitialPosts = <?php echo wp_json_encode($home_feed_posts); ?>;
     const tfProfileInitialPosts = <?php echo wp_json_encode($profile_posts); ?>;
