@@ -425,7 +425,47 @@ $home_feed_posts = array_map(static function ($row) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        /* Topbar action buttons */
+        /* Layout picker */
+        .create-layout-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:8px; }
+        .create-layout-option { display:flex; align-items:center; gap:10px; min-height:78px; padding:10px; text-align:left; color:#d8d8d8; background:#141414; border:1px solid #292929; border-radius:12px; cursor:pointer; transition:border-color .18s, background .18s, transform .18s; }
+        .create-layout-option:hover { background:#1b1b1b; border-color:#555; transform:translateY(-1px); }
+        .create-layout-option.active { border-color:#F2CA50; background:rgba(242,202,80,.08); box-shadow:0 0 0 1px rgba(242,202,80,.16); }
+        .create-layout-option b,.create-layout-option small { display:block; }
+        .create-layout-option b { font-size:12px; color:#f5f5f5; margin-bottom:3px; }
+        .create-layout-option small { font-size:10px; line-height:1.35; color:#858585; }
+        .create-layout-preview { width:76px; min-width:76px; height:56px; padding:8px; display:flex; flex-direction:column; justify-content:space-between; border-radius:8px; background:#0d0d0d; border:1px solid #292929; overflow:hidden; }
+        .create-layout-preview strong { font-size:11px; color:#f4f4f4; }
+        .create-layout-preview span { font-size:9px; color:#79d88c; font-weight:700; }
+        .create-layout-preview small { font-size:7px; color:#777; white-space:nowrap; }
+        .create-layout-preview--analysis span { color:#c8a85b; }
+        .create-layout-preview--image { align-items:center; justify-content:center; gap:4px; background:linear-gradient(135deg,#252525,#101010); }
+        .create-layout-preview--image span { font-size:20px; color:#F2CA50; }
+        .create-layout-preview--text { justify-content:center; gap:1px; }
+        .create-layout-preview--text span { font-size:24px; color:#F2CA50; line-height:1; }
+        @media (max-width:600px) { .create-layout-grid { grid-template-columns:1fr; } }
+
+        /* Published post layout variants */
+        .group-feed-card[data-layout="trade_card"], .group-feed-card[data-layout="analysis_card"] { overflow:hidden; }
+        .social-trade-layout { margin-top:12px; border:1px solid #292929; border-radius:14px; background:#101010; overflow:hidden; }
+        .social-trade-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid #242424; }
+        .social-trade-symbol { font-size:24px; font-weight:800; letter-spacing:.04em; color:#f5f5f5; }
+        .social-trade-direction { color:#79d88c; font-size:13px; font-weight:800; letter-spacing:.08em; }
+        .social-trade-pnl { padding:8px 12px; border-radius:9px; background:rgba(90,190,112,.12); color:#79d88c; font-size:15px; font-weight:800; }
+        .social-trade-metrics { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid #242424; }
+        .social-trade-metric { padding:12px 14px; border-right:1px solid #242424; }
+        .social-trade-metric:last-child { border-right:0; }
+        .social-trade-metric label { display:block; color:#686868; font-size:9px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
+        .social-trade-metric strong { color:#d7d7d7; font-size:14px; }
+        .social-trade-media { max-height:320px; }
+        .social-trade-media .social-post-media { margin-top:0; border:0; border-radius:0; }
+        .social-analysis-layout { margin-top:12px; padding:18px; border:1px solid rgba(242,202,80,.22); border-radius:14px; background:linear-gradient(135deg,rgba(242,202,80,.08),#111 42%); }
+        .social-analysis-kicker { color:#F2CA50; font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
+        .social-analysis-layout .social-analysis-title { color:#f4f4f4; font-size:18px; font-weight:800; margin-bottom:10px; }
+        .social-image-layout { margin-top:12px; }
+        .social-image-layout .social-post-media { margin-top:0; }
+        .social-text-layout { margin-top:12px; padding:18px 20px; border-left:3px solid #F2CA50; background:#151515; border-radius:10px; }
+        .social-text-mark { color:#F2CA50; font-size:28px; line-height:1; margin-bottom:4px; }
+
         .tf-topbar-btn {
             display: flex; align-items: center; gap: 6px;
             background: none; border: none; cursor: pointer;
@@ -3890,7 +3930,20 @@ $home_feed_posts = array_map(static function ($row) {
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
-        return `<article class="group-feed-card" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div>${menu}</div>${metaBits ? `<div class="group-feed-body" style="margin-top:8px;color:#f2ca50;">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}</article>`;
+        const layout = escapeHtml(post.layout_style || 'text');
+        const layoutClass = `group-feed-card--${layout}`;
+        const mediaBlock = media ? `<div class="social-${layout === 'image' ? 'image' : 'generic'}-layout">${media}</div>` : '';
+        let layoutBody = '';
+        if (layout === 'trade_card') {
+            layoutBody = `<div class="social-trade-layout"><div class="social-trade-head"><div><div class="social-trade-symbol">${symbol || 'TRADE'}</div><div class="social-trade-direction">● ${direction || 'SETUP'}</div></div>${formatPnlBadge(post) ? `<div class="social-trade-pnl">${formatPnlBadge(post)}</div>` : ''}</div><div class="social-trade-metrics"><div class="social-trade-metric"><label>R:R</label><strong>${rr || '—'}</strong></div><div class="social-trade-metric"><label>Type</label><strong>${typeLabel}</strong></div><div class="social-trade-metric"><label>Status</label><strong>Published</strong></div></div>${media ? `<div class="social-trade-media">${media}</div>` : ''}<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div></div>`;
+        } else if (layout === 'analysis_card') {
+            layoutBody = `<div class="social-analysis-layout"><div class="social-analysis-kicker">${typeLabel} · Market view</div><div class="social-analysis-title">${symbol || 'Market analysis'}${direction ? ` · ${direction}` : ''}</div><div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>${mediaBlock}</div>`;
+        } else if (layout === 'image') {
+            layoutBody = `${mediaBlock}<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>`;
+        } else {
+            layoutBody = `<div class="social-text-layout"><div class="social-text-mark">“</div><div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div></div>${media ? mediaBlock : ''}`;
+        }
+        return `<article class="group-feed-card ${layoutClass}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div>${menu}</div>${layoutBody}</article>`;
     }
 
     function togglePostMenu(button, event) {
