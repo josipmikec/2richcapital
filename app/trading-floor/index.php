@@ -1188,15 +1188,16 @@ $home_feed_posts = array_map(static function ($row) {
         .story-trade-detail { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; text-transform: uppercase; }
 
 
-        /* Feed layouts */
-        .social-layout-analysis { margin-top:10px; padding:16px; border:1px solid rgba(242,202,80,.22); border-radius:12px; background:rgba(242,202,80,.04); }
-        .social-layout-kicker { color:#F2CA50; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:7px; }
-        .social-layout-symbol { color:#f2f2f2; font-size:18px; font-weight:800; margin-bottom:8px; }
-        .social-layout-image { margin-top:10px; }
+        /* Feed layouts — polished */
+        .social-layout-analysis { margin:14px 0 0; padding:18px 18px 16px; border:1px solid rgba(242,202,80,.25); border-radius:14px; background:linear-gradient(180deg, rgba(242,202,80,.06), rgba(242,202,80,.03)); }
+        .social-layout-kicker { color:#F2CA50; font-size:9px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
+        .social-layout-symbol { color:#f5f5f5; font-size:19px; font-weight:800; margin-bottom:9px; }
+        .social-layout-image { margin:12px 0 0; }
         .social-layout-image .social-post-media { margin-top:0; }
-        .social-layout-text { margin-top:10px; padding:14px 16px; border-left:3px solid #F2CA50; border-radius:8px; background:#151515; }
-        .social-layout-quote { display:block; color:#F2CA50; font-size:25px; line-height:1; }
-        .social-layout-trade-meta { margin-top:8px; color:#F2CA50 !important; }
+        .social-layout-text { margin:14px 0 0; padding:16px 18px 14px; border-left:3px solid #F2CA50; border-radius:10px; background:#151515; }
+        .social-layout-quote { display:block; color:#F2CA50; font-size:28px; line-height:1; margin-bottom:6px; }
+        .social-layout-trade-meta { margin:10px 0 0 !important; color:#F2CA50 !important; font-weight:600; }
+        .social-layout-trade-meta em { color:#79d88c; font-style:normal; font-weight:800; }
         /* ── Create modal ── */
         /* Clean layout picker — scoped to Create only */
         .create-layout-field { margin-bottom: 20px; }
@@ -3829,8 +3830,8 @@ $home_feed_posts = array_map(static function ($row) {
     bindCreateLayouts();
     function setCreateLayout(layout) {
         const allowed = ['trade_card', 'analysis_card', 'image', 'text'];
-        const selected = allowed.includes(layout) ? layout : (tfCreateType === 'trade' ? 'trade_card' : 'analysis_card');
         const input = document.getElementById('createLayoutStyle');
+        const selected = allowed.includes(layout) ? layout : (tfCreateType === 'trade' ? 'trade_card' : 'analysis_card');
         if (input) input.value = selected;
         document.querySelectorAll('.create-layout-option').forEach(option => {
             const active = option.dataset.layout === selected;
