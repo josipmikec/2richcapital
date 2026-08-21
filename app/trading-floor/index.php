@@ -4124,8 +4124,7 @@ $home_feed_posts = array_map(static function ($row) {
     }
 
     bindCreateLayoutOptions();
-
-
+    function openCreateModal(type='post') {
         document.getElementById('createModal').classList.add('active');
         switchCreateTab(type);
         setCreateLayout(tfCreateType === 'trade' ? 'trade_card' : 'analysis_card');
