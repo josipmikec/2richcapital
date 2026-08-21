@@ -3824,7 +3824,26 @@ $home_feed_posts = array_map(static function ($row) {
                     throw new Error(data && data.message ? data.message : 'Could not publish post.');
                 }
                 tfFeedInitialPosts.unshift(data.post);
-                const feedPostModal = document.getElementById('feedPostModal');
+                renderHomeFeedPosts(tfFeedInitialPosts);
+                if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
+                    tfProfileInitialPosts.unshift(data.post);
+                    renderProfilePosts(tfProfileInitialPosts);
+                    renderProfileThumbGrid(tfProfileInitialPosts);
+                }
+                createPostForm.reset();
+                switchCreateTab(tfCreateType);
+                setCreateFormStatus('Post published successfully.');
+                setTimeout(() => { closeCreateModal(); setCreateFormStatus(''); }, 700);
+            } catch (error) {
+                setCreateFormStatus(error && error.message ? error.message : 'Could not publish post.', true);
+            } finally {
+                tfSubmittingPost = false;
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
+
+    const feedPostModal = document.getElementById('feedPostModal');
     if (feedPostModal) {
         feedPostModal.addEventListener('click', (event) => {
             if (event.target === feedPostModal) closeFeedPostModal();
