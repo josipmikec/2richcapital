@@ -146,9 +146,9 @@ if (!function_exists('tf_format_social_post')) {
                 'user_id' => (int) ($row->user_id ?? 0),
                 'author_name' => $display_name,
                 'author_avatar' => $avatar_url ?: '',
-            'post_type' => sanitize_key($row->post_type ?? 'trade'),
-            'layout_style' => sanitize_key($row->layout_style ?? 'text'),
-            'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
+                'post_type' => sanitize_key($row->post_type ?? 'trade'),
+                'layout_style' => sanitize_key($row->layout_style ?? 'text'),
+                'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
                 'rr_value' => trim((string) ($row->rr_value ?? '')),
@@ -256,13 +256,6 @@ if (!function_exists('tf_format_social_post')) {
     if ($layout_style_column_exists) {
         $post_data['layout_style'] = $layout_style;
         $post_formats[] = '%s';
-    } else {
-        $added_layout_column = $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN layout_style VARCHAR(32) NOT NULL DEFAULT 'text'");
-        $layout_style_column_exists = $added_layout_column !== false;
-        if ($layout_style_column_exists) {
-            $post_data['layout_style'] = $layout_style;
-            $post_formats[] = '%s';
-        }
     }
     $inserted = $wpdb->insert($post_table, $post_data, $post_formats);
 
@@ -279,9 +272,7 @@ if (!function_exists('tf_format_social_post')) {
         (int) $wpdb->insert_id
     ));
 
-    $formatted_post = tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader');
-    $formatted_post['layout_style'] = $layout_style;
-    wp_send_json(['success' => true, 'post' => $formatted_post, 'debug_layout_submitted' => $layout_style, 'debug_layout_column_exists' => (bool) $layout_style_column_exists]);
+    wp_send_json(['success' => true, 'post' => tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader')]);
 }
 
 $profile_table = $wpdb->prefix . 'rich_user_profiles';
@@ -391,7 +382,6 @@ if (!function_exists('tf_format_social_post')) {
             'author_name' => $display_name,
             'author_avatar' => $avatar_url ?: '',
             'post_type' => sanitize_key($row->post_type ?? 'trade'),
-            'layout_style' => sanitize_key($row->layout_style ?? 'text'),
             'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
             'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
             'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
@@ -607,10 +597,6 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-posts-list .group-feed-card { width:100%; }
         .profile-tab-panel { display:none; margin-top:18px; }
         .profile-tab-panel.active { display:block; }
-        .profile-section.profile-tab-active-posts .profile-sidebar,
-        .profile-section.profile-tab-active-posts .profile-suggestions,
-        .profile-section.profile-tab-active-posts [class*="suggest"],
-        .profile-section.profile-tab-active-posts [id*="suggest"] { display:none !important; }
         .profile-archive-mode .profile-hero,
         .profile-archive-mode .profile-profile-actions,
         .profile-archive-mode .profile-highlights,
@@ -1610,7 +1596,37 @@ $home_feed_posts = array_map(static function ($row) {
                 </div>
 
                 <div class="profile-tab-panel" data-profile-panel="posts">
-                    <div class="profile-posts-list" id="profileFeedGrid"></div>
+                    <div class="profile-posts-list" id="profileFeedGrid">
+                        <?php if (!empty($profile_posts)) : ?>
+                            <?php foreach ($profile_posts as $profile_post) : ?>
+                                <article class="group-feed-card" data-post-id="<?php echo (int) $profile_post['id']; ?>">
+                                    <div class="group-feed-top">
+                                        <div>
+                                            <div class="group-card-kicker"><?php echo $profile_post['post_type'] === 'analysis' ? 'Analysis' : 'Trade'; ?></div>
+                                            <div class="group-feed-title" style="font-size:16px;"><?php echo esc_html($profile_post['author_name']); ?></div>
+                                            <div class="group-feed-meta"><?php echo esc_html($profile_post['created_label']); ?></div>
+                                        </div>
+                                    </div>
+                                    <?php $profile_meta = array_filter([
+                                        $profile_post['symbol'],
+                                        $profile_post['direction'],
+                                        $profile_post['rr_value'] ? 'R:R ' . $profile_post['rr_value'] : '',
+                                        $profile_post['pnl_value'] !== null ? (($profile_post['pnl_value'] > 0 ? '+' : '') . number_format((float) $profile_post['pnl_value'], 2) . '%') : '',
+                                    ]); ?>
+                                    <?php if (!empty($profile_meta)) : ?>
+                                        <div class="group-feed-body" style="margin-top:8px;color:#f2ca50;"><?php echo esc_html(implode(' · ', $profile_meta)); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($profile_post['caption'])) : ?>
+                                        <div class="group-feed-body"><?php echo nl2br(esc_html($profile_post['caption'])); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($profile_post['image_url'])) : ?>
+                                        <div style="margin-top:12px;"><img src="<?php echo esc_url($profile_post['image_url']); ?>" alt="Post chart" style="width:100%;border-radius:14px;border:1px solid rgba(255,255,255,0.08);object-fit:cover;max-height:180px;"></div>
+                                    <?php endif; ?>
+                                </article>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <div class="group-feed-card" style="grid-column:1/-1;"><div class="group-feed-body">No posts published yet.</div></div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -3999,7 +4015,7 @@ $home_feed_posts = array_map(static function ($row) {
             host.innerHTML = '<div class="group-feed-card" style="grid-column:1/-1;"><div class="group-feed-body">No posts published yet.</div></div>';
             return;
         }
-        host.innerHTML = posts.map(post => renderSocialPostCard(post, false)).join('');
+        host.innerHTML = posts.map(post => renderSocialPostCard(post, true)).join('');
     }
 
     let tfFeedModalIndex = -1;
@@ -4161,8 +4177,6 @@ $home_feed_posts = array_map(static function ($row) {
             if (tfSubmittingPost) return;
             const submitBtn = document.getElementById('createSubmitBtn');
             const payload = new FormData(createPostForm);
-            const selectedLayout = document.getElementById('createLayoutStyle')?.value || 'text';
-            payload.set('layout_style', selectedLayout);
             payload.append('post_type', tfCreateType);
             tfSubmittingPost = true;
             if (submitBtn) submitBtn.disabled = true;
@@ -4183,7 +4197,6 @@ $home_feed_posts = array_map(static function ($row) {
                 if (!response.ok || !data || !data.success || !data.post) {
                     throw new Error(data && data.message ? data.message : 'Could not publish post.');
                 }
-                console.debug('[Trading Floor] publish response', { post: data.post, debugLayoutSubmitted: data.debug_layout_submitted, debugLayoutColumnExists: data.debug_layout_column_exists });
                 tfFeedInitialPosts.unshift(data.post);
                 renderHomeFeedPosts(tfFeedInitialPosts);
                 if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
