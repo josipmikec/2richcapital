@@ -256,6 +256,13 @@ if (!function_exists('tf_format_social_post')) {
     if ($layout_style_column_exists) {
         $post_data['layout_style'] = $layout_style;
         $post_formats[] = '%s';
+    } else {
+        $added_layout_column = $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN layout_style VARCHAR(32) NOT NULL DEFAULT 'text'");
+        $layout_style_column_exists = $added_layout_column !== false;
+        if ($layout_style_column_exists) {
+            $post_data['layout_style'] = $layout_style;
+            $post_formats[] = '%s';
+        }
     }
     $inserted = $wpdb->insert($post_table, $post_data, $post_formats);
 
