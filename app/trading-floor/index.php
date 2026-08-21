@@ -131,9 +131,12 @@ if (!function_exists('tf_format_social_post')) {
     $image_urls = [];
     if (!empty($_FILES['image']['name'])) {
         require_once ABSPATH . 'wp-admin/includes/file.php';
-        $upload = wp_handle_upload($_FILES['image'], ['test_form' => false]);
+        $upload = @wp_handle_upload($_FILES['image'], ['test_form' => false]);
         if (!empty($upload['error'])) {
-            wp_send_json(['success' => false, 'message' => $upload['error']]);
+            wp_send_json(['success' => false, 'message' => 'Upload error (single): ' . $upload['error']]);
+        }
+        if (empty($upload['url']) || empty($upload['file'])) {
+            wp_send_json(['success' => false, 'message' => 'Upload failed (single): missing URL or file.']);
         }
         $image_url = (string) ($upload['url'] ?? '');
         $image_path = (string) ($upload['file'] ?? '');
@@ -151,9 +154,15 @@ if (!function_exists('tf_format_social_post')) {
                 'error' => $_FILES['images']['error'][$index] ?? UPLOAD_ERR_NO_FILE,
                 'size' => $_FILES['images']['size'][$index] ?? 0,
             ];
-            $upload = wp_handle_upload($file, ['test_form' => false]);
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                wp_send_json(['success' => false, 'message' => 'Upload error (file ' . ($index + 1) . '): code ' . $file['error']]);
+            }
+            $upload = @wp_handle_upload($file, ['test_form' => false]);
             if (!empty($upload['error'])) {
-                wp_send_json(['success' => false, 'message' => $upload['error']]);
+                wp_send_json(['success' => false, 'message' => 'Upload error (file ' . ($index + 1) . '): ' . $upload['error']]);
+            }
+            if (empty($upload['url']) || empty($upload['file'])) {
+                wp_send_json(['success' => false, 'message' => 'Upload failed (file ' . ($index + 1) . '): missing URL or file.']);
             }
             $url = (string) ($upload['url'] ?? '');
             $path = (string) ($upload['file'] ?? '');
