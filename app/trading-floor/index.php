@@ -425,120 +425,7 @@ $home_feed_posts = array_map(static function ($row) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        /* Create modal — single isolated layout system */
-        #createModal.modal-overlay { position:fixed !important; inset:0 !important; z-index:10000 !important; display:none !important; align-items:center !important; justify-content:center !important; padding:20px !important; overflow:hidden !important; box-sizing:border-box !important; }
-        #createModal.modal-overlay.active { display:flex !important; }
-        #createModal.modal-overlay > .create-modal { all:initial; display:flex !important; flex-direction:column !important; position:relative !important; box-sizing:border-box !important; width:min(760px,100%) !important; max-width:760px !important; height:auto !important; max-height:calc(100vh - 40px) !important; margin:0 !important; padding:0 !important; overflow:hidden !important; background:#111 !important; border:1px solid #2b2b2b !important; border-radius:14px !important; color:#f2f2f2 !important; font-family:"Montserrat",sans-serif !important; }
-        #createModal.modal-overlay > .create-modal * { box-sizing:border-box !important; }
-        #createModal .create-modal-header { all:initial; display:flex !important; flex:0 0 auto !important; align-items:center !important; justify-content:space-between !important; min-height:64px !important; width:100% !important; padding:0 22px !important; background:#151515 !important; border-bottom:1px solid #262626 !important; color:#f2f2f2 !important; font-family:"Montserrat",sans-serif !important; }
-        #createModal .create-modal-title { all:initial; color:#f2f2f2 !important; font:700 13px/1 "Montserrat",sans-serif !important; letter-spacing:.08em !important; text-transform:uppercase !important; }
-        #createModal .modal-close-btn { all:initial; display:grid !important; place-items:center !important; width:36px !important; height:36px !important; color:#888 !important; cursor:pointer !important; font-family:"Montserrat",sans-serif !important; }
-        #createModal .modal-close-btn:hover { color:#f2ca50 !important; }
-        #createModal .create-modal-body { display:block !important; flex:1 1 auto !important; width:100% !important; max-height:calc(100vh - 104px) !important; padding:20px 22px 24px !important; overflow-y:auto !important; overflow-x:hidden !important; background:#111 !important; }
-        #createModal .create-tabs { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; width:100% !important; margin:0 0 20px !important; padding:0 !important; gap:6px !important; }
-        #createModal .create-tab { display:block !important; width:100% !important; min-height:44px !important; margin:0 !important; padding:10px 8px !important; border:1px solid #292929 !important; border-radius:8px !important; background:#171717 !important; color:#8b8b8b !important; font:700 10px/1.2 "Montserrat",sans-serif !important; text-transform:uppercase !important; cursor:pointer !important; }
-        #createModal .create-tab.active { color:#111 !important; background:#f2ca50 !important; border-color:#f2ca50 !important; }
-        #createModal #createPostForm { display:flex !important; flex-direction:column !important; width:100% !important; max-width:100% !important; min-width:0 !important; gap:16px !important; margin:0 !important; padding:0 !important; }
-        #createModal #createPostForm > * { width:100% !important; max-width:100% !important; min-width:0 !important; margin:0 !important; }
-        #createModal .create-layout-grid { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; width:100% !important; }
-        #createModal .create-layout-option { display:flex !important; align-items:center !important; gap:10px !important; width:100% !important; min-width:0 !important; min-height:78px !important; margin:0 !important; padding:10px !important; overflow:hidden !important; }
-        #createModal .create-layout-option > span:last-child { min-width:0 !important; overflow-wrap:anywhere !important; }
-        #createModal .create-form-row { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:14px !important; width:100% !important; }
-        #createModal .create-form-field { display:block !important; width:100% !important; min-width:0 !important; }
-        #createModal .create-form-field[style*="display: none"] { display:none !important; }
-        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea, #createModal input[type="file"] { display:block !important; width:100% !important; max-width:100% !important; min-width:0 !important; }
-        #createModal .create-form-textarea { min-height:110px !important; resize:vertical !important; }
-        #createModal .create-submit-btn, #createModal button[type="submit"] { display:block !important; width:100% !important; max-width:100% !important; min-height:48px !important; margin:0 !important; }
-        @media (max-width:640px) {
-            #createModal.modal-overlay { padding:10px !important; }
-            #createModal.modal-overlay > .create-modal { max-height:calc(100vh - 20px) !important; }
-            #createModal .create-modal-body { padding:16px !important; max-height:calc(100vh - 84px) !important; }
-            #createModal .create-layout-grid, #createModal .create-form-row { grid-template-columns:1fr !important; }
-        }
-
-
-        #createModal { position:fixed !important; inset:0 !important; z-index:10000 !important; display:none; align-items:center !important; justify-content:center !important; padding:20px !important; overflow-y:auto !important; }
-        #createModal.active { display:flex !important; }
-        #createModal > .create-modal { position:relative !important; flex:0 1 760px !important; width:100% !important; max-width:760px !important; height:auto !important; max-height:calc(100vh - 40px) !important; margin:0 !important; overflow:hidden !important; }
-        #createModal .create-modal-body { max-height:calc(100vh - 120px) !important; overflow-y:auto !important; overflow-x:hidden !important; }
-        #createModal #createPostForm { width:100% !important; max-width:100% !important; display:flex !important; flex-direction:column !important; gap:16px !important; }
-        #createModal .create-form-row { width:100% !important; display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:14px !important; }
-        #createModal .create-form-field { width:100% !important; min-width:0 !important; }
-        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea { display:block !important; width:100% !important; min-width:0 !important; max-width:100% !important; }
-        #createModal .create-layout-grid { display:grid !important; width:100% !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; }
-        #createModal .create-layout-option { display:flex !important; width:100% !important; min-width:0 !important; max-width:100% !important; }
-        #createModal .create-submit-btn { display:block !important; width:100% !important; max-width:100% !important; }
-        @media (max-width:640px) {
-            #createModal { padding:12px !important; }
-            #createModal > .create-modal { max-height:calc(100vh - 24px) !important; }
-            #createModal .create-modal-body { max-height:calc(100vh - 100px) !important; }
-            #createModal .create-form-row, #createModal .create-layout-grid { grid-template-columns:1fr !important; }
-        }
-
-
-        #createModal { align-items:flex-start; justify-content:flex-start; padding:clamp(18px,4vw,48px); overflow-y:auto; }
-        #createModal .create-modal { width:min(760px,calc(100vw - 36px)); max-height:calc(100vh - 36px); overflow-y:auto; margin:0 auto; box-sizing:border-box; }
-        #createModal .create-modal-body { display:block; padding:22px 28px 28px; box-sizing:border-box; }
-        #createModal #createPostForm { display:flex; flex-direction:column; gap:16px; min-width:0; }
-        #createModal .create-form-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; min-width:0; }
-        #createModal .create-form-field { min-width:0; width:100%; }
-        #createModal .create-form-field[style*="display: none"] { display:none !important; }
-        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea { width:100%; max-width:100%; box-sizing:border-box; }
-        #createModal .create-form-textarea { min-height:112px; resize:vertical; }
-        #createModal .create-layout-grid { width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-        #createModal .create-layout-option { width:100%; min-width:0; box-sizing:border-box; overflow:hidden; }
-        #createModal .create-layout-option > span:last-child { min-width:0; overflow:hidden; }
-        #createModal .create-layout-option b, #createModal .create-layout-option small { overflow-wrap:anywhere; }
-        #createModal .create-layout-preview { flex:0 0 76px; }
-        #createModal .create-submit-btn { width:100%; min-height:48px; margin-top:2px; }
-        @media (max-width:640px) {
-            #createModal { padding:12px; }
-            #createModal .create-modal { width:100%; max-height:calc(100vh - 24px); }
-            #createModal .create-modal-body { padding:18px 16px 22px; }
-            #createModal .create-form-row, #createModal .create-layout-grid { grid-template-columns:1fr; }
-        }
-
-
-        .create-layout-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:8px; }
-        .create-layout-option { display:flex; align-items:center; gap:10px; min-height:78px; padding:10px; text-align:left; color:#d8d8d8; background:#141414; border:1px solid #292929; border-radius:12px; cursor:pointer; transition:border-color .18s, background .18s, transform .18s; }
-        .create-layout-option:hover { background:#1b1b1b; border-color:#555; transform:translateY(-1px); }
-        .create-layout-option.active { border-color:#F2CA50; background:rgba(242,202,80,.08); box-shadow:0 0 0 1px rgba(242,202,80,.16); }
-        .create-layout-option b,.create-layout-option small { display:block; }
-        .create-layout-option b { font-size:12px; color:#f5f5f5; margin-bottom:3px; }
-        .create-layout-option small { font-size:10px; line-height:1.35; color:#858585; }
-        .create-layout-preview { width:76px; min-width:76px; height:56px; padding:8px; display:flex; flex-direction:column; justify-content:space-between; border-radius:8px; background:#0d0d0d; border:1px solid #292929; overflow:hidden; }
-        .create-layout-preview strong { font-size:11px; color:#f4f4f4; }
-        .create-layout-preview span { font-size:9px; color:#79d88c; font-weight:700; }
-        .create-layout-preview small { font-size:7px; color:#777; white-space:nowrap; }
-        .create-layout-preview--analysis span { color:#c8a85b; }
-        .create-layout-preview--image { align-items:center; justify-content:center; gap:4px; background:linear-gradient(135deg,#252525,#101010); }
-        .create-layout-preview--image span { font-size:20px; color:#F2CA50; }
-        .create-layout-preview--text { justify-content:center; gap:1px; }
-        .create-layout-preview--text span { font-size:24px; color:#F2CA50; line-height:1; }
-        @media (max-width:600px) { .create-layout-grid { grid-template-columns:1fr; } }
-
-        /* Published post layout variants */
-        .group-feed-card[data-layout="trade_card"], .group-feed-card[data-layout="analysis_card"] { overflow:hidden; }
-        .social-trade-layout { margin-top:12px; border:1px solid #292929; border-radius:14px; background:#101010; overflow:hidden; }
-        .social-trade-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid #242424; }
-        .social-trade-symbol { font-size:24px; font-weight:800; letter-spacing:.04em; color:#f5f5f5; }
-        .social-trade-direction { color:#79d88c; font-size:13px; font-weight:800; letter-spacing:.08em; }
-        .social-trade-pnl { padding:8px 12px; border-radius:9px; background:rgba(90,190,112,.12); color:#79d88c; font-size:15px; font-weight:800; }
-        .social-trade-metrics { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid #242424; }
-        .social-trade-metric { padding:12px 14px; border-right:1px solid #242424; }
-        .social-trade-metric:last-child { border-right:0; }
-        .social-trade-metric label { display:block; color:#686868; font-size:9px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
-        .social-trade-metric strong { color:#d7d7d7; font-size:14px; }
-        .social-trade-media { max-height:320px; }
-        .social-trade-media .social-post-media { margin-top:0; border:0; border-radius:0; }
-        .social-analysis-layout { margin-top:12px; padding:18px; border:1px solid rgba(242,202,80,.22); border-radius:14px; background:linear-gradient(135deg,rgba(242,202,80,.08),#111 42%); }
-        .social-analysis-kicker { color:#F2CA50; font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
-        .social-analysis-layout .social-analysis-title { color:#f4f4f4; font-size:18px; font-weight:800; margin-bottom:10px; }
-        .social-image-layout { margin-top:12px; }
-        .social-image-layout .social-post-media { margin-top:0; }
-        .social-text-layout { margin-top:12px; padding:18px 20px; border-left:3px solid #F2CA50; background:#151515; border-radius:10px; }
-        .social-text-mark { color:#F2CA50; font-size:28px; line-height:1; margin-bottom:4px; }
-
+        /* Topbar action buttons */
         .tf-topbar-btn {
             display: flex; align-items: center; gap: 6px;
             background: none; border: none; cursor: pointer;
@@ -4003,20 +3890,7 @@ $home_feed_posts = array_map(static function ($row) {
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
-        const layout = escapeHtml(post.layout_style || 'text');
-        const layoutClass = `group-feed-card--${layout}`;
-        const mediaBlock = media ? `<div class="social-${layout === 'image' ? 'image' : 'generic'}-layout">${media}</div>` : '';
-        let layoutBody = '';
-        if (layout === 'trade_card') {
-            layoutBody = `<div class="social-trade-layout"><div class="social-trade-head"><div><div class="social-trade-symbol">${symbol || 'TRADE'}</div><div class="social-trade-direction">● ${direction || 'SETUP'}</div></div>${formatPnlBadge(post) ? `<div class="social-trade-pnl">${formatPnlBadge(post)}</div>` : ''}</div><div class="social-trade-metrics"><div class="social-trade-metric"><label>R:R</label><strong>${rr || '—'}</strong></div><div class="social-trade-metric"><label>Type</label><strong>${typeLabel}</strong></div><div class="social-trade-metric"><label>Status</label><strong>Published</strong></div></div>${media ? `<div class="social-trade-media">${media}</div>` : ''}<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div></div>`;
-        } else if (layout === 'analysis_card') {
-            layoutBody = `<div class="social-analysis-layout"><div class="social-analysis-kicker">${typeLabel} · Market view</div><div class="social-analysis-title">${symbol || 'Market analysis'}${direction ? ` · ${direction}` : ''}</div><div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>${mediaBlock}</div>`;
-        } else if (layout === 'image') {
-            layoutBody = `${mediaBlock}<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>`;
-        } else {
-            layoutBody = `<div class="social-text-layout"><div class="social-text-mark">“</div><div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div></div>${media ? mediaBlock : ''}`;
-        }
-        return `<article class="group-feed-card ${layoutClass}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div>${menu}</div>${layoutBody}</article>`;
+        return `<article class="group-feed-card" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div>${menu}</div>${metaBits ? `<div class="group-feed-body" style="margin-top:8px;color:#f2ca50;">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}</article>`;
     }
 
     function togglePostMenu(button, event) {
