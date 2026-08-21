@@ -1182,6 +1182,16 @@ $home_feed_posts = array_map(static function ($row) {
         .story-trade-pnl.loss { color: #f87171; }
         .story-trade-detail { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; text-transform: uppercase; }
 
+
+        /* Feed layouts */
+        .social-layout-analysis { margin-top:10px; padding:16px; border:1px solid rgba(242,202,80,.22); border-radius:12px; background:rgba(242,202,80,.04); }
+        .social-layout-kicker { color:#F2CA50; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:7px; }
+        .social-layout-symbol { color:#f2f2f2; font-size:18px; font-weight:800; margin-bottom:8px; }
+        .social-layout-image { margin-top:10px; }
+        .social-layout-image .social-post-media { margin-top:0; }
+        .social-layout-text { margin-top:10px; padding:14px 16px; border-left:3px solid #F2CA50; border-radius:8px; background:#151515; }
+        .social-layout-quote { display:block; color:#F2CA50; font-size:25px; line-height:1; }
+        .social-layout-trade-meta { margin-top:8px; color:#F2CA50 !important; }
         /* ── Create modal ── */
         /* Clean layout picker — scoped to Create only */
         .create-layout-field { margin-bottom: 20px; }
@@ -3921,10 +3931,21 @@ $home_feed_posts = array_map(static function ($row) {
         const rr = escapeHtml(post.rr_value || '');
         const time = escapeHtml(post.created_label || 'Just now');
         const media = renderPostMedia(post, compact);
+        const layout = ['trade_card','analysis_card','image','text'].includes(post.layout_style) ? post.layout_style : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
-        return `<article class="group-feed-card" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div>${menu}</div>${metaBits ? `<div class="group-feed-body" style="margin-top:8px;color:#f2ca50;">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}</article>`;
+        let content = '';
+        if (layout === 'trade_card') {
+            content = `${metaBits ? `<div class="group-feed-body social-layout-trade-meta">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}`;
+        } else if (layout === 'analysis_card') {
+            content = `<div class="social-layout-analysis"><div class="social-layout-kicker">Market analysis</div>${symbol ? `<div class="social-layout-symbol">${symbol}${direction ? ` · ${direction}` : ''}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}</div>`;
+        } else if (layout === 'image') {
+            content = `${media ? `<div class="social-layout-image">${media}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}`;
+        } else {
+            content = `<div class="social-layout-text"><span class="social-layout-quote">“</span>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}</div>${media}`;
+        }
+        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div>${menu}</div>${content}</article>`;
     }
 
     function togglePostMenu(button, event) {
