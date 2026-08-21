@@ -607,6 +607,7 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-posts-list .group-feed-card { width:100%; }
         .profile-tab-panel { display:none; margin-top:18px; }
         .profile-tab-panel.active { display:block; }
+        .profile-section.profile-tab-active-posts > :not(.profile-tab-panel):not(.profile-tabs),
         .profile-section.profile-tab-active-posts .profile-sidebar,
         .profile-section.profile-tab-active-posts .profile-suggestions,
         .profile-section.profile-tab-active-posts [class*="suggest"],
@@ -3927,7 +3928,6 @@ $home_feed_posts = array_map(static function ($row) {
         const time = escapeHtml(post.created_label || 'Just now');
         const media = renderPostMedia(post, compact);
         const layout = ['trade_card','analysis_card','image','text'].includes(post.layout_style) ? post.layout_style : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
-        console.debug('[Trading Floor] render post', { id: post.id, postType: post.post_type, layoutStyle: post.layout_style, resolvedLayout: layout, hasMedia: Boolean(media) });
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
@@ -4164,7 +4164,6 @@ $home_feed_posts = array_map(static function ($row) {
             const payload = new FormData(createPostForm);
             const selectedLayout = document.getElementById('createLayoutStyle')?.value || 'text';
             payload.set('layout_style', selectedLayout);
-            console.debug('[Trading Floor] publish payload', { layoutStyle: selectedLayout, formLayoutStyle: payload.get('layout_style') });
             payload.append('post_type', tfCreateType);
             tfSubmittingPost = true;
             if (submitBtn) submitBtn.disabled = true;
