@@ -425,7 +425,30 @@ $home_feed_posts = array_map(static function ($row) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        /* Layout picker */
+        /* Create modal layout normalization */
+        #createModal { align-items:flex-start; justify-content:flex-start; padding:clamp(18px,4vw,48px); overflow-y:auto; }
+        #createModal .create-modal { width:min(760px,calc(100vw - 36px)); max-height:calc(100vh - 36px); overflow-y:auto; margin:0 auto; box-sizing:border-box; }
+        #createModal .create-modal-body { display:block; padding:22px 28px 28px; box-sizing:border-box; }
+        #createModal #createPostForm { display:flex; flex-direction:column; gap:16px; min-width:0; }
+        #createModal .create-form-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; min-width:0; }
+        #createModal .create-form-field { min-width:0; width:100%; }
+        #createModal .create-form-field[style*="display: none"] { display:none !important; }
+        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea { width:100%; max-width:100%; box-sizing:border-box; }
+        #createModal .create-form-textarea { min-height:112px; resize:vertical; }
+        #createModal .create-layout-grid { width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+        #createModal .create-layout-option { width:100%; min-width:0; box-sizing:border-box; overflow:hidden; }
+        #createModal .create-layout-option > span:last-child { min-width:0; overflow:hidden; }
+        #createModal .create-layout-option b, #createModal .create-layout-option small { overflow-wrap:anywhere; }
+        #createModal .create-layout-preview { flex:0 0 76px; }
+        #createModal .create-submit-btn { width:100%; min-height:48px; margin-top:2px; }
+        @media (max-width:640px) {
+            #createModal { padding:12px; }
+            #createModal .create-modal { width:100%; max-height:calc(100vh - 24px); }
+            #createModal .create-modal-body { padding:18px 16px 22px; }
+            #createModal .create-form-row, #createModal .create-layout-grid { grid-template-columns:1fr; }
+        }
+
+
         .create-layout-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:8px; }
         .create-layout-option { display:flex; align-items:center; gap:10px; min-height:78px; padding:10px; text-align:left; color:#d8d8d8; background:#141414; border:1px solid #292929; border-radius:12px; cursor:pointer; transition:border-color .18s, background .18s, transform .18s; }
         .create-layout-option:hover { background:#1b1b1b; border-color:#555; transform:translateY(-1px); }
