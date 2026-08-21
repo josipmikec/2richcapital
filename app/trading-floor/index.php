@@ -1330,16 +1330,36 @@ $home_feed_posts = array_map(static function ($row) {
                 </div>
 
                 <div class="profile-tab-panel active" data-profile-panel="posts">
-                    <div class="profile-feed-grid">
-                        <?php if (!$is_own_profile): ?>
-                            <div class="profile-activity-empty" style="grid-column: 1 / -1;">Public posts from this trader will appear here.</div>
-                        <?php else: ?>
-                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">2</div></div>
-                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#30201f,#191416 45%,#4b2b25);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">R</div></div>
-                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#191a20,#101114 45%,#3a3d45);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">T</div></div>
-                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#2a2416,#15120f 45%,#4a3a1c);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">+</div></div>
-                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1f1823,#120f16 45%,#44304b);display:grid;place-items:center;color:#fff;font-size:28px;font-weight:800;">FX</div></div>
-                            <div class="profile-post-thumb"><span class="post-meta-badge">Play</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#14211b,#0e1411 45%,#294438);display:grid;place-items:center;color:#fff;font-size:22px;font-weight:700;">XAU</div></div>
+                    <div class="profile-feed-grid" id="profileFeedGrid">
+                        <?php if (!empty($profile_posts)) : ?>
+                            <?php foreach ($profile_posts as $profile_post) : ?>
+                                <article class="group-feed-card" data-post-id="<?php echo (int) $profile_post['id']; ?>">
+                                    <div class="group-feed-top">
+                                        <div>
+                                            <div class="group-card-kicker"><?php echo $profile_post['post_type'] === 'analysis' ? 'Analysis' : 'Trade'; ?></div>
+                                            <div class="group-feed-title" style="font-size:16px;"><?php echo esc_html($profile_post['author_name']); ?></div>
+                                            <div class="group-feed-meta"><?php echo esc_html($profile_post['created_label']); ?></div>
+                                        </div>
+                                    </div>
+                                    <?php $profile_meta = array_filter([
+                                        $profile_post['symbol'],
+                                        $profile_post['direction'],
+                                        $profile_post['rr_value'] ? 'R:R ' . $profile_post['rr_value'] : '',
+                                        $profile_post['pnl_value'] !== null ? (($profile_post['pnl_value'] > 0 ? '+' : '') . number_format((float) $profile_post['pnl_value'], 2) . '%') : '',
+                                    ]); ?>
+                                    <?php if (!empty($profile_meta)) : ?>
+                                        <div class="group-feed-body" style="margin-top:8px;color:#f2ca50;"><?php echo esc_html(implode(' · ', $profile_meta)); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($profile_post['caption'])) : ?>
+                                        <div class="group-feed-body"><?php echo nl2br(esc_html($profile_post['caption'])); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($profile_post['image_url'])) : ?>
+                                        <div style="margin-top:12px;"><img src="<?php echo esc_url($profile_post['image_url']); ?>" alt="Post chart" style="width:100%;border-radius:14px;border:1px solid rgba(255,255,255,0.08);object-fit:cover;max-height:180px;"></div>
+                                    <?php endif; ?>
+                                </article>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <div class="group-feed-card" style="grid-column:1/-1;"><div class="group-feed-body">No posts published yet.</div></div>
                         <?php endif; ?>
                     </div>
                 </div>
