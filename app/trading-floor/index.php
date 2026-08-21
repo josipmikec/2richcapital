@@ -1188,13 +1188,18 @@ $home_feed_posts = array_map(static function ($row) {
         .story-trade-detail { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; text-transform: uppercase; }
 
 
-        /* Feed layouts — polished */
-        .social-layout-analysis { margin:14px 0 0; padding:18px 18px 16px; border:1px solid rgba(242,202,80,.25); border-radius:14px; background:linear-gradient(180deg, rgba(242,202,80,.06), rgba(242,202,80,.03)); }
-        .social-layout-kicker { color:#F2CA50; font-size:9px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
+        /* Feed layouts — same home-feed card language, different hierarchy */
+        .group-feed-card.social-layout-trade_card { background:rgba(20,20,20,.9); border-color:rgba(242,202,80,.16); }
+        .group-feed-card.social-layout-analysis_card { background:linear-gradient(180deg,rgba(242,202,80,.08),rgba(20,20,20,.94)); border-color:rgba(242,202,80,.28); }
+        .group-feed-card.social-layout-image { padding-bottom:16px; }
+        .group-feed-card.social-layout-text { background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(20,20,20,.94)); border-color:rgba(255,255,255,.14); }
+        .social-layout-analysis { margin:14px 0 0; padding:0; border:0; background:none; }
+        .social-layout-kicker { color:#F2CA50; font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
         .social-layout-symbol { color:#f5f5f5; font-size:19px; font-weight:800; margin-bottom:9px; }
-        .social-layout-image { margin:12px 0 0; }
-        .social-layout-image .social-post-media { margin-top:0; }
-        .social-layout-text { margin:14px 0 0; padding:16px 18px 14px; border-left:3px solid #F2CA50; border-radius:10px; background:#151515; }
+        .social-layout-symbol em { color:#79d88c; font-style:normal; font-weight:800; margin-left:6px; }
+        .social-layout-image { margin:0; }
+        .social-layout-image .social-post-media { margin-top:12px; }
+        .social-layout-text { margin:14px 0 0; padding:15px 16px 14px; border-left:3px solid #F2CA50; border-radius:10px; background:#151515; }
         .social-layout-quote { display:block; color:#F2CA50; font-size:28px; line-height:1; margin-bottom:6px; }
         .social-layout-trade-meta { margin:10px 0 0 !important; color:#F2CA50 !important; font-weight:600; }
         .social-layout-trade-meta em { color:#79d88c; font-style:normal; font-weight:800; }
