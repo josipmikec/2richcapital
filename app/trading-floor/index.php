@@ -3849,13 +3849,25 @@ $home_feed_posts = array_map(static function ($row) {
         const caption = document.getElementById('feedPostModalCaption');
         const counter = document.getElementById('feedPostModalCounter');
         if (!modal || !media || !title || !meta || !type || !metrics || !caption || !post) return;
-        const mediaUrl = post.image_url || '';
-        const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
-        media.innerHTML = mediaUrl
-            ? (isVideo
-                ? `<video src="${escapeHtml(mediaUrl)}" controls autoplay playsinline style="width:100%;height:100%;object-fit:contain;background:#0f0f10;"></video>`
-                : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(post.symbol || post.post_type || 'Post')}" style="width:100%;height:100%;object-fit:contain;background:#0f0f10;">`)
-            : `<div style="width:100%;height:100%;display:grid;place-items:center;padding:32px;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);color:#fff;font-size:28px;font-weight:800;text-align:center;">${escapeHtml(post.symbol || (post.post_type === 'analysis' ? 'Analysis' : 'Trade'))}</div>`;
+        const mediaUrls = getPostMediaUrls(post);
+        const isMulti = mediaUrls.length > 1;
+        if (isMulti) {
+            const slides = mediaUrls.map((url, index) => {
+                const safeUrl = escapeHtml(url);
+                const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
+                return `<div class="social-post-media-slide${index === 0 ? ' is-active' : ''}" data-slide-index="${index}">${isVideo ? `<video src="${safeUrl}" controls muted playsinline></video>` : `<img src="${safeUrl}" alt="Post media ${index + 1}">`}</div>`;
+            }).join('');
+            const controls = `<button type="button" class="social-post-carousel-btn prev" aria-label="Previous media" onclick="movePostCarousel(this,-1)">‹</button><button type="button" class="social-post-carousel-btn next" aria-label="Next media" onclick="movePostCarousel(this,1)">›</button><div class="social-post-carousel-count">1 / ${mediaUrls.length}</div><div class="social-post-carousel-dots">${mediaUrls.map((_, index) => `<button type="button" class="social-post-carousel-dot${index === 0 ? ' is-active' : ''}" aria-label="Show media ${index + 1}" onclick="goToPostCarouselSlide(this,${index})"></button>`).join('')}</div>`;
+            media.innerHTML = `<div class="social-post-media" style="--post-media-height:320px;" data-slide="0" data-total-slides="${mediaUrls.length}">${slides}${controls}</div>`;
+        } else {
+            const mediaUrl = mediaUrls[0] || '';
+            const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
+            media.innerHTML = mediaUrl
+                ? (isVideo
+                    ? `<video src="${escapeHtml(mediaUrl)}" controls autoplay playsinline style="width:100%;height:100%;object-fit:contain;background:#0f0f10;"></video>`
+                    : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(post.symbol || post.post_type || 'Post')}" style="width:100%;height:100%;object-fit:contain;background:#0f0f10;">`)
+                : `<div style="width:100%;height:100%;display:grid;place-items:center;padding:32px;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);color:#fff;font-size:28px;font-weight:800;text-align:center;">${escapeHtml(post.symbol || (post.post_type === 'analysis' ? 'Analysis' : 'Trade'))}</div>`;
+        }
         if (avatar) {
             avatar.src = post.author_avatar || '';
             avatar.alt = (post.author_name || 'Trader') + ' avatar';
