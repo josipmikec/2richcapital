@@ -23,6 +23,28 @@ if (!defined('WP_USE_THEMES')) {
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
 
+if (isset($_POST['post_action']) && in_array($_POST['post_action'], ['delete', 'archive'], true)) {
+    $action_user_id = (int) ($_SESSION['user_id'] ?? 0);
+    $post_table = $wpdb->prefix . 'rich_social_posts';
+    $post_id = absint($_POST['post_id'] ?? 0);
+    $post_action = sanitize_key($_POST['post_action']);
+    if (!$action_user_id || !$post_id) {
+        wp_send_json(['success' => false, 'message' => 'Invalid post action.'], 400);
+    }
+    $target_post = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$post_table} WHERE id = %d LIMIT 1", $post_id));
+    if (!$target_post || (int) $target_post->user_id !== $action_user_id) {
+        wp_send_json(['success' => false, 'message' => 'You can only manage your own posts.'], 403);
+    }
+    if ($post_action === 'delete') {
+        $deleted = $wpdb->delete($post_table, ['id' => $post_id], ['%d']);
+        if (!$deleted) wp_send_json(['success' => false, 'message' => 'The post could not be deleted.'], 500);
+        wp_send_json(['success' => true, 'post_id' => $post_id, 'action' => 'delete']);
+    }
+    $archived = $wpdb->update($post_table, ['post_type' => 'archived'], ['id' => $post_id], ['%s'], ['%d']);
+    if ($archived === false) wp_send_json(['success' => false, 'message' => 'The post could not be archived.'], 500);
+    wp_send_json(['success' => true, 'post_id' => $post_id, 'action' => 'archive']);
+}
+
 if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     $user_id = (int) ($_SESSION['user_id'] ?? 0);
     $post_table = $wpdb->prefix . 'rich_social_posts';
@@ -486,7 +508,15 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-highlight { min-width:70px; display:grid; justify-items:center; gap:7px; }
         .profile-highlight-ring { width:63px; height:63px; border-radius:50%; border:1px solid rgba(255,255,255,0.08); background:#101010; display:grid; place-items:center; }
         .profile-highlight-ring span { width:51px; height:51px; border-radius:50%; border:2px solid rgba(255,255,255,0.18); display:grid; place-items:center; color:#f3f3f3; font-size:19px; font-weight:700; }
-        .social-post-media { position:relative; margin-top:12px; height:var(--post-media-height,320px); min-height:220px; overflow:hidden; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:#101216; }
+        .social-post-menu-wrap { position:relative; flex:0 0 auto; }
+        .social-post-menu-btn { display:grid; place-items:center; width:32px; height:32px; border:1px solid rgba(255,255,255,0.08); border-radius:50%; background:rgba(255,255,255,0.03); color:#a9afb8; font-size:22px; line-height:1; letter-spacing:2px; cursor:pointer; }
+        .social-post-menu-btn:hover, .social-post-menu-btn:focus-visible { background:rgba(242,202,80,0.12); border-color:rgba(242,202,80,0.3); color:#f2ca50; }
+        .social-post-menu { position:absolute; top:38px; right:0; z-index:20; min-width:178px; padding:6px; border:1px solid rgba(255,255,255,0.12); border-radius:12px; background:#191919; box-shadow:0 14px 32px rgba(0,0,0,0.42); }
+        .social-post-menu[hidden] { display:none; }
+        .social-post-menu button { display:block; width:100%; padding:10px 11px; border:0; border-radius:8px; background:transparent; color:#d8dbe1; text-align:left; font-size:12px; cursor:pointer; }
+        .social-post-menu button:hover, .social-post-menu button:focus-visible { background:rgba(255,255,255,0.07); color:#fff; }
+        .social-post-menu button.danger { color:#ff9c9c; }
+        .social-post-menu button.danger:hover, .social-post-menu button.danger:focus-visible { background:rgba(248,113,113,0.12); color:#ffb4b4; }
         #feedPostModalMedia { position:relative; min-height:380px; height:100%; background:#0f0f10; }
         #feedPostModalMedia > .social-post-media { position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; border:0; border-radius:0; background:#0f0f10; }
         #feedPostModalMedia .social-post-media-slide { position:absolute; inset:0; width:100%; height:100%; }
@@ -3792,10 +3822,52 @@ $home_feed_posts = array_map(static function ($row) {
         const time = escapeHtml(post.created_label || 'Just now');
         const media = renderPostMedia(post, compact);
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
-        return `<article class="group-feed-card" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div></div>${metaBits ? `<div class="group-feed-body" style="margin-top:8px;color:#f2ca50;">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}</article>`;
+        const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
+        const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
+        return `<article class="group-feed-card" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div>${menu}</div>${metaBits ? `<div class="group-feed-body" style="margin-top:8px;color:#f2ca50;">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}</article>`;
     }
 
-    function renderHomeFeedPosts(posts) {
+    function togglePostMenu(button, event) {
+        if (event) event.stopPropagation();
+        const menu = button && button.parentElement ? button.parentElement.querySelector('.social-post-menu') : null;
+        if (!menu) return;
+        document.querySelectorAll('.social-post-menu').forEach(item => { if (item !== menu) item.hidden = true; });
+        menu.hidden = !menu.hidden;
+        button.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
+    }
+
+    document.addEventListener('click', () => document.querySelectorAll('.social-post-menu').forEach(menu => { menu.hidden = true; }));
+
+    async function runSocialPostAction(postId, action) {
+        const payload = new FormData();
+        payload.append('post_action', action);
+        payload.append('post_id', String(postId));
+        const response = await fetch(window.location.href, { method: 'POST', body: payload, credentials: 'same-origin' });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Could not update post.');
+        const removeFrom = list => {
+            if (!Array.isArray(list)) return;
+            const index = list.findIndex(post => Number(post.id) === Number(postId));
+            if (index >= 0) list.splice(index, 1);
+        };
+        removeFrom(tfFeedInitialPosts);
+        removeFrom(tfProfileInitialPosts);
+        renderHomeFeedPosts(tfFeedInitialPosts);
+        renderProfilePosts(tfProfileInitialPosts);
+        renderProfileThumbGrid(tfProfileInitialPosts);
+    }
+
+    async function archiveSocialPost(postId) {
+        if (!window.confirm('Archive this post? It will be removed from the active feed but kept in your archive.')) return;
+        try { await runSocialPostAction(postId, 'archive'); } catch (error) { window.alert(error.message || 'Could not archive post.'); }
+    }
+
+    async function deleteSocialPost(postId) {
+        if (!window.confirm('Delete this post permanently? This post will be completely deleted and cannot be recovered.')) return;
+        try { await runSocialPostAction(postId, 'delete'); } catch (error) { window.alert(error.message || 'Could not delete post.'); }
+    }
+
+
         const host = document.getElementById('tfHomeFeedPosts');
         if (!host) return;
         if (!Array.isArray(posts) || !posts.length) {
