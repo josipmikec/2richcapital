@@ -3434,8 +3434,7 @@ $home_feed_posts = array_map(static function ($row) {
         const time = escapeHtml(post.created_label || 'Just now');
         const image = post.image_url ? `<div style="margin-top:12px;"><img src="${escapeHtml(post.image_url)}" alt="Post chart" style="width:100%;border-radius:14px;border:1px solid rgba(255,255,255,0.08);object-fit:cover;max-height:${compact ? '180px' : '320px'};"></div>` : '';
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
-        return `<article class="group-feed-card" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div></div>${metaBits ? `<div class="group-feed-body" style="margin-top:8px;color:#f2ca50;">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/
-/g, '<br>')}</div>` : ''}${image}</article>`;
+        return `<article class="group-feed-card" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div></div>${metaBits ? `<div class="group-feed-body" style="margin-top:8px;color:#f2ca50;">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${image}</article>`;
     }
 
     function renderHomeFeedPosts(posts) {
