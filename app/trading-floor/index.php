@@ -382,6 +382,7 @@ if (!function_exists('tf_format_social_post')) {
             'author_name' => $display_name,
             'author_avatar' => $avatar_url ?: '',
             'post_type' => sanitize_key($row->post_type ?? 'trade'),
+            'layout_style' => sanitize_key($row->layout_style ?? 'text'),
             'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
             'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
             'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
@@ -597,6 +598,10 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-posts-list .group-feed-card { width:100%; }
         .profile-tab-panel { display:none; margin-top:18px; }
         .profile-tab-panel.active { display:block; }
+        .profile-section.profile-tab-active-posts .profile-sidebar,
+        .profile-section.profile-tab-active-posts .profile-suggestions,
+        .profile-section.profile-tab-active-posts [class*="suggest"],
+        .profile-section.profile-tab-active-posts [id*="suggest"] { display:none !important; }
         .profile-archive-mode .profile-hero,
         .profile-archive-mode .profile-profile-actions,
         .profile-archive-mode .profile-highlights,
@@ -3913,6 +3918,7 @@ $home_feed_posts = array_map(static function ($row) {
         const time = escapeHtml(post.created_label || 'Just now');
         const media = renderPostMedia(post, compact);
         const layout = ['trade_card','analysis_card','image','text'].includes(post.layout_style) ? post.layout_style : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
+        console.debug('[Trading Floor] render post', { id: post.id, postType: post.post_type, layoutStyle: post.layout_style, resolvedLayout: layout, hasMedia: Boolean(media) });
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
