@@ -3866,8 +3866,7 @@ $home_feed_posts = array_map(static function ($row) {
         if (!window.confirm('Delete this post permanently? This post will be completely deleted and cannot be recovered.')) return;
         try { await runSocialPostAction(postId, 'delete'); } catch (error) { window.alert(error.message || 'Could not delete post.'); }
     }
-
-
+    function renderHomeFeedPosts(posts) {
         const host = document.getElementById('tfHomeFeedPosts');
         if (!host) return;
         if (!Array.isArray(posts) || !posts.length) {
