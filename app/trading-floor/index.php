@@ -4180,9 +4180,13 @@ $home_feed_posts = array_map(static function ($row) {
                 const raw = await response.text();
                 let data = null;
                 try {
-                    data = JSON.parse(raw);
+                    const jsonStart = raw.indexOf('{');
+                    const jsonEnd = raw.lastIndexOf('}');
+                    if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) throw new Error('Server did not return JSON.');
+                    data = JSON.parse(raw.slice(jsonStart, jsonEnd + 1));
                 } catch (parseError) {
-                    throw new Error('Unexpected server response while publishing post.');
+                    console.error('Publish response parse error:', parseError, raw.slice(0, 400));
+                    throw new Error('Could not parse server response.');
                 }
                 if (!response.ok || !data || !data.success || !data.post) {
                     throw new Error(data && data.message ? data.message : 'Could not publish post.');
