@@ -525,7 +525,10 @@ $home_feed_posts = array_map(static function ($row) {
         .social-post-media-slide { display:none; position:absolute; inset:0; width:100%; height:100%; }
         .social-post-media-slide.is-active { display:block; }
         .social-post-media-slide img,
-        .social-post-media-slide video { display:block; width:100%; height:100%; object-fit:cover; }
+        .social-post-media-slide video { display:block; width:100%; max-width:100%; height:100%; max-height:100%; object-fit:cover; }
+        .profile-feed-grid .social-post-media { height:180px; min-height:180px; }
+        .profile-feed-grid .social-post-media-slide img,
+        .profile-feed-grid .social-post-media-slide video { object-fit:cover; }
         .social-post-carousel-btn { position:absolute; top:50%; z-index:3; transform:translateY(-50%); display:grid; place-items:center; width:40px; height:40px; border:1px solid rgba(255,255,255,0.22); border-radius:50%; background:rgba(0,0,0,0.62); color:#fff; font-size:28px; line-height:1; cursor:pointer; }
         .social-post-carousel-btn:hover { background:rgba(242,202,80,0.88); color:#111; }
         .social-post-carousel-btn.prev { left:10px; }
