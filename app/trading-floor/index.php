@@ -4015,7 +4015,7 @@ $home_feed_posts = array_map(static function ($row) {
             host.innerHTML = '<div class="group-feed-card" style="grid-column:1/-1;"><div class="group-feed-body">No posts published yet.</div></div>';
             return;
         }
-        host.innerHTML = posts.map(post => renderSocialPostCard(post, true)).join('');
+        host.innerHTML = posts.map(post => renderSocialPostCard(post, false)).join('');
     }
 
     let tfFeedModalIndex = -1;
