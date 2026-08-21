@@ -607,7 +607,6 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-posts-list .group-feed-card { width:100%; }
         .profile-tab-panel { display:none; margin-top:18px; }
         .profile-tab-panel.active { display:block; }
-        .profile-section.profile-tab-active-posts > :not(.profile-tab-panel):not(.profile-tabs),
         .profile-section.profile-tab-active-posts .profile-sidebar,
         .profile-section.profile-tab-active-posts .profile-suggestions,
         .profile-section.profile-tab-active-posts [class*="suggest"],
