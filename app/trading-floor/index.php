@@ -1991,9 +1991,29 @@ $home_feed_posts = array_map(static function ($row) {
                     <button class="create-tab" id="tabAnalysis" onclick="switchCreateTab('analysis')">📈 Analysis</button>
                 </div>
                 <form id="createPostForm" enctype="multipart/form-data">
-                    <div class="create-form-row">
-                        <div class="create-form-field">
-                            <label class="create-form-label">Symbol</label>
+                    <div class="create-form-field">
+                        <label class="create-form-label">Post layout</label>
+                        <input type="hidden" id="createLayoutStyle" name="layout_style" value="trade_card">
+                        <div class="create-layout-grid" role="radiogroup" aria-label="Choose post layout">
+                            <button type="button" class="create-layout-option active" data-layout="trade_card" role="radio" aria-checked="true">
+                                <span class="create-layout-preview create-layout-preview--trade"><strong>XAUUSD</strong><span>● LONG</span><small>ENTRY · EXIT · R:R</small></span>
+                                <span><b>Trade card</b><small>Structured setup and result</small></span>
+                            </button>
+                            <button type="button" class="create-layout-option" data-layout="analysis_card" role="radio" aria-checked="false">
+                                <span class="create-layout-preview create-layout-preview--analysis"><strong>MARKET VIEW</strong><span>Context · thesis · levels</span></span>
+                                <span><b>Analysis card</b><small>Clean market breakdown</small></span>
+                            </button>
+                            <button type="button" class="create-layout-option" data-layout="image" role="radio" aria-checked="false">
+                                <span class="create-layout-preview create-layout-preview--image"><span>◩</span><small>CHART / IMAGE</small></span>
+                                <span><b>Image post</b><small>Let the chart lead</small></span>
+                            </button>
+                            <button type="button" class="create-layout-option" data-layout="text" role="radio" aria-checked="false">
+                                <span class="create-layout-preview create-layout-preview--text"><span>“</span><small>YOUR THOUGHT</small></span>
+                                <span><b>Text post</b><small>Quick idea or lesson</small></span>
+                            </button>
+                        </div>
+                    </div>
+
                             <input type="text" class="create-form-input" id="createSymbol" name="symbol" placeholder="e.g. XAUUSD">
                         </div>
                         <div class="create-form-field">
@@ -4070,9 +4090,45 @@ $home_feed_posts = array_map(static function ($row) {
         if (rr) rr.disabled = !isTrade;
     }
 
-    function openCreateModal(type='post') {
+    function setCreateLayout(layout) {
+        const allowed = ['trade_card', 'analysis_card', 'image', 'text'];
+        const selected = allowed.includes(layout) ? layout : (tfCreateType === 'trade' ? 'trade_card' : 'analysis_card');
+        const input = document.getElementById('createLayoutStyle');
+        if (input) input.value = selected;
+        document.querySelectorAll('.create-layout-option').forEach(option => {
+            const active = option.dataset.layout === selected;
+            option.classList.toggle('active', active);
+            option.setAttribute('aria-checked', active ? 'true' : 'false');
+        });
+        const isText = selected === 'text';
+        const isImage = selected === 'image';
+        const isCard = selected === 'trade_card' || selected === 'analysis_card';
+        const symbol = document.getElementById('createSymbol');
+        const direction = document.getElementById('createDirection');
+        const pnl = document.getElementById('createPnl');
+        const rr = document.getElementById('createRr');
+        [symbol, direction, pnl, rr].forEach(field => {
+            if (!field) return;
+            const wrapper = field.closest('.create-form-field');
+            if (wrapper) wrapper.style.display = isText || isImage ? 'none' : '';
+            field.required = field === symbol && tfCreateType === 'trade' && isCard;
+        });
+        const submit = document.getElementById('createSubmitBtn');
+        if (submit) submit.textContent = tfCreateType === 'analysis' ? 'Post Analysis' : 'Post Trade';
+    }
+
+    function bindCreateLayoutOptions() {
+        document.querySelectorAll('.create-layout-option').forEach(option => {
+            option.addEventListener('click', () => setCreateLayout(option.dataset.layout));
+        });
+    }
+
+    bindCreateLayoutOptions();
+
+
         document.getElementById('createModal').classList.add('active');
         switchCreateTab(type);
+        setCreateLayout(tfCreateType === 'trade' ? 'trade_card' : 'analysis_card');
         setCreateFormStatus('');
     }
     function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
@@ -4080,6 +4136,7 @@ $home_feed_posts = array_map(static function ($row) {
     function switchCreateTab(tab) {
         tfCreateType = tab === 'analysis' ? 'analysis' : 'trade';
         applyCreateTabUi(tfCreateType);
+        setCreateLayout(tfCreateType === 'analysis' ? 'analysis_card' : 'trade_card');
         setCreateFormStatus(tfCreateType === 'analysis' ? 'Analysis posts use caption and optional image.' : 'Trade posts use symbol, direction, performance and caption.');
     }
 
