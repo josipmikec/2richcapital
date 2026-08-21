@@ -27,7 +27,47 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     $user_id = (int) ($_SESSION['user_id'] ?? 0);
     $post_table = $wpdb->prefix . 'rich_social_posts';
 
-    if (!function_exists('tf_format_social_post')) {
+    if (!function_exists('tf_normalize_media_url')) {
+    function tf_normalize_media_url($url, $path = '') {
+        $url = trim((string) $url);
+        $path = trim((string) $path);
+        if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
+            return $url;
+        }
+        if ($path !== '') {
+            $uploads = wp_upload_dir();
+            $basedir = wp_normalize_path((string) ($uploads['basedir'] ?? ''));
+            $baseurl = rtrim((string) ($uploads['baseurl'] ?? ''), '/');
+            $normalized_path = wp_normalize_path($path);
+            if ($basedir !== '' && $baseurl !== '' && str_starts_with($normalized_path, rtrim($basedir, '/'))) {
+                return $baseurl . str_replace($basedir, '', $normalized_path);
+            }
+        }
+        return $url;
+    }
+}
+
+if (!function_exists('tf_collect_media_urls')) {
+    function tf_collect_media_urls($row) {
+        $urls = [];
+        $primary = tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? '');
+        if ($primary !== '') $urls[] = $primary;
+        $raw = trim((string) ($row->image_urls ?? $row->media_urls ?? ''));
+        if ($raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $item) {
+                    $candidate = is_array($item) ? ($item['url'] ?? $item['image_url'] ?? '') : $item;
+                    $candidate = tf_normalize_media_url($candidate, is_array($item) ? ($item['path'] ?? $item['image_path'] ?? '') : '');
+                    if ($candidate !== '' && !in_array($candidate, $urls, true)) $urls[] = $candidate;
+                }
+            }
+        }
+        return array_values($urls);
+    }
+}
+
+if (!function_exists('tf_format_social_post')) {
         function tf_format_social_post($row, $fallback_name = 'Trader') {
             $display_name = trim((string) ($row->display_name ?? ''));
             if ($display_name === '') {
@@ -56,7 +96,8 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
                 'rr_value' => trim((string) ($row->rr_value ?? '')),
                 'caption' => trim((string) ($row->caption ?? '')),
-                'image_url' => trim((string) ($row->image_url ?? '')),
+                'image_url' => tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? ''),
+                'image_urls' => tf_collect_media_urls($row),
                 'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
                 'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
             ];
@@ -87,6 +128,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
 
     $image_url = '';
     $image_path = '';
+    $image_urls = [];
     if (!empty($_FILES['image']['name'])) {
         require_once ABSPATH . 'wp-admin/includes/file.php';
         $upload = wp_handle_upload($_FILES['image'], ['test_form' => false]);
@@ -95,7 +137,35 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         }
         $image_url = (string) ($upload['url'] ?? '');
         $image_path = (string) ($upload['file'] ?? '');
+        if ($image_url !== '') $image_urls[] = ['url' => $image_url, 'path' => $image_path];
     }
+
+    if (!empty($_FILES['images']['name']) && is_array($_FILES['images']['name'])) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        foreach ($_FILES['images']['name'] as $index => $name) {
+            if (!$name) continue;
+            $file = [
+                'name' => $_FILES['images']['name'][$index] ?? '',
+                'type' => $_FILES['images']['type'][$index] ?? '',
+                'tmp_name' => $_FILES['images']['tmp_name'][$index] ?? '',
+                'error' => $_FILES['images']['error'][$index] ?? UPLOAD_ERR_NO_FILE,
+                'size' => $_FILES['images']['size'][$index] ?? 0,
+            ];
+            $upload = wp_handle_upload($file, ['test_form' => false]);
+            if (!empty($upload['error'])) {
+                wp_send_json(['success' => false, 'message' => $upload['error']]);
+            }
+            $url = (string) ($upload['url'] ?? '');
+            $path = (string) ($upload['file'] ?? '');
+            if ($url !== '') $image_urls[] = ['url' => $url, 'path' => $path];
+            if ($image_url === '' && $url !== '') {
+                $image_url = $url;
+                $image_path = $path;
+            }
+        }
+    }
+
+    $image_urls_json = null;
 
     $inserted = $wpdb->insert($post_table, [
         'user_id' => $user_id,
@@ -107,6 +177,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         'caption' => $caption,
         'image_url' => $image_url ?: null,
         'image_path' => $image_path ?: null,
+        'image_urls' => $image_urls_json,
         'created_at' => current_time('mysql'),
         'updated_at' => current_time('mysql'),
     ], ['%d','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s']);
@@ -195,7 +266,8 @@ $profile_follow_state = false;
 $social_table = $wpdb->prefix . 'rich_user_follows';
 $post_table = $wpdb->prefix . 'rich_social_posts';
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$social_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, follower_id BIGINT UNSIGNED NOT NULL, following_id BIGINT UNSIGNED NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY follower_following (follower_id, following_id), KEY following_idx (following_id), KEY follower_idx (follower_id)) {$wpdb->get_charset_collate()}");
-$wpdb->query("CREATE TABLE IF NOT EXISTS {$post_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, user_id BIGINT UNSIGNED NOT NULL, post_type VARCHAR(24) NOT NULL DEFAULT 'trade', symbol VARCHAR(32) NULL, direction VARCHAR(16) NULL, pnl_value DECIMAL(10,2) NULL, rr_value VARCHAR(32) NULL, caption TEXT NULL, image_url TEXT NULL, image_path TEXT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY user_created_idx (user_id, created_at), KEY created_idx (created_at), KEY post_type_idx (post_type)) {$wpdb->get_charset_collate()}");
+$wpdb->query("CREATE TABLE IF NOT EXISTS {$post_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, user_id BIGINT UNSIGNED NOT NULL, post_type VARCHAR(24) NOT NULL DEFAULT 'trade', symbol VARCHAR(32) NULL, direction VARCHAR(16) NULL, pnl_value DECIMAL(10,2) NULL, rr_value VARCHAR(32) NULL, caption TEXT NULL, image_url TEXT NULL, image_path TEXT NULL, image_urls LONGTEXT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY user_created_idx (user_id, created_at), KEY created_idx (created_at), KEY post_type_idx (post_type)) {$wpdb->get_charset_collate()}");
+$wpdb->query("ALTER TABLE {$post_table} ADD COLUMN image_urls LONGTEXT NULL");
 $profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
 $profile_following_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE follower_id = %d", $view_user_id));
 if (!$is_own_profile) {
