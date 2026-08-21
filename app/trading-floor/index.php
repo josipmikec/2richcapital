@@ -3812,8 +3812,6 @@ $home_feed_posts = array_map(static function ($row) {
 
     // Create modal
     bindCreateLayouts();
-    let tfCreateType = 'trade';
-
     function setCreateLayout(layout) {
         const allowed = ['trade_card', 'analysis_card', 'image', 'text'];
         const selected = allowed.includes(layout) ? layout : (tfCreateType === 'trade' ? 'trade_card' : 'analysis_card');
@@ -4132,6 +4130,7 @@ $home_feed_posts = array_map(static function ($row) {
         setCreateFormStatus('');
     }
     function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+    bindCreateLayouts();
     document.getElementById('createModal').addEventListener('click', e => { if(e.target===document.getElementById('createModal'))closeCreateModal(); });
     function switchCreateTab(tab) {
         tfCreateType = tab === 'analysis' ? 'analysis' : 'trade';
