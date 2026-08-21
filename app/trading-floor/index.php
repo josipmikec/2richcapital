@@ -23,7 +23,42 @@ if (!defined('WP_USE_THEMES')) {
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
 
-if (isset($_POST['post_action']) && in_array($_POST['post_action'], ['delete', 'archive'], true)) {
+if (!function_exists('tf_delete_media_file')) {
+    function tf_delete_media_file($url = '', $path = '') {
+        $uploads = wp_upload_dir();
+        $basedir = wp_normalize_path((string) ($uploads['basedir'] ?? ''));
+        $candidate = trim((string) $path);
+        if ($candidate === '') {
+            $url = trim((string) $url);
+            $baseurl = rtrim((string) ($uploads['baseurl'] ?? ''), '/');
+            if ($url !== '' && $baseurl !== '' && str_starts_with($url, $baseurl)) {
+                $candidate = $basedir . str_replace($baseurl, '', $url);
+            }
+        }
+        $candidate = wp_normalize_path($candidate);
+        if ($basedir === '' || $candidate === '' || !str_starts_with($candidate, rtrim($basedir, '/'))) return false;
+        return is_file($candidate) ? @unlink($candidate) : true;
+    }
+}
+
+if (!function_exists('tf_delete_post_media')) {
+    function tf_delete_post_media($row) {
+        tf_delete_media_file($row->image_url ?? '', $row->image_path ?? '');
+        $raw = trim((string) ($row->image_urls ?? $row->media_urls ?? ''));
+        if ($raw === '') return;
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) return;
+        foreach ($decoded as $item) {
+            if (is_array($item)) {
+                tf_delete_media_file($item['url'] ?? $item['image_url'] ?? '', $item['path'] ?? $item['image_path'] ?? '');
+            } else {
+                tf_delete_media_file($item, '');
+            }
+        }
+    }
+}
+
+
     $action_user_id = (int) ($_SESSION['user_id'] ?? 0);
     $post_table = $wpdb->prefix . 'rich_social_posts';
     $post_id = absint($_POST['post_id'] ?? 0);
@@ -36,6 +71,7 @@ if (isset($_POST['post_action']) && in_array($_POST['post_action'], ['delete', '
         wp_send_json(['success' => false, 'message' => 'You can only manage your own posts.'], 403);
     }
     if ($post_action === 'delete') {
+        tf_delete_post_media($target_post);
         $deleted = $wpdb->delete($post_table, ['id' => $post_id], ['%d']);
         if (!$deleted) wp_send_json(['success' => false, 'message' => 'The post could not be deleted.'], 500);
         wp_send_json(['success' => true, 'post_id' => $post_id, 'action' => 'delete']);
