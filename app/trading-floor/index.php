@@ -146,9 +146,9 @@ if (!function_exists('tf_format_social_post')) {
                 'user_id' => (int) ($row->user_id ?? 0),
                 'author_name' => $display_name,
                 'author_avatar' => $avatar_url ?: '',
-                'post_type' => sanitize_key($row->post_type ?? 'trade'),
-                'layout_style' => sanitize_key($row->layout_style ?? 'text'),
-                'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
+            'post_type' => sanitize_key($row->post_type ?? 'trade'),
+            'layout_style' => sanitize_key($row->layout_style ?? 'text'),
+            'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
                 'rr_value' => trim((string) ($row->rr_value ?? '')),
@@ -4153,6 +4153,9 @@ $home_feed_posts = array_map(static function ($row) {
             if (tfSubmittingPost) return;
             const submitBtn = document.getElementById('createSubmitBtn');
             const payload = new FormData(createPostForm);
+            const selectedLayout = document.getElementById('createLayoutStyle')?.value || 'text';
+            payload.set('layout_style', selectedLayout);
+            console.debug('[Trading Floor] publish payload', { layoutStyle: selectedLayout, formLayoutStyle: payload.get('layout_style') });
             payload.append('post_type', tfCreateType);
             tfSubmittingPost = true;
             if (submitBtn) submitBtn.disabled = true;
