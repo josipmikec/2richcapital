@@ -146,9 +146,9 @@ if (!function_exists('tf_format_social_post')) {
                 'user_id' => (int) ($row->user_id ?? 0),
                 'author_name' => $display_name,
                 'author_avatar' => $avatar_url ?: '',
-                'post_type' => sanitize_key($row->post_type ?? 'trade'),
-                'layout_style' => sanitize_key($row->layout_style ?? 'text'),
-                'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
+            'post_type' => sanitize_key($row->post_type ?? 'trade'),
+            'layout_style' => sanitize_key($row->layout_style ?? 'text'),
+            'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
                 'rr_value' => trim((string) ($row->rr_value ?? '')),
@@ -256,6 +256,13 @@ if (!function_exists('tf_format_social_post')) {
     if ($layout_style_column_exists) {
         $post_data['layout_style'] = $layout_style;
         $post_formats[] = '%s';
+    } else {
+        $added_layout_column = $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN layout_style VARCHAR(32) NOT NULL DEFAULT 'text'");
+        $layout_style_column_exists = $added_layout_column !== false;
+        if ($layout_style_column_exists) {
+            $post_data['layout_style'] = $layout_style;
+            $post_formats[] = '%s';
+        }
     }
     $inserted = $wpdb->insert($post_table, $post_data, $post_formats);
 
@@ -272,7 +279,9 @@ if (!function_exists('tf_format_social_post')) {
         (int) $wpdb->insert_id
     ));
 
-    wp_send_json(['success' => true, 'post' => tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader')]);
+    $formatted_post = tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader');
+    $formatted_post['layout_style'] = $layout_style;
+    wp_send_json(['success' => true, 'post' => $formatted_post, 'debug_layout_submitted' => $layout_style, 'debug_layout_column_exists' => (bool) $layout_style_column_exists]);
 }
 
 $profile_table = $wpdb->prefix . 'rich_user_profiles';
@@ -382,6 +391,7 @@ if (!function_exists('tf_format_social_post')) {
             'author_name' => $display_name,
             'author_avatar' => $avatar_url ?: '',
             'post_type' => sanitize_key($row->post_type ?? 'trade'),
+            'layout_style' => sanitize_key($row->layout_style ?? 'text'),
             'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
             'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
             'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
@@ -430,6 +440,330 @@ $home_feed_posts = array_map(static function ($row) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
+        /* Create modal — single isolated layout system */
+        #createModal.modal-overlay { position:fixed !important; inset:0 !important; z-index:10000 !important; display:none !important; align-items:center !important; justify-content:center !important; padding:20px !important; overflow:hidden !important; box-sizing:border-box !important; }
+        #createModal.modal-overlay.active { display:flex !important; }
+        #createModal.modal-overlay > .create-modal { all:initial; display:flex !important; flex-direction:column !important; position:relative !important; box-sizing:border-box !important; width:min(760px,100%) !important; max-width:760px !important; height:auto !important; max-height:calc(100vh - 40px) !important; margin:0 !important; padding:0 !important; overflow:hidden !important; background:#111 !important; border:1px solid #2b2b2b !important; border-radius:14px !important; color:#f2f2f2 !important; font-family:"Montserrat",sans-serif !important; }
+        #createModal.modal-overlay > .create-modal * { box-sizing:border-box !important; }
+        #createModal .create-modal-header { all:initial; display:flex !important; flex:0 0 auto !important; align-items:center !important; justify-content:space-between !important; min-height:64px !important; width:100% !important; padding:0 22px !important; background:#151515 !important; border-bottom:1px solid #262626 !important; color:#f2f2f2 !important; font-family:"Montserrat",sans-serif !important; }
+        #createModal .create-modal-title { all:initial; color:#f2f2f2 !important; font:700 13px/1 "Montserrat",sans-serif !important; letter-spacing:.08em !important; text-transform:uppercase !important; }
+        #createModal .modal-close-btn { all:initial; display:grid !important; place-items:center !important; width:36px !important; height:36px !important; color:#888 !important; cursor:pointer !important; font-family:"Montserrat",sans-serif !important; }
+        #createModal .modal-close-btn:hover { color:#f2ca50 !important; }
+        #createModal .create-modal-body { display:block !important; flex:1 1 auto !important; width:100% !important; max-height:calc(100vh - 104px) !important; padding:20px 22px 24px !important; overflow-y:auto !important; overflow-x:hidden !important; background:#111 !important; }
+        #createModal .create-tabs { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; width:100% !important; margin:0 0 20px !important; padding:0 !important; gap:6px !important; }
+        #createModal .create-tab { display:block !important; width:100% !important; min-height:44px !important; margin:0 !important; padding:10px 8px !important; border:1px solid #292929 !important; border-radius:8px !important; background:#171717 !important; color:#8b8b8b !important; font:700 10px/1.2 "Montserrat",sans-serif !important; text-transform:uppercase !important; cursor:pointer !important; }
+        #createModal .create-tab.active { color:#111 !important; background:#f2ca50 !important; border-color:#f2ca50 !important; }
+        #createModal #createPostForm { display:flex !important; flex-direction:column !important; width:100% !important; max-width:100% !important; min-width:0 !important; gap:16px !important; margin:0 !important; padding:0 !important; }
+        #createModal #createPostForm > * { width:100% !important; max-width:100% !important; min-width:0 !important; margin:0 !important; }
+        #createModal .create-layout-grid { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; width:100% !important; }
+        #createModal .create-layout-option { display:flex !important; align-items:center !important; gap:10px !important; width:100% !important; min-width:0 !important; min-height:78px !important; margin:0 !important; padding:10px !important; overflow:hidden !important; }
+        #createModal .create-layout-option > span:last-child { min-width:0 !important; overflow-wrap:anywhere !important; }
+        #createModal .create-form-row { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:14px !important; width:100% !important; }
+        #createModal .create-form-field { display:block !important; width:100% !important; min-width:0 !important; }
+        #createModal .create-form-field[style*="display: none"] { display:none !important; }
+        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea, #createModal input[type="file"] { display:block !important; width:100% !important; max-width:100% !important; min-width:0 !important; }
+        #createModal .create-form-textarea { min-height:110px !important; resize:vertical !important; }
+        #createModal .create-submit-btn, #createModal button[type="submit"] { display:block !important; width:100% !important; max-width:100% !important; min-height:48px !important; margin:0 !important; }
+        @media (max-width:640px) {
+            #createModal.modal-overlay { padding:10px !important; }
+            #createModal.modal-overlay > .create-modal { max-height:calc(100vh - 20px) !important; }
+            #createModal .create-modal-body { padding:16px !important; max-height:calc(100vh - 84px) !important; }
+            #createModal .create-layout-grid, #createModal .create-form-row { grid-template-columns:1fr !important; }
+        }
+
+
+        #createModal { position:fixed !important; inset:0 !important; z-index:10000 !important; display:none; align-items:center !important; justify-content:center !important; padding:20px !important; overflow-y:auto !important; }
+        #createModal.active { display:flex !important; }
+        #createModal > .create-modal { position:relative !important; flex:0 1 760px !important; width:100% !important; max-width:760px !important; height:auto !important; max-height:calc(100vh - 40px) !important; margin:0 !important; overflow:hidden !important; }
+        #createModal .create-modal-body { max-height:calc(100vh - 120px) !important; overflow-y:auto !important; overflow-x:hidden !important; }
+        #createModal #createPostForm { width:100% !important; max-width:100% !important; display:flex !important; flex-direction:column !important; gap:16px !important; }
+        #createModal .create-form-row { width:100% !important; display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:14px !important; }
+        #createModal .create-form-field { width:100% !important; min-width:0 !important; }
+        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea { display:block !important; width:100% !important; min-width:0 !important; max-width:100% !important; }
+        #createModal .create-layout-grid { display:grid !important; width:100% !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; }
+        #createModal .create-layout-option { display:flex !important; width:100% !important; min-width:0 !important; max-width:100% !important; }
+        #createModal .create-submit-btn { display:block !important; width:100% !important; max-width:100% !important; }
+        @media (max-width:640px) {
+            #createModal { padding:12px !important; }
+            #createModal > .create-modal { max-height:calc(100vh - 24px) !important; }
+            #createModal .create-modal-body { max-height:calc(100vh - 100px) !important; }
+            #createModal .create-form-row, #createModal .create-layout-grid { grid-template-columns:1fr !important; }
+        }
+
+
+        #createModal { align-items:flex-start; justify-content:flex-start; padding:clamp(18px,4vw,48px); overflow-y:auto; }
+        #createModal .create-modal { width:min(760px,calc(100vw - 36px)); max-height:calc(100vh - 36px); overflow-y:auto; margin:0 auto; box-sizing:border-box; }
+        #createModal .create-modal-body { display:block; padding:22px 28px 28px; box-sizing:border-box; }
+        #createModal #createPostForm { display:flex; flex-direction:column; gap:16px; min-width:0; }
+        #createModal .create-form-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; min-width:0; }
+        #createModal .create-form-field { min-width:0; width:100%; }
+        #createModal .create-form-field[style*="display: none"] { display:none !important; }
+        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea { width:100%; max-width:100%; box-sizing:border-box; }
+        #createModal .create-form-textarea { min-height:112px; resize:vertical; }
+        #createModal .create-layout-grid { width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+        #createModal .create-layout-option { width:100%; min-width:0; box-sizing:border-box; overflow:hidden; }
+        #createModal .create-layout-option > span:last-child { min-width:0; overflow:hidden; }
+        #createModal .create-layout-option b, #createModal .create-layout-option small { overflow-wrap:anywhere; }
+        #createModal .create-layout-preview { flex:0 0 76px; }
+        #createModal .create-submit-btn { width:100%; min-height:48px; margin-top:2px; }
+        @media (max-width:640px) {
+            #createModal { padding:12px; }
+            #createModal .create-modal { width:100%; max-height:calc(100vh - 24px); }
+            #createModal .create-modal-body { padding:18px 16px 22px; }
+            #createModal .create-form-row, #createModal .create-layout-grid { grid-template-columns:1fr; }
+        }
+
+
+        .create-layout-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:8px; }
+        .create-layout-option { display:flex; align-items:center; gap:10px; min-height:78px; padding:10px; text-align:left; color:#d8d8d8; background:#141414; border:1px solid #292929; border-radius:12px; cursor:pointer; transition:border-color .18s, background .18s, transform .18s; }
+        .create-layout-option:hover { background:#1b1b1b; border-color:#555; transform:translateY(-1px); }
+        .create-layout-option.active { border-color:#F2CA50; background:rgba(242,202,80,.08); box-shadow:0 0 0 1px rgba(242,202,80,.16); }
+        .create-layout-option b,.create-layout-option small { display:block; }
+        .create-layout-option b { font-size:12px; color:#f5f5f5; margin-bottom:3px; }
+        .create-layout-option small { font-size:10px; line-height:1.35; color:#858585; }
+        .create-layout-preview { width:76px; min-width:76px; height:56px; padding:8px; display:flex; flex-direction:column; justify-content:space-between; border-radius:8px; background:#0d0d0d; border:1px solid #292929; overflow:hidden; }
+        .create-layout-preview strong { font-size:11px; color:#f4f4f4; }
+        .create-layout-preview span { font-size:9px; color:#79d88c; font-weight:700; }
+        .create-layout-preview small { font-size:7px; color:#777; white-space:nowrap; }
+        .create-layout-preview--analysis span { color:#c8a85b; }
+        .create-layout-preview--image { align-items:center; justify-content:center; gap:4px; background:linear-gradient(135deg,#252525,#101010); }
+        .create-layout-preview--image span { font-size:20px; color:#F2CA50; }
+        .create-layout-preview--text { justify-content:center; gap:1px; }
+        .create-layout-preview--text span { font-size:24px; color:#F2CA50; line-height:1; }
+        @media (max-width:600px) { .create-layout-grid { grid-template-columns:1fr; } }
+
+        /* Published post layout variants */
+        .group-feed-card[data-layout="trade_card"], .group-feed-card[data-layout="analysis_card"] { overflow:hidden; }
+        .social-trade-layout { margin-top:12px; border:1px solid #292929; border-radius:14px; background:#101010; overflow:hidden; }
+        .social-trade-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid #242424; }
+        .social-trade-symbol { font-size:24px; font-weight:800; letter-spacing:.04em; color:#f5f5f5; }
+        .social-trade-direction { color:#79d88c; font-size:13px; font-weight:800; letter-spacing:.08em; }
+        .social-trade-pnl { padding:8px 12px; border-radius:9px; background:rgba(90,190,112,.12); color:#79d88c; font-size:15px; font-weight:800; }
+        .social-trade-metrics { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid #242424; }
+        .social-trade-metric { padding:12px 14px; border-right:1px solid #242424; }
+        .social-trade-metric:last-child { border-right:0; }
+        .social-trade-metric label { display:block; color:#686868; font-size:9px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
+        .social-trade-metric strong { color:#d7d7d7; font-size:14px; }
+        .social-trade-media { max-height:320px; }
+        .social-trade-media .social-post-media { margin-top:0; border:0; border-radius:0; }
+        .social-analysis-layout { margin-top:12px; padding:18px; border:1px solid rgba(242,202,80,.22); border-radius:14px; background:linear-gradient(135deg,rgba(242,202,80,.08),#111 42%); }
+        .social-analysis-kicker { color:#F2CA50; font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
+        .social-analysis-layout .social-analysis-title { color:#f4f4f4; font-size:18px; font-weight:800; margin-bottom:10px; }
+        .social-image-layout { margin-top:12px; }
+        .social-image-layout .social-post-media { margin-top:0; }
+        .social-text-layout { margin-top:12px; padding:18px 20px; border-left:3px solid #F2CA50; background:#151515; border-radius:10px; }
+        .social-text-mark { color:#F2CA50; font-size:28px; line-height:1; margin-bottom:4px; }
+
+        .tf-topbar-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: none; border: none; cursor: pointer;
+            color: #555; padding: 6px 8px; border-radius: 8px;
+            font-family: "Montserrat", sans-serif;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+            transition: color 0.2s, background 0.2s;
+            position: relative;
+        }
+        .tf-topbar-btn:hover { color: #ccc; background: rgba(255,255,255,0.04); }
+        .tf-topbar-badge {
+            position: absolute; top: 4px; right: 4px;
+            width: 7px; height: 7px; background: #F2CA50;
+            border-radius: 50%; border: 1.5px solid #0E0E0E;
+            box-shadow: 0 0 6px rgba(242,202,80,0.5);
+        }
+        .tf-topbar-create {
+            color: #F2CA50;
+            border: 1px solid rgba(242,202,80,0.25);
+            background: rgba(242,202,80,0.06);
+            padding: 6px 14px;
+        }
+        .tf-topbar-create:hover { background: rgba(242,202,80,0.12); color: #F2CA50; }
+        .tf-topbar-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #F2CA50, #FFDB70);
+            color: #0E0E0E; font-size: 13px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .tf-topbar-avatar:hover { border-color: #F2CA50; }
+
+        .floor-section { flex: 1; display: block; padding: 32px 24px 32px 32px; max-width: 640px; overflow-y: auto; }
+        .floor-section[hidden] { display: none !important; }
+        .floor-section-card { background: #151515; border: 1px solid #1e1e1e; border-radius: 16px; padding: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.35); }
+        .floor-section-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+        .floor-kicker { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #777; margin-bottom: 6px; }
+        .floor-profile-grid { display: grid; grid-template-columns: 72px 1fr; gap: 18px; align-items: start; }
+        .floor-profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #F2CA50, #FFDB70); color: #0E0E0E; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; }
+        .floor-profile-name { font-size: 24px; font-weight: 800; color: #f2f2f2; margin-bottom: 4px; }
+        .floor-profile-email { font-size: 12px; color: #999; margin-bottom: 12px; }
+        .floor-profile-note { font-size: 13px; color: #9ea3ad; line-height: 1.6; max-width: 560px; }
+        .profile-hero {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 8px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 18px;
+            position: relative;
+            overflow: visible;
+        }
+        .profile-avatar-wrap { position: relative; flex-shrink: 0; }
+        .profile-avatar-large {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #F2CA50, #FFDB70);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 800;
+            color: #0E0E0E;
+            border: 3px solid rgba(242,202,80,0.3);
+        }
+        .profile-avatar-edit {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 26px;
+            height: 26px;
+            background: #1e1e1e;
+            border: 2px solid #0E0E0E;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #666;
+        }
+        .profile-avatar-edit:hover { background: #2a2a2a; color: #aaa; }
+        .profile-info { flex: 1; }
+        .profile-handle-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+        .profile-name { font-size: 14px; font-weight: 500; color: #8b9098; letter-spacing: 0.01em; margin-top: 0; }
+        .profile-handle { font-size: 30px; font-weight: 800; color: #f1f1f1; margin: 0; letter-spacing: -0.01em; line-height: 1; }
+        .profile-member-badge { position:relative; display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:999px; background:rgba(242,202,80,0.18); color:#ffe082; border:1px solid rgba(255,220,120,0.42); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 12px rgba(0,0,0,0.16); overflow:hidden; transition: width 0.2s ease, padding 0.2s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease; vertical-align:middle; white-space:nowrap; backdrop-filter: blur(6px); }
+        .profile-member-badge:hover { width:120px; padding:0 10px; justify-content:flex-start; background:rgba(242,202,80,0.24); border-color:rgba(255,228,138,0.54); box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 8px 18px rgba(0,0,0,0.22); }
+        .profile-member-badge-icon { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; flex:0 0 20px; font-size:11px; font-weight:800; text-shadow: 0 1px 0 rgba(0,0,0,0.16); }
+        .profile-member-badge-text { opacity:0; max-width:0; overflow:hidden; font-size:8px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#ffe082; text-shadow: 0 1px 0 rgba(0,0,0,0.16); transition: opacity 0.16s ease, max-width 0.2s ease, margin-left 0.2s ease; }
+        .profile-member-badge:hover .profile-member-badge-text { opacity:1; max-width:92px; margin-left:3px; }
+        .profile-bio-text { font-size: 14px; font-weight: 500; color: #8b9098; margin-top: 12px; line-height: 1.55; max-width: 460px; }
+        .profile-bio-line { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px; max-width:560px; }
+        .profile-bio-copy { font-size: 14px; font-weight: 500; color: #8b9098; line-height: 1.55; }
+        .profile-bio-separator { color: rgba(255,255,255,0.22); font-weight: 700; }
+        .profile-identity-badges { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .profile-identity-badge { display:inline-flex; align-items:center; gap:6px; min-height:24px; padding:4px 10px; border:1px solid rgba(242,202,80,0.28); border-radius:999px; background:linear-gradient(180deg, rgba(242,202,80,0.16), rgba(242,202,80,0.07)); color:#ffe082; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 12px rgba(0,0,0,0.14); font-size:10px; font-weight:750; letter-spacing:.04em; text-transform:uppercase; }
+        .profile-identity-badge::before { content:'◆'; font-size:7px; color:#f2ca50; }
+        .profile-identity-badge--style { border-color:rgba(151,185,255,0.28); background:linear-gradient(180deg, rgba(151,185,255,0.15), rgba(151,185,255,0.06)); color:#c8d9ff; }
+        .profile-identity-badge--style::before { color:#97b9ff; }
+        .profile-identity-grid { display:grid; gap:16px; margin-top:18px; }
+        .profile-section-card { background: rgba(18,18,18,0.82); border: 1px solid #1a1a1a; border-radius: 14px; padding: 18px; }
+        .profile-section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+        .profile-section-head h3 { margin:0; font-size:15px; font-weight:800; color:#f1f1f1; letter-spacing:0.01em; }
+        .profile-section-head p { margin:4px 0 0; font-size:12px; line-height:1.5; color:#7b8088; max-width:420px; }
+        .profile-social-strip { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; margin-top:18px; }
+        .profile-social-box { background:#101010; border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:14px 12px; }
+        .profile-social-box-value { font-size:22px; font-weight:800; color:#f3f3f3; line-height:1; }
+        .profile-social-box-label { margin-top:6px; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#666b73; }
+        .profile-highlights { display:flex; gap:12px; margin-top:18px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+        .profile-profile-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:nowrap; width:100%; max-width:360px; margin-left:0; margin-right:0; justify-content:flex-start; }
+        .profile-action-btn { flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; min-width:0; padding:9px 16px; border-radius:999px; border:1px solid rgba(255,255,255,0.05); background:#131313; color:#bfc3ca; font-size:10px; font-weight:700; letter-spacing:0.01em; text-transform:none; transition:background 0.2s,border-color 0.2s,color 0.2s,transform 0.2s; }
+        .profile-action-btn:hover { background:#171717; border-color:rgba(255,255,255,0.10); color:#e8e8e8; transform:translateY(-1px); }
+        .profile-action-btn.secondary { background:#141414; border-color:rgba(255,255,255,0.06); color:#c8ccd2; }
+        .profile-action-btn.secondary:hover { background:#181818; border-color:rgba(255,255,255,0.10); color:#ededed; }
+        .profile-highlights::-webkit-scrollbar { display:none; }
+        .profile-highlight { min-width:70px; display:grid; justify-items:center; gap:7px; }
+        .profile-highlight-ring { width:63px; height:63px; border-radius:50%; border:1px solid rgba(255,255,255,0.08); background:#101010; display:grid; place-items:center; }
+        .profile-highlight-ring span { width:51px; height:51px; border-radius:50%; border:2px solid rgba(255,255,255,0.18); display:grid; place-items:center; color:#f3f3f3; font-size:19px; font-weight:700; }
+        .social-post-menu-wrap { position:relative; flex:0 0 auto; }
+        .social-post-menu-btn { display:grid; place-items:center; width:32px; height:32px; border:1px solid rgba(255,255,255,0.08); border-radius:50%; background:rgba(255,255,255,0.03); color:#a9afb8; font-size:22px; line-height:1; letter-spacing:2px; cursor:pointer; }
+        .social-post-menu-btn:hover, .social-post-menu-btn:focus-visible { background:rgba(242,202,80,0.12); border-color:rgba(242,202,80,0.3); color:#f2ca50; }
+        .social-post-menu { position:absolute; top:38px; right:0; z-index:20; min-width:178px; padding:6px; border:1px solid rgba(255,255,255,0.12); border-radius:12px; background:#191919; box-shadow:0 14px 32px rgba(0,0,0,0.42); }
+        .social-post-menu[hidden] { display:none; }
+        .social-post-menu button { display:block; width:100%; padding:10px 11px; border:0; border-radius:8px; background:transparent; color:#d8dbe1; text-align:left; font-size:12px; cursor:pointer; }
+        .social-post-menu button:hover, .social-post-menu button:focus-visible { background:rgba(255,255,255,0.07); color:#fff; }
+        .social-post-menu button.danger { color:#ff9c9c; }
+        .social-post-menu button.danger:hover, .social-post-menu button.danger:focus-visible { background:rgba(248,113,113,0.12); color:#ffb4b4; }
+        #feedPostModalMedia { position:relative; min-height:380px; height:100%; background:#0f0f10; }
+        #feedPostModalMedia > .social-post-media { position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; border:0; border-radius:0; background:#0f0f10; }
+        #feedPostModalMedia .social-post-media-slide { position:absolute; inset:0; width:100%; height:100%; }
+        #feedPostModalMedia .social-post-media-slide img,
+        #feedPostModalMedia .social-post-media-slide video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
+        .social-post-media-slide { display:none; position:absolute; inset:0; width:100%; height:100%; }
+        .social-post-media-slide.is-active { display:block; }
+        .social-post-media-slide img,
+        .social-post-media-slide video { display:block; width:100%; max-width:100%; height:100%; max-height:100%; object-fit:cover; }
+        .social-post-media { position:relative; display:block; width:100%; max-width:100%; margin-top:12px; height:var(--post-media-height,320px); min-height:220px; overflow:hidden; isolation:isolate; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:#101216; }
+        .profile-feed-grid .social-post-media { height:180px; min-height:180px; }
+        .profile-feed-grid .social-post-media-slide img,
+        .profile-feed-grid .social-post-media-slide video { object-fit:cover; }
+        .social-post-carousel-btn { position:absolute; top:50%; z-index:3; transform:translateY(-50%); display:grid; place-items:center; width:40px; height:40px; border:1px solid rgba(255,255,255,0.22); border-radius:50%; background:rgba(0,0,0,0.62); color:#fff; font-size:28px; line-height:1; cursor:pointer; }
+        .social-post-carousel-btn:hover { background:rgba(242,202,80,0.88); color:#111; }
+        .social-post-carousel-btn.prev { left:10px; }
+        .social-post-carousel-btn.next { right:10px; }
+        .social-post-carousel-count { position:absolute; right:12px; bottom:10px; z-index:3; padding:5px 8px; border-radius:999px; background:rgba(0,0,0,0.68); color:#fff; font-size:11px; font-weight:800; letter-spacing:0.04em; }
+        .social-post-carousel-dots { position:absolute; left:50%; bottom:10px; z-index:3; display:flex; gap:6px; transform:translateX(-50%); padding:5px 8px; border-radius:999px; background:rgba(0,0,0,0.5); }
+        .social-post-carousel-dot { width:8px; height:8px; padding:0; border:1px solid rgba(255,255,255,0.7); border-radius:50%; background:transparent; cursor:pointer; }
+        .social-post-carousel-dot.is-active { background:#f2ca50; border-color:#f2ca50; }
+        .group-feed-card .social-post-media { flex:0 0 auto; }
+        .group-feed-card .social-post-menu-wrap { z-index:30; }
+        .profile-tabs { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06); }
+        .profile-tab-list { display:flex; gap:8px; flex-wrap:wrap; }
+        .profile-tab { display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:0 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:#101010; color:#b7bcc5; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; }
+        .profile-tab.active { background:rgba(242,202,80,0.12); color:#F2CA50; border-color:rgba(242,202,80,0.22); }
+        .profile-counts-inline { display:flex; gap:10px; flex-wrap:wrap; align-items:center; color:#f3f3f3; font-size:12px; font-weight:700; }
+        .profile-counts-inline span { color:#80858d; font-weight:600; }
+        .profile-feed-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:18px; }
+        .profile-posts-list { display:flex; flex-direction:column; gap:16px; margin-top:18px; }
+        .profile-posts-list .group-feed-card { width:100%; }
+        .profile-tab-panel { display:none; margin-top:18px; }
+        .profile-tab-panel.active { display:block; }
+        .profile-archive-mode .profile-hero,
+        .profile-archive-mode .profile-profile-actions,
+        .profile-archive-mode .profile-highlights,
+        .profile-archive-mode .profile-tabs,
+        .dashboard-container.profile-mode #floor-profile-panel.profile-archive-mode .profile-hero,
+        .dashboard-container.profile-mode #floor-profile-panel.profile-archive-mode .profile-profile-actions,
+        .dashboard-container.profile-mode #floor-profile-panel.profile-archive-mode .profile-highlights,
+        .dashboard-container.profile-mode #floor-profile-panel.profile-archive-mode .profile-tabs {
+            display:none !important;
+        }
+        .profile-trades-panel { display:grid; gap:18px; }
+        .profile-stats-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; }
+        .profile-stat-card { background:#121212; border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:18px; }
+        .profile-stat-card-label { font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#6e737c; }
+        .profile-stat-card-value { margin-top:10px; font-size:28px; font-weight:800; color:#f3f3f3; line-height:1; }
+        .profile-stat-card-value.gold { color:#F2CA50; }
+        .profile-stat-card-value.positive { color:#4ade80; }
+        .profile-stat-card-value.negative { color:#f87171; }
+        .profile-stat-card-sub { margin-top:8px; font-size:12px; color:#7b8088; line-height:1.5; }
+        .profile-activity-card { background:#121212; border:1px solid rgba(255,255,255,0.06); border-radius:16px; overflow:hidden; }
+        .profile-activity-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 18px 14px; border-bottom:1px solid rgba(255,255,255,0.06); }
+        .profile-activity-head h3 { margin:0; font-size:15px; font-weight:800; color:#f3f3f3; }
+        .profile-activity-head p { margin:4px 0 0; font-size:12px; color:#7b8088; }
+        .profile-activity-link { color:#F2CA50; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; text-decoration:none; }
+        .profile-activity-empty { padding:40px; text-align:center; color:#666b73; font-size:12px; font-weight:600; }
+        .profile-activity-row { display:grid; grid-template-columns:minmax(0, 1fr) auto auto auto auto; gap:12px; align-items:center; padding:14px 18px; border-top:1px solid rgba(255,255,255,0.04); }
+        .profile-activity-symbol { font-size:13px; font-weight:800; color:#f3f3f3; }
+        .profile-activity-dir,
+        .profile-activity-outcome { font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; padding:6px 8px; border-radius:999px; }
+        .profile-activity-dir.long, .profile-activity-dir.buy { background:rgba(74,222,128,0.12); color:#4ade80; }
+        .profile-activity-dir.short, .profile-activity-dir.sell { background:rgba(248,113,113,0.12); color:#f87171; }
+        .profile-activity-outcome.win { background:rgba(74,222,128,0.12); color:#4ade80; }
+        .profile-activity-outcome.loss { background:rgba(248,113,113,0.12); color:#f87171; }
+        .profile-activity-outcome.be { background:rgba(255,255,255,0.08); color:#d1d5db; }
+        .profile-activity-pnl { font-size:13px; font-weight:800; }
+        .profile-activity-pnl.pos { color:#4ade80; }
+        .profile-activity-pnl.neg { color:#f87171; }
+        .profile-activity-date { font-size:11px; color:#6e737c; text-align:right; }
+        .profile-post-thumb { position:relative; aspect-ratio:1 / 1; border-radius:16px; overflow:hidden; background:#101010; border:1px solid rgba(255,255,255,0.06); display:grid; place-items:center; }
+        .profile-post-thumb .post-meta-badge { position:absolute; top:10px; right:10px; z-index:1; }
+        .profile-inline-list { display:grid; gap:8px; }
+        .profile-inline-item { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:12px; background:#101010; border:1px solid rgba(255,255,255,0.06); }
+        .profile-inline-copy strong { display:block; font-size:12px; color:#ececec; }
+        .profile-inline-copy span { display:block; margin-top:2px; font-size:11px; color:#767b84; }
         /* Topbar action buttons */
         .tf-topbar-btn {
             display: flex; align-items: center; gap: 6px;
@@ -597,6 +931,10 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-posts-list .group-feed-card { width:100%; }
         .profile-tab-panel { display:none; margin-top:18px; }
         .profile-tab-panel.active { display:block; }
+        .profile-section.profile-tab-active-posts .profile-sidebar,
+        .profile-section.profile-tab-active-posts .profile-suggestions,
+        .profile-section.profile-tab-active-posts [class*="suggest"],
+        .profile-section.profile-tab-active-posts [id*="suggest"] { display:none !important; }
         .profile-archive-mode .profile-hero,
         .profile-archive-mode .profile-profile-actions,
         .profile-archive-mode .profile-highlights,
@@ -2000,6 +2338,29 @@ $home_feed_posts = array_map(static function ($row) {
                     <button class="create-tab" id="tabAnalysis" onclick="switchCreateTab('analysis')">📈 Analysis</button>
                 </div>
                 <form id="createPostForm" enctype="multipart/form-data">
+                    <div class="create-form-field">
+                        <label class="create-form-label">Post layout</label>
+                        <input type="hidden" id="createLayoutStyle" name="layout_style" value="trade_card">
+                        <div class="create-layout-grid" role="radiogroup" aria-label="Choose post layout">
+                            <button type="button" class="create-layout-option active" data-layout="trade_card" role="radio" aria-checked="true">
+                                <span class="create-layout-preview create-layout-preview--trade"><strong>XAUUSD</strong><span>● LONG</span><small>ENTRY · EXIT · R:R</small></span>
+                                <span><b>Trade card</b><small>Structured setup and result</small></span>
+                            </button>
+                            <button type="button" class="create-layout-option" data-layout="analysis_card" role="radio" aria-checked="false">
+                                <span class="create-layout-preview create-layout-preview--analysis"><strong>MARKET VIEW</strong><span>Context · thesis · levels</span></span>
+                                <span><b>Analysis card</b><small>Clean market breakdown</small></span>
+                            </button>
+                            <button type="button" class="create-layout-option" data-layout="image" role="radio" aria-checked="false">
+                                <span class="create-layout-preview create-layout-preview--image"><span>◩</span><small>CHART / IMAGE</small></span>
+                                <span><b>Image post</b><small>Let the chart lead</small></span>
+                            </button>
+                            <button type="button" class="create-layout-option" data-layout="text" role="radio" aria-checked="false">
+                                <span class="create-layout-preview create-layout-preview--text"><span>“</span><small>YOUR THOUGHT</small></span>
+                                <span><b>Text post</b><small>Quick idea or lesson</small></span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="create-form-field create-layout-field">
                         <label class="create-form-label">Post layout</label>
                         <input type="hidden" id="createLayoutStyle" name="layout_style" value="trade_card">
@@ -4147,6 +4508,8 @@ $home_feed_posts = array_map(static function ($row) {
             if (tfSubmittingPost) return;
             const submitBtn = document.getElementById('createSubmitBtn');
             const payload = new FormData(createPostForm);
+            const selectedLayout = document.getElementById('createLayoutStyle')?.value || 'text';
+            payload.set('layout_style', selectedLayout);
             payload.append('post_type', tfCreateType);
             tfSubmittingPost = true;
             if (submitBtn) submitBtn.disabled = true;
@@ -4167,6 +4530,7 @@ $home_feed_posts = array_map(static function ($row) {
                 if (!response.ok || !data || !data.success || !data.post) {
                     throw new Error(data && data.message ? data.message : 'Could not publish post.');
                 }
+                console.debug('[Trading Floor] publish response', { post: data.post, debugLayoutSubmitted: data.debug_layout_submitted, debugLayoutColumnExists: data.debug_layout_column_exists });
                 tfFeedInitialPosts.unshift(data.post);
                 renderHomeFeedPosts(tfFeedInitialPosts);
                 if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
