@@ -272,7 +272,9 @@ if (!function_exists('tf_format_social_post')) {
         (int) $wpdb->insert_id
     ));
 
-    wp_send_json(['success' => true, 'post' => tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader')]);
+    $formatted_post = tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader');
+    $formatted_post['layout_style'] = $layout_style;
+    wp_send_json(['success' => true, 'post' => $formatted_post, 'debug_layout_submitted' => $layout_style, 'debug_layout_column_exists' => (bool) $layout_style_column_exists]);
 }
 
 $profile_table = $wpdb->prefix . 'rich_user_profiles';
@@ -4176,6 +4178,7 @@ $home_feed_posts = array_map(static function ($row) {
                 if (!response.ok || !data || !data.success || !data.post) {
                     throw new Error(data && data.message ? data.message : 'Could not publish post.');
                 }
+                console.debug('[Trading Floor] publish response', { post: data.post, debugLayoutSubmitted: data.debug_layout_submitted, debugLayoutColumnExists: data.debug_layout_column_exists });
                 tfFeedInitialPosts.unshift(data.post);
                 renderHomeFeedPosts(tfFeedInitialPosts);
                 if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
