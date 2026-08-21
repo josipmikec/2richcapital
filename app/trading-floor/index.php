@@ -526,6 +526,7 @@ $home_feed_posts = array_map(static function ($row) {
         .social-post-media-slide.is-active { display:block; }
         .social-post-media-slide img,
         .social-post-media-slide video { display:block; width:100%; max-width:100%; height:100%; max-height:100%; object-fit:cover; }
+        .social-post-media { position:relative; display:block; width:100%; max-width:100%; margin-top:12px; height:var(--post-media-height,320px); min-height:220px; overflow:hidden; isolation:isolate; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:#101216; }
         .profile-feed-grid .social-post-media { height:180px; min-height:180px; }
         .profile-feed-grid .social-post-media-slide img,
         .profile-feed-grid .social-post-media-slide video { object-fit:cover; }
@@ -537,7 +538,8 @@ $home_feed_posts = array_map(static function ($row) {
         .social-post-carousel-dots { position:absolute; left:50%; bottom:10px; z-index:3; display:flex; gap:6px; transform:translateX(-50%); padding:5px 8px; border-radius:999px; background:rgba(0,0,0,0.5); }
         .social-post-carousel-dot { width:8px; height:8px; padding:0; border:1px solid rgba(255,255,255,0.7); border-radius:50%; background:transparent; cursor:pointer; }
         .social-post-carousel-dot.is-active { background:#f2ca50; border-color:#f2ca50; }
-        .social-post-text-only { min-height:92px; margin-top:12px; display:flex; align-items:center; justify-content:center; border:1px dashed rgba(242,202,80,0.32); border-radius:14px; background:linear-gradient(135deg,rgba(242,202,80,0.08),rgba(255,255,255,0.02)); color:#f2ca50; font-size:12px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; }
+        .group-feed-card .social-post-media { flex:0 0 auto; }
+        .group-feed-card .social-post-menu-wrap { z-index:30; }
         .profile-tabs { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06); }
         .profile-tab-list { display:flex; gap:8px; flex-wrap:wrap; }
         .profile-tab { display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:0 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:#101010; color:#b7bcc5; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; }
