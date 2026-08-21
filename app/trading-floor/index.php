@@ -238,10 +238,9 @@ if (!function_exists('tf_format_social_post')) {
 
     $image_urls_json = $image_urls ? wp_json_encode($image_urls) : null;
 
-    $inserted = $wpdb->insert($post_table, [
+    $post_data = [
         'user_id' => $user_id,
         'post_type' => $post_type,
-        'layout_style' => $layout_style,
         'symbol' => $symbol ?: null,
         'direction' => $direction ?: null,
         'pnl_value' => $pnl_value,
@@ -252,7 +251,13 @@ if (!function_exists('tf_format_social_post')) {
         'image_urls' => $image_urls_json,
         'created_at' => current_time('mysql'),
         'updated_at' => current_time('mysql'),
-    ], ['%d','%s','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s']);
+    ];
+    $post_formats = ['%d','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s'];
+    if ($layout_style_column_exists) {
+        $post_data['layout_style'] = $layout_style;
+        $post_formats[] = '%s';
+    }
+    $inserted = $wpdb->insert($post_table, $post_data, $post_formats);
 
     if (!$inserted) {
         wp_send_json(['success' => false, 'message' => 'Database error while creating the post.']);
