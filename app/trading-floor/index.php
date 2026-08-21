@@ -56,10 +56,30 @@ if (!function_exists('tf_delete_post_media')) {
             }
         }
     }
+}if (isset($_POST['post_action']) && in_array($_POST['post_action'], ['delete', 'archive'], true)) {
+    $action_user_id = (int) ($_SESSION['user_id'] ?? 0);
+    $post_table = $wpdb->prefix . 'rich_social_posts';
+    $post_id = absint($_POST['post_id'] ?? 0);
+    $post_action = sanitize_key($_POST['post_action']);
+    if (!$action_user_id || !$post_id) {
+        wp_send_json(['success' => false, 'message' => 'Invalid post action.'], 400);
+    }
+    $target_post = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$post_table} WHERE id = %d LIMIT 1", $post_id));
+    if (!$target_post || (int) $target_post->user_id !== $action_user_id) {
+        wp_send_json(['success' => false, 'message' => 'You can only manage your own posts.'], 403);
+    }
+    if ($post_action === 'delete') {
+        tf_delete_post_media($target_post);
+        $deleted = $wpdb->delete($post_table, ['id' => $post_id], ['%d']);
+        if (!$deleted) wp_send_json(['success' => false, 'message' => 'The post could not be deleted.'], 500);
+        wp_send_json(['success' => true, 'post_id' => $post_id, 'action' => 'delete']);
+    }
+    $archived = $wpdb->update($post_table, ['post_type' => 'archived'], ['id' => $post_id], ['%s'], ['%d']);
+    if ($archived === false) wp_send_json(['success' => false, 'message' => 'The post could not be archived.'], 500);
+    wp_send_json(['success' => true, 'post_id' => $post_id, 'action' => 'archive']);
 }
 
 
-    $action_user_id = (int) ($_SESSION['user_id'] ?? 0);
     $post_table = $wpdb->prefix . 'rich_social_posts';
     $post_id = absint($_POST['post_id'] ?? 0);
     $post_action = sanitize_key($_POST['post_action']);
