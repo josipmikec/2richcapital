@@ -1007,9 +1007,9 @@ $home_feed_posts = array_map(static function ($row) {
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
         .feed-post-modal { background:#151515; border:1px solid #1e1e1e; border-radius:20px; width:min(1080px, 94vw); max-height:88vh; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5); display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(320px, 420px); position:relative; }
-        .feed-post-nav { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); background:rgba(8,8,8,0.76); color:#f5f5f5; display:flex; align-items:center; justify-content:center; z-index:2; backdrop-filter:blur(10px); }
-        .feed-post-nav.prev { left:16px; }
-        .feed-post-nav.next { right:calc(420px + 16px); }
+        .feed-post-nav { position:fixed; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); background:rgba(8,8,8,0.82); color:#f5f5f5; display:flex; align-items:center; justify-content:center; z-index:13010; backdrop-filter:blur(10px); box-shadow:0 18px 40px rgba(0,0,0,0.35); }
+        .feed-post-nav.prev { left:24px; }
+        .feed-post-nav.next { right:24px; }
         .feed-post-counter { position:absolute; top:16px; left:16px; z-index:2; padding:7px 11px; border-radius:999px; background:rgba(8,8,8,0.78); border:1px solid rgba(255,255,255,0.08); color:#f5f5f5; font-size:12px; font-weight:700; letter-spacing:0.04em; }
         .feed-post-media { background:#0f0f10; min-height:420px; display:flex; align-items:center; justify-content:center; }
         .feed-post-media img, .feed-post-media video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
@@ -3706,6 +3706,7 @@ $home_feed_posts = array_map(static function ($row) {
         const type = document.getElementById('feedPostModalType');
         const metrics = document.getElementById('feedPostModalMetrics');
         const caption = document.getElementById('feedPostModalCaption');
+        const counter = document.getElementById('feedPostModalCounter');
         if (!modal || !media || !title || !meta || !type || !metrics || !caption || !post) return;
         const mediaUrl = post.image_url || '';
         const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
@@ -3732,6 +3733,10 @@ $home_feed_posts = array_map(static function ($row) {
         }
         metrics.innerHTML = metricBits.length ? metricBits.join('') : '<span>No trade metrics</span>';
         caption.textContent = post.caption || '';
+        if (counter) {
+            const total = Array.isArray(tfProfileInitialPosts) ? tfProfileInitialPosts.length : 0;
+            counter.textContent = total ? `${tfFeedModalIndex + 1} / ${total}` : '1 / 1';
+        }
         modal.classList.add('active');
         modal.setAttribute('aria-hidden', 'false');
     }
@@ -3826,15 +3831,34 @@ $home_feed_posts = array_map(static function ($row) {
         });
     }
 
+    let feedTouchStartX = 0;
+    let feedTouchEndX = 0;
+    const feedPostMedia = document.getElementById('feedPostModalMedia');
+    if (feedPostMedia) {
+        feedPostMedia.addEventListener('touchstart', (event) => {
+            feedTouchStartX = event.changedTouches[0].clientX;
+        }, { passive: true });
+        feedPostMedia.addEventListener('touchend', (event) => {
+            feedTouchEndX = event.changedTouches[0].clientX;
+            const delta = feedTouchEndX - feedTouchStartX;
+            if (Math.abs(delta) < 40) return;
+            if (delta < 0) showNextFeedPost(1);
+            else showNextFeedPost(-1);
+        }, { passive: true });
+    }
+
     document.addEventListener('keydown', (event) => {
         const feedModalOpen = !!(feedPostModal && feedPostModal.classList.contains('active'));
+        const createModal = document.getElementById('createModal');
+        const createModalOpen = !!(createModal && createModal.classList.contains('active'));
         if (event.key === 'Escape') {
             if (feedModalOpen) {
+                event.preventDefault();
                 closeFeedPostModal();
                 return;
             }
-            const createModal = document.getElementById('createModal');
-            if (createModal && createModal.classList.contains('active')) {
+            if (createModalOpen) {
+                event.preventDefault();
                 closeCreateModal();
                 return;
             }
@@ -3854,25 +3878,7 @@ $home_feed_posts = array_map(static function ($row) {
     window.switchCreateTab = switchCreateTab;
     window.openFeedPostModalByIndex = openFeedPostModalByIndex;
     window.closeFeedPostModal = closeFeedPostModal;
-
-    renderHomeFeedPosts(tfFeedInitialPosts);
-                if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
-                    tfProfileInitialPosts.unshift(data.post);
-                    renderProfilePosts(tfProfileInitialPosts);
-                    renderProfileThumbGrid(tfProfileInitialPosts);
-                }
-                createPostForm.reset();
-                switchCreateTab(tfCreateType);
-                setCreateFormStatus('Post published successfully.');
-                setTimeout(() => { closeCreateModal(); setCreateFormStatus(''); }, 700);
-            } catch (error) {
-                setCreateFormStatus(error && error.message ? error.message : 'Could not publish post.', true);
-            } finally {
-                tfSubmittingPost = false;
-                if (submitBtn) submitBtn.disabled = false;
-            }
-        });
-    }
+    window.showNextFeedPost = showNextFeedPost;
 
     renderHomeFeedPosts(tfFeedInitialPosts);
     renderProfilePosts(tfProfileInitialPosts);
