@@ -89,7 +89,9 @@ $profile_followers_count = 0;
 $profile_following_count = 0;
 $profile_follow_state = false;
 $social_table = $wpdb->prefix . 'rich_user_follows';
+$post_table = $wpdb->prefix . 'rich_social_posts';
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$social_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, follower_id BIGINT UNSIGNED NOT NULL, following_id BIGINT UNSIGNED NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY follower_following (follower_id, following_id), KEY following_idx (following_id), KEY follower_idx (follower_id)) {$wpdb->get_charset_collate()}");
+$wpdb->query("CREATE TABLE IF NOT EXISTS {$post_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, user_id BIGINT UNSIGNED NOT NULL, post_type VARCHAR(24) NOT NULL DEFAULT 'trade', symbol VARCHAR(32) NULL, direction VARCHAR(16) NULL, pnl_value DECIMAL(10,2) NULL, rr_value VARCHAR(32) NULL, caption TEXT NULL, image_url TEXT NULL, image_path TEXT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY user_created_idx (user_id, created_at), KEY created_idx (created_at), KEY post_type_idx (post_type)) {$wpdb->get_charset_collate()}");
 $profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
 $profile_following_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE follower_id = %d", $view_user_id));
 if (!$is_own_profile) {
@@ -98,6 +100,67 @@ if (!$is_own_profile) {
 $profile_visibility_label = $is_own_profile ? 'Public profile preview' : 'Public trader profile';
 
 $profile_section_note = $is_own_profile ? 'This is your public Trading Floor profile.' : "You are viewing this trader's public profile.";
+
+if (!function_exists('tf_format_social_post')) {
+    function tf_format_social_post($row, $fallback_name = 'Trader') {
+        $display_name = trim((string) ($row->display_name ?? ''));
+        if ($display_name === '') {
+            $display_name = trim((string) ($row->user_nicename ?? ''));
+        }
+        if ($display_name === '') {
+            $display_name = trim((string) ($row->user_login ?? ''));
+        }
+        if ($display_name === '') {
+            $display_name = $fallback_name;
+        }
+
+        $avatar_url = '';
+        if (!empty($row->user_id)) {
+            $avatar_url = get_avatar_url((int) $row->user_id, ['size' => 96]);
+        }
+
+        return [
+            'id' => (int) ($row->id ?? 0),
+            'user_id' => (int) ($row->user_id ?? 0),
+            'author_name' => $display_name,
+            'author_avatar' => $avatar_url ?: '',
+            'post_type' => sanitize_key($row->post_type ?? 'trade'),
+            'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
+            'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
+            'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
+            'rr_value' => trim((string) ($row->rr_value ?? '')),
+            'caption' => trim((string) ($row->caption ?? '')),
+            'image_url' => trim((string) ($row->image_url ?? '')),
+            'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
+            'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
+        ];
+    }
+}
+
+$profile_post_rows = $wpdb->get_results($wpdb->prepare(
+    "SELECT p.*, u.display_name, u.user_nicename, u.user_login
+     FROM {$post_table} p
+     LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+     WHERE p.user_id = %d
+     ORDER BY p.created_at DESC
+     LIMIT 24",
+    $view_user_id
+));
+$profile_post_count = is_array($profile_post_rows) ? count($profile_post_rows) : 0;
+$profile_posts = array_map(static function ($row) {
+    return tf_format_social_post($row);
+}, $profile_post_rows ?: []);
+
+$feed_post_rows = $wpdb->get_results(
+    "SELECT p.*, u.display_name, u.user_nicename, u.user_login
+     FROM {$post_table} p
+     LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+     ORDER BY p.created_at DESC
+     LIMIT 30"
+);
+$home_feed_posts = array_map(static function ($row) {
+    return tf_format_social_post($row);
+}, $feed_post_rows ?: []);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1576,41 +1639,42 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
                     <button class="create-tab" id="tabStory" onclick="switchCreateTab('story')">⚡ Story</button>
                     <button class="create-tab" id="tabAnalysis" onclick="switchCreateTab('analysis')">📈 Analysis</button>
                 </div>
-                <div id="createPostForm">
+                <form id="createPostForm" enctype="multipart/form-data">
                     <div class="create-form-row">
                         <div class="create-form-field">
                             <label class="create-form-label">Symbol</label>
-                            <input type="text" class="create-form-input" placeholder="e.g. XAUUSD">
+                            <input type="text" class="create-form-input" id="createSymbol" name="symbol" placeholder="e.g. XAUUSD">
                         </div>
                         <div class="create-form-field">
                             <label class="create-form-label">Direction</label>
-                            <select class="create-form-select">
+                            <select class="create-form-select" id="createDirection" name="direction">
                                 <option value="">Select...</option>
-                                <option>LONG</option>
-                                <option>SHORT</option>
+                                <option value="LONG">LONG</option>
+                                <option value="SHORT">SHORT</option>
                             </select>
                         </div>
                     </div>
                     <div class="create-form-row">
                         <div class="create-form-field">
                             <label class="create-form-label">P&L %</label>
-                            <input type="number" class="create-form-input" placeholder="+2.5" step="0.01">
+                            <input type="number" class="create-form-input" id="createPnl" name="pnl_value" placeholder="+2.5" step="0.01">
                         </div>
                         <div class="create-form-field">
                             <label class="create-form-label">R:R</label>
-                            <input type="text" class="create-form-input" placeholder="e.g. 3.2R">
+                            <input type="text" class="create-form-input" id="createRr" name="rr_value" placeholder="e.g. 3.2R">
                         </div>
                     </div>
                     <div class="create-form-field">
                         <label class="create-form-label">Caption</label>
-                        <textarea class="create-form-textarea" placeholder="Share your analysis, entry logic, lessons learned..."></textarea>
+                        <textarea class="create-form-textarea" id="createCaption" name="caption" placeholder="Share your analysis, entry logic, lessons learned..." required></textarea>
                     </div>
                     <div class="create-form-field">
                         <label class="create-form-label">Chart Screenshot (optional)</label>
-                        <input type="file" class="create-form-input" accept="image/*" style="padding:8px 14px;cursor:pointer;">
+                        <input type="file" class="create-form-input" id="createImage" name="image" accept="image/*" style="padding:8px 14px;cursor:pointer;">
                     </div>
-                    <button class="create-submit-btn">Post Trade</button>
-                </div>
+                    <div class="create-form-field" id="createFormStatus" style="display:none;font-size:12px;color:#a9afb8;"></div>
+                    <button class="create-submit-btn" type="submit" id="createSubmitBtn">Post Trade</button>
+                </form>
             </div>
         </div>
     </div>
@@ -3334,13 +3398,148 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
     function toggleDM() { document.getElementById('dmPanel').classList.toggle('open'); }
 
     // Create modal
-    function openCreateModal(type='post') { document.getElementById('createModal').classList.add('active'); switchCreateTab(type); }
+    const tfAjaxEndpoint = <?php echo json_encode(admin_url('admin-ajax.php')); ?>;
+    const tfFeedInitialPosts = <?php echo wp_json_encode($home_feed_posts); ?>;
+    const tfProfileInitialPosts = <?php echo wp_json_encode($profile_posts); ?>;
+    const tfViewedUserId = <?php echo (int) $view_user_id; ?>;
+    const tfCurrentUserId = <?php echo (int) $user_id; ?>;
+    let tfCreateType = 'trade';
+    let tfSubmittingPost = false;
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function formatPnlBadge(post) {
+        if (post.pnl_value === null || post.pnl_value === undefined || post.pnl_value === '') return '';
+        const numeric = Number(post.pnl_value);
+        if (Number.isNaN(numeric)) return '';
+        const cls = numeric >= 0 ? 'style="color:#6ee7b7;"' : 'style="color:#fda4af;"';
+        const prefix = numeric > 0 ? '+' : '';
+        return `<span ${cls}>${prefix}${numeric.toFixed(2)}%</span>`;
+    }
+
+    function renderSocialPostCard(post, compact = false) {
+        const typeLabel = post.post_type === 'analysis' ? 'Analysis' : 'Trade';
+        const author = escapeHtml(post.author_name || 'Trader');
+        const caption = escapeHtml(post.caption || '');
+        const symbol = escapeHtml(post.symbol || '');
+        const direction = escapeHtml(post.direction || '');
+        const rr = escapeHtml(post.rr_value || '');
+        const time = escapeHtml(post.created_label || 'Just now');
+        const image = post.image_url ? `<div style="margin-top:12px;"><img src="${escapeHtml(post.image_url)}" alt="Post chart" style="width:100%;border-radius:14px;border:1px solid rgba(255,255,255,0.08);object-fit:cover;max-height:${compact ? '180px' : '320px'};"></div>` : '';
+        const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
+        return `<article class="group-feed-card" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-card-kicker">${typeLabel}</div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div></div>${metaBits ? `<div class="group-feed-body" style="margin-top:8px;color:#f2ca50;">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/
+/g, '<br>')}</div>` : ''}${image}</article>`;
+    }
+
+    function renderHomeFeedPosts(posts) {
+        const host = document.getElementById('tfHomeFeedPosts');
+        if (!host) return;
+        if (!Array.isArray(posts) || !posts.length) {
+            host.innerHTML = '<div class="group-feed-card"><div class="group-feed-body">No posts yet. Use CREATE to publish the first trade or analysis.</div></div>';
+            return;
+        }
+        host.innerHTML = posts.map(post => renderSocialPostCard(post, false)).join('');
+    }
+
+    function renderProfilePosts(posts) {
+        const host = document.getElementById('profileFeedGrid');
+        if (!host) return;
+        if (!Array.isArray(posts) || !posts.length) {
+            host.innerHTML = '<div class="group-feed-card" style="grid-column:1/-1;"><div class="group-feed-body">No posts published yet.</div></div>';
+            return;
+        }
+        host.innerHTML = posts.map(post => renderSocialPostCard(post, true)).join('');
+    }
+
+    function setCreateFormStatus(message, isError = false) {
+        const el = document.getElementById('createFormStatus');
+        if (!el) return;
+        if (!message) {
+            el.style.display = 'none';
+            el.textContent = '';
+            return;
+        }
+        el.style.display = 'block';
+        el.style.color = isError ? '#fda4af' : '#a9afb8';
+        el.textContent = message;
+    }
+
+    function applyCreateTabUi(tab) {
+        document.querySelectorAll('.create-tab').forEach(t => t.classList.remove('active'));
+        const activeTab = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        if (activeTab) activeTab.classList.add('active');
+        const submit = document.getElementById('createSubmitBtn');
+        const symbol = document.getElementById('createSymbol');
+        const direction = document.getElementById('createDirection');
+        const pnl = document.getElementById('createPnl');
+        const rr = document.getElementById('createRr');
+        if (submit) submit.textContent = tab === 'analysis' ? 'Post Analysis' : 'Post Trade';
+        const isTrade = tab === 'trade';
+        if (symbol) symbol.disabled = !isTrade;
+        if (direction) direction.disabled = !isTrade;
+        if (pnl) pnl.disabled = !isTrade;
+        if (rr) rr.disabled = !isTrade;
+    }
+
+    function openCreateModal(type='post') {
+        document.getElementById('createModal').classList.add('active');
+        switchCreateTab(type);
+        setCreateFormStatus('');
+    }
     function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
     document.getElementById('createModal').addEventListener('click', e => { if(e.target===document.getElementById('createModal'))closeCreateModal(); });
     function switchCreateTab(tab) {
-        document.querySelectorAll('.create-tab').forEach(t=>t.classList.remove('active'));
-        document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+        tfCreateType = tab === 'analysis' ? 'analysis' : 'trade';
+        applyCreateTabUi(tfCreateType);
+        setCreateFormStatus(tfCreateType === 'analysis' ? 'Analysis posts use caption and optional image.' : 'Trade posts use symbol, direction, performance and caption.');
     }
+
+    const createPostForm = document.getElementById('createPostForm');
+    if (createPostForm) {
+        createPostForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            if (tfSubmittingPost) return;
+            const submitBtn = document.getElementById('createSubmitBtn');
+            const payload = new FormData(createPostForm);
+            payload.append('action', 'tf_create_post');
+            payload.append('post_type', tfCreateType);
+            tfSubmittingPost = true;
+            if (submitBtn) submitBtn.disabled = true;
+            setCreateFormStatus('Publishing post...');
+            try {
+                const response = await fetch(tfAjaxEndpoint, { method: 'POST', body: payload, credentials: 'same-origin' });
+                const data = await response.json();
+                if (!data || !data.success || !data.post) {
+                    throw new Error(data && data.message ? data.message : 'Could not publish post.');
+                }
+                tfFeedInitialPosts.unshift(data.post);
+                renderHomeFeedPosts(tfFeedInitialPosts);
+                if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
+                    tfProfileInitialPosts.unshift(data.post);
+                    renderProfilePosts(tfProfileInitialPosts);
+                }
+                createPostForm.reset();
+                switchCreateTab(tfCreateType);
+                setCreateFormStatus('Post published successfully.');
+                setTimeout(() => { closeCreateModal(); setCreateFormStatus(''); }, 700);
+            } catch (error) {
+                setCreateFormStatus(error && error.message ? error.message : 'Could not publish post.', true);
+            } finally {
+                tfSubmittingPost = false;
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
+
+    renderHomeFeedPosts(tfFeedInitialPosts);
+    renderProfilePosts(tfProfileInitialPosts);
 
     function getActiveSignalGroup() {
         const activeId = floorSignalsState.activeGroupId;
@@ -3376,6 +3575,73 @@ $profile_section_note = $is_own_profile ? 'This is your public Trading Floor pro
         modal.setAttribute('aria-hidden', 'true');
         if (status) status.textContent = '';
     }
+
+<?php
+if (isset($_POST['action']) && $_POST['action'] === 'tf_create_post') {
+    if (!$user_id) {
+        wp_send_json(['success' => false, 'message' => 'You must be logged in to post.']);
+    }
+
+    $post_type = sanitize_key($_POST['post_type'] ?? 'trade');
+    if (!in_array($post_type, ['trade', 'analysis'], true)) {
+        $post_type = 'trade';
+    }
+
+    $symbol = strtoupper(sanitize_text_field($_POST['symbol'] ?? ''));
+    $direction = strtoupper(sanitize_text_field($_POST['direction'] ?? ''));
+    $caption = trim(wp_kses_post($_POST['caption'] ?? ''));
+    $rr_value = sanitize_text_field($_POST['rr_value'] ?? '');
+    $pnl_value = isset($_POST['pnl_value']) && $_POST['pnl_value'] !== '' ? (float) $_POST['pnl_value'] : null;
+
+    if ($caption === '') {
+        wp_send_json(['success' => false, 'message' => 'Caption is required.']);
+    }
+    if ($post_type === 'trade' && $symbol === '') {
+        wp_send_json(['success' => false, 'message' => 'Symbol is required for trade posts.']);
+    }
+
+    $image_url = '';
+    $image_path = '';
+    if (!empty($_FILES['image']['name'])) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        $upload = wp_handle_upload($_FILES['image'], ['test_form' => false]);
+        if (!empty($upload['error'])) {
+            wp_send_json(['success' => false, 'message' => $upload['error']]);
+        }
+        $image_url = (string) ($upload['url'] ?? '');
+        $image_path = (string) ($upload['file'] ?? '');
+    }
+
+    $inserted = $wpdb->insert($post_table, [
+        'user_id' => $user_id,
+        'post_type' => $post_type,
+        'symbol' => $symbol ?: null,
+        'direction' => $direction ?: null,
+        'pnl_value' => $pnl_value,
+        'rr_value' => $rr_value ?: null,
+        'caption' => $caption,
+        'image_url' => $image_url ?: null,
+        'image_path' => $image_path ?: null,
+        'created_at' => current_time('mysql'),
+        'updated_at' => current_time('mysql'),
+    ], ['%d','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s']);
+
+    if (!$inserted) {
+        wp_send_json(['success' => false, 'message' => 'Database error while creating the post.']);
+    }
+
+    $row = $wpdb->get_row($wpdb->prepare(
+        "SELECT p.*, u.display_name, u.user_nicename, u.user_login
+         FROM {$post_table} p
+         LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+         WHERE p.id = %d
+         LIMIT 1",
+        (int) $wpdb->insert_id
+    ));
+
+    wp_send_json(['success' => true, 'post' => tf_format_social_post($row, wp_get_current_user()->display_name ?: 'Trader')]);
+}
+?>
 
     const groupSignalModal = document.getElementById('groupSignalModal');
     if (groupSignalModal) {
