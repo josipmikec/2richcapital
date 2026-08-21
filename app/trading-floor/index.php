@@ -1957,7 +1957,6 @@ $home_feed_posts = array_map(static function ($row) {
 
     <div class="modal-overlay" id="feedPostModal" aria-hidden="true">
         <div class="feed-post-modal" role="dialog" aria-modal="true" aria-labelledby="feedPostModalTitle">
-            <div class="feed-post-counter" id="feedPostModalCounter">1 / 1</div>
             <button class="feed-post-nav prev" type="button" aria-label="Previous post" onclick="showNextFeedPost(-1)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
             </button>
@@ -3861,7 +3860,7 @@ $home_feed_posts = array_map(static function ($row) {
         const type = document.getElementById('feedPostModalType');
         const metrics = document.getElementById('feedPostModalMetrics');
         const caption = document.getElementById('feedPostModalCaption');
-        const counter = document.getElementById('feedPostModalCounter');
+        const counter = null;
         if (!modal || !media || !title || !meta || !type || !metrics || !caption || !post) return;
         const mediaUrls = getPostMediaUrls(post);
         const isMulti = mediaUrls.length > 1;
