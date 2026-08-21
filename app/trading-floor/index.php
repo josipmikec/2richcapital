@@ -1321,7 +1321,8 @@ $home_feed_posts = array_map(static function ($row) {
 
                 <div class="profile-tabs">
                     <div class="profile-tab-list">
-                        <button type="button" class="profile-tab active" data-profile-tab="posts">Posts</button>
+                        <button type="button" class="profile-tab active" data-profile-tab="feed">Feed</button>
+                        <button type="button" class="profile-tab" data-profile-tab="posts">Posts</button>
                         <button type="button" class="profile-tab" data-profile-tab="trades">Trades</button>
                         <?php if ($is_own_profile): ?>
                             <button type="button" class="profile-tab" data-profile-tab="saved">Saved</button>
@@ -1329,7 +1330,32 @@ $home_feed_posts = array_map(static function ($row) {
                     </div>
                 </div>
 
-                <div class="profile-tab-panel active" data-profile-panel="posts">
+                <div class="profile-tab-panel active" data-profile-panel="feed">
+                    <div class="profile-feed-grid" id="profileFeedThumbGrid">
+                        <?php if (!empty($profile_posts)) : ?>
+                            <?php foreach ($profile_posts as $profile_thumb_post) :
+                                $is_video = !empty($profile_thumb_post['image_url']) && preg_match('/\.(mp4|webm|mov)$/i', $profile_thumb_post['image_url']);
+                                $badge = $profile_thumb_post['post_type'] === 'analysis' ? 'Analysis' : 'Trade';
+                                $thumb_label = $profile_thumb_post['symbol'] ?: ($profile_thumb_post['post_type'] === 'analysis' ? 'Analysis' : 'Trade');
+                            ?>
+                                <div class="profile-post-thumb" data-post-id="<?php echo (int) $profile_thumb_post['id']; ?>">
+                                    <span class="post-meta-badge"><?php echo esc_html($badge); ?></span>
+                                    <?php if (!empty($profile_thumb_post['image_url']) && $is_video) : ?>
+                                        <video src="<?php echo esc_url($profile_thumb_post['image_url']); ?>" style="width:100%;height:100%;object-fit:cover;" muted loop playsinline></video>
+                                    <?php elseif (!empty($profile_thumb_post['image_url'])) : ?>
+                                        <img src="<?php echo esc_url($profile_thumb_post['image_url']); ?>" alt="<?php echo esc_attr($thumb_label); ?>" style="width:100%;height:100%;object-fit:cover;">
+                                    <?php else : ?>
+                                        <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;text-align:center;padding:8px;"><?php echo esc_html($thumb_label); ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <div class="profile-activity-empty" style="grid-column: 1 / -1;">No posts yet. Photos and videos you publish will show up here in a grid.</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="profile-tab-panel" data-profile-panel="posts">
                     <div class="profile-feed-grid" id="profileFeedGrid">
                         <?php if (!empty($profile_posts)) : ?>
                             <?php foreach ($profile_posts as $profile_post) : ?>
@@ -1793,8 +1819,8 @@ $home_feed_posts = array_map(static function ($row) {
                         <textarea class="create-form-textarea" id="createCaption" name="caption" placeholder="Share your analysis, entry logic, lessons learned..." required></textarea>
                     </div>
                     <div class="create-form-field">
-                        <label class="create-form-label">Chart Screenshot (optional)</label>
-                        <input type="file" class="create-form-input" id="createImage" name="image" accept="image/*" style="padding:8px 14px;cursor:pointer;">
+                        <label class="create-form-label">Photo or Video (optional)</label>
+                        <input type="file" class="create-form-input" id="createImage" name="image" accept="image/*,video/mp4,video/webm,video/quicktime" style="padding:8px 14px;cursor:pointer;">
                     </div>
                     <div class="create-form-field" id="createFormStatus" style="display:none;font-size:12px;color:#a9afb8;"></div>
                     <button class="create-submit-btn" type="submit" id="createSubmitBtn">Post Trade</button>
@@ -3581,6 +3607,28 @@ $home_feed_posts = array_map(static function ($row) {
         host.innerHTML = posts.map(post => renderSocialPostCard(post, true)).join('');
     }
 
+    function renderProfileThumbGrid(posts) {
+        const host = document.getElementById('profileFeedThumbGrid');
+        if (!host) return;
+        if (!Array.isArray(posts) || !posts.length) {
+            host.innerHTML = '<div class="profile-activity-empty" style="grid-column: 1 / -1;">No posts yet. Photos and videos you publish will show up here in a grid.</div>';
+            return;
+        }
+        host.innerHTML = posts.map((post) => {
+            const typeLabel = post.post_type === 'analysis' ? 'Analysis' : 'Trade';
+            const thumbLabel = escapeHtml(post.symbol || typeLabel);
+            const mediaUrl = escapeHtml(post.image_url || '');
+            const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(post.image_url || '');
+            if (mediaUrl && isVideo) {
+                return `<div class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}"><span class="post-meta-badge">${typeLabel}</span><video src="${mediaUrl}" style="width:100%;height:100%;object-fit:cover;" muted loop playsinline></video></div>`;
+            }
+            if (mediaUrl) {
+                return `<div class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}"><span class="post-meta-badge">${typeLabel}</span><img src="${mediaUrl}" alt="${thumbLabel}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+            }
+            return `<div class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}"><span class="post-meta-badge">${typeLabel}</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;text-align:center;padding:8px;">${thumbLabel}</div></div>`;
+        }).join('');
+    }
+
     function setCreateFormStatus(message, isError = false) {
         const el = document.getElementById('createFormStatus');
         if (!el) return;
@@ -3652,6 +3700,7 @@ $home_feed_posts = array_map(static function ($row) {
                 if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
                     tfProfileInitialPosts.unshift(data.post);
                     renderProfilePosts(tfProfileInitialPosts);
+                    renderProfileThumbGrid(tfProfileInitialPosts);
                 }
                 createPostForm.reset();
                 switchCreateTab(tfCreateType);
@@ -3668,6 +3717,7 @@ $home_feed_posts = array_map(static function ($row) {
 
     renderHomeFeedPosts(tfFeedInitialPosts);
     renderProfilePosts(tfProfileInitialPosts);
+    renderProfileThumbGrid(tfProfileInitialPosts);
 
     function getActiveSignalGroup() {
         const activeId = floorSignalsState.activeGroupId;
