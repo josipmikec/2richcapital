@@ -147,6 +147,7 @@ if (!function_exists('tf_format_social_post')) {
                 'author_name' => $display_name,
                 'author_avatar' => $avatar_url ?: '',
                 'post_type' => sanitize_key($row->post_type ?? 'trade'),
+                'layout_style' => sanitize_key($row->layout_style ?? 'text'),
                 'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
@@ -332,9 +333,9 @@ $social_table = $wpdb->prefix . 'rich_user_follows';
 $post_table = $wpdb->prefix . 'rich_social_posts';
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$social_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, follower_id BIGINT UNSIGNED NOT NULL, following_id BIGINT UNSIGNED NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY follower_following (follower_id, following_id), KEY following_idx (following_id), KEY follower_idx (follower_id)) {$wpdb->get_charset_collate()}");
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$post_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, user_id BIGINT UNSIGNED NOT NULL, post_type VARCHAR(24) NOT NULL DEFAULT 'trade', symbol VARCHAR(32) NULL, direction VARCHAR(16) NULL, pnl_value DECIMAL(10,2) NULL, rr_value VARCHAR(32) NULL, caption TEXT NULL, image_url TEXT NULL, image_path TEXT NULL, image_urls LONGTEXT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY user_created_idx (user_id, created_at), KEY created_idx (created_at), KEY post_type_idx (post_type)) {$wpdb->get_charset_collate()}");
-$image_urls_column_exists = (bool) $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$post_table} LIKE %s", 'image_urls'));
-if (!$image_urls_column_exists) {
-    $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN image_urls LONGTEXT NULL");
+$layout_style_column_exists = (bool) $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$post_table} LIKE %s", 'layout_style'));
+if (!$layout_style_column_exists) {
+    $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN layout_style VARCHAR(32) NOT NULL DEFAULT 'text'");
 }
 
 $profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
