@@ -1004,6 +1004,22 @@ $home_feed_posts = array_map(static function ($row) {
         /* ── Create modal ── */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
+        .feed-post-modal { background:#151515; border:1px solid #1e1e1e; border-radius:20px; width:min(1080px, 94vw); max-height:88vh; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5); display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(320px, 420px); }
+        .feed-post-media { background:#0f0f10; min-height:420px; display:flex; align-items:center; justify-content:center; }
+        .feed-post-media img, .feed-post-media video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
+        .feed-post-side { display:flex; flex-direction:column; min-height:0; }
+        .feed-post-head { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 20px; border-bottom:1px solid #1e1e1e; }
+        .feed-post-author { display:flex; align-items:center; gap:12px; min-width:0; }
+        .feed-post-avatar { width:42px; height:42px; border-radius:50%; background:#202020; object-fit:cover; }
+        .feed-post-author-name { font-size:14px; font-weight:700; color:#f5f5f5; }
+        .feed-post-author-meta { font-size:12px; color:#8b8b8b; }
+        .feed-post-body { padding:18px 20px 22px; overflow:auto; display:flex; flex-direction:column; gap:14px; }
+        .feed-post-type { display:inline-flex; align-self:flex-start; padding:6px 10px; border-radius:999px; background:rgba(242,202,80,0.12); color:#f2ca50; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; }
+        .feed-post-metrics { display:flex; flex-wrap:wrap; gap:8px; }
+        .feed-post-metrics span { display:inline-flex; align-items:center; padding:7px 10px; border-radius:999px; background:#1a1a1a; border:1px solid rgba(255,255,255,0.06); color:#d7d7d7; font-size:12px; }
+        .feed-post-caption { color:#d9d9d9; font-size:14px; line-height:1.6; white-space:pre-wrap; }
+        .profile-post-thumb { cursor:pointer; }
+        @media (max-width: 900px) { .feed-post-modal { grid-template-columns:1fr; width:min(96vw, 720px); } .feed-post-media { min-height:280px; max-height:52vh; } }
         .create-modal { background: #151515; border: 1px solid #1e1e1e; border-radius: 16px; width: 540px; max-height: 85vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
         .create-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #1e1e1e; }
         .create-modal-title { font-size: 14px; font-weight: 700; color: #e0e0e0; letter-spacing: 0.04em; text-transform: uppercase; }
@@ -1825,6 +1841,33 @@ $home_feed_posts = array_map(static function ($row) {
                     <div class="create-form-field" id="createFormStatus" style="display:none;font-size:12px;color:#a9afb8;"></div>
                     <button class="create-submit-btn" type="submit" id="createSubmitBtn">Post Trade</button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="feedPostModal" aria-hidden="true">
+        <div class="feed-post-modal" role="dialog" aria-modal="true" aria-labelledby="feedPostModalTitle">
+            <div class="feed-post-media" id="feedPostModalMedia"></div>
+            <div class="feed-post-side">
+                <div class="feed-post-head">
+                    <div class="feed-post-author">
+                        <img class="feed-post-avatar" id="feedPostModalAvatar" src="" alt="">
+                        <div>
+                            <div class="feed-post-author-name" id="feedPostModalTitle">Trader</div>
+                            <div class="feed-post-author-meta" id="feedPostModalMeta">Just now</div>
+                        </div>
+                    </div>
+                    <button class="modal-close-btn" type="button" onclick="closeFeedPostModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="feed-post-body">
+                    <div class="feed-post-type" id="feedPostModalType">Trade</div>
+                    <div class="feed-post-metrics" id="feedPostModalMetrics"></div>
+                    <div class="feed-post-caption" id="feedPostModalCaption"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -3607,6 +3650,8 @@ $home_feed_posts = array_map(static function ($row) {
         host.innerHTML = posts.map(post => renderSocialPostCard(post, true)).join('');
     }
 
+    let tfFeedModalIndex = -1;
+
     function renderProfileThumbGrid(posts) {
         const host = document.getElementById('profileFeedThumbGrid');
         if (!host) return;
@@ -3614,19 +3659,84 @@ $home_feed_posts = array_map(static function ($row) {
             host.innerHTML = '<div class="profile-activity-empty" style="grid-column: 1 / -1;">No posts yet. Photos and videos you publish will show up here in a grid.</div>';
             return;
         }
-        host.innerHTML = posts.map((post) => {
+        host.innerHTML = posts.map((post, index) => {
             const typeLabel = post.post_type === 'analysis' ? 'Analysis' : 'Trade';
             const thumbLabel = escapeHtml(post.symbol || typeLabel);
             const mediaUrl = escapeHtml(post.image_url || '');
             const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(post.image_url || '');
             if (mediaUrl && isVideo) {
-                return `<div class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}"><span class="post-meta-badge">${typeLabel}</span><video src="${mediaUrl}" style="width:100%;height:100%;object-fit:cover;" muted loop playsinline></video></div>`;
+                return `<button type="button" class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}" data-feed-index="${index}" onclick="openFeedPostModalByIndex(${index})"><span class="post-meta-badge">${typeLabel}</span><video src="${mediaUrl}" style="width:100%;height:100%;object-fit:cover;" muted loop playsinline></video></button>`;
             }
             if (mediaUrl) {
-                return `<div class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}"><span class="post-meta-badge">${typeLabel}</span><img src="${mediaUrl}" alt="${thumbLabel}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+                return `<button type="button" class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}" data-feed-index="${index}" onclick="openFeedPostModalByIndex(${index})"><span class="post-meta-badge">${typeLabel}</span><img src="${mediaUrl}" alt="${thumbLabel}" style="width:100%;height:100%;object-fit:cover;"></button>`;
             }
-            return `<div class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}"><span class="post-meta-badge">${typeLabel}</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;text-align:center;padding:8px;">${thumbLabel}</div></div>`;
+            return `<button type="button" class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}" data-feed-index="${index}" onclick="openFeedPostModalByIndex(${index})"><span class="post-meta-badge">${typeLabel}</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;text-align:center;padding:8px;">${thumbLabel}</div></button>`;
         }).join('');
+    }
+
+    function closeFeedPostModal() {
+        const modal = document.getElementById('feedPostModal');
+        const media = document.getElementById('feedPostModalMedia');
+        if (!modal) return;
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        if (media) media.innerHTML = '';
+        tfFeedModalIndex = -1;
+    }
+
+    function renderFeedPostModal(post) {
+        const modal = document.getElementById('feedPostModal');
+        const media = document.getElementById('feedPostModalMedia');
+        const avatar = document.getElementById('feedPostModalAvatar');
+        const title = document.getElementById('feedPostModalTitle');
+        const meta = document.getElementById('feedPostModalMeta');
+        const type = document.getElementById('feedPostModalType');
+        const metrics = document.getElementById('feedPostModalMetrics');
+        const caption = document.getElementById('feedPostModalCaption');
+        if (!modal || !media || !title || !meta || !type || !metrics || !caption || !post) return;
+        const mediaUrl = post.image_url || '';
+        const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
+        media.innerHTML = mediaUrl
+            ? (isVideo
+                ? `<video src="${escapeHtml(mediaUrl)}" controls autoplay playsinline style="width:100%;height:100%;object-fit:contain;background:#0f0f10;"></video>`
+                : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(post.symbol || post.post_type || 'Post')}" style="width:100%;height:100%;object-fit:contain;background:#0f0f10;">`)
+            : `<div style="width:100%;height:100%;display:grid;place-items:center;padding:32px;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);color:#fff;font-size:28px;font-weight:800;text-align:center;">${escapeHtml(post.symbol || (post.post_type === 'analysis' ? 'Analysis' : 'Trade'))}</div>`;
+        if (avatar) {
+            avatar.src = post.author_avatar || '';
+            avatar.alt = (post.author_name || 'Trader') + ' avatar';
+            avatar.style.display = post.author_avatar ? 'block' : 'none';
+        }
+        title.textContent = post.author_name || 'Trader';
+        meta.textContent = post.created_label || 'Just now';
+        type.textContent = post.post_type === 'analysis' ? 'Analysis' : 'Trade';
+        const metricBits = [];
+        if (post.symbol) metricBits.push(`<span>${escapeHtml(post.symbol)}</span>`);
+        if (post.direction) metricBits.push(`<span>${escapeHtml(post.direction)}</span>`);
+        if (post.rr_value) metricBits.push(`<span>R:R ${escapeHtml(post.rr_value)}</span>`);
+        if (post.pnl_value !== null && post.pnl_value !== undefined && post.pnl_value !== '') {
+            const numeric = Number(post.pnl_value);
+            if (!Number.isNaN(numeric)) metricBits.push(`<span>${numeric > 0 ? '+' : ''}${numeric.toFixed(2)}%</span>`);
+        }
+        metrics.innerHTML = metricBits.length ? metricBits.join('') : '<span>No trade metrics</span>';
+        caption.textContent = post.caption || '';
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function openFeedPostModalByIndex(index) {
+        if (!Array.isArray(tfProfileInitialPosts) || !tfProfileInitialPosts.length) return;
+        const safeIndex = Number(index);
+        if (!Number.isInteger(safeIndex) || safeIndex < 0 || safeIndex >= tfProfileInitialPosts.length) return;
+        tfFeedModalIndex = safeIndex;
+        renderFeedPostModal(tfProfileInitialPosts[safeIndex]);
+    }
+
+    function showNextFeedPost(step = 1) {
+        if (!Array.isArray(tfProfileInitialPosts) || !tfProfileInitialPosts.length) return;
+        if (tfFeedModalIndex < 0) return;
+        const total = tfProfileInitialPosts.length;
+        tfFeedModalIndex = (tfFeedModalIndex + step + total) % total;
+        renderFeedPostModal(tfProfileInitialPosts[tfFeedModalIndex]);
     }
 
     function setCreateFormStatus(message, isError = false) {
@@ -3696,7 +3806,43 @@ $home_feed_posts = array_map(static function ($row) {
                     throw new Error(data && data.message ? data.message : 'Could not publish post.');
                 }
                 tfFeedInitialPosts.unshift(data.post);
-                renderHomeFeedPosts(tfFeedInitialPosts);
+                const feedPostModal = document.getElementById('feedPostModal');
+    if (feedPostModal) {
+        feedPostModal.addEventListener('click', (event) => {
+            if (event.target === feedPostModal) closeFeedPostModal();
+        });
+    }
+
+    document.addEventListener('keydown', (event) => {
+        const feedModalOpen = !!(feedPostModal && feedPostModal.classList.contains('active'));
+        if (event.key === 'Escape') {
+            if (feedModalOpen) {
+                closeFeedPostModal();
+                return;
+            }
+            const createModal = document.getElementById('createModal');
+            if (createModal && createModal.classList.contains('active')) {
+                closeCreateModal();
+                return;
+            }
+        }
+        if (!feedModalOpen) return;
+        if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            showNextFeedPost(1);
+        } else if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            showNextFeedPost(-1);
+        }
+    });
+
+    window.openCreateModal = openCreateModal;
+    window.closeCreateModal = closeCreateModal;
+    window.switchCreateTab = switchCreateTab;
+    window.openFeedPostModalByIndex = openFeedPostModalByIndex;
+    window.closeFeedPostModal = closeFeedPostModal;
+
+    renderHomeFeedPosts(tfFeedInitialPosts);
                 if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
                     tfProfileInitialPosts.unshift(data.post);
                     renderProfilePosts(tfProfileInitialPosts);
