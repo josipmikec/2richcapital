@@ -425,7 +425,38 @@ $home_feed_posts = array_map(static function ($row) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        /* Final Create-modal containment fix */
+        /* Create modal — single isolated layout system */
+        #createModal.modal-overlay { position:fixed !important; inset:0 !important; z-index:10000 !important; display:none !important; align-items:center !important; justify-content:center !important; padding:20px !important; overflow:hidden !important; box-sizing:border-box !important; }
+        #createModal.modal-overlay.active { display:flex !important; }
+        #createModal.modal-overlay > .create-modal { all:initial; display:flex !important; flex-direction:column !important; position:relative !important; box-sizing:border-box !important; width:min(760px,100%) !important; max-width:760px !important; height:auto !important; max-height:calc(100vh - 40px) !important; margin:0 !important; padding:0 !important; overflow:hidden !important; background:#111 !important; border:1px solid #2b2b2b !important; border-radius:14px !important; color:#f2f2f2 !important; font-family:"Montserrat",sans-serif !important; }
+        #createModal.modal-overlay > .create-modal * { box-sizing:border-box !important; }
+        #createModal .create-modal-header { all:initial; display:flex !important; flex:0 0 auto !important; align-items:center !important; justify-content:space-between !important; min-height:64px !important; width:100% !important; padding:0 22px !important; background:#151515 !important; border-bottom:1px solid #262626 !important; color:#f2f2f2 !important; font-family:"Montserrat",sans-serif !important; }
+        #createModal .create-modal-title { all:initial; color:#f2f2f2 !important; font:700 13px/1 "Montserrat",sans-serif !important; letter-spacing:.08em !important; text-transform:uppercase !important; }
+        #createModal .modal-close-btn { all:initial; display:grid !important; place-items:center !important; width:36px !important; height:36px !important; color:#888 !important; cursor:pointer !important; font-family:"Montserrat",sans-serif !important; }
+        #createModal .modal-close-btn:hover { color:#f2ca50 !important; }
+        #createModal .create-modal-body { display:block !important; flex:1 1 auto !important; width:100% !important; max-height:calc(100vh - 104px) !important; padding:20px 22px 24px !important; overflow-y:auto !important; overflow-x:hidden !important; background:#111 !important; }
+        #createModal .create-tabs { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; width:100% !important; margin:0 0 20px !important; padding:0 !important; gap:6px !important; }
+        #createModal .create-tab { display:block !important; width:100% !important; min-height:44px !important; margin:0 !important; padding:10px 8px !important; border:1px solid #292929 !important; border-radius:8px !important; background:#171717 !important; color:#8b8b8b !important; font:700 10px/1.2 "Montserrat",sans-serif !important; text-transform:uppercase !important; cursor:pointer !important; }
+        #createModal .create-tab.active { color:#111 !important; background:#f2ca50 !important; border-color:#f2ca50 !important; }
+        #createModal #createPostForm { display:flex !important; flex-direction:column !important; width:100% !important; max-width:100% !important; min-width:0 !important; gap:16px !important; margin:0 !important; padding:0 !important; }
+        #createModal #createPostForm > * { width:100% !important; max-width:100% !important; min-width:0 !important; margin:0 !important; }
+        #createModal .create-layout-grid { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; width:100% !important; }
+        #createModal .create-layout-option { display:flex !important; align-items:center !important; gap:10px !important; width:100% !important; min-width:0 !important; min-height:78px !important; margin:0 !important; padding:10px !important; overflow:hidden !important; }
+        #createModal .create-layout-option > span:last-child { min-width:0 !important; overflow-wrap:anywhere !important; }
+        #createModal .create-form-row { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:14px !important; width:100% !important; }
+        #createModal .create-form-field { display:block !important; width:100% !important; min-width:0 !important; }
+        #createModal .create-form-field[style*="display: none"] { display:none !important; }
+        #createModal .create-form-input, #createModal .create-form-select, #createModal .create-form-textarea, #createModal input[type="file"] { display:block !important; width:100% !important; max-width:100% !important; min-width:0 !important; }
+        #createModal .create-form-textarea { min-height:110px !important; resize:vertical !important; }
+        #createModal .create-submit-btn, #createModal button[type="submit"] { display:block !important; width:100% !important; max-width:100% !important; min-height:48px !important; margin:0 !important; }
+        @media (max-width:640px) {
+            #createModal.modal-overlay { padding:10px !important; }
+            #createModal.modal-overlay > .create-modal { max-height:calc(100vh - 20px) !important; }
+            #createModal .create-modal-body { padding:16px !important; max-height:calc(100vh - 84px) !important; }
+            #createModal .create-layout-grid, #createModal .create-form-row { grid-template-columns:1fr !important; }
+        }
+
+
         #createModal { position:fixed !important; inset:0 !important; z-index:10000 !important; display:none; align-items:center !important; justify-content:center !important; padding:20px !important; overflow-y:auto !important; }
         #createModal.active { display:flex !important; }
         #createModal > .create-modal { position:relative !important; flex:0 1 760px !important; width:100% !important; max-width:760px !important; height:auto !important; max-height:calc(100vh - 40px) !important; margin:0 !important; overflow:hidden !important; }
