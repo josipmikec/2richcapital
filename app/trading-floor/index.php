@@ -486,7 +486,12 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-highlight { min-width:70px; display:grid; justify-items:center; gap:7px; }
         .profile-highlight-ring { width:63px; height:63px; border-radius:50%; border:1px solid rgba(255,255,255,0.08); background:#101010; display:grid; place-items:center; }
         .profile-highlight-ring span { width:51px; height:51px; border-radius:50%; border:2px solid rgba(255,255,255,0.18); display:grid; place-items:center; color:#f3f3f3; font-size:19px; font-weight:700; }
-        .social-post-media { position:relative; margin-top:12px; height:var(--post-media-height,320px); overflow:hidden; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:#101216; }
+        .social-post-media { position:relative; margin-top:12px; height:var(--post-media-height,320px); min-height:220px; overflow:hidden; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:#101216; }
+        #feedPostModalMedia { position:relative; min-height:380px; height:100%; background:#0f0f10; }
+        #feedPostModalMedia > .social-post-media { position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; border:0; border-radius:0; background:#0f0f10; }
+        #feedPostModalMedia .social-post-media-slide { position:absolute; inset:0; width:100%; height:100%; }
+        #feedPostModalMedia .social-post-media-slide img,
+        #feedPostModalMedia .social-post-media-slide video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
         .social-post-media-slide { display:none; position:absolute; inset:0; width:100%; height:100%; }
         .social-post-media-slide.is-active { display:block; }
         .social-post-media-slide img,
@@ -3867,7 +3872,7 @@ $home_feed_posts = array_map(static function ($row) {
                 return `<div class="social-post-media-slide${index === 0 ? ' is-active' : ''}" data-slide-index="${index}">${isVideo ? `<video src="${safeUrl}" controls muted playsinline></video>` : `<img src="${safeUrl}" alt="Post media ${index + 1}">`}</div>`;
             }).join('');
             const controls = `<button type="button" class="social-post-carousel-btn prev" aria-label="Previous media" onclick="movePostCarousel(this,-1)">‹</button><button type="button" class="social-post-carousel-btn next" aria-label="Next media" onclick="movePostCarousel(this,1)">›</button><div class="social-post-carousel-count">1 / ${mediaUrls.length}</div><div class="social-post-carousel-dots">${mediaUrls.map((_, index) => `<button type="button" class="social-post-carousel-dot${index === 0 ? ' is-active' : ''}" aria-label="Show media ${index + 1}" onclick="goToPostCarouselSlide(this,${index})"></button>`).join('')}</div>`;
-            media.innerHTML = `<div class="social-post-media" style="--post-media-height:320px;" data-slide="0" data-total-slides="${mediaUrls.length}">${slides}${controls}</div>`;
+            media.innerHTML = `<div class="social-post-media modal-social-post-media" style="--post-media-height:100%;" data-slide="0" data-total-slides="${mediaUrls.length}">${slides}${controls}</div>`;
         } else {
             const mediaUrl = mediaUrls[0] || '';
             const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
