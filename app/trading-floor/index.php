@@ -3507,15 +3507,20 @@ $home_feed_posts = array_map(static function ($row) {
             if (tfSubmittingPost) return;
             const submitBtn = document.getElementById('createSubmitBtn');
             const payload = new FormData(createPostForm);
-            payload.append('action', 'tf_create_post');
             payload.append('post_type', tfCreateType);
             tfSubmittingPost = true;
             if (submitBtn) submitBtn.disabled = true;
             setCreateFormStatus('Publishing post...');
             try {
-                const response = await fetch(tfAjaxEndpoint, { method: 'POST', body: payload, credentials: 'same-origin' });
-                const data = await response.json();
-                if (!data || !data.success || !data.post) {
+                const response = await fetch(window.location.href, { method: 'POST', body: payload, credentials: 'same-origin' });
+                const raw = await response.text();
+                let data = null;
+                try {
+                    data = JSON.parse(raw);
+                } catch (parseError) {
+                    throw new Error('Unexpected server response while publishing post.');
+                }
+                if (!response.ok || !data || !data.success || !data.post) {
                     throw new Error(data && data.message ? data.message : 'Could not publish post.');
                 }
                 tfFeedInitialPosts.unshift(data.post);
@@ -3576,7 +3581,7 @@ $home_feed_posts = array_map(static function ($row) {
     }
 
 <?php
-if (isset($_POST['action']) && $_POST['action'] === 'tf_create_post') {
+if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     if (!$user_id) {
         wp_send_json(['success' => false, 'message' => 'You must be logged in to post.']);
     }
