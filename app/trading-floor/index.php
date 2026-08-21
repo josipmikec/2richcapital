@@ -409,6 +409,8 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-counts-inline { display:flex; gap:10px; flex-wrap:wrap; align-items:center; color:#f3f3f3; font-size:12px; font-weight:700; }
         .profile-counts-inline span { color:#80858d; font-weight:600; }
         .profile-feed-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:18px; }
+        .profile-posts-list { display:flex; flex-direction:column; gap:16px; margin-top:18px; }
+        .profile-posts-list .group-feed-card { width:100%; }
         .profile-tab-panel { display:none; margin-top:18px; }
         .profile-tab-panel.active { display:block; }
         .profile-archive-mode .profile-hero,
@@ -1004,7 +1006,11 @@ $home_feed_posts = array_map(static function ($row) {
         /* ── Create modal ── */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
-        .feed-post-modal { background:#151515; border:1px solid #1e1e1e; border-radius:20px; width:min(1080px, 94vw); max-height:88vh; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5); display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(320px, 420px); }
+        .feed-post-modal { background:#151515; border:1px solid #1e1e1e; border-radius:20px; width:min(1080px, 94vw); max-height:88vh; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5); display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(320px, 420px); position:relative; }
+        .feed-post-nav { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); background:rgba(8,8,8,0.76); color:#f5f5f5; display:flex; align-items:center; justify-content:center; z-index:2; backdrop-filter:blur(10px); }
+        .feed-post-nav.prev { left:16px; }
+        .feed-post-nav.next { right:calc(420px + 16px); }
+        .feed-post-counter { position:absolute; top:16px; left:16px; z-index:2; padding:7px 11px; border-radius:999px; background:rgba(8,8,8,0.78); border:1px solid rgba(255,255,255,0.08); color:#f5f5f5; font-size:12px; font-weight:700; letter-spacing:0.04em; }
         .feed-post-media { background:#0f0f10; min-height:420px; display:flex; align-items:center; justify-content:center; }
         .feed-post-media img, .feed-post-media video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
         .feed-post-side { display:flex; flex-direction:column; min-height:0; }
@@ -1372,7 +1378,7 @@ $home_feed_posts = array_map(static function ($row) {
                 </div>
 
                 <div class="profile-tab-panel" data-profile-panel="posts">
-                    <div class="profile-feed-grid" id="profileFeedGrid">
+                    <div class="profile-posts-list" id="profileFeedGrid">
                         <?php if (!empty($profile_posts)) : ?>
                             <?php foreach ($profile_posts as $profile_post) : ?>
                                 <article class="group-feed-card" data-post-id="<?php echo (int) $profile_post['id']; ?>">
@@ -1847,6 +1853,13 @@ $home_feed_posts = array_map(static function ($row) {
 
     <div class="modal-overlay" id="feedPostModal" aria-hidden="true">
         <div class="feed-post-modal" role="dialog" aria-modal="true" aria-labelledby="feedPostModalTitle">
+            <div class="feed-post-counter" id="feedPostModalCounter">1 / 1</div>
+            <button class="feed-post-nav prev" type="button" aria-label="Previous post" onclick="showNextFeedPost(-1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button class="feed-post-nav next" type="button" aria-label="Next post" onclick="showNextFeedPost(1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
             <div class="feed-post-media" id="feedPostModalMedia"></div>
             <div class="feed-post-side">
                 <div class="feed-post-head">
