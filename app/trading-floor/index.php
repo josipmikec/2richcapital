@@ -154,6 +154,7 @@ if (!function_exists('tf_format_social_post')) {
                 'rr_value' => trim((string) ($row->rr_value ?? '')),
                 'caption' => trim((string) ($row->caption ?? '')),
                 'image_url' => tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? ''),
+                'image_urls' => tf_collect_media_urls($row),
                 'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
                 'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
             ];
@@ -381,21 +382,12 @@ if (!function_exists('tf_format_social_post')) {
             'author_name' => $display_name,
             'author_avatar' => $avatar_url ?: '',
             'post_type' => sanitize_key($row->post_type ?? 'trade'),
-            'layout_style' => (function () use ($row) {
-                $post_type = sanitize_key($row->post_type ?? 'trade');
-                $layout = sanitize_key($row->layout_style ?? '');
-                $allowed = ['trade_card', 'analysis_card', 'image', 'text'];
-                if (in_array($layout, $allowed, true)) return $layout;
-                if ($post_type === 'analysis') return 'analysis_card';
-                return 'trade_card';
-            })(),
             'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
             'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
             'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
             'rr_value' => trim((string) ($row->rr_value ?? '')),
             'caption' => trim((string) ($row->caption ?? '')),
             'image_url' => trim((string) ($row->image_url ?? '')),
-            'image_urls' => tf_collect_media_urls($row),
             'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
             'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
         ];
