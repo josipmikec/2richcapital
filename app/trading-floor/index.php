@@ -372,6 +372,7 @@ if (!$layout_style_column_exists) {
 if ($layout_style_column_exists) {
     $wpdb->query("UPDATE {$post_table} SET layout_style = CASE WHEN post_type IN ('analysis','analysis_card') THEN 'analysis_card' WHEN post_type IN ('image','text','trade_card') THEN post_type ELSE 'trade_card' END WHERE layout_style IS NULL OR layout_style = ''");
     $wpdb->query("UPDATE {$post_table} SET post_type = layout_style WHERE layout_style IN ('trade_card','analysis_card','image','text') AND (post_type IS NULL OR post_type = '' OR post_type IN ('trade','analysis'))");
+    $wpdb->query("UPDATE {$post_table} SET layout_style = post_type WHERE post_type IN ('trade_card','analysis_card','image','text') AND (layout_style IS NULL OR layout_style = '' OR layout_style = 'text' AND post_type IN ('trade_card','analysis_card'))");
 }
 
 $profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
