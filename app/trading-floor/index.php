@@ -1266,6 +1266,7 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-counter { position:absolute; top:16px; left:16px; z-index:2; padding:7px 11px; border-radius:999px; background:rgba(8,8,8,0.78); border:1px solid rgba(255,255,255,0.08); color:#f5f5f5; font-size:12px; font-weight:700; letter-spacing:0.04em; }
         .feed-post-media { background:#0f0f10; min-height:420px; display:flex; align-items:center; justify-content:center; }
         .feed-post-media img, .feed-post-media video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
+        .feed-post-media .modal-trade-preview { width:min(100%, 560px); margin:24px auto; }
         .feed-post-side { display:flex; flex-direction:column; min-height:0; }
         .feed-post-head { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 20px; border-bottom:1px solid #1e1e1e; }
         .feed-post-head-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
@@ -4251,11 +4252,15 @@ $home_feed_posts = array_map(static function ($row) {
         } else {
             const mediaUrl = mediaUrls[0] || '';
             const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl);
+            const normalizedLayout = String((post.layout_style || post.post_type || '')).toLowerCase();
+            const isTradeLayout = normalizedLayout === 'trade' || normalizedLayout === 'trade_card';
             media.innerHTML = mediaUrl
                 ? (isVideo
                     ? `<video src="${escapeHtml(mediaUrl)}" controls autoplay playsinline style="width:100%;height:100%;object-fit:contain;background:#0f0f10;"></video>`
                     : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(post.symbol || post.post_type || 'Post')}" style="width:100%;height:100%;object-fit:contain;background:#0f0f10;">`)
-                : `<div style="width:100%;height:100%;display:grid;place-items:center;padding:32px;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);color:#fff;font-size:28px;font-weight:800;text-align:center;">${escapeHtml(post.symbol || (post.post_type === 'analysis' ? 'Analysis' : 'Trade'))}</div>`;
+                : (isTradeLayout
+                    ? `<div class="post-trade-card social-trade-variant modal-trade-preview">${tradeCardMarkup(post)}</div>`
+                    : `<div style="width:100%;height:100%;display:grid;place-items:center;padding:32px;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);color:#fff;font-size:28px;font-weight:800;text-align:center;">${escapeHtml(post.symbol || (post.post_type === 'analysis' ? 'Analysis' : 'Post'))}</div>`);
         }
         if (avatar) {
             avatar.src = post.author_avatar || '';
