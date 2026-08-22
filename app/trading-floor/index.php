@@ -3942,8 +3942,7 @@ $home_feed_posts = array_map(static function ($row) {
         if (valid.includes(explicit)) return { ...post, layout_style: explicit };
         const normalizedType = String(post.post_type || '').toLowerCase();
         if (normalizedType === 'analysis') return { ...post, layout_style: 'analysis_card' };
-        if (normalizedType === 'trade') return { ...post, layout_style: 'text' };
-        return { ...post, layout_style: 'text' };
+        return { ...post, layout_style: 'trade_card' };
     }
 
     function renderSocialPostCard(post, compact = false) {
