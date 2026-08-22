@@ -672,10 +672,9 @@ $home_feed_posts = array_map(static function ($row) {
         .group-feed-avatar-wrap { flex:0 0 auto; }
         .group-feed-avatar { width:44px; height:44px; border-radius:50%; object-fit:cover; background:#161616; border:1px solid rgba(255,255,255,.08); box-shadow:0 8px 18px rgba(0,0,0,.22); }
         .group-feed-avatar-fallback { display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#111; background:linear-gradient(135deg,#f2ca50,#9b7b18); }
-        .group-feed-subtitle-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:4px; }
-        .group-feed-subtitle { font-size:11px; color:#8f8f8f; letter-spacing:.14em; text-transform:uppercase; font-weight:700; }
         .group-feed-title { font-size: 20px; line-height: 1.12; font-weight: 800; color: #f5f5f5; letter-spacing: -0.02em; }
         .group-feed-meta { margin-top: 5px; font-size: 12px; color: #a8a8a8; letter-spacing: 0.01em; }
+        .group-feed-meta-inline { margin-top:4px; }
         .group-feed-body { margin: 10px 12px 0; font-size: 13px; line-height: 1.55; color: #d3d3d3; }
         .group-joined-pill { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; background: rgba(242,202,80,0.14); border: 1px solid rgba(242,202,80,0.3); color: #f2ca50; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
         .group-feed-actions { display:flex; align-items:center; gap:20px; margin:14px 18px 0; padding:14px 2px 0; border-top:1px solid rgba(255,255,255,.045); }
@@ -3979,16 +3978,18 @@ $home_feed_posts = array_map(static function ($row) {
         const layout = ['trade_card','analysis_card','image','text'].includes(selectedLayout) ? selectedLayout : 'trade_card';
         const typeLabel = layoutLabel(post);
         const author = escapeHtml(post.author_name || 'Trader');
-        const caption = escapeHtml(post.caption || '');
+        const rawCaption = String(post.caption || '');
+        const caption = escapeHtml(rawCaption);
         const symbol = escapeHtml(post.symbol || '');
         const direction = escapeHtml(post.direction || '');
         const rr = escapeHtml(post.rr_value || '');
         const time = escapeHtml(post.created_label || 'Just now');
         const avatarUrl = escapeHtml(post.author_avatar || '');
-        const subtitleText = escapeHtml(String(post.author_title || typeLabel || '').toUpperCase());
-        const rawTags = Array.isArray(post.tags)
+        const explicitTags = Array.isArray(post.tags)
             ? post.tags
-            : String(post.tags || caption.match(/#[A-Za-z0-9_]+/g)?.join(' ') || '').split(/[\s,]+/);
+            : String(post.tags || '').split(/[\s,]+/);
+        const fallbackTags = rawCaption.match(/#[A-Za-z0-9_]+/g) || [];
+        const rawTags = explicitTags.some(tag => String(tag).trim()) ? explicitTags : fallbackTags;
         const tags = rawTags.map(tag => String(tag).trim().replace(/^#+/, '')).filter(Boolean).slice(0, 8);
         const tagsMarkup = tags.length ? `<div class="group-feed-tags">${tags.map(tag => `<span class="group-feed-tag">#${escapeHtml(tag)}</span>`).join(' ')}</div>` : '';
         const media = renderPostMedia(post, compact);
@@ -4005,7 +4006,7 @@ $home_feed_posts = array_map(static function ($row) {
         } else {
             content = `<div class="social-layout-text"><span class="social-layout-quote">“</span>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${tagsMarkup}</div>${media}`;
         }
-        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div class="group-feed-author"><div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div><div class="group-feed-author-copy"><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-subtitle-row"><div class="group-feed-subtitle">${subtitleText}</div><div class="group-feed-meta">${time}</div></div></div></div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
+        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div class="group-feed-author"><div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div><div class="group-feed-author-copy"><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta group-feed-meta-inline">${time}</div></div></div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
     }
 
     function togglePostMenu(button, event) {
