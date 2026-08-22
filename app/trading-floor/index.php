@@ -1272,7 +1272,7 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-avatar { width:42px; height:42px; border-radius:50%; background:#202020; object-fit:cover; }
         .feed-post-author-name { font-size:14px; font-weight:700; color:#f5f5f5; }
         .feed-post-author-meta { font-size:12px; color:#8b8b8b; }
-        .feed-post-body { padding:18px 20px 22px; overflow:auto; display:flex; flex-direction:column; gap:14px; }
+        .feed-post-body { padding:18px 20px 22px; overflow:auto; display:flex; flex-direction:column; gap:14px; flex:1; min-height:0; }
         .feed-post-type { display:inline-flex; align-self:flex-start; padding:6px 10px; border-radius:999px; background:rgba(242,202,80,0.12); color:#f2ca50; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; }
         .feed-post-metrics { display:flex; flex-wrap:wrap; gap:8px; }
         .feed-post-metrics span { display:inline-flex; align-items:center; padding:7px 10px; border-radius:999px; background:#1a1a1a; border:1px solid rgba(255,255,255,0.06); color:#d7d7d7; font-size:12px; }
