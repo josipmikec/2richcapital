@@ -3966,7 +3966,17 @@ $home_feed_posts = array_map(static function ($row) {
         return `<div class="trade-card-header"><span class="trade-symbol">${symbol}</span><div class="trade-direction ${direction.toLowerCase()}"><span class="trade-direction-dot"></span>${direction}</div><span class="trade-pnl-badge">${pnl}</span></div><div class="trade-stats-row"><div class="trade-stat"><div class="trade-stat-label">Entry</div><div class="trade-stat-value">${entry}</div></div><div class="trade-stat"><div class="trade-stat-label">Exit</div><div class="trade-stat-value">${exit}</div></div><div class="trade-stat"><div class="trade-stat-label">R:R</div><div class="trade-stat-value">${rr || '—'}</div></div><div class="trade-stat"><div class="trade-stat-label">Session</div><div class="trade-stat-value">${session}</div></div></div><div class="trade-chart-area"><canvas class="mini-chart" data-win="1" data-dir="${direction.toLowerCase()}"></canvas><span class="trade-chart-label">Price Action</span></div>`;
     }
 
+    function normalizePostLayout(post) {
+        if (!post || typeof post !== 'object') return post;
+        const valid = ['trade_card','analysis_card','image','text'];
+        const explicit = String(post.layout_style || '').toLowerCase();
+        if (valid.includes(explicit)) return { ...post, layout_style: explicit };
+        return { ...post, layout_style: post.post_type === 'analysis' ? 'analysis_card' : 'trade_card' };
+    }
+
     function renderSocialPostCard(post, compact = false) {
+        post = normalizePostLayout(post);
+
         const selectedLayout = String(post.layout_style || '').toLowerCase();
         const layout = ['trade_card','analysis_card','image','text'].includes(selectedLayout) ? selectedLayout : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
         const typeLabel = layoutLabel(post);
