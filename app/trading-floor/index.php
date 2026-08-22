@@ -2024,11 +2024,6 @@ $home_feed_posts = array_map(static function ($row) {
                 </button>
             </div>
             <div class="create-modal-body">
-                <div class="create-tabs">
-                    <button class="create-tab active" id="tabPost" onclick="switchCreateTab('post')">📊 Trade Post</button>
-                    <button class="create-tab" id="tabStory" onclick="switchCreateTab('story')">⚡ Story</button>
-                    <button class="create-tab" id="tabAnalysis" onclick="switchCreateTab('analysis')">📈 Analysis</button>
-                </div>
                 <form id="createPostForm" enctype="multipart/form-data">
                     <div class="create-form-field create-layout-field">
                         <label class="create-form-label">Post layout</label>
@@ -3831,31 +3826,33 @@ $home_feed_posts = array_map(static function ($row) {
     // DM
     function toggleDM() { document.getElementById('dmPanel').classList.toggle('open'); }
 
-    // Create modal
-    bindCreateLayouts();
+    // Create modal — post layout is the single source of truth.
     function setCreateLayout(layout) {
         const allowed = ['trade_card', 'analysis_card', 'image', 'text'];
+        const selected = allowed.includes(layout) ? layout : 'trade_card';
         const input = document.getElementById('createLayoutStyle');
-        const selected = allowed.includes(layout) ? layout : (tfCreateType === 'trade' ? 'trade_card' : 'analysis_card');
         if (input) input.value = selected;
         document.querySelectorAll('.create-layout-option').forEach(option => {
             const active = option.dataset.layout === selected;
             option.classList.toggle('active', active);
             option.setAttribute('aria-checked', active ? 'true' : 'false');
         });
-        const hideTradeFields = selected === 'image' || selected === 'text';
+        tfCreateType = selected === 'analysis_card' ? 'analysis' : 'trade';
+        const isTradeCard = selected === 'trade_card';
+        const hideTradeFields = !isTradeCard;
         ['createSymbol','createDirection','createPnl','createRr'].forEach(id => {
             const field = document.getElementById(id);
             const wrapper = field && field.closest('.create-form-field');
             if (wrapper) wrapper.style.display = hideTradeFields ? 'none' : '';
-            if (field && id === 'createSymbol') field.required = !hideTradeFields && tfCreateType === 'trade';
+            if (field) {
+                field.disabled = hideTradeFields;
+                if (id === 'createSymbol') field.required = isTradeCard;
+            }
         });
-    }
-
-    function bindCreateLayouts() {
-        document.querySelectorAll('.create-layout-option').forEach(option => {
-            option.addEventListener('click', () => setCreateLayout(option.dataset.layout));
-        });
+        const submit = document.getElementById('createSubmitBtn');
+        if (submit) submit.textContent = selected === 'analysis_card' ? 'Post Analysis' : 'Post';
+        const status = document.getElementById('createFormStatus');
+        if (status) status.textContent = selected === 'analysis_card' ? 'Analysis posts use caption and optional image.' : 'Add your caption and optional media.';
     }
 
     const tfAjaxEndpoint = <?php echo json_encode(admin_url('admin-ajax.php')); ?>;
@@ -4158,17 +4155,12 @@ $home_feed_posts = array_map(static function ($row) {
 
     function openCreateModal(type='post') {
         document.getElementById('createModal').classList.add('active');
-        switchCreateTab(type);
+        setCreateLayout('trade_card');
         setCreateFormStatus('');
     }
     function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
     bindCreateLayouts();
     document.getElementById('createModal').addEventListener('click', e => { if(e.target===document.getElementById('createModal'))closeCreateModal(); });
-    function switchCreateTab(tab) {
-        tfCreateType = tab === 'analysis' ? 'analysis' : 'trade';
-        applyCreateTabUi(tfCreateType);
-        setCreateFormStatus(tfCreateType === 'analysis' ? 'Analysis posts use caption and optional image.' : 'Trade posts use symbol, direction, performance and caption.');
-    }
 
     const createPostForm = document.getElementById('createPostForm');
     if (createPostForm) {
@@ -4205,7 +4197,7 @@ $home_feed_posts = array_map(static function ($row) {
                     renderProfileThumbGrid(tfProfileInitialPosts);
                 }
                 createPostForm.reset();
-                switchCreateTab(tfCreateType);
+                setCreateLayout('trade_card');
                 setCreateFormStatus('Post published successfully.');
                 setTimeout(() => { closeCreateModal(); setCreateFormStatus(''); }, 700);
             } catch (error) {
@@ -4268,7 +4260,6 @@ $home_feed_posts = array_map(static function ($row) {
 
     window.openCreateModal = openCreateModal;
     window.closeCreateModal = closeCreateModal;
-    window.switchCreateTab = switchCreateTab;
     window.openFeedPostModalByIndex = openFeedPostModalByIndex;
     window.closeFeedPostModal = closeFeedPostModal;
     window.showNextFeedPost = showNextFeedPost;
