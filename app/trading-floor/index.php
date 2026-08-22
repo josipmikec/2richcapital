@@ -79,6 +79,46 @@ if (!function_exists('tf_delete_post_media')) {
     wp_send_json(['success' => true, 'post_id' => $post_id, 'action' => 'archive']);
 }
 
+if (!function_exists('tf_normalize_media_url')) {
+    function tf_normalize_media_url($url, $path = '') {
+        $url = trim((string) $url);
+        $path = trim((string) $path);
+        if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
+            return $url;
+        }
+        if ($path !== '') {
+            $uploads = wp_upload_dir();
+            $basedir = wp_normalize_path((string) ($uploads['basedir'] ?? ''));
+            $baseurl = rtrim((string) ($uploads['baseurl'] ?? ''), '/');
+            $normalized_path = wp_normalize_path($path);
+            if ($basedir !== '' && $baseurl !== '' && str_starts_with($normalized_path, rtrim($basedir, '/'))) {
+                return $baseurl . str_replace($basedir, '', $normalized_path);
+            }
+        }
+        return $url;
+    }
+}
+
+if (!function_exists('tf_collect_media_urls')) {
+    function tf_collect_media_urls($row) {
+        $urls = [];
+        $primary = tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? '');
+        if ($primary !== '') $urls[] = $primary;
+        $raw = trim((string) ($row->image_urls ?? $row->media_urls ?? ''));
+        if ($raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $item) {
+                    $candidate = is_array($item) ? ($item['url'] ?? $item['image_url'] ?? '') : $item;
+                    $candidate = tf_normalize_media_url($candidate, is_array($item) ? ($item['path'] ?? $item['image_path'] ?? '') : '');
+                    if ($candidate !== '' && !in_array($candidate, $urls, true)) $urls[] = $candidate;
+                }
+            }
+        }
+        return array_values($urls);
+    }
+}
+
 if (!function_exists('tf_format_social_post')) {
         function tf_format_social_post($row, $fallback_name = 'Trader') {
             $display_name = trim((string) ($row->display_name ?? ''));
@@ -121,45 +161,9 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     $user_id = (int) ($_SESSION['user_id'] ?? 0);
     $post_table = $wpdb->prefix . 'rich_social_posts';
 
-    if (!function_exists('tf_normalize_media_url')) {
-    function tf_normalize_media_url($url, $path = '') {
-        $url = trim((string) $url);
-        $path = trim((string) $path);
-        if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
-            return $url;
-        }
-        if ($path !== '') {
-            $uploads = wp_upload_dir();
-            $basedir = wp_normalize_path((string) ($uploads['basedir'] ?? ''));
-            $baseurl = rtrim((string) ($uploads['baseurl'] ?? ''), '/');
-            $normalized_path = wp_normalize_path($path);
-            if ($basedir !== '' && $baseurl !== '' && str_starts_with($normalized_path, rtrim($basedir, '/'))) {
-                return $baseurl . str_replace($basedir, '', $normalized_path);
-            }
-        }
-        return $url;
-    }
-}
+    
 
-if (!function_exists('tf_collect_media_urls')) {
-    function tf_collect_media_urls($row) {
-        $urls = [];
-        $primary = tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? '');
-        if ($primary !== '') $urls[] = $primary;
-        $raw = trim((string) ($row->image_urls ?? $row->media_urls ?? ''));
-        if ($raw !== '') {
-            $decoded = json_decode($raw, true);
-            if (is_array($decoded)) {
-                foreach ($decoded as $item) {
-                    $candidate = is_array($item) ? ($item['url'] ?? $item['image_url'] ?? '') : $item;
-                    $candidate = tf_normalize_media_url($candidate, is_array($item) ? ($item['path'] ?? $item['image_path'] ?? '') : '');
-                    if ($candidate !== '' && !in_array($candidate, $urls, true)) $urls[] = $candidate;
-                }
-            }
-        }
-        return array_values($urls);
-    }
-}
+
 
 
 
