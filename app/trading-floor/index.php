@@ -1040,11 +1040,6 @@ $home_feed_posts = array_map(static function ($row) {
         .tf-feed-col::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 4px; }
 
         /* Stories */
-        .stories-row-wrap { position:relative; }
-        .stories-row-disabled { opacity:.45; filter:grayscale(.65); }
-        .stories-row-overlay { position:absolute; inset:0; z-index:3; display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 22px; border:1px solid rgba(242,202,80,.2); border-radius:14px; background:rgba(14,14,14,.86); color:#f1f1f1; text-align:center; backdrop-filter:blur(6px); }
-        .stories-row-overlay strong { color:#f2ca50; font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
-        .stories-row-overlay span { color:#9b9b9b; font-size:12px; }
         .stories-row {
             display: flex;
             gap: 16px;
@@ -1853,26 +1848,8 @@ $home_feed_posts = array_map(static function ($row) {
             </div>
             <?php endif; ?>
 
-            <?php
-            $stories_feature_enabled = function_exists('rich_feature_enabled') ? rich_feature_enabled('trading-floor-stories', true, $user_id) : true;
-            $stories_overlay_enabled = false;
-            $stories_overlay_message = 'Stories are temporarily unavailable.';
-            if (isset($wpdb) && function_exists('rich_find_feature_table')) {
-                $stories_table = rich_find_feature_table($wpdb);
-                if ($stories_table) {
-                    $stories_flag = $wpdb->get_row($wpdb->prepare("SELECT is_enabled, is_overlay_enabled, overlay_message FROM {$stories_table} WHERE flag_key = %s LIMIT 1", 'trading-floor-stories'), ARRAY_A);
-                    if (is_array($stories_flag)) {
-                        $stories_feature_enabled = !empty($stories_flag['is_enabled']);
-                        $stories_overlay_enabled = !empty($stories_flag['is_overlay_enabled']);
-                        $stories_overlay_message = (string)(!empty($stories_flag['overlay_message']) ? $stories_flag['overlay_message'] : $stories_overlay_message);
-                    }
-                }
-            }
-            ?>
-            <div class="stories-row-wrap" style="position:relative;">
-                <div class="stories-row<?php echo (!$stories_feature_enabled || $stories_overlay_enabled) ? ' stories-row-disabled' : ''; ?>" aria-disabled="<?php echo (!$stories_feature_enabled || $stories_overlay_enabled) ? 'true' : 'false'; ?>">
-            <?php if ($stories_feature_enabled && !$stories_overlay_enabled): ?>
-
+            <!-- Stories -->
+            <div class="stories-row">
                 <div class="story-item">
                     <div class="story-ring add-story" style="position:relative;">
                         <div class="story-avatar"><?php echo strtoupper(substr($user_name,0,1)); ?></div>
@@ -1903,13 +1880,6 @@ $home_feed_posts = array_map(static function ($row) {
                     <span class="story-name"><?= $s['name'] ?></span>
                 </div>
                 <?php endforeach; ?>
-            <?php else: ?>
-                <div class="stories-row-overlay" role="status">
-                    <strong>Stories unavailable</strong>
-                    <span><?php echo htmlspecialchars($stories_overlay_enabled ? $stories_overlay_message : 'Stories are currently unavailable.'); ?></span>
-                </div>
-            <?php endif; ?>
-                </div>
             </div>
 
             <!-- Posts -->
