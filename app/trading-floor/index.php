@@ -4261,16 +4261,19 @@ $home_feed_posts = array_map(static function ($row) {
         }
         title.textContent = post.author_name || 'Trader';
         meta.textContent = post.created_label || 'Just now';
-        type.textContent = post.post_type === 'analysis' ? 'Analysis' : 'Trade';
+        type.textContent = '';
+        type.style.display = 'none';
+        const isTradePost = String(post.post_type || '').toLowerCase() === 'trade';
         const metricBits = [];
-        if (post.symbol) metricBits.push(`<span>${escapeHtml(post.symbol)}</span>`);
-        if (post.direction) metricBits.push(`<span>${escapeHtml(post.direction)}</span>`);
-        if (post.rr_value) metricBits.push(`<span>R:R ${escapeHtml(post.rr_value)}</span>`);
-        if (post.pnl_value !== null && post.pnl_value !== undefined && post.pnl_value !== '') {
+        if (isTradePost && post.symbol) metricBits.push(`<span>${escapeHtml(post.symbol)}</span>`);
+        if (isTradePost && post.direction) metricBits.push(`<span>${escapeHtml(post.direction)}</span>`);
+        if (isTradePost && post.rr_value) metricBits.push(`<span>R:R ${escapeHtml(post.rr_value)}</span>`);
+        if (isTradePost && post.pnl_value !== null && post.pnl_value !== undefined && post.pnl_value !== '') {
             const numeric = Number(post.pnl_value);
             if (!Number.isNaN(numeric)) metricBits.push(`<span>${numeric > 0 ? '+' : ''}${numeric.toFixed(2)}%</span>`);
         }
-        metrics.innerHTML = metricBits.length ? metricBits.join('') : '<span>No trade metrics</span>';
+        metrics.style.display = metricBits.length ? 'flex' : 'none';
+        metrics.innerHTML = metricBits.join('');
         const rawCaption = String(post.caption || '');
         const visibleCaption = rawCaption.replace(/(^|\s)#[A-Za-z0-9_]+(?=\s|$)/g, '$1').replace(/[ \t]{2,}/g, ' ').trim();
         caption.textContent = visibleCaption;
