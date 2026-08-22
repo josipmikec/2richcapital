@@ -2073,6 +2073,11 @@ $home_feed_posts = array_map(static function ($row) {
                         <textarea class="create-form-textarea" id="createCaption" name="caption" placeholder="Share your analysis, entry logic, lessons learned..." required></textarea>
                     </div>
                     <div class="create-form-field">
+                        <label class="create-form-label" for="createTags">Tags</label>
+                        <input type="text" class="create-form-input" id="createTags" name="tags" placeholder="#XAUUSD #SmartMoney #NYSession">
+                        <div style="margin-top:6px;font-size:11px;color:#7b8088;">Add tags separated by spaces or commas.</div>
+                    </div>
+                    <div class="create-form-field">
                         <label class="create-form-label">Photos or Videos (optional)</label>
                         <input type="file" class="create-form-input" id="createImages" name="images[]" accept="image/*,video/mp4,video/webm,video/quicktime" multiple style="padding:8px 14px;cursor:pointer;">
                         <div style="margin-top:6px;font-size:11px;color:#7b8088;">Select one file for a normal post or multiple files to create a carousel.</div>
@@ -3970,13 +3975,15 @@ $home_feed_posts = array_map(static function ($row) {
         const direction = escapeHtml(post.direction || '');
         const rr = escapeHtml(post.rr_value || '');
         const time = escapeHtml(post.created_label || 'Just now');
-        const media = renderPostMedia(post, compact);
+        const rawTags = Array.isArray(post.tags) ? post.tags : String(post.tags || '').split(/[\s,]+/);
+        const tags = rawTags.map(tag => String(tag).trim().replace(/^#+/, '')).filter(Boolean).slice(0, 8);
+        const tagsMarkup = tags.length ? `<div class="group-feed-tags">${tags.map(tag => `<span class="group-feed-tag">#${escapeHtml(tag)}</span>`).join('')}</div>` : '';
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
         let content = '';
         if (layout === 'trade_card') {
-            content = `<div class="post-trade-card social-trade-variant">${tradeCardMarkup(post)}</div>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}`;
+            content = `<div class="post-trade-card social-trade-variant">${tradeCardMarkup(post)}</div>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${tagsMarkup}${media}`;
         } else if (layout === 'analysis_card') {
             content = `<div class="social-layout-analysis"><div class="social-layout-kicker">Market analysis</div>${symbol ? `<div class="social-layout-symbol">${symbol}${direction ? ` · ${direction}` : ''}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}</div>`;
         } else if (layout === 'image') {
