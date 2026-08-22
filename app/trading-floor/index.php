@@ -3861,20 +3861,22 @@ $home_feed_posts = array_map(static function ($row) {
     let tfCreateType = 'trade';
     let tfSubmittingPost = false;
 
-    console.log('[TradingFloorLayouts] boot home feed', (tfFeedInitialPosts || []).map(post => ({
-        id: post && post.id,
-        post_type: post && post.post_type,
-        layout_style: post && post.layout_style,
-        normalized: normalizePostLayout(post).layout_style,
-        has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
-    })));
-    console.log('[TradingFloorLayouts] boot profile feed', (tfProfileInitialPosts || []).map(post => ({
-        id: post && post.id,
-        post_type: post && post.post_type,
-        layout_style: post && post.layout_style,
-        normalized: normalizePostLayout(post).layout_style,
-        has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
-    })));
+    setTimeout(() => {
+        console.log('[TradingFloorLayouts] boot home feed full', JSON.stringify((tfFeedInitialPosts || []).map(post => ({
+            id: post && post.id,
+            post_type: post && post.post_type,
+            layout_style: post && post.layout_style,
+            normalized: normalizePostLayout(post).layout_style,
+            has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
+        })), null, 2));
+        console.log('[TradingFloorLayouts] boot profile feed full', JSON.stringify((tfProfileInitialPosts || []).map(post => ({
+            id: post && post.id,
+            post_type: post && post.post_type,
+            layout_style: post && post.layout_style,
+            normalized: normalizePostLayout(post).layout_style,
+            has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
+        })), null, 2));
+    }, 0);
 
     function escapeHtml(value) {
         return String(value == null ? '' : value)
