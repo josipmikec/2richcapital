@@ -1268,6 +1268,7 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-media img, .feed-post-media video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
         .feed-post-side { display:flex; flex-direction:column; min-height:0; }
         .feed-post-head { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 20px; border-bottom:1px solid #1e1e1e; }
+        .feed-post-head-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
         .feed-post-author { display:flex; align-items:center; gap:12px; min-width:0; }
         .feed-post-avatar { width:42px; height:42px; border-radius:50%; background:#202020; object-fit:cover; }
         .feed-post-author-name { font-size:14px; font-weight:700; color:#f5f5f5; }
@@ -2150,15 +2151,7 @@ $home_feed_posts = array_map(static function ($row) {
                             <div class="feed-post-author-meta" id="feedPostModalMeta">Just now</div>
                         </div>
                     </div>
-                    <button class="modal-close-btn" type="button" onclick="closeFeedPostModal()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-                <div class="feed-post-body">
-                    <div class="feed-post-type-row">
-                        <div class="feed-post-type" id="feedPostModalType">Trade</div>
+                    <div class="feed-post-head-actions">
                         <div class="social-post-menu-wrap" id="feedPostModalMenuWrap" hidden>
                             <button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button>
                             <div class="social-post-menu" hidden>
@@ -2166,6 +2159,16 @@ $home_feed_posts = array_map(static function ($row) {
                                 <button type="button" class="danger" id="feedPostModalDeleteBtn">Delete permanently</button>
                             </div>
                         </div>
+                        <button class="modal-close-btn" type="button" onclick="closeFeedPostModal()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="feed-post-body">
+                    <div class="feed-post-type-row">
+                        <div class="feed-post-type" id="feedPostModalType">Trade</div>
                     </div>
                     <div class="feed-post-metrics" id="feedPostModalMetrics"></div>
                     <div class="feed-post-caption" id="feedPostModalCaption"></div>
