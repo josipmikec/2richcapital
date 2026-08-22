@@ -181,6 +181,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     if (!in_array($layout_style, $allowed_layouts, true)) {
         $layout_style = $post_type === 'trade' ? 'trade_card' : 'analysis_card';
     }
+    error_log('[TradingFloorLayouts] submit post_type=' . $post_type . ' layout_style=' . $layout_style . ' raw_layout=' . (string) ($_POST['layout_style'] ?? ''));
 
 
     $caption = trim(wp_kses_post($_POST['caption'] ?? ''));
@@ -263,6 +264,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         $post_data['layout_style'] = $layout_style;
         $post_formats[] = '%s';
     }
+    error_log('[TradingFloorLayouts] insert columns=' . implode(',', array_keys($post_data)) . ' layout_style_column_exists=' . ($layout_style_column_exists ? '1' : '0'));
     $inserted = $wpdb->insert($post_table, $post_data, $post_formats);
 
     if (!$inserted) {
@@ -352,7 +354,12 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$social_table} (id BIGINT UNSIGNED NOT
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$post_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, user_id BIGINT UNSIGNED NOT NULL, post_type VARCHAR(24) NOT NULL DEFAULT 'trade', symbol VARCHAR(32) NULL, direction VARCHAR(16) NULL, pnl_value DECIMAL(10,2) NULL, rr_value VARCHAR(32) NULL, caption TEXT NULL, image_url TEXT NULL, image_path TEXT NULL, image_urls LONGTEXT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY user_created_idx (user_id, created_at), KEY created_idx (created_at), KEY post_type_idx (post_type)) {$wpdb->get_charset_collate()}");
 $layout_style_column_exists = (bool) $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$post_table} LIKE %s", 'layout_style'));
 if (!$layout_style_column_exists) {
-    $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN layout_style VARCHAR(32) NOT NULL DEFAULT 'text'");
+    $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN layout_style VARCHAR(32) NOT NULL DEFAULT 'trade_card'");
+    $layout_style_column_exists = true;
+}
+
+if ($layout_style_column_exists) {
+    $wpdb->query("UPDATE {$post_table} SET layout_style = CASE WHEN post_type = 'analysis' THEN 'analysis_card' ELSE 'trade_card' END WHERE layout_style IS NULL OR layout_style = '' OR layout_style = 'text'");
 }
 
 $profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
@@ -4215,7 +4222,17 @@ $home_feed_posts = array_map(static function ($row) {
             if (tfSubmittingPost) return;
             const submitBtn = document.getElementById('createSubmitBtn');
             const payload = new FormData(createPostForm);
-            payload.append('post_type', tfCreateType);
+            console.log('[TradingFloorLayouts] submit payload', {
+                post_type_before_append: payload.get('post_type'),
+                layout_style: payload.get('layout_style'),
+                caption: payload.get('caption'),
+                symbol: payload.get('symbol')
+            });
+            payload.set('post_type', tfCreateType);
+            console.log('[TradingFloorLayouts] submit effective', {
+                post_type: payload.get('post_type'),
+                layout_style: payload.get('layout_style')
+            });
             tfSubmittingPost = true;
             if (submitBtn) submitBtn.disabled = true;
             setCreateFormStatus('Publishing post...');
