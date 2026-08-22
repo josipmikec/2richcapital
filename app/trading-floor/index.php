@@ -4117,7 +4117,14 @@ $home_feed_posts = array_map(static function ($row) {
             host.innerHTML = '<div class="group-feed-card" style="grid-column:1/-1;"><div class="group-feed-body">No posts published yet.</div></div>';
             return;
         }
-        host.innerHTML = posts.map(post => renderSocialPostCard(post, false)).join('');
+        host.innerHTML = posts.map((post, index) => renderSocialPostCard({ ...post, feed_index: index }, false)).join('');
+        host.querySelectorAll('.group-feed-card').forEach(card => {
+            card.addEventListener('click', event => {
+                if (event.target.closest('button, a, input, textarea, select, [data-stop-post-open]')) return;
+                const index = Number(card.dataset.feedIndex);
+                if (Number.isInteger(index)) openFeedPostModalByIndex(index);
+            });
+        });
     }
 
     let tfFeedModalIndex = -1;
