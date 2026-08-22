@@ -1301,7 +1301,7 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-action-bar { display:flex; align-items:center; gap:18px; padding:14px 0; border-top:1px solid rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.06); }
         .feed-post-comments { display:flex; flex-direction:column; gap:12px; min-height:0; flex:1; }
         .feed-post-comments-title { color:#f2ca50; font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
-        .feed-post-comments-list { display:flex; flex-direction:column; gap:10px; min-height:90px; max-height:220px; overflow:auto; }
+        .feed-post-comments-list { display:flex; flex-direction:column; gap:10px; min-height:0; flex:1; max-height:220px; overflow:auto; }
         .feed-post-comments-empty { color:#8e949f; font-size:13px; }
         .feed-post-comment { padding:10px 12px; border:1px solid rgba(255,255,255,.05); border-radius:12px; background:rgba(255,255,255,.03); }
         .feed-post-comment-author { color:#f5f5f5; font-size:12px; font-weight:700; margin-bottom:4px; }
