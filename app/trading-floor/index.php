@@ -3936,8 +3936,25 @@ $home_feed_posts = array_map(static function ($row) {
         setPostCarouselSlide(button.closest('.social-post-media'), index);
     }
 
+    function layoutLabel(post) {
+        const layout = post && post.layout_style;
+        return ({trade_card:'Trade', analysis_card:'Analysis', image:'Image', text:'Text'})[layout] || (post && post.post_type === 'analysis' ? 'Analysis' : 'Trade');
+    }
+
+    function tradeCardMarkup(post) {
+        const symbol = escapeHtml(post.symbol || 'TRADE');
+        const direction = escapeHtml(post.direction || '');
+        const pnl = formatPnlBadge(post);
+        const rr = escapeHtml(post.rr_value || '');
+        const entry = escapeHtml(post.entry_price || post.entry || '—');
+        const exit = escapeHtml(post.exit_price || post.exit || '—');
+        const session = escapeHtml(post.session || '—');
+        return `<div class="trade-card-header"><span class="trade-symbol">${symbol}</span><div class="trade-direction ${direction.toLowerCase()}"><span class="trade-direction-dot"></span>${direction}</div><span class="trade-pnl-badge">${pnl}</span></div><div class="trade-stats-row"><div class="trade-stat"><div class="trade-stat-label">Entry</div><div class="trade-stat-value">${entry}</div></div><div class="trade-stat"><div class="trade-stat-label">Exit</div><div class="trade-stat-value">${exit}</div></div><div class="trade-stat"><div class="trade-stat-label">R:R</div><div class="trade-stat-value">${rr || '—'}</div></div><div class="trade-stat"><div class="trade-stat-label">Session</div><div class="trade-stat-value">${session}</div></div></div><div class="trade-chart-area"><canvas class="mini-chart" data-win="1" data-dir="${direction.toLowerCase()}"></canvas><span class="trade-chart-label">Price Action</span></div>`;
+    }
+
     function renderSocialPostCard(post, compact = false) {
-        const typeLabel = post.post_type === 'analysis' ? 'Analysis' : 'Trade';
+        const layout = ['trade_card','analysis_card','image','text'].includes(post.layout_style) ? post.layout_style : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
+        const typeLabel = layoutLabel(post);
         const author = escapeHtml(post.author_name || 'Trader');
         const caption = escapeHtml(post.caption || '');
         const symbol = escapeHtml(post.symbol || '');
@@ -3945,13 +3962,12 @@ $home_feed_posts = array_map(static function ($row) {
         const rr = escapeHtml(post.rr_value || '');
         const time = escapeHtml(post.created_label || 'Just now');
         const media = renderPostMedia(post, compact);
-        const layout = ['trade_card','analysis_card','image','text'].includes(post.layout_style) ? post.layout_style : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
         let content = '';
         if (layout === 'trade_card') {
-            content = `${metaBits ? `<div class="group-feed-body social-layout-trade-meta">${metaBits}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}`;
+            content = `<div class="post-trade-card social-trade-variant">${tradeCardMarkup(post)}</div>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}`;
         } else if (layout === 'analysis_card') {
             content = `<div class="social-layout-analysis"><div class="social-layout-kicker">Market analysis</div>${symbol ? `<div class="social-layout-symbol">${symbol}${direction ? ` · ${direction}` : ''}</div>` : ''}${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${media}</div>`;
         } else if (layout === 'image') {
