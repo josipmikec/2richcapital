@@ -1259,13 +1259,15 @@ $home_feed_posts = array_map(static function ($row) {
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
-        .feed-post-modal { background:#151515; border:1px solid #1e1e1e; border-radius:20px; width:min(1080px, 94vw); max-height:88vh; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5); display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(320px, 420px); position:relative; }
+        .feed-post-modal { background:#151515; border:1px solid #1e1e1e; border-radius:20px; width:min(1080px, 94vw); height:min(88vh, 760px); max-height:88vh; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5); display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(320px, 420px); position:relative; }
         .feed-post-nav { position:fixed; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); background:rgba(8,8,8,0.82); color:#f5f5f5; display:flex; align-items:center; justify-content:center; z-index:13010; backdrop-filter:blur(10px); box-shadow:0 18px 40px rgba(0,0,0,0.35); }
         .feed-post-nav.prev { left:24px; }
         .feed-post-nav.next { right:24px; }
         .feed-post-counter { position:absolute; top:16px; left:16px; z-index:2; padding:7px 11px; border-radius:999px; background:rgba(8,8,8,0.78); border:1px solid rgba(255,255,255,0.08); color:#f5f5f5; font-size:12px; font-weight:700; letter-spacing:0.04em; }
-        .feed-post-media { background:#0f0f10; min-height:420px; display:flex; align-items:center; justify-content:center; }
-        .feed-post-media img, .feed-post-media video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
+        .feed-post-media { background:#0f0f10; min-height:0; height:100%; max-height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+        .feed-post-media img, .feed-post-media video { display:block; width:100%; height:100%; max-width:100%; max-height:100%; object-fit:contain; background:#0f0f10; }
+        .feed-post-media .social-post-media { width:100%; height:100%; min-height:0; max-height:100%; overflow:hidden; }
+        .feed-post-media .social-post-media-slide { width:100%; height:100%; min-height:0; }
         .feed-post-media .modal-trade-preview { width:100%; height:100%; margin:0; border-radius:0; display:flex; flex-direction:column; }
         .feed-post-media .modal-trade-preview .trade-card-header { padding:24px 28px 18px; }
         .feed-post-media .modal-trade-preview .trade-stats-row { flex:0 0 auto; }
@@ -1284,7 +1286,7 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-post-thumb.trade-thumb-preview .trade-stat-value { font-size:11px; }
         .profile-post-thumb.trade-thumb-preview .trade-chart-area { flex:1; min-height:120px; height:auto; }
         .profile-post-thumb.trade-thumb-preview .trade-chart-label { font-size:7px; right:8px; bottom:8px; }
-        .feed-post-side { display:flex; flex-direction:column; min-height:0; }
+        .feed-post-side { display:flex; flex-direction:column; min-height:0; height:100%; overflow:hidden; }
         .feed-post-head { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 20px; border-bottom:1px solid #1e1e1e; }
         .feed-post-head-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
         .feed-post-author { display:flex; align-items:center; gap:12px; min-width:0; }
@@ -1314,7 +1316,7 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-comment-submit:hover { transform:translateY(-1px); background:#f6d774; border-color:#f6d774; }
         .feed-post-comment-submit:focus-visible { outline:2px solid #F2CA50; outline-offset:2px; }
         .profile-post-thumb { cursor:pointer; }
-        @media (max-width: 900px) { .feed-post-modal { grid-template-columns:1fr; width:min(96vw, 720px); } .feed-post-media { min-height:280px; max-height:52vh; } }
+        @media (max-width: 900px) { .feed-post-modal { grid-template-columns:1fr; width:min(96vw, 720px); height:min(92vh, 900px); } .feed-post-media { min-height:280px; max-height:52vh; height:52vh; } }
         .create-modal { background: #151515; border: 1px solid #1e1e1e; border-radius: 16px; width: 540px; max-height: 85vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
         .create-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #1e1e1e; }
         .create-modal-title { font-size: 14px; font-weight: 700; color: #e0e0e0; letter-spacing: 0.04em; text-transform: uppercase; }
