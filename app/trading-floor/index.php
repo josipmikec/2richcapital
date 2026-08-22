@@ -1536,7 +1536,7 @@ $home_feed_posts = array_map(static function ($row) {
             </a>
             <a class="tf-left-link" title="Notifications"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Notifications</span></a>
             <a class="tf-left-link" onclick="document.getElementById('dmPanel').classList.add('open')" title="Messages"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messages</span></a>
-            <a class="tf-left-link" title="Saved"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Saved</span></a>
+            <a class="tf-left-link" onclick="openProfileSavedTab(); return false;" title="Saved"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Saved</span></a>
             <a class="tf-left-link" data-floor-nav="profile" onclick="openFloorSection('profile')" title="Profile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
         </aside>
         <!-- Search Overlay -->
@@ -2378,6 +2378,19 @@ $home_feed_posts = array_map(static function ($row) {
             }
         });
     });
+
+    function openProfileSavedTab() {
+        openFloorSection('profile');
+        const savedTab = document.querySelector('[data-profile-tab="saved"]');
+        if (savedTab) {
+            savedTab.click();
+            return;
+        }
+        document.querySelectorAll('[data-profile-tab]').forEach((tab) => tab.classList.remove('active'));
+        document.querySelectorAll('[data-profile-panel]').forEach((panel) => panel.classList.remove('active'));
+        const savedPanel = document.querySelector('[data-profile-panel="saved"]');
+        if (savedPanel) savedPanel.classList.add('active');
+    }
 
     function openFloorSection(section) {
         const app = document.querySelector('.dashboard-container');
