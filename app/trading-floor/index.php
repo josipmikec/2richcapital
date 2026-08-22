@@ -680,8 +680,9 @@ $home_feed_posts = array_map(static function ($row) {
         .group-pinned-header { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #f2ca50; font-weight: 800; margin: 4px 0 0; }
         .group-feed-card { background: rgba(20,20,20,0.9); border: 1px solid rgba(242,202,80,0.12); border-radius: 18px; padding: 15px 16px; box-shadow: 0 12px 26px rgba(0,0,0,0.18); }
         .group-feed-card.joined { border-color: rgba(242,202,80,0.28); background: linear-gradient(180deg, rgba(242,202,80,0.08), rgba(20,20,20,0.94)); }
-        .group-feed-top, .group-feed-body, .group-feed-actions { width:100%; max-width:none; }
         .group-feed-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .group-feed-title { font-size: 20px; line-height: 1.12; font-weight: 800; color: #f5f5f5; letter-spacing: -0.02em; }
+        .group-feed-meta { margin-top: 5px; font-size: 12px; color: #a8a8a8; letter-spacing: 0.01em; }
         .group-feed-body { margin-top: 10px; font-size: 13px; line-height: 1.55; color: #d3d3d3; }
         .group-joined-pill { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; background: rgba(242,202,80,0.14); border: 1px solid rgba(242,202,80,0.3); color: #f2ca50; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
         .group-feed-actions { display:flex; align-items:center; gap:20px; margin-top:14px; padding:14px 2px 0; border-top:1px solid rgba(255,255,255,.045); }
