@@ -1863,8 +1863,7 @@ $home_feed_posts = array_map(static function ($row) {
             <!-- Posts -->
             <div class="group-feed-stack" id="homeFeedPosts"></div>
 
-            <?php endif; ?>
-                    <div class="post-avatar" style="background:linear-gradient(135deg,<?= $p['color'] ?>,<?= $p['color'] ?>99);"><?= $p['init'] ?></div>
+            <!-- Feed content is rendered from database-backed posts by JavaScript. -->
                     <div class="post-meta">
                         <div class="post-author"><?= $p['author'] ?></div>
                         <div class="post-subtitle"><?= $p['badge'] ?></div>
@@ -1930,7 +1929,6 @@ $home_feed_posts = array_map(static function ($row) {
                     </button>
                 </div>
             </div>
-            <?php endforeach; ?>
 
         </main>
 
