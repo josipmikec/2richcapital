@@ -147,7 +147,7 @@ if (!function_exists('tf_format_social_post')) {
                 'author_name' => $display_name,
                 'author_avatar' => $avatar_url ?: '',
                 'post_type' => sanitize_key($row->post_type ?? 'trade'),
-                'layout_style' => sanitize_key($row->layout_style ?? 'text'),
+                'layout_style' => sanitize_key($row->layout_style ?? ($row->post_type === 'trade' ? 'trade_card' : 'analysis_card')),
                 'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
@@ -3968,7 +3968,7 @@ $home_feed_posts = array_map(static function ($row) {
 
     function renderSocialPostCard(post, compact = false) {
         const selectedLayout = String(post.layout_style || '').toLowerCase();
-        const layout = ['trade_card','analysis_card','image','text'].includes(selectedLayout) ? selectedLayout : 'text';
+        const layout = ['trade_card','analysis_card','image','text'].includes(selectedLayout) ? selectedLayout : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
         const typeLabel = layoutLabel(post);
         const author = escapeHtml(post.author_name || 'Trader');
         const caption = escapeHtml(post.caption || '');
