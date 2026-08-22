@@ -143,7 +143,7 @@ if (!function_exists('tf_format_social_post')) {
                 'author_name' => $display_name,
                 'author_avatar' => $avatar_url ?: '',
                 'post_type' => sanitize_key($row->post_type ?? 'trade'),
-                'layout_style' => sanitize_key($row->layout_style ?? ($row->post_type === 'trade' ? 'trade_card' : 'analysis_card')),
+                'layout_style' => sanitize_key((isset($row->layout_style) && trim((string) $row->layout_style) !== '') ? $row->layout_style : ($row->post_type === 'analysis' ? 'analysis_card' : 'trade_card')),
                 'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
@@ -176,7 +176,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         $post_type = 'trade';
     }
 
-    $layout_style = sanitize_key($_POST['layout_style'] ?? 'text');
+    $layout_style = sanitize_key($_POST['layout_style'] ?? ($post_type === 'trade' ? 'trade_card' : 'analysis_card'));
     $allowed_layouts = ['trade_card', 'analysis_card', 'image', 'text'];
     if (!in_array($layout_style, $allowed_layouts, true)) {
         $layout_style = $post_type === 'trade' ? 'trade_card' : 'analysis_card';
