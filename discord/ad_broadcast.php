@@ -5,10 +5,9 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // 2Rich Ad Broadcaster — Standalone
-// Sends one promotional image embed to a Discord channel every 3 hours
+// Sends one promotional GIF embed to a Discord channel every 3 hours
 // Cron: 0 */3 * * * /usr/local/bin/php /home/richcapit/domains/2rich.capital/public_html/discord/ad_broadcast.php
 
-// ── Security: block browser access ────────────────────────────────────────────
 if (php_sapi_name() !== 'cli') {
     http_response_code(403);
     exit('Forbidden');
@@ -22,7 +21,6 @@ define('SITE_URL',            'https://2rich.capital');
 define('DISCORD_DIR',         '/home/richcapit/domains/2rich.capital/public_html/discord');
 define('LOG_FILE',            DISCORD_DIR . '/cron_test.log');
 
-// Shared filesystem paths, not sys_get_temp_dir()
 $lockDir   = DISCORD_DIR . '/.ad_broadcast.lock';
 $pidFile   = $lockDir . '/pid';
 $stateFile = DISCORD_DIR . '/.ad_broadcast_state.json';
@@ -78,47 +76,20 @@ register_shutdown_function(function () use ($lockDir, $pidFile) {
     release_lock($lockDir, $pidFile);
 });
 
-// ── Ad definitions ────────────────────────────────────────────────────────────
-$ads = [
-    [
-        'image' => 'https://2rich.capital/discord/img/LIVE_NEWS_ACCESS_3.jpg',
-        'title' => 'Get Free Live News Feed Widget Here',
-        'url'   => SITE_URL,
-    ],
-    [
-        'image' => 'https://2rich.capital/discord/img/LIVE_FEED_ACCESS.jpg',
-        'title' => 'Free Pop-Out News Widget',
-        'url'   => SITE_URL,
-    ],
+// ── Freeze time once per run ──────────────────────────────────────────────────
+$nowTs  = time();
+$dayKey = date('Y-m-d', $nowTs);
+$hour   = (int) date('G', $nowTs);
+$window = (int) floor($hour / 3);
+
+// ── Single GIF ad ─────────────────────────────────────────────────────────────
+$ad = [
+    'image' => 'https://2rich.capital/discord/img/0810.gif',
+    'title' => 'https://2rich.capital',
+    'url'   => SITE_URL,
 ];
 
-// ── Optional CLI test override: --ad=0 or --ad=1 ─────────────────────────────
-$forcedAd = null;
-
-if (!empty($argv)) {
-    foreach ($argv as $arg) {
-        if (strpos($arg, '--ad=') === 0) {
-            $forcedAd = (int) substr($arg, 5);
-        }
-    }
-}
-
-// ── Freeze time once per run so selection can't drift mid-execution ───────────
-$nowTs   = time();
-$hour    = (int) date('G', $nowTs);
-$dayKey  = date('Y-m-d', $nowTs);
-$window  = (int) floor($hour / 3);
-
-// ── Rotate ads every 3 hours ──────────────────────────────────────────────────
-if ($forcedAd !== null) {
-    $block = $forcedAd % count($ads);
-} else {
-    $block = $window % count($ads);
-}
-
-$ad = $ads[$block];
-
-// ── Idempotency guard: same ad + same 3h window + short retry shield ─────────
+// ── Idempotency guard ─────────────────────────────────────────────────────────
 $currentKey = hash(
     'sha256',
     $ad['title'] . '|' .
@@ -143,7 +114,7 @@ if (
     ($nowTs - (int) $previousState['time']) < $stateTtl
 ) {
     echo "[SKIP] Duplicate send prevented.\n";
-    log_line('SKIP | PID ' . getmypid() . ' | Duplicate prevented | ' . $ad['title']);
+    log_line('SKIP | PID ' . getmypid() . ' | Duplicate prevented | GIF ad');
     exit(0);
 }
 
@@ -171,7 +142,7 @@ if ($payload === false) {
 log_line(
     'START | PID ' . getmypid() .
     ' | Window ' . $dayKey . ' #' . $window .
-    ' | Ad: ' . $ad['title']
+    ' | GIF ad'
 );
 
 // ── Send via file_get_contents ────────────────────────────────────────────────
@@ -201,9 +172,8 @@ if (!empty($http_response_header)) {
     $httpCode = isset($matches[1]) ? (int) $matches[1] : 0;
 }
 
-// ── Result ────────────────────────────────────────────────────────────────────
 if ($httpCode === 204) {
-    echo '[OK] Ad sent: ' . $ad['title'] . "\n";
+    echo '[OK] GIF ad sent' . "\n";
     echo '[INFO] Image: ' . $ad['image'] . "\n";
 
     @file_put_contents(
@@ -219,7 +189,7 @@ if ($httpCode === 204) {
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
     );
 
-    log_line('OK | PID ' . getmypid() . ' | ' . $ad['title']);
+    log_line('OK | PID ' . getmypid() . ' | GIF ad sent');
     exit(0);
 }
 
