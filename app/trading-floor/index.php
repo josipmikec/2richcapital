@@ -1367,9 +1367,11 @@ $home_feed_posts = array_map(static function ($row) {
         .dm-panel.is-back .dm-panel-header svg:last-child { opacity:.7; }
         .dm-panel.is-collapsed { width:220px !important; transform:translateY(calc(100% - 48px)) !important; }
         .dm-panel.is-collapsed.is-front { right:0; z-index:202; }
-        .dm-panel.is-collapsed.is-back { right:36px; z-index:201; }
+        .dm-panel.is-collapsed.is-back { right:36px; z-index:201; transform:translateY(calc(100% - 96px)) !important; }
         .dm-panel.is-collapsed .dm-list,
         .dm-panel.is-collapsed .dm-compose-row { display:none; }
+        .dm-stack.all-collapsed .dm-panel.is-collapsed.is-front { right:0; }
+        .dm-stack.all-collapsed .dm-panel.is-collapsed.is-back { right:0; transform:translateY(calc(100% - 96px)) !important; }
         .notifications-panel { background:#121212; }
         .notifications-panel .dm-panel-title { color:#d9d9d9; }
         .notifications-panel .dm-list { max-height:260px; }
@@ -3936,11 +3938,19 @@ $home_feed_posts = array_map(static function ($row) {
         const panel = document.getElementById(panelId);
         const otherId = panelId === 'dmPanel' ? 'notificationsPanel' : 'dmPanel';
         const other = document.getElementById(otherId);
+        const stack = document.getElementById('dmStack');
         if (!panel || !other) return;
         panel.classList.remove('is-front', 'is-back');
         panel.classList.add('is-collapsed', 'is-back');
+        if (other.classList.contains('is-collapsed')) {
+            other.classList.remove('is-front', 'is-back');
+            other.classList.add('is-collapsed', 'is-front');
+            if (stack) stack.classList.add('all-collapsed');
+            return;
+        }
         other.classList.remove('is-collapsed', 'is-back');
         other.classList.add('is-front');
+        if (stack) stack.classList.remove('all-collapsed');
     }
 
     function toggleDM() {
