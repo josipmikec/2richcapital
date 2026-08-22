@@ -1287,9 +1287,13 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-comment { padding:10px 12px; border:1px solid rgba(255,255,255,.05); border-radius:12px; background:rgba(255,255,255,.03); }
         .feed-post-comment-author { color:#f5f5f5; font-size:12px; font-weight:700; margin-bottom:4px; }
         .feed-post-comment-body { color:#cfcfcf; font-size:13px; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
-        .feed-post-comment-form { display:flex; flex-direction:column; gap:10px; margin-top:auto; }
-        .feed-post-comment-input { width:100%; min-height:70px; resize:vertical; border:1px solid rgba(255,255,255,.08); border-radius:12px; background:#0d0e10; color:#f2f4f7; padding:11px 12px; font:inherit; }
+        .feed-post-comment-form { display:flex; align-items:center; gap:10px; margin-top:auto; }
+        .feed-post-comment-input { flex:1; min-width:0; height:42px; min-height:42px; max-height:42px; resize:none; border:1px solid rgba(255,255,255,.08); border-radius:999px; background:#0d0e10; color:#f2f4f7; padding:0 16px; font:inherit; line-height:42px; }
+        .feed-post-comment-input::placeholder { color:#8f949d; }
         .feed-post-comment-input:focus-visible { outline:2px solid #F2CA50; outline-offset:2px; }
+        .feed-post-comment-submit { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; min-width:42px; width:42px; height:42px; border-radius:999px; padding:0; background:#f2ca50; border:1px solid #f2ca50; color:#111; box-shadow:0 8px 18px rgba(242,202,80,.18); transition:transform .18s ease, background .18s ease, border-color .18s ease; }
+        .feed-post-comment-submit:hover { transform:translateY(-1px); background:#f6d774; border-color:#f6d774; }
+        .feed-post-comment-submit:focus-visible { outline:2px solid #F2CA50; outline-offset:2px; }
         .profile-post-thumb { cursor:pointer; }
         @media (max-width: 900px) { .feed-post-modal { grid-template-columns:1fr; width:min(96vw, 720px); } .feed-post-media { min-height:280px; max-height:52vh; } }
         .create-modal { background: #151515; border: 1px solid #1e1e1e; border-radius: 16px; width: 540px; max-height: 85vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
@@ -2177,8 +2181,10 @@ $home_feed_posts = array_map(static function ($row) {
                         <div class="feed-post-comments-title">Comments</div>
                         <div class="feed-post-comments-list" id="feedPostModalCommentsList"></div>
                         <form class="feed-post-comment-form" id="feedPostModalCommentForm">
-                            <textarea id="feedPostModalCommentInput" class="feed-post-comment-input" rows="3" placeholder="Write a comment..."></textarea>
-                            <button type="submit" class="group-feed-btn primary">Post comment</button>
+                            <textarea id="feedPostModalCommentInput" class="feed-post-comment-input" rows="1" placeholder="Write a comment..."></textarea>
+                            <button type="submit" class="feed-post-comment-submit" aria-label="Post comment">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
                         </form>
                     </div>
                 </div>
