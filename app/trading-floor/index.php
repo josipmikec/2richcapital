@@ -3967,7 +3967,8 @@ $home_feed_posts = array_map(static function ($row) {
     }
 
     function renderSocialPostCard(post, compact = false) {
-        const layout = ['trade_card','analysis_card','image','text'].includes(post.layout_style) ? post.layout_style : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
+        const selectedLayout = String(post.layout_style || '').toLowerCase();
+        const layout = ['trade_card','analysis_card','image','text'].includes(selectedLayout) ? selectedLayout : 'text';
         const typeLabel = layoutLabel(post);
         const author = escapeHtml(post.author_name || 'Trader');
         const caption = escapeHtml(post.caption || '');
