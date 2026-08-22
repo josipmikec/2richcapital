@@ -142,8 +142,8 @@ if (!function_exists('tf_format_social_post')) {
                 'user_id' => (int) ($row->user_id ?? 0),
                 'author_name' => $display_name,
                 'author_avatar' => $avatar_url ?: '',
-                'post_type' => sanitize_key($row->post_type ?? 'trade'),
-                'layout_style' => sanitize_key((isset($row->layout_style) && trim((string) $row->layout_style) !== '') ? $row->layout_style : ($row->post_type === 'analysis' ? 'analysis_card' : 'trade_card')),
+                'post_type' => sanitize_key($row->post_type ?? 'trade_card'),
+                'layout_style' => sanitize_key((isset($row->layout_style) && trim((string) $row->layout_style) !== '') ? $row->layout_style : (in_array(sanitize_key($row->post_type ?? ''), ['trade_card','analysis_card','image','text'], true) ? sanitize_key($row->post_type) : 'trade_card')),
                 'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
@@ -171,16 +171,17 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         wp_send_json(['success' => false, 'message' => 'You must be logged in to post.']);
     }
 
-    $post_type = sanitize_key($_POST['post_type'] ?? 'trade');
-    if (!in_array($post_type, ['trade', 'analysis'], true)) {
-        $post_type = 'trade';
+    $post_type = sanitize_key($_POST['post_type'] ?? '');
+    $allowed_layouts = ['trade_card', 'analysis_card', 'image', 'text'];
+    if (in_array($post_type, $allowed_layouts, true) && empty($_POST['layout_style'])) {
+        $_POST['layout_style'] = $post_type;
     }
 
-    $layout_style = sanitize_key($_POST['layout_style'] ?? ($post_type === 'trade' ? 'trade_card' : 'analysis_card'));
-    $allowed_layouts = ['trade_card', 'analysis_card', 'image', 'text'];
+    $layout_style = sanitize_key($_POST['layout_style'] ?? '');
     if (!in_array($layout_style, $allowed_layouts, true)) {
-        $layout_style = $post_type === 'trade' ? 'trade_card' : 'analysis_card';
+        $layout_style = in_array($post_type, $allowed_layouts, true) ? $post_type : 'trade_card';
     }
+    $post_type = $layout_style;
     error_log('[TradingFloorLayouts] submit post_type=' . $post_type . ' layout_style=' . $layout_style . ' raw_layout=' . (string) ($_POST['layout_style'] ?? ''));
 
 
@@ -191,7 +192,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     if ($caption === '') {
         wp_send_json(['success' => false, 'message' => 'Caption is required.']);
     }
-    if ($post_type === 'trade' && $symbol === '') {
+    if ($post_type === 'trade_card' && $symbol === '') {
         wp_send_json(['success' => false, 'message' => 'Symbol is required for trade posts.']);
     }
 
@@ -359,7 +360,8 @@ if (!$layout_style_column_exists) {
 }
 
 if ($layout_style_column_exists) {
-    $wpdb->query("UPDATE {$post_table} SET layout_style = CASE WHEN post_type = 'analysis' THEN 'analysis_card' ELSE 'trade_card' END WHERE layout_style IS NULL OR layout_style = '' OR layout_style = 'text'");
+    $wpdb->query("UPDATE {$post_table} SET layout_style = CASE WHEN post_type IN ('analysis','analysis_card') THEN 'analysis_card' WHEN post_type IN ('image','text','trade_card') THEN post_type ELSE 'trade_card' END WHERE layout_style IS NULL OR layout_style = ''");
+    $wpdb->query("UPDATE {$post_table} SET post_type = layout_style WHERE layout_style IN ('trade_card','analysis_card','image','text') AND (post_type IS NULL OR post_type = '' OR post_type IN ('trade','analysis'))");
 }
 
 $profile_followers_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$social_table} WHERE following_id = %d", $view_user_id));
@@ -3827,7 +3829,7 @@ $home_feed_posts = array_map(static function ($row) {
             option.classList.toggle('active', active);
             option.setAttribute('aria-checked', active ? 'true' : 'false');
         });
-        tfCreateType = selected === 'analysis_card' ? 'analysis' : 'trade';
+        tfCreateType = selected;
         const isTradeCard = selected === 'trade_card';
         const hideTradeFields = !isTradeCard;
         ['createSymbol','createDirection','createPnl','createRr'].forEach(id => {
@@ -3959,17 +3961,19 @@ $home_feed_posts = array_map(static function ($row) {
         if (!post || typeof post !== 'object') return post;
         const valid = ['trade_card','analysis_card','image','text'];
         const explicit = String(post.layout_style || '').toLowerCase();
-        if (valid.includes(explicit)) return { ...post, layout_style: explicit };
+        if (valid.includes(explicit)) return { ...post, layout_style: explicit, post_type: explicit };
         const normalizedType = String(post.post_type || '').toLowerCase();
-        if (normalizedType === 'analysis') return { ...post, layout_style: 'analysis_card' };
-        return { ...post, layout_style: 'trade_card' };
+        if (valid.includes(normalizedType)) return { ...post, layout_style: normalizedType, post_type: normalizedType };
+        if (normalizedType === 'analysis') return { ...post, layout_style: 'analysis_card', post_type: 'analysis_card' };
+        if (normalizedType === 'trade') return { ...post, layout_style: 'trade_card', post_type: 'trade_card' };
+        return { ...post, layout_style: 'trade_card', post_type: 'trade_card' };
     }
 
     function renderSocialPostCard(post, compact = false) {
         post = normalizePostLayout(post);
 
         const selectedLayout = String(post.layout_style || '').toLowerCase();
-        const layout = ['trade_card','analysis_card','image','text'].includes(selectedLayout) ? selectedLayout : (post.post_type === 'trade' ? 'trade_card' : 'analysis_card');
+        const layout = ['trade_card','analysis_card','image','text'].includes(selectedLayout) ? selectedLayout : 'trade_card';
         const typeLabel = layoutLabel(post);
         const author = escapeHtml(post.author_name || 'Trader');
         const caption = escapeHtml(post.caption || '');
@@ -4222,17 +4226,17 @@ $home_feed_posts = array_map(static function ($row) {
             if (tfSubmittingPost) return;
             const submitBtn = document.getElementById('createSubmitBtn');
             const payload = new FormData(createPostForm);
-            console.log('[TradingFloorLayouts] submit payload', {
+            alert('[TradingFloorLayouts] submit payload ' + JSON.stringify({
                 post_type_before_append: payload.get('post_type'),
                 layout_style: payload.get('layout_style'),
                 caption: payload.get('caption'),
                 symbol: payload.get('symbol')
-            });
+            }));
             payload.set('post_type', tfCreateType);
-            console.log('[TradingFloorLayouts] submit effective', {
+alert('[TradingFloorLayouts] submit effective ' + JSON.stringify({
                 post_type: payload.get('post_type'),
                 layout_style: payload.get('layout_style')
-            });
+            }));
             tfSubmittingPost = true;
             if (submitBtn) submitBtn.disabled = true;
             setCreateFormStatus('Publishing post...');
