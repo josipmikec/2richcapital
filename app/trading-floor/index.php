@@ -357,43 +357,6 @@ if (!$is_own_profile) {
 $profile_visibility_label = $is_own_profile ? 'Public profile preview' : 'Public trader profile';
 
 $profile_section_note = $is_own_profile ? 'This is your public Trading Floor profile.' : "You are viewing this trader's public profile.";
-
-if (!function_exists('tf_format_social_post')) {
-    function tf_format_social_post($row, $fallback_name = 'Trader') {
-        $display_name = trim((string) ($row->display_name ?? ''));
-        if ($display_name === '') {
-            $display_name = trim((string) ($row->user_nicename ?? ''));
-        }
-        if ($display_name === '') {
-            $display_name = trim((string) ($row->user_login ?? ''));
-        }
-        if ($display_name === '') {
-            $display_name = $fallback_name;
-        }
-
-        $avatar_url = '';
-        if (!empty($row->user_id)) {
-            $avatar_url = get_avatar_url((int) $row->user_id, ['size' => 96]);
-        }
-
-        return [
-            'id' => (int) ($row->id ?? 0),
-            'user_id' => (int) ($row->user_id ?? 0),
-            'author_name' => $display_name,
-            'author_avatar' => $avatar_url ?: '',
-            'post_type' => sanitize_key($row->post_type ?? 'trade'),
-            'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
-            'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
-            'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
-            'rr_value' => trim((string) ($row->rr_value ?? '')),
-            'caption' => trim((string) ($row->caption ?? '')),
-            'image_url' => trim((string) ($row->image_url ?? '')),
-            'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
-            'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
-        ];
-    }
-}
-
 $profile_post_rows = $wpdb->get_results($wpdb->prepare(
     "SELECT p.*, u.display_name, u.user_nicename, u.user_login
      FROM {$post_table} p
@@ -3971,7 +3934,10 @@ $home_feed_posts = array_map(static function ($row) {
         const valid = ['trade_card','analysis_card','image','text'];
         const explicit = String(post.layout_style || '').toLowerCase();
         if (valid.includes(explicit)) return { ...post, layout_style: explicit };
-        return { ...post, layout_style: post.post_type === 'analysis' ? 'analysis_card' : 'trade_card' };
+        const normalizedType = String(post.post_type || '').toLowerCase();
+        if (normalizedType === 'analysis') return { ...post, layout_style: 'analysis_card' };
+        if (normalizedType === 'trade') return { ...post, layout_style: 'text' };
+        return { ...post, layout_style: 'text' };
     }
 
     function renderSocialPostCard(post, compact = false) {
