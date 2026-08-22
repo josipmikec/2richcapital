@@ -1198,10 +1198,10 @@ $home_feed_posts = array_map(static function ($row) {
 
 
         /* Feed layouts — same home-feed card language, different hierarchy */
-        .group-feed-card.social-layout-trade_card { background:rgba(20,20,20,.9); border-color:rgba(242,202,80,.16); }
+        .group-feed-card.social-layout-trade_card { padding-block:28px; background:rgba(20,20,20,.9); border-color:rgba(242,202,80,.16); }
         .group-feed-card.social-layout-analysis_card { padding-block:28px; background:linear-gradient(180deg,rgba(242,202,80,.08),rgba(20,20,20,.94)); border-color:rgba(242,202,80,.28); }
-        .group-feed-card.social-layout-image { padding-bottom:16px; }
-        .group-feed-card.social-layout-text { background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(20,20,20,.94)); border-color:rgba(255,255,255,.14); }
+        .group-feed-card.social-layout-image { padding-block:28px; padding-bottom:28px; }
+        .group-feed-card.social-layout-text { padding-block:28px; background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(20,20,20,.94)); border-color:rgba(255,255,255,.14); }
         .social-layout-analysis { margin:14px 0 0; padding:0; border:0; background:none; }
         .social-layout-kicker { color:#F2CA50; font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
         .social-layout-symbol { color:#f5f5f5; font-size:19px; font-weight:800; margin-bottom:9px; }
