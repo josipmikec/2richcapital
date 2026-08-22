@@ -4216,8 +4216,19 @@ $home_feed_posts = array_map(static function ($row) {
         const type = document.getElementById('feedPostModalType');
         const metrics = document.getElementById('feedPostModalMetrics');
         const caption = document.getElementById('feedPostModalCaption');
+        const tags = document.getElementById('feedPostModalTags');
+        const likeBtn = document.getElementById('feedPostModalLikeBtn');
+        const commentBtn = document.getElementById('feedPostModalCommentBtn');
+        const shareBtn = document.getElementById('feedPostModalShareBtn');
+        const saveBtn = document.getElementById('feedPostModalSaveBtn');
+        const commentsList = document.getElementById('feedPostModalCommentsList');
+        const commentForm = document.getElementById('feedPostModalCommentForm');
+        const commentInput = document.getElementById('feedPostModalCommentInput');
+        const menuWrap = document.getElementById('feedPostModalMenuWrap');
+        const archiveBtn = document.getElementById('feedPostModalArchiveBtn');
+        const deleteBtn = document.getElementById('feedPostModalDeleteBtn');
         const counter = null;
-        if (!modal || !media || !title || !meta || !type || !metrics || !caption || !post) return;
+        if (!modal || !media || !title || !meta || !type || !metrics || !caption || !tags || !likeBtn || !commentBtn || !shareBtn || !saveBtn || !commentsList || !commentForm || !commentInput || !menuWrap || !archiveBtn || !deleteBtn || !post) return;
         const mediaUrls = getPostMediaUrls(post);
         const isMulti = mediaUrls.length > 1;
         if (isMulti) {
@@ -4302,6 +4313,21 @@ $home_feed_posts = array_map(static function ($row) {
         if (!Number.isInteger(safeIndex) || safeIndex < 0 || safeIndex >= tfProfileInitialPosts.length) return;
         tfFeedModalIndex = safeIndex;
         renderFeedPostModal(tfProfileInitialPosts[safeIndex]);
+    }
+
+    function openFeedPostModalById(postId) {
+        const numericId = Number(postId);
+        if (!Number.isInteger(numericId)) return;
+        let index = Array.isArray(tfProfileInitialPosts) ? tfProfileInitialPosts.findIndex(post => Number(post.id) === numericId) : -1;
+        if (index >= 0) {
+            openFeedPostModalByIndex(index);
+            return;
+        }
+        index = Array.isArray(tfFeedInitialPosts) ? tfFeedInitialPosts.findIndex(post => Number(post.id) === numericId) : -1;
+        if (index >= 0) {
+            tfFeedModalIndex = index;
+            renderFeedPostModal(tfFeedInitialPosts[index]);
+        }
     }
 
     function showNextFeedPost(step = 1) {
