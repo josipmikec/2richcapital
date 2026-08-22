@@ -1277,6 +1277,19 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-metrics { display:flex; flex-wrap:wrap; gap:8px; }
         .feed-post-metrics span { display:inline-flex; align-items:center; padding:7px 10px; border-radius:999px; background:#1a1a1a; border:1px solid rgba(255,255,255,0.06); color:#d7d7d7; font-size:12px; }
         .feed-post-caption { color:#d9d9d9; font-size:14px; line-height:1.6; white-space:pre-wrap; }
+        .feed-post-type-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .feed-post-tags { display:flex; flex-wrap:wrap; gap:10px; margin-top:-4px; }
+        .feed-post-action-bar { display:flex; align-items:center; gap:18px; padding:14px 0; border-top:1px solid rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.06); }
+        .feed-post-comments { display:flex; flex-direction:column; gap:12px; min-height:0; flex:1; }
+        .feed-post-comments-title { color:#f2ca50; font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+        .feed-post-comments-list { display:flex; flex-direction:column; gap:10px; min-height:90px; max-height:220px; overflow:auto; }
+        .feed-post-comments-empty { color:#8e949f; font-size:13px; }
+        .feed-post-comment { padding:10px 12px; border:1px solid rgba(255,255,255,.05); border-radius:12px; background:rgba(255,255,255,.03); }
+        .feed-post-comment-author { color:#f5f5f5; font-size:12px; font-weight:700; margin-bottom:4px; }
+        .feed-post-comment-body { color:#cfcfcf; font-size:13px; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+        .feed-post-comment-form { display:flex; flex-direction:column; gap:10px; margin-top:auto; }
+        .feed-post-comment-input { width:100%; min-height:70px; resize:vertical; border:1px solid rgba(255,255,255,.08); border-radius:12px; background:#0d0e10; color:#f2f4f7; padding:11px 12px; font:inherit; }
+        .feed-post-comment-input:focus-visible { outline:2px solid #F2CA50; outline-offset:2px; }
         .profile-post-thumb { cursor:pointer; }
         @media (max-width: 900px) { .feed-post-modal { grid-template-columns:1fr; width:min(96vw, 720px); } .feed-post-media { min-height:280px; max-height:52vh; } }
         .create-modal { background: #151515; border: 1px solid #1e1e1e; border-radius: 16px; width: 540px; max-height: 85vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
@@ -2140,9 +2153,34 @@ $home_feed_posts = array_map(static function ($row) {
                     </button>
                 </div>
                 <div class="feed-post-body">
-                    <div class="feed-post-type" id="feedPostModalType">Trade</div>
+                    <div class="feed-post-type-row">
+                        <div class="feed-post-type" id="feedPostModalType">Trade</div>
+                        <div class="social-post-menu-wrap" id="feedPostModalMenuWrap" hidden>
+                            <button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button>
+                            <div class="social-post-menu" hidden>
+                                <button type="button" id="feedPostModalArchiveBtn">Archive post</button>
+                                <button type="button" class="danger" id="feedPostModalDeleteBtn">Delete permanently</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="feed-post-metrics" id="feedPostModalMetrics"></div>
                     <div class="feed-post-caption" id="feedPostModalCaption"></div>
+                    <div class="feed-post-tags" id="feedPostModalTags"></div>
+                    <div class="feed-post-action-bar" aria-label="Post actions">
+                        <button type="button" class="group-feed-action" id="feedPostModalLikeBtn" aria-label="Like post"></button>
+                        <button type="button" class="group-feed-action" id="feedPostModalCommentBtn" aria-label="Comment on post"></button>
+                        <button type="button" class="group-feed-action" id="feedPostModalShareBtn" aria-label="Share post"></button>
+                        <div class="group-feed-action-spacer"></div>
+                        <button type="button" class="group-feed-action" id="feedPostModalSaveBtn" aria-label="Save post"></button>
+                    </div>
+                    <div class="feed-post-comments">
+                        <div class="feed-post-comments-title">Comments</div>
+                        <div class="feed-post-comments-list" id="feedPostModalCommentsList"></div>
+                        <form class="feed-post-comment-form" id="feedPostModalCommentForm">
+                            <textarea id="feedPostModalCommentInput" class="feed-post-comment-input" rows="3" placeholder="Write a comment..."></textarea>
+                            <button type="submit" class="group-feed-btn primary">Post comment</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4216,7 +4254,40 @@ $home_feed_posts = array_map(static function ($row) {
             if (!Number.isNaN(numeric)) metricBits.push(`<span>${numeric > 0 ? '+' : ''}${numeric.toFixed(2)}%</span>`);
         }
         metrics.innerHTML = metricBits.length ? metricBits.join('') : '<span>No trade metrics</span>';
-        caption.textContent = post.caption || '';
+        const rawCaption = String(post.caption || '');
+        const visibleCaption = rawCaption.replace(/(^|\s)#[A-Za-z0-9_]+(?=\s|$)/g, '$1').replace(/[ \t]{2,}/g, ' ').trim();
+        caption.textContent = visibleCaption;
+        const explicitTags = Array.isArray(post.tags) ? post.tags : String(post.tags || '').split(/[\s,]+/);
+        const fallbackTags = rawCaption.match(/#[A-Za-z0-9_]+/g) || [];
+        const modalTags = (explicitTags.some(tag => String(tag).trim()) ? explicitTags : fallbackTags).map(tag => String(tag).trim().replace(/^#+/, '')).filter(Boolean).slice(0, 8);
+        tags.innerHTML = modalTags.map(tag => `<button type="button" class="group-feed-tag" data-stop-post-open>#${escapeHtml(tag)}</button>`).join(' ');
+        likeBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span>${Number(post.likes_count || post.likes || 0)}</span>`;
+        commentBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span>`;
+        shareBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg><span>Share</span>`;
+        saveBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.saves_count || post.saves || 0)}</span>`;
+        likeBtn.onclick = () => toggleLike(likeBtn);
+        commentBtn.onclick = () => commentInput.focus();
+        shareBtn.onclick = () => sharePost(Number(post.id));
+        saveBtn.onclick = () => toggleBookmark(saveBtn);
+        const canManageModalPost = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
+        menuWrap.hidden = !canManageModalPost;
+        archiveBtn.onclick = () => archiveSocialPost(Number(post.id));
+        deleteBtn.onclick = () => deleteSocialPost(Number(post.id));
+        commentsList.innerHTML = Array.isArray(post.comments_preview) && post.comments_preview.length
+            ? post.comments_preview.map(comment => `<div class="feed-post-comment"><div class="feed-post-comment-author">${escapeHtml(comment.author_name || 'Trader')}</div><div class="feed-post-comment-body">${escapeHtml(comment.body || '')}</div></div>`).join('')
+            : '<div class="feed-post-comments-empty">No comments yet. Start the conversation.</div>';
+        commentForm.onsubmit = event => {
+            event.preventDefault();
+            const value = String(commentInput.value || '').trim();
+            if (!value) return;
+            const item = document.createElement('div');
+            item.className = 'feed-post-comment';
+            item.innerHTML = `<div class="feed-post-comment-author">You</div><div class="feed-post-comment-body">${escapeHtml(value)}</div>`;
+            const empty = commentsList.querySelector('.feed-post-comments-empty');
+            if (empty) empty.remove();
+            commentsList.appendChild(item);
+            commentInput.value = '';
+        };
         if (counter) {
             const total = Array.isArray(tfProfileInitialPosts) ? tfProfileInitialPosts.length : 0;
             counter.textContent = total ? `${tfFeedModalIndex + 1} / ${total}` : '1 / 1';
