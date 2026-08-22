@@ -1357,10 +1357,15 @@ $home_feed_posts = array_map(static function ($row) {
         .dm-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid #1e1e1e; border-radius: 16px; padding: 8px 12px; font-size: 12px; font-weight: 500; color: #aaa; font-family: "Montserrat", sans-serif; }
         .dm-input:focus { outline: none; border-color: #333; }
 
-        .dm-stack { position:fixed; bottom:0; right:80px; width:300px; z-index:200; pointer-events:none; }
-        .dm-stack .dm-panel { position:absolute; right:0; bottom:0; width:100%; pointer-events:auto; }
-        .notifications-panel { z-index:199; right:32px; background:#121212; }
-        .notifications-panel.open { transform:translateY(0); }
+        .dm-stack { position:fixed; bottom:0; right:80px; width:320px; height:360px; z-index:200; pointer-events:none; }
+        .dm-stack .dm-panel { position:absolute; right:0; bottom:0; width:300px; pointer-events:auto; transition:transform .28s ease, width .28s ease, box-shadow .28s ease, background .28s ease; }
+        .dm-panel.is-front { width:300px; z-index:201; transform:translateY(0) scale(1); box-shadow:0 -12px 34px rgba(0,0,0,0.45); }
+        .dm-panel.is-back { width:272px; z-index:199; transform:translate(0, 0); box-shadow:0 -6px 20px rgba(0,0,0,0.26); }
+        .dm-panel.is-back .dm-list,
+        .dm-panel.is-back .dm-compose-row { display:none; }
+        .dm-panel.is-back .dm-panel-header { border-bottom-color:transparent; }
+        .dm-panel.is-back .dm-panel-header svg:last-child { opacity:.7; }
+        .notifications-panel { right:28px; background:#121212; }
         .notifications-panel .dm-panel-title { color:#d9d9d9; }
         .notifications-panel .dm-list { max-height:260px; }
         .notification-item { align-items:flex-start; }
@@ -3897,32 +3902,42 @@ $home_feed_posts = array_map(static function ($row) {
     }
 
     // DM
-    function openMessagesPanel() {
+    function applyInboxPanelState(frontPanelId) {
         const messages = document.getElementById('dmPanel');
         const notifications = document.getElementById('notificationsPanel');
-        if (notifications) notifications.classList.remove('open');
-        if (messages) messages.classList.add('open');
+        if (!messages || !notifications) return;
+        const front = frontPanelId === 'notificationsPanel' ? notifications : messages;
+        const back = front === messages ? notifications : messages;
+        front.classList.add('is-front', 'open');
+        front.classList.remove('is-back');
+        back.classList.add('is-back', 'open');
+        back.classList.remove('is-front');
+    }
+
+    function openMessagesPanel() {
+        applyInboxPanelState('dmPanel');
     }
 
     function openNotificationsPanel() {
-        const messages = document.getElementById('dmPanel');
-        const notifications = document.getElementById('notificationsPanel');
-        if (messages) messages.classList.remove('open');
-        if (notifications) notifications.classList.add('open');
+        applyInboxPanelState('notificationsPanel');
     }
 
     function toggleDM() {
         const panel = document.getElementById('dmPanel');
-        const notifications = document.getElementById('notificationsPanel');
-        if (notifications) notifications.classList.remove('open');
-        if (panel) panel.classList.toggle('open');
+        if (panel && panel.classList.contains('is-front')) {
+            applyInboxPanelState('notificationsPanel');
+            return;
+        }
+        applyInboxPanelState('dmPanel');
     }
 
     function toggleNotificationsPanel() {
         const panel = document.getElementById('notificationsPanel');
-        const messages = document.getElementById('dmPanel');
-        if (messages) messages.classList.remove('open');
-        if (panel) panel.classList.toggle('open');
+        if (panel && panel.classList.contains('is-front')) {
+            applyInboxPanelState('dmPanel');
+            return;
+        }
+        applyInboxPanelState('notificationsPanel');
     }
 
     // Create modal — post layout is the single source of truth.
