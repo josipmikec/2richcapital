@@ -1365,7 +1365,8 @@ $home_feed_posts = array_map(static function ($row) {
         .dm-panel.is-back .dm-compose-row { display:none; }
         .dm-panel.is-back .dm-panel-header { border-bottom-color:transparent; }
         .dm-panel.is-back .dm-panel-header svg:last-child { opacity:.7; }
-        .dm-panel.is-collapsed { transform:translateY(calc(100% - 48px)) !important; }
+        .dm-panel.is-collapsed { transform:translateY(calc(100% - 48px - 56px)) !important; }
+        .dm-panel.is-collapsed.is-back { transform:translateY(calc(100% - 48px - 56px)) !important; }
         .dm-panel.is-collapsed .dm-list,
         .dm-panel.is-collapsed .dm-compose-row { display:none; }
         .notifications-panel { background:#121212; }
