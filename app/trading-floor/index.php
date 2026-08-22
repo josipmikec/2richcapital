@@ -79,6 +79,44 @@ if (!function_exists('tf_delete_post_media')) {
     wp_send_json(['success' => true, 'post_id' => $post_id, 'action' => 'archive']);
 }
 
+if (!function_exists('tf_format_social_post')) {
+        function tf_format_social_post($row, $fallback_name = 'Trader') {
+            $display_name = trim((string) ($row->display_name ?? ''));
+            if ($display_name === '') {
+                $display_name = trim((string) ($row->user_nicename ?? ''));
+            }
+            if ($display_name === '') {
+                $display_name = trim((string) ($row->user_login ?? ''));
+            }
+            if ($display_name === '') {
+                $display_name = $fallback_name;
+            }
+
+            $avatar_url = '';
+            if (!empty($row->user_id)) {
+                $avatar_url = get_avatar_url((int) $row->user_id, ['size' => 96]);
+            }
+
+            return [
+                'id' => (int) ($row->id ?? 0),
+                'user_id' => (int) ($row->user_id ?? 0),
+                'author_name' => $display_name,
+                'author_avatar' => $avatar_url ?: '',
+                'post_type' => sanitize_key($row->post_type ?? 'trade'),
+                'layout_style' => sanitize_key($row->layout_style ?? ($row->post_type === 'trade' ? 'trade_card' : 'analysis_card')),
+                'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
+                'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
+                'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
+                'rr_value' => trim((string) ($row->rr_value ?? '')),
+                'caption' => trim((string) ($row->caption ?? '')),
+                'image_url' => tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? ''),
+                'image_urls' => tf_collect_media_urls($row),
+                'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
+                'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
+            ];
+        }
+    }
+
 if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     $user_id = (int) ($_SESSION['user_id'] ?? 0);
     $post_table = $wpdb->prefix . 'rich_social_posts';
@@ -123,43 +161,7 @@ if (!function_exists('tf_collect_media_urls')) {
     }
 }
 
-if (!function_exists('tf_format_social_post')) {
-        function tf_format_social_post($row, $fallback_name = 'Trader') {
-            $display_name = trim((string) ($row->display_name ?? ''));
-            if ($display_name === '') {
-                $display_name = trim((string) ($row->user_nicename ?? ''));
-            }
-            if ($display_name === '') {
-                $display_name = trim((string) ($row->user_login ?? ''));
-            }
-            if ($display_name === '') {
-                $display_name = $fallback_name;
-            }
 
-            $avatar_url = '';
-            if (!empty($row->user_id)) {
-                $avatar_url = get_avatar_url((int) $row->user_id, ['size' => 96]);
-            }
-
-            return [
-                'id' => (int) ($row->id ?? 0),
-                'user_id' => (int) ($row->user_id ?? 0),
-                'author_name' => $display_name,
-                'author_avatar' => $avatar_url ?: '',
-                'post_type' => sanitize_key($row->post_type ?? 'trade'),
-                'layout_style' => sanitize_key($row->layout_style ?? ($row->post_type === 'trade' ? 'trade_card' : 'analysis_card')),
-                'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
-                'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
-                'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
-                'rr_value' => trim((string) ($row->rr_value ?? '')),
-                'caption' => trim((string) ($row->caption ?? '')),
-                'image_url' => tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? ''),
-                'image_urls' => tf_collect_media_urls($row),
-                'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
-                'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
-            ];
-        }
-    }
 
     if (!$user_id) {
         wp_send_json(['success' => false, 'message' => 'You must be logged in to post.']);
