@@ -4446,6 +4446,10 @@ $home_feed_posts = array_map(static function ($row) {
                 }
                 tfFeedInitialPosts.unshift(data.post);
                 renderHomeFeedPosts(tfFeedInitialPosts);
+                if (Array.isArray(tfProfileInitialPosts) && Number(data.post.user_id) === Number(tfViewedUserId)) {
+                    tfProfileInitialPosts.unshift(data.post);
+                    renderProfilePosts(tfProfileInitialPosts);
+                }
                 if (Number(data.post.user_id || 0) === Number(tfViewedUserId || 0)) {
                     tfProfileInitialPosts.unshift(data.post);
                     renderProfilePosts(tfProfileInitialPosts);
