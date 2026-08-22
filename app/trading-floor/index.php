@@ -1861,33 +1861,9 @@ $home_feed_posts = array_map(static function ($row) {
             </div>
 
             <!-- Posts -->
-            <?php
-            $posts = [
-                ['init'=>'AT','author'=>'Alex Thompson','badge'=>'FOREX TRADER','time'=>'35m ago','color'=>'#7c3aed',
-                 'symbol'=>'XAUUSD','dir'=>'LONG','pnl'=>'+2.43%','win'=>true,
-                 'entry'=>'2318.50','exit'=>'2374.90','rr'=>'3.2R','session'=>'NY',
-                 'caption'=>'<strong>Clean MSS on Gold</strong> — waited for the London open pullback, got the confirmation at 2318 with heavy order flow. Held for the full NY session run. Closed at 2374.',
-                 'tags'=>['#XAUUSD','#SmartMoney','#NYSession','#OrderFlow'],'likes'=>47,'comments'=>12],
-                ['init'=>'SK','author'=>'Sara Kovač','badge'=>'CRYPTO ANALYST','time'=>'2h ago','color'=>'#059669',
-                 'symbol'=>'BTCUSD','dir'=>'LONG','pnl'=>'+1.82%','win'=>true,
-                 'entry'=>'67,420','exit'=>'68,650','rr'=>'2.8R','session'=>'ASIA',
-                 'caption'=>'<strong>BTC daily demand respected.</strong> Textbook FVG fill at the 67.4k zone. Asia session accumulation confirmed before the push. Patience paid off again.',
-                 'tags'=>['#Bitcoin','#BTCUSD','#AsiaSession','#FVG'],'likes'=>83,'comments'=>21],
-                ['init'=>'MR','author'=>'Mike Rivera','badge'=>'FUTURES PRO','time'=>'5h ago','color'=>'#dc2626',
-                 'symbol'=>'NAS100','dir'=>'SHORT','pnl'=>'-0.72%','win'=>false,
-                 'entry'=>'19,840','exit'=>'19,984','rr'=>'-0.9R','session'=>'NY',
-                 'caption'=>'Took the short too early at the resistance. Market pushed through my stop. Lesson: wait for the daily close confirmation before entering on intraday structure.',
-                 'tags'=>['#NAS100','#Lesson','#ShortTrade','#RiskManagement'],'likes'=>34,'comments'=>28],
-                ['init'=>'CL','author'=>'Chen Li','badge'=>'INDICES TRADER','time'=>'8h ago','color'=>'#0284c7',
-                 'symbol'=>'EURUSD','dir'=>'LONG','pnl'=>'+3.10%','win'=>true,
-                 'entry'=>'1.0845','exit'=>'1.0978','rr'=>'4.1R','session'=>'LONDON',
-                 'caption'=>'<strong>Best trade of the week.</strong> EUR/USD weekly demand at 1.0845 held perfectly. London session momentum + ECB hawkish tone = clean run to weekly highs.',
-                 'tags'=>['#EURUSD','#LondonSession','#Forex','#WeeklyDemand'],'likes'=>102,'comments'=>31],
-            ];
-            foreach ($posts as $idx => $p):
-            ?>
-            <div class="post-card">
-                <div class="post-header">
+            <div class="group-feed-stack" id="homeFeedPosts"></div>
+
+            <?php endif; ?>
                     <div class="post-avatar" style="background:linear-gradient(135deg,<?= $p['color'] ?>,<?= $p['color'] ?>99);"><?= $p['init'] ?></div>
                     <div class="post-meta">
                         <div class="post-author"><?= $p['author'] ?></div>
