@@ -1272,6 +1272,18 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-media .modal-trade-preview .trade-stat { padding:14px 16px; }
         .feed-post-media .modal-trade-preview .trade-chart-area { flex:1; height:auto; min-height:320px; }
         .feed-post-media .modal-trade-preview .trade-chart-area canvas { width:100%; height:100%; }
+        .profile-post-thumb.trade-thumb-preview { padding:0; overflow:hidden; background:#0f1116; }
+        .profile-post-thumb.trade-thumb-preview .post-meta-badge { z-index:3; }
+        .profile-post-thumb.trade-thumb-preview .profile-trade-thumb-card { width:100%; height:100%; display:flex; flex-direction:column; background:linear-gradient(180deg,rgba(8,10,14,.98),rgba(10,14,24,.98)); }
+        .profile-post-thumb.trade-thumb-preview .trade-card-header { padding:14px 14px 10px; }
+        .profile-post-thumb.trade-thumb-preview .trade-symbol { font-size:15px; }
+        .profile-post-thumb.trade-thumb-preview .trade-pnl-badge { font-size:12px; padding:3px 8px; }
+        .profile-post-thumb.trade-thumb-preview .trade-stats-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .profile-post-thumb.trade-thumb-preview .trade-stat { padding:10px 12px; }
+        .profile-post-thumb.trade-thumb-preview .trade-stat-label { font-size:7px; }
+        .profile-post-thumb.trade-thumb-preview .trade-stat-value { font-size:11px; }
+        .profile-post-thumb.trade-thumb-preview .trade-chart-area { flex:1; min-height:120px; height:auto; }
+        .profile-post-thumb.trade-thumb-preview .trade-chart-label { font-size:7px; right:8px; bottom:8px; }
         .feed-post-side { display:flex; flex-direction:column; min-height:0; }
         .feed-post-head { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 20px; border-bottom:1px solid #1e1e1e; }
         .feed-post-head-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
@@ -4207,6 +4219,10 @@ $home_feed_posts = array_map(static function ($row) {
             }
             if (mediaUrl) {
                 return `<button type="button" class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}" data-feed-index="${index}" onclick="openFeedPostModalByIndex(${index})">${carouselBadge}<span class="post-meta-badge">${typeLabel}</span><img src="${mediaUrl}" alt="${thumbLabel}" style="width:100%;height:100%;object-fit:cover;"></button>`;
+            }
+            const normalizedLayout = normalizePostLayout(post).layout_style;
+            if (normalizedLayout === 'trade_card') {
+                return `<button type="button" class="profile-post-thumb trade-thumb-preview" data-post-id="${escapeHtml(post.id)}" data-feed-index="${index}" onclick="openFeedPostModalByIndex(${index})"><span class="post-meta-badge">${typeLabel}</span><div class="profile-trade-thumb-card">${tradeCardMarkup(post)}</div></button>`;
             }
             return `<button type="button" class="profile-post-thumb" data-post-id="${escapeHtml(post.id)}" data-feed-index="${index}" onclick="openFeedPostModalByIndex(${index})"><span class="post-meta-badge">${typeLabel}</span><div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1c22,#0f1116 45%,#2b3038);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:700;text-align:center;padding:8px;">${thumbLabel}</div></button>`;
         }).join('');
