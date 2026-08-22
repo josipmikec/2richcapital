@@ -266,7 +266,17 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         $post_formats[] = '%s';
     }
     error_log('[TradingFloorLayouts] insert columns=' . implode(',', array_keys($post_data)) . ' layout_style_column_exists=' . ($layout_style_column_exists ? '1' : '0'));
+    if (!$layout_style_column_exists) {
+        $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN layout_style varchar(50) NOT NULL DEFAULT 'trade_card' AFTER post_type");
+        $layout_style_column_exists = true;
+        $post_data['layout_style'] = $layout_style;
+        $post_formats[] = '%s';
+        error_log('[TradingFloorLayouts] layout_style column auto-created');
+    }
     $inserted = $wpdb->insert($post_table, $post_data, $post_formats);
+    if ($inserted && $layout_style_column_exists) {
+        $wpdb->update($post_table, ['layout_style' => $layout_style, 'post_type' => $post_type], ['id' => (int) $wpdb->insert_id], ['%s','%s'], ['%d']);
+    }
 
     if (!$inserted) {
         wp_send_json(['success' => false, 'message' => 'Database error while creating the post.']);
