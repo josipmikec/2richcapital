@@ -1357,15 +1357,18 @@ $home_feed_posts = array_map(static function ($row) {
         .dm-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid #1e1e1e; border-radius: 16px; padding: 8px 12px; font-size: 12px; font-weight: 500; color: #aaa; font-family: "Montserrat", sans-serif; }
         .dm-input:focus { outline: none; border-color: #333; }
 
-        .dm-stack { position:fixed; bottom:0; right:80px; width:320px; height:360px; z-index:200; pointer-events:none; }
-        .dm-stack .dm-panel { position:absolute; right:0; bottom:0; width:300px; pointer-events:auto; transition:transform .28s ease, width .28s ease, box-shadow .28s ease, background .28s ease; }
-        .dm-panel.is-front { width:300px; z-index:201; transform:translateY(0) scale(1); box-shadow:0 -12px 34px rgba(0,0,0,0.45); }
-        .dm-panel.is-back { width:272px; z-index:199; transform:translate(0, 0); box-shadow:0 -6px 20px rgba(0,0,0,0.26); }
+        .dm-stack { position:fixed; bottom:0; right:80px; width:336px; height:360px; z-index:200; pointer-events:none; }
+        .dm-stack .dm-panel { position:absolute; bottom:0; width:300px; pointer-events:auto; transition:transform .28s ease, width .28s ease, box-shadow .28s ease, background .28s ease, opacity .2s ease; }
+        .dm-panel.is-front { right:0; width:300px; z-index:201; transform:translateY(0) scale(1); box-shadow:0 -12px 34px rgba(0,0,0,0.45); opacity:1; }
+        .dm-panel.is-back { right:36px; width:252px; z-index:199; transform:translateY(0) scale(1); box-shadow:0 -6px 20px rgba(0,0,0,0.26); opacity:1; }
         .dm-panel.is-back .dm-list,
         .dm-panel.is-back .dm-compose-row { display:none; }
         .dm-panel.is-back .dm-panel-header { border-bottom-color:transparent; }
         .dm-panel.is-back .dm-panel-header svg:last-child { opacity:.7; }
-        .notifications-panel { right:28px; background:#121212; }
+        .dm-panel.is-collapsed { transform:translateY(calc(100% - 48px)) !important; }
+        .dm-panel.is-collapsed .dm-list,
+        .dm-panel.is-collapsed .dm-compose-row { display:none; }
+        .notifications-panel { background:#121212; }
         .notifications-panel .dm-panel-title { color:#d9d9d9; }
         .notifications-panel .dm-list { max-height:260px; }
         .notification-item { align-items:flex-start; }
@@ -3902,16 +3905,21 @@ $home_feed_posts = array_map(static function ($row) {
     }
 
     // DM
-    function applyInboxPanelState(frontPanelId) {
+    function applyInboxPanelState(frontPanelId, collapsedPanelId = null) {
         const messages = document.getElementById('dmPanel');
         const notifications = document.getElementById('notificationsPanel');
         if (!messages || !notifications) return;
-        const front = frontPanelId === 'notificationsPanel' ? notifications : messages;
+        const panels = { dmPanel: messages, notificationsPanel: notifications };
+        const front = panels[frontPanelId] || messages;
         const back = front === messages ? notifications : messages;
-        front.classList.add('is-front', 'open');
-        front.classList.remove('is-back');
-        back.classList.add('is-back', 'open');
-        back.classList.remove('is-front');
+        [messages, notifications].forEach((panel) => {
+            panel.classList.remove('is-front', 'is-back', 'is-collapsed');
+        });
+        front.classList.add('is-front');
+        back.classList.add('is-back');
+        if (collapsedPanelId && panels[collapsedPanelId]) {
+            panels[collapsedPanelId].classList.add('is-collapsed');
+        }
     }
 
     function openMessagesPanel() {
@@ -3924,8 +3932,9 @@ $home_feed_posts = array_map(static function ($row) {
 
     function toggleDM() {
         const panel = document.getElementById('dmPanel');
-        if (panel && panel.classList.contains('is-front')) {
-            applyInboxPanelState('notificationsPanel');
+        if (!panel) return;
+        if (panel.classList.contains('is-front') && !panel.classList.contains('is-collapsed')) {
+            applyInboxPanelState('notificationsPanel', 'dmPanel');
             return;
         }
         applyInboxPanelState('dmPanel');
@@ -3933,8 +3942,9 @@ $home_feed_posts = array_map(static function ($row) {
 
     function toggleNotificationsPanel() {
         const panel = document.getElementById('notificationsPanel');
-        if (panel && panel.classList.contains('is-front')) {
-            applyInboxPanelState('dmPanel');
+        if (!panel) return;
+        if (panel.classList.contains('is-front') && !panel.classList.contains('is-collapsed')) {
+            applyInboxPanelState('dmPanel', 'notificationsPanel');
             return;
         }
         applyInboxPanelState('notificationsPanel');
