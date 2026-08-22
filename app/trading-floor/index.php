@@ -154,7 +154,6 @@ if (!function_exists('tf_format_social_post')) {
                 'rr_value' => trim((string) ($row->rr_value ?? '')),
                 'caption' => trim((string) ($row->caption ?? '')),
                 'image_url' => tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? ''),
-                'image_urls' => tf_collect_media_urls($row),
                 'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
                 'created_label' => human_time_diff(strtotime((string) ($row->created_at ?? current_time('mysql'))), current_time('timestamp')) . ' ago',
             ];
