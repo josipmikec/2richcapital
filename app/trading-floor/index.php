@@ -3909,7 +3909,7 @@ $home_feed_posts = array_map(static function ($row) {
 
     function renderPostMedia(post, compact = false) {
         const urls = getPostMediaUrls(post);
-        if (!urls.length) return `<div class="social-post-text-only" aria-label="Text-only post"><span>${post.post_type === 'analysis' ? 'Analysis' : 'Trade'} update</span></div>`;
+        if (!urls.length) return '';
         const height = compact ? 180 : 320;
         const slides = urls.map((url, index) => {
             const safeUrl = escapeHtml(url);
