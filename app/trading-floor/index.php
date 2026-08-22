@@ -1093,7 +1093,7 @@ $home_feed_posts = array_map(static function ($row) {
         .post-more-btn:hover { color: #aaa; }
 
         /* Trade card inside post */
-        .post-trade-card { margin: 0 18px; border-radius: 10px; overflow: hidden; border: 1px solid #1e1e1e; }
+        .post-trade-card { margin: 12px 18px 0; border-radius: 10px; overflow: hidden; border: 1px solid #1e1e1e; }
         .trade-card-header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 14px 16px 12px;
