@@ -1857,12 +1857,15 @@ $home_feed_posts = array_map(static function ($row) {
             $stories_feature_enabled = function_exists('rich_feature_enabled') ? rich_feature_enabled('trading-floor-stories', true, $user_id) : true;
             $stories_overlay_enabled = false;
             $stories_overlay_message = 'Stories are temporarily unavailable.';
-            if (function_exists('rich_feature_get')) {
-                $stories_flag = rich_feature_get('trading-floor-stories');
-                if (is_array($stories_flag)) {
-                    $stories_feature_enabled = !empty($stories_flag['is_enabled']);
-                    $stories_overlay_enabled = !empty($stories_flag['is_overlay_enabled']);
-                    $stories_overlay_message = (string)($stories_flag['overlay_message'] ?: $stories_overlay_message);
+            if (isset($wpdb) && function_exists('rich_find_feature_table')) {
+                $stories_table = rich_find_feature_table($wpdb);
+                if ($stories_table) {
+                    $stories_flag = $wpdb->get_row($wpdb->prepare("SELECT is_enabled, is_overlay_enabled, overlay_message FROM {$stories_table} WHERE flag_key = %s LIMIT 1", 'trading-floor-stories'), ARRAY_A);
+                    if (is_array($stories_flag)) {
+                        $stories_feature_enabled = !empty($stories_flag['is_enabled']);
+                        $stories_overlay_enabled = !empty($stories_flag['is_overlay_enabled']);
+                        $stories_overlay_message = (string)(!empty($stories_flag['overlay_message']) ? $stories_flag['overlay_message'] : $stories_overlay_message);
+                    }
                 }
             }
             ?>
