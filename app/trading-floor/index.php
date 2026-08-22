@@ -1266,7 +1266,12 @@ $home_feed_posts = array_map(static function ($row) {
         .feed-post-counter { position:absolute; top:16px; left:16px; z-index:2; padding:7px 11px; border-radius:999px; background:rgba(8,8,8,0.78); border:1px solid rgba(255,255,255,0.08); color:#f5f5f5; font-size:12px; font-weight:700; letter-spacing:0.04em; }
         .feed-post-media { background:#0f0f10; min-height:420px; display:flex; align-items:center; justify-content:center; }
         .feed-post-media img, .feed-post-media video { width:100%; height:100%; object-fit:contain; background:#0f0f10; }
-        .feed-post-media .modal-trade-preview { width:min(100%, 560px); margin:24px auto; }
+        .feed-post-media .modal-trade-preview { width:100%; height:100%; margin:0; border-radius:0; display:flex; flex-direction:column; }
+        .feed-post-media .modal-trade-preview .trade-card-header { padding:24px 28px 18px; }
+        .feed-post-media .modal-trade-preview .trade-stats-row { flex:0 0 auto; }
+        .feed-post-media .modal-trade-preview .trade-stat { padding:14px 16px; }
+        .feed-post-media .modal-trade-preview .trade-chart-area { flex:1; height:auto; min-height:320px; }
+        .feed-post-media .modal-trade-preview .trade-chart-area canvas { width:100%; height:100%; }
         .feed-post-side { display:flex; flex-direction:column; min-height:0; }
         .feed-post-head { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 20px; border-bottom:1px solid #1e1e1e; }
         .feed-post-head-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
