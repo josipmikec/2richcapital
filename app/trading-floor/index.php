@@ -3852,6 +3852,19 @@ $home_feed_posts = array_map(static function ($row) {
     let tfCreateType = 'trade';
     let tfSubmittingPost = false;
 
+    console.log('[TradingFloorLayouts] boot home feed', (tfFeedInitialPosts || []).map(post => ({
+        id: post && post.id,
+        post_type: post && post.post_type,
+        layout_style: post && post.layout_style,
+        has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
+    })));
+    console.log('[TradingFloorLayouts] boot profile feed', (tfProfileInitialPosts || []).map(post => ({
+        id: post && post.id,
+        post_type: post && post.post_type,
+        layout_style: post && post.layout_style,
+        has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
+    })));
+
     function escapeHtml(value) {
         return String(value == null ? '' : value)
             .replace(/&/g, '&amp;')
@@ -4019,6 +4032,12 @@ $home_feed_posts = array_map(static function ($row) {
     function renderHomeFeedPosts(posts) {
         const host = document.getElementById('tfHomeFeedPosts');
         if (!host) return;
+        console.log('[TradingFloorLayouts] render home', (posts || []).map(post => ({
+            id: post && post.id,
+            post_type: post && post.post_type,
+            layout_style: post && post.layout_style,
+            normalized: normalizePostLayout(post).layout_style
+        })));
         if (!Array.isArray(posts) || !posts.length) {
             host.innerHTML = '<div class="group-feed-card"><div class="group-feed-body">No posts yet. Use CREATE to publish the first trade or analysis.</div></div>';
             return;
@@ -4029,6 +4048,12 @@ $home_feed_posts = array_map(static function ($row) {
     function renderProfilePosts(posts) {
         const host = document.getElementById('profileFeedGrid');
         if (!host) return;
+        console.log('[TradingFloorLayouts] render profile', (posts || []).map(post => ({
+            id: post && post.id,
+            post_type: post && post.post_type,
+            layout_style: post && post.layout_style,
+            normalized: normalizePostLayout(post).layout_style
+        })));
         if (!Array.isArray(posts) || !posts.length) {
             host.innerHTML = '<div class="group-feed-card" style="grid-column:1/-1;"><div class="group-feed-body">No posts published yet.</div></div>';
             return;
