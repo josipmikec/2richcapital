@@ -3865,12 +3865,14 @@ $home_feed_posts = array_map(static function ($row) {
         id: post && post.id,
         post_type: post && post.post_type,
         layout_style: post && post.layout_style,
+        normalized: normalizePostLayout(post).layout_style,
         has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
     })));
     console.log('[TradingFloorLayouts] boot profile feed', (tfProfileInitialPosts || []).map(post => ({
         id: post && post.id,
         post_type: post && post.post_type,
         layout_style: post && post.layout_style,
+        normalized: normalizePostLayout(post).layout_style,
         has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
     })));
 
