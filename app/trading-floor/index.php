@@ -1365,9 +1365,9 @@ $home_feed_posts = array_map(static function ($row) {
         .dm-panel.is-back .dm-compose-row { display:none; }
         .dm-panel.is-back .dm-panel-header { border-bottom-color:transparent; }
         .dm-panel.is-back .dm-panel-header svg:last-child { opacity:.7; }
-        .dm-panel.is-collapsed { transform:translateY(calc(100% - 48px - 56px)) !important; }
-        .dm-panel.is-collapsed.is-back { transform:translateY(calc(100% - 48px - 48px)) !important; width:236px; }
-        .dm-panel.is-collapsed.is-front { width:284px; }
+        .dm-panel.is-collapsed { width:220px !important; transform:translateY(calc(100% - 48px)) !important; }
+        .dm-panel.is-collapsed.is-front { right:0; z-index:202; }
+        .dm-panel.is-collapsed.is-back { right:36px; z-index:201; }
         .dm-panel.is-collapsed .dm-list,
         .dm-panel.is-collapsed .dm-compose-row { display:none; }
         .notifications-panel { background:#121212; }
@@ -3932,11 +3932,22 @@ $home_feed_posts = array_map(static function ($row) {
         applyInboxPanelState('notificationsPanel');
     }
 
+    function collapseInboxPanel(panelId) {
+        const panel = document.getElementById(panelId);
+        const otherId = panelId === 'dmPanel' ? 'notificationsPanel' : 'dmPanel';
+        const other = document.getElementById(otherId);
+        if (!panel || !other) return;
+        panel.classList.remove('is-front', 'is-back');
+        panel.classList.add('is-collapsed', 'is-back');
+        other.classList.remove('is-collapsed', 'is-back');
+        other.classList.add('is-front');
+    }
+
     function toggleDM() {
         const panel = document.getElementById('dmPanel');
         if (!panel) return;
         if (panel.classList.contains('is-front')) {
-            panel.classList.toggle('is-collapsed');
+            collapseInboxPanel('dmPanel');
             return;
         }
         applyInboxPanelState('dmPanel');
@@ -3946,7 +3957,7 @@ $home_feed_posts = array_map(static function ($row) {
         const panel = document.getElementById('notificationsPanel');
         if (!panel) return;
         if (panel.classList.contains('is-front')) {
-            panel.classList.toggle('is-collapsed');
+            collapseInboxPanel('notificationsPanel');
             return;
         }
         applyInboxPanelState('notificationsPanel');
