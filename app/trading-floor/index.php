@@ -182,8 +182,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         $layout_style = in_array($post_type, $allowed_layouts, true) ? $post_type : 'trade_card';
     }
     $post_type = $layout_style;
-    error_log('[TradingFloorLayouts] submit post_type=' . $post_type . ' layout_style=' . $layout_style . ' raw_layout=' . (string) ($_POST['layout_style'] ?? ''));
-
+    
 
     $caption = trim(wp_kses_post($_POST['caption'] ?? ''));
     $rr_value = sanitize_text_field($_POST['rr_value'] ?? '');
@@ -265,13 +264,11 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         $post_data['layout_style'] = $layout_style;
         $post_formats[] = '%s';
     }
-    error_log('[TradingFloorLayouts] insert columns=' . implode(',', array_keys($post_data)) . ' layout_style_column_exists=' . ($layout_style_column_exists ? '1' : '0'));
-    if (!$layout_style_column_exists) {
+        if (!$layout_style_column_exists) {
         $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN layout_style varchar(50) NOT NULL DEFAULT 'trade_card' AFTER post_type");
         $layout_style_column_exists = true;
         $post_data['layout_style'] = $layout_style;
         $post_formats[] = '%s';
-        error_log('[TradingFloorLayouts] layout_style column auto-created');
     }
     $inserted = $wpdb->insert($post_table, $post_data, $post_formats);
     if ($inserted && $layout_style_column_exists) {
@@ -670,6 +667,13 @@ $home_feed_posts = array_map(static function ($row) {
         .group-feed-card { background: rgba(20,20,20,0.9); border: 1px solid rgba(242,202,80,0.12); border-radius: 18px; padding: 15px 16px; box-shadow: 0 12px 26px rgba(0,0,0,0.18); }
         .group-feed-card.joined { border-color: rgba(242,202,80,0.28); background: linear-gradient(180deg, rgba(242,202,80,0.08), rgba(20,20,20,0.94)); }
         .group-feed-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-inline: 12px; }
+        .group-feed-author { display:flex; align-items:center; gap:12px; min-width:0; }
+        .group-feed-author-copy { min-width:0; display:flex; flex-direction:column; }
+        .group-feed-avatar-wrap { flex:0 0 auto; }
+        .group-feed-avatar { width:44px; height:44px; border-radius:50%; object-fit:cover; background:#161616; border:1px solid rgba(255,255,255,.08); box-shadow:0 8px 18px rgba(0,0,0,.22); }
+        .group-feed-avatar-fallback { display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#111; background:linear-gradient(135deg,#f2ca50,#9b7b18); }
+        .group-feed-subtitle-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:4px; }
+        .group-feed-subtitle { font-size:11px; color:#8f8f8f; letter-spacing:.14em; text-transform:uppercase; font-weight:700; }
         .group-feed-title { font-size: 20px; line-height: 1.12; font-weight: 800; color: #f5f5f5; letter-spacing: -0.02em; }
         .group-feed-meta { margin-top: 5px; font-size: 12px; color: #a8a8a8; letter-spacing: 0.01em; }
         .group-feed-body { margin: 10px 12px 0; font-size: 13px; line-height: 1.55; color: #d3d3d3; }
@@ -3872,22 +3876,6 @@ $home_feed_posts = array_map(static function ($row) {
     let tfCreateType = 'trade';
     let tfSubmittingPost = false;
 
-    setTimeout(() => {
-        console.log('[TradingFloorLayouts] boot home feed full', JSON.stringify((tfFeedInitialPosts || []).map(post => ({
-            id: post && post.id,
-            post_type: post && post.post_type,
-            layout_style: post && post.layout_style,
-            normalized: normalizePostLayout(post).layout_style,
-            has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
-        })), null, 2));
-        console.log('[TradingFloorLayouts] boot profile feed full', JSON.stringify((tfProfileInitialPosts || []).map(post => ({
-            id: post && post.id,
-            post_type: post && post.post_type,
-            layout_style: post && post.layout_style,
-            normalized: normalizePostLayout(post).layout_style,
-            has_image_urls: Array.isArray(post && post.image_urls) ? post.image_urls.length : 0
-        })), null, 2));
-    }, 0);
 
     function escapeHtml(value) {
         return String(value == null ? '' : value)
@@ -3996,9 +3984,13 @@ $home_feed_posts = array_map(static function ($row) {
         const direction = escapeHtml(post.direction || '');
         const rr = escapeHtml(post.rr_value || '');
         const time = escapeHtml(post.created_label || 'Just now');
-        const rawTags = Array.isArray(post.tags) ? post.tags : String(post.tags || '').split(/[\s,]+/);
+        const avatarUrl = escapeHtml(post.author_avatar || '');
+        const subtitleText = escapeHtml(String(post.author_title || typeLabel || '').toUpperCase());
+        const rawTags = Array.isArray(post.tags)
+            ? post.tags
+            : String(post.tags || caption.match(/#[A-Za-z0-9_]+/g)?.join(' ') || '').split(/[\s,]+/);
         const tags = rawTags.map(tag => String(tag).trim().replace(/^#+/, '')).filter(Boolean).slice(0, 8);
-        const tagsMarkup = tags.length ? `<div class="group-feed-tags">${tags.map(tag => `<span class="group-feed-tag">#${escapeHtml(tag)}</span>`).join('')}</div>` : '';
+        const tagsMarkup = tags.length ? `<div class="group-feed-tags">${tags.map(tag => `<span class="group-feed-tag">#${escapeHtml(tag)}</span>`).join(' ')}</div>` : '';
         const media = renderPostMedia(post, compact);
         const metaBits = [symbol, direction, rr ? `R:R ${rr}` : '', formatPnlBadge(post)].filter(Boolean).join(' · ');
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
@@ -4013,7 +4005,7 @@ $home_feed_posts = array_map(static function ($row) {
         } else {
             content = `<div class="social-layout-text"><span class="social-layout-quote">“</span>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${tagsMarkup}</div>${media}`;
         }
-        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta">${time}</div></div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
+        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"><div class="group-feed-top"><div class="group-feed-author"><div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div><div class="group-feed-author-copy"><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-subtitle-row"><div class="group-feed-subtitle">${subtitleText}</div><div class="group-feed-meta">${time}</div></div></div></div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
     }
 
     function togglePostMenu(button, event) {
