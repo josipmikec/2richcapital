@@ -3855,6 +3855,12 @@ $home_feed_posts = array_map(static function ($row) {
         if (status) status.textContent = selected === 'analysis_card' ? 'Analysis posts use caption and optional image.' : 'Add your caption and optional media.';
     }
 
+    function bindCreateLayouts() {
+        document.querySelectorAll('.create-layout-option').forEach(option => {
+            option.addEventListener('click', () => setCreateLayout(option.dataset.layout));
+        });
+    }
+
     const tfAjaxEndpoint = <?php echo json_encode(admin_url('admin-ajax.php')); ?>;
     const tfFeedInitialPosts = <?php echo wp_json_encode($home_feed_posts); ?>;
     const tfProfileInitialPosts = <?php echo wp_json_encode($profile_posts); ?>;
