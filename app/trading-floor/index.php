@@ -190,6 +190,30 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     
 
     $caption = trim(wp_kses_post($_POST['caption'] ?? ''));
+    $tags_input = trim(sanitize_text_field($_POST['tags'] ?? ''));
+    $normalized_tags = [];
+    if ($tags_input !== '') {
+        $tag_parts = preg_split('/[\s,]+/', $tags_input);
+        foreach ($tag_parts as $tag_part) {
+            $tag = preg_replace('/[^A-Za-z0-9_#]/', '', (string) $tag_part);
+            $tag = ltrim($tag, '#');
+            if ($tag !== '') {
+                $normalized_tags[] = '#' . $tag;
+            }
+        }
+        $normalized_tags = array_values(array_unique($normalized_tags));
+    }
+    if (!empty($normalized_tags)) {
+        $existing_caption_tags = [];
+        preg_match_all('/#([A-Za-z0-9_]+)/', $caption, $caption_matches);
+        foreach (($caption_matches[1] ?? []) as $existing_tag) {
+            $existing_caption_tags[] = '#' . $existing_tag;
+        }
+        $missing_tags = array_values(array_diff($normalized_tags, $existing_caption_tags));
+        if (!empty($missing_tags)) {
+            $caption = trim($caption . ' ' . implode(' ', $missing_tags));
+        }
+    }
     $rr_value = sanitize_text_field($_POST['rr_value'] ?? '');
     $pnl_value = isset($_POST['pnl_value']) && $_POST['pnl_value'] !== '' ? (float) $_POST['pnl_value'] : null;
 
@@ -4239,17 +4263,7 @@ $home_feed_posts = array_map(static function ($row) {
             if (tfSubmittingPost) return;
             const submitBtn = document.getElementById('createSubmitBtn');
             const payload = new FormData(createPostForm);
-            alert('[TradingFloorLayouts] submit payload ' + JSON.stringify({
-                post_type_before_append: payload.get('post_type'),
-                layout_style: payload.get('layout_style'),
-                caption: payload.get('caption'),
-                symbol: payload.get('symbol')
-            }));
             payload.set('post_type', tfCreateType);
-alert('[TradingFloorLayouts] submit effective ' + JSON.stringify({
-                post_type: payload.get('post_type'),
-                layout_style: payload.get('layout_style')
-            }));
             tfSubmittingPost = true;
             if (submitBtn) submitBtn.disabled = true;
             setCreateFormStatus('Publishing post...');
