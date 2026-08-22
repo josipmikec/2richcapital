@@ -1357,6 +1357,16 @@ $home_feed_posts = array_map(static function ($row) {
         .dm-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid #1e1e1e; border-radius: 16px; padding: 8px 12px; font-size: 12px; font-weight: 500; color: #aaa; font-family: "Montserrat", sans-serif; }
         .dm-input:focus { outline: none; border-color: #333; }
 
+        .dm-stack { position:fixed; bottom:0; right:80px; width:300px; z-index:200; pointer-events:none; }
+        .dm-stack .dm-panel { position:absolute; right:0; bottom:0; width:100%; pointer-events:auto; }
+        .notifications-panel { z-index:199; right:32px; background:#121212; }
+        .notifications-panel.open { transform:translateY(0); }
+        .notifications-panel .dm-panel-title { color:#d9d9d9; }
+        .notifications-panel .dm-list { max-height:260px; }
+        .notification-item { align-items:flex-start; }
+        .notification-item .dm-item-avatar { margin-top:2px; }
+        .notification-item .dm-item-preview { white-space:normal; line-height:1.45; }
+
         /* ── Search overlay ── */
         .search-overlay { display: none; position: fixed; top: 0; left: 72px; width: 340px; height: 100vh; background: #0f0f0f; border-right: 1px solid #1a1a1a; z-index: 300; padding: 24px 20px; overflow-y: auto; }
         .search-overlay.active { display: block; }
@@ -1534,8 +1544,8 @@ $home_feed_posts = array_map(static function ($row) {
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 <span>GROUPS</span>
             </a>
-            <a class="tf-left-link" title="Notifications"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Notifications</span></a>
-            <a class="tf-left-link" onclick="document.getElementById('dmPanel').classList.add('open')" title="Messages"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messages</span></a>
+            <a class="tf-left-link" onclick="openNotificationsPanel(); return false;" title="Notifications"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Notifications</span></a>
+            <a class="tf-left-link" onclick="openMessagesPanel(); return false;" title="Messages"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messages</span></a>
             <a class="tf-left-link" onclick="openProfileSavedTab(); return false;" title="Saved"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Saved</span></a>
             <a class="tf-left-link" data-floor-nav="profile" onclick="openFloorSection('profile')" title="Profile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
         </aside>
@@ -1938,7 +1948,42 @@ $home_feed_posts = array_map(static function ($row) {
     </div>
 
     <!-- DM Panel -->
-    <div class="dm-panel" id="dmPanel">
+    <div class="dm-stack" id="dmStack">
+        <div class="dm-panel notifications-panel" id="notificationsPanel">
+            <div class="dm-panel-header" onclick="toggleNotificationsPanel()">
+                <div class="dm-panel-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    Notifications <span class="dm-unread-dot"></span>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+            </div>
+            <div class="dm-list">
+                <?php
+                $notifications = [
+                    ['init'=>'RC','name'=>'2RICH Capital','preview'=>'Your latest trade post is now visible in the home feed.','time'=>'Just now','color'=>'#F2CA50','unread'=>true],
+                    ['init'=>'AL','name'=>'Alpha Digital','preview'=>'Started following your trading profile.','time'=>'12m','color'=>'#34d399','unread'=>true],
+                    ['init'=>'MR','name'=>'Mike Rivera','preview'=>'Liked your market analysis on EURUSD.','time'=>'48m','color'=>'#dc2626','unread'=>false],
+                    ['init'=>'JB','name'=>'John B','preview'=>'Commented on your post: “Clean breakdown, great patience.”','time'=>'2h','color'=>'#be185d','unread'=>false],
+                ];
+                foreach ($notifications as $notification): ?>
+                <div class="dm-item notification-item <?= $notification['unread'] ? 'unread' : '' ?>">
+                    <div class="dm-item-avatar" style="background:<?= $notification['color'] ?>"><?= $notification['init'] ?></div>
+                    <div class="dm-item-info">
+                        <div class="dm-item-name"><?= $notification['name'] ?></div>
+                        <div class="dm-item-preview"><?= $notification['preview'] ?></div>
+                    </div>
+                    <div class="dm-item-time"><?= $notification['time'] ?></div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="dm-panel" id="dmPanel">
         <div class="dm-panel-header" onclick="toggleDM()">
             <div class="dm-panel-title">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1976,6 +2021,7 @@ $home_feed_posts = array_map(static function ($row) {
                     <line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
             </button>
+        </div>
         </div>
     </div>
 
@@ -3851,7 +3897,33 @@ $home_feed_posts = array_map(static function ($row) {
     }
 
     // DM
-    function toggleDM() { document.getElementById('dmPanel').classList.toggle('open'); }
+    function openMessagesPanel() {
+        const messages = document.getElementById('dmPanel');
+        const notifications = document.getElementById('notificationsPanel');
+        if (notifications) notifications.classList.remove('open');
+        if (messages) messages.classList.add('open');
+    }
+
+    function openNotificationsPanel() {
+        const messages = document.getElementById('dmPanel');
+        const notifications = document.getElementById('notificationsPanel');
+        if (messages) messages.classList.remove('open');
+        if (notifications) notifications.classList.add('open');
+    }
+
+    function toggleDM() {
+        const panel = document.getElementById('dmPanel');
+        const notifications = document.getElementById('notificationsPanel');
+        if (notifications) notifications.classList.remove('open');
+        if (panel) panel.classList.toggle('open');
+    }
+
+    function toggleNotificationsPanel() {
+        const panel = document.getElementById('notificationsPanel');
+        const messages = document.getElementById('dmPanel');
+        if (messages) messages.classList.remove('open');
+        if (panel) panel.classList.toggle('open');
+    }
 
     // Create modal — post layout is the single source of truth.
     function setCreateLayout(layout) {
