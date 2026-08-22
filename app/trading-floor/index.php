@@ -3906,7 +3906,7 @@ $home_feed_posts = array_map(static function ($row) {
     }
 
     // DM
-    function applyInboxPanelState(frontPanelId, collapsedPanelId = null) {
+    function applyInboxPanelState(frontPanelId = 'dmPanel', collapsedPanelId = null) {
         const messages = document.getElementById('dmPanel');
         const notifications = document.getElementById('notificationsPanel');
         if (!messages || !notifications) return;
@@ -3934,8 +3934,8 @@ $home_feed_posts = array_map(static function ($row) {
     function toggleDM() {
         const panel = document.getElementById('dmPanel');
         if (!panel) return;
-        if (panel.classList.contains('is-front') && !panel.classList.contains('is-collapsed')) {
-            applyInboxPanelState('notificationsPanel', 'dmPanel');
+        if (panel.classList.contains('is-front')) {
+            panel.classList.toggle('is-collapsed');
             return;
         }
         applyInboxPanelState('dmPanel');
@@ -3944,8 +3944,8 @@ $home_feed_posts = array_map(static function ($row) {
     function toggleNotificationsPanel() {
         const panel = document.getElementById('notificationsPanel');
         if (!panel) return;
-        if (panel.classList.contains('is-front') && !panel.classList.contains('is-collapsed')) {
-            applyInboxPanelState('dmPanel', 'notificationsPanel');
+        if (panel.classList.contains('is-front')) {
+            panel.classList.toggle('is-collapsed');
             return;
         }
         applyInboxPanelState('notificationsPanel');
