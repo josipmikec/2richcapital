@@ -4062,7 +4062,7 @@ $home_feed_posts = array_map(static function ($row) {
         try { await runSocialPostAction(postId, 'delete'); } catch (error) { window.alert(error.message || 'Could not delete post.'); }
     }
     function renderHomeFeedPosts(posts) {
-        const host = document.getElementById('tfHomeFeedPosts');
+        const host = document.getElementById('homeFeedPosts');
         if (!host) return;
         console.log('[TradingFloorLayouts] render home', (posts || []).map(post => ({
             id: post && post.id,
