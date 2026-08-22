@@ -137,6 +137,10 @@ if (!function_exists('tf_format_social_post')) {
                 $avatar_url = get_avatar_url((int) $row->user_id, ['size' => 96]);
             }
 
+            $caption = trim((string) ($row->caption ?? ''));
+            preg_match_all('/#([A-Za-z0-9_]+)/', $caption, $matches);
+            $tags = array_values(array_unique(array_filter($matches[1] ?? [])));
+
             return [
                 'id' => (int) ($row->id ?? 0),
                 'user_id' => (int) ($row->user_id ?? 0),
@@ -148,7 +152,8 @@ if (!function_exists('tf_format_social_post')) {
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
                 'rr_value' => trim((string) ($row->rr_value ?? '')),
-                'caption' => trim((string) ($row->caption ?? '')),
+                'caption' => $caption,
+                'tags' => $tags,
                 'image_url' => tf_normalize_media_url($row->image_url ?? '', $row->image_path ?? ''),
                 'image_urls' => tf_collect_media_urls($row),
                 'created_at' => mysql2date('c', (string) ($row->created_at ?? current_time('mysql')), false),
