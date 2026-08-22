@@ -382,14 +382,6 @@ if (!function_exists('tf_format_social_post')) {
             'author_name' => $display_name,
             'author_avatar' => $avatar_url ?: '',
             'post_type' => sanitize_key($row->post_type ?? 'trade'),
-            'layout_style' => (function () use ($row) {
-                $post_type = sanitize_key($row->post_type ?? 'trade');
-                $layout = sanitize_key($row->layout_style ?? '');
-                $allowed = ['trade_card', 'analysis_card', 'image', 'text'];
-                if (in_array($layout, $allowed, true)) return $layout;
-                if ($post_type === 'analysis') return 'analysis_card';
-                return 'trade_card';
-            })(),
             'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
             'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
             'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
