@@ -1040,6 +1040,11 @@ $home_feed_posts = array_map(static function ($row) {
         .tf-feed-col::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 4px; }
 
         /* Stories */
+        .stories-row-wrap { position:relative; margin-bottom:32px; }
+        .stories-row-disabled { opacity:.45; filter:grayscale(.65); }
+        .stories-row-overlay { position:relative; z-index:2; min-height:88px; display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 22px; border:1px solid rgba(242,202,80,.2); border-radius:14px; background:rgba(14,14,14,.86); color:#f1f1f1; text-align:center; backdrop-filter:blur(6px); }
+        .stories-row-overlay strong { color:#f2ca50; font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
+        .stories-row-overlay span { color:#9b9b9b; font-size:12px; }
         .stories-row {
             display: flex;
             gap: 16px;
