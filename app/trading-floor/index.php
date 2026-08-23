@@ -1192,7 +1192,7 @@ $home_feed_posts = array_map(static function ($row) {
         .follow-btn:hover { color: #FFDB70; }
         .follow-btn.following { color: #555; }
         .right-footer-links { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 8px; }
-        .right-footer-link { font-size: 9px; font-weight: 500; color: #333; letter-spacing: 0.04em; cursor: pointer; text-transform: uppercase; transition: color 0.2s; }
+        .right-footer-link { font-size: 9px; font-weight: 500; color: #333; letter-spacing: 0.04em; cursor: pointer; text-transform: uppercase; text-decoration: none; transition: color 0.2s; }
         .right-footer-link:hover { color: #555; }
 
         /* ── Story viewer overlay ── */
