@@ -4398,6 +4398,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 commentsList.innerHTML = rows.length ? rows.map(comment => `<div class="feed-post-comment"><div class="feed-post-comment-author">${escapeHtml(comment.display_name || 'Trader')}</div><div class="feed-post-comment-body">${escapeHtml(comment.body || '')}</div></div>`).join('') : '<div class="feed-post-comments-empty">No comments yet. Start the conversation.</div>';
                 commentInput.value = '';
                 commentBtn.querySelector('span').textContent = Number(data.comments_count || rows.length);
+                updateFeedEngagement(Number(post.id), data);
             } catch (error) {
                 window.alert(error.message || 'Could not post comment.');
             } finally {
@@ -4733,15 +4734,37 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         if (!response.ok || !data.success) throw new Error(data.message || 'Could not update post.');
         return data;
     }
+    function updateFeedEngagement(postId, data) {
+        const card = document.querySelector(`.group-feed-card[data-post-id=\"${postId}\"]`);
+        if (!card) return;
+        const actions = card.querySelectorAll('.group-feed-action');
+        const likeBtn = actions[0];
+        const commentBtn = actions[1];
+        const saveBtn = actions[3];
+        if (likeBtn) { likeBtn.classList.toggle('liked', !!data.is_liked); const count = likeBtn.querySelector('.like-count'); if (count) count.textContent = Number(data.likes_count || 0); }
+        if (commentBtn) { const count = commentBtn.querySelector('span'); if (count) count.textContent = Number(data.comments_count || 0); }
+        if (saveBtn) saveBtn.classList.toggle('bookmarked', !!data.is_saved);
+    }
+
     async function toggleLike(btn, postId) {
         if (!postId || btn.disabled) return;
         const liked = btn.classList.contains('liked'); btn.disabled = true;
-        try { const data = await engagementRequest(liked ? 'unlike' : 'like', postId); btn.classList.toggle('liked', !!data.is_liked); const count=btn.querySelector('.like-count'); if(count) count.textContent=Number(data.likes_count||0); } catch(error) { window.alert(error.message); } finally { btn.disabled=false; }
+        try {
+            const data = await engagementRequest(liked ? 'unlike' : 'like', postId);
+            btn.classList.toggle('liked', !!data.is_liked);
+            const count = btn.querySelector('.like-count');
+            if (count) count.textContent = Number(data.likes_count || 0);
+            updateFeedEngagement(postId, data);
+        } catch(error) { window.alert(error.message); } finally { btn.disabled=false; }
     }
     async function toggleBookmark(btn, postId) {
         if (!postId || btn.disabled) return;
         const saved = btn.classList.contains('bookmarked'); btn.disabled = true;
-        try { const data = await engagementRequest(saved ? 'unsave' : 'save', postId); btn.classList.toggle('bookmarked', !!data.is_saved); } catch(error) { window.alert(error.message); } finally { btn.disabled=false; }
+        try {
+            const data = await engagementRequest(saved ? 'unsave' : 'save', postId);
+            btn.classList.toggle('bookmarked', !!data.is_saved);
+            updateFeedEngagement(postId, data);
+        } catch(error) { window.alert(error.message); } finally { btn.disabled=false; }
     }
     async function sharePost(postId) {
         const url = `${window.location.origin}${window.location.pathname}?post_id=${encodeURIComponent(postId)}`;
