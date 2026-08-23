@@ -387,6 +387,24 @@ $profile_following_count = 0;
 $profile_follow_state = false;
 $social_table = $wpdb->prefix . 'rich_user_follows';
 $post_table = $wpdb->prefix . 'rich_social_posts';
+$likes_table = $wpdb->prefix . 'rich_post_likes';
+$saves_table = $wpdb->prefix . 'rich_post_saves';
+$comments_table = $wpdb->prefix . 'rich_post_comments';
+
+if (!function_exists('tf_add_engagement_data')) {
+    function tf_add_engagement_data($posts, $wpdb, $likes_table, $saves_table, $comments_table) {
+        foreach ($posts as &$post) {
+            $post_id = (int) ($post['id'] ?? 0);
+            $post['likes_count'] = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$likes_table} WHERE post_id = %d", $post_id));
+            $post['saves_count'] = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$saves_table} WHERE post_id = %d", $post_id));
+            $comments = $wpdb->get_results($wpdb->prepare("SELECT c.body, c.created_at, COALESCE(u.display_name, 'Trader') AS author_name FROM {$comments_table} c LEFT JOIN {$wpdb->users} u ON u.ID = c.user_id WHERE c.post_id = %d ORDER BY c.created_at ASC LIMIT 50", $post_id), ARRAY_A);
+            $post['comments_count'] = count($comments);
+            $post['comments_preview'] = $comments ?: [];
+        }
+        unset($post);
+        return $posts;
+    }
+}
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$social_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, follower_id BIGINT UNSIGNED NOT NULL, following_id BIGINT UNSIGNED NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY follower_following (follower_id, following_id), KEY following_idx (following_id), KEY follower_idx (follower_id)) {$wpdb->get_charset_collate()}");
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$post_table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, user_id BIGINT UNSIGNED NOT NULL, post_type VARCHAR(24) NOT NULL DEFAULT 'trade', symbol VARCHAR(32) NULL, direction VARCHAR(16) NULL, pnl_value DECIMAL(10,2) NULL, rr_value VARCHAR(32) NULL, caption TEXT NULL, image_url TEXT NULL, image_path TEXT NULL, image_urls LONGTEXT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY user_created_idx (user_id, created_at), KEY created_idx (created_at), KEY post_type_idx (post_type)) {$wpdb->get_charset_collate()}");
 $layout_style_column_exists = (bool) $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$post_table} LIKE %s", 'layout_style'));
@@ -422,6 +440,7 @@ $profile_post_count = is_array($profile_post_rows) ? count($profile_post_rows) :
 $profile_posts = array_map(static function ($row) {
     return tf_format_social_post($row);
 }, $profile_post_rows ?: []);
+$profile_posts = tf_add_engagement_data($profile_posts, $wpdb, $likes_table, $saves_table, $comments_table);
 
 $feed_post_rows = $wpdb->get_results(
     "SELECT p.*, u.display_name, u.user_nicename, u.user_login
@@ -433,6 +452,7 @@ $feed_post_rows = $wpdb->get_results(
 $home_feed_posts = array_map(static function ($row) {
     return tf_format_social_post($row);
 }, $feed_post_rows ?: []);
+$home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table, $saves_table, $comments_table);
 ?>
 <!DOCTYPE html>
 <html lang="en">
