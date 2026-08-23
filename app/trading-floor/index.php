@@ -4356,10 +4356,10 @@ $home_feed_posts = array_map(static function ($row) {
         commentBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span>`;
         shareBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg><span>Share</span>`;
         saveBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.saves_count || post.saves || 0)}</span>`;
-        likeBtn.onclick = () => toggleLike(likeBtn);
+        likeBtn.onclick = () => toggleLike(likeBtn, Number(post.id));
         commentBtn.onclick = () => commentInput.focus();
         shareBtn.onclick = () => sharePost(Number(post.id));
-        saveBtn.onclick = () => toggleBookmark(saveBtn);
+        saveBtn.onclick = () => toggleBookmark(saveBtn, Number(post.id));
         const canManageModalPost = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         menuWrap.hidden = !canManageModalPost;
         archiveBtn.onclick = () => archiveSocialPost(Number(post.id));
@@ -4367,17 +4367,22 @@ $home_feed_posts = array_map(static function ($row) {
         commentsList.innerHTML = Array.isArray(post.comments_preview) && post.comments_preview.length
             ? post.comments_preview.map(comment => `<div class="feed-post-comment"><div class="feed-post-comment-author">${escapeHtml(comment.author_name || 'Trader')}</div><div class="feed-post-comment-body">${escapeHtml(comment.body || '')}</div></div>`).join('')
             : '<div class="feed-post-comments-empty">No comments yet. Start the conversation.</div>';
-        commentForm.onsubmit = event => {
+        commentForm.onsubmit = async event => {
             event.preventDefault();
             const value = String(commentInput.value || '').trim();
             if (!value) return;
-            const item = document.createElement('div');
-            item.className = 'feed-post-comment';
-            item.innerHTML = `<div class="feed-post-comment-author">You</div><div class="feed-post-comment-body">${escapeHtml(value)}</div>`;
-            const empty = commentsList.querySelector('.feed-post-comments-empty');
-            if (empty) empty.remove();
-            commentsList.appendChild(item);
-            commentInput.value = '';
+            commentInput.disabled = true;
+            try {
+                const data = await engagementRequest('comment', Number(post.id), value);
+                const rows = Array.isArray(data.comments) ? data.comments : [];
+                commentsList.innerHTML = rows.length ? rows.map(comment => `<div class="feed-post-comment"><div class="feed-post-comment-author">${escapeHtml(comment.display_name || 'Trader')}</div><div class="feed-post-comment-body">${escapeHtml(comment.body || '')}</div></div>`).join('') : '<div class="feed-post-comments-empty">No comments yet. Start the conversation.</div>';
+                commentInput.value = '';
+                commentBtn.querySelector('span').textContent = Number(data.comments_count || rows.length);
+            } catch (error) {
+                window.alert(error.message || 'Could not post comment.');
+            } finally {
+                commentInput.disabled = false;
+            }
         };
         if (counter) {
             const total = Array.isArray(tfProfileInitialPosts) ? tfProfileInitialPosts.length : 0;
@@ -4703,7 +4708,7 @@ $home_feed_posts = array_map(static function ($row) {
 
     // Interactions
     async function engagementRequest(action, postId, body = '') {
-        const response = await fetch('./../api/social/engagement.php', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action, post_id:Number(postId), body}) });
+        const response = await fetch('./../api/social/engagement.php', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRF-Token': <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>}, body:JSON.stringify({action, post_id:Number(postId), body}) });
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || 'Could not update post.');
         return data;
