@@ -711,7 +711,7 @@ $home_feed_posts = array_map(static function ($row) {
         .group-joined-pill { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; background: rgba(242,202,80,0.14); border: 1px solid rgba(242,202,80,0.3); color: #f2ca50; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
         .group-feed-actions { display:flex; align-items:center; gap:20px; margin:14px 18px 0; padding:14px 2px 0; border-top:1px solid rgba(255,255,255,.045); }
         .group-feed-action { display:inline-flex; align-items:center; gap:7px; min-width:34px; min-height:40px; padding:6px 0; border:0; background:none; color:#666; font-family:"Montserrat",sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:color .2s,transform .2s; }
-        .group-feed-action:hover { color:#ccc; transform:translateY(-1px); }
+        .group-feed-action:hover { color:#f2ca50; transform:translateY(-1px); }
         .group-feed-action:active { transform:translateY(0); }
         .group-feed-action:focus-visible { outline:2px solid #F2CA50; outline-offset:3px; border-radius:5px; }
         .group-feed-action svg { width:19px; height:19px; flex:0 0 19px; }
