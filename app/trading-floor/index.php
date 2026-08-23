@@ -570,8 +570,8 @@ $home_feed_posts = array_map(static function ($row) {
         .profile-highlight-ring { width:63px; height:63px; border-radius:50%; border:1px solid rgba(255,255,255,0.08); background:#101010; display:grid; place-items:center; }
         .profile-highlight-ring span { width:51px; height:51px; border-radius:50%; border:2px solid rgba(255,255,255,0.18); display:grid; place-items:center; color:#f3f3f3; font-size:19px; font-weight:700; }
         .social-post-menu-wrap { position:relative; flex:0 0 auto; }
-        .social-post-menu-btn { display:grid; place-items:center; width:32px; height:32px; border:1px solid rgba(255,255,255,0.08); border-radius:50%; background:rgba(255,255,255,0.03); color:#a9afb8; font-size:22px; line-height:1; letter-spacing:2px; cursor:pointer; }
-        .social-post-menu-btn:hover, .social-post-menu-btn:focus-visible { background:rgba(242,202,80,0.12); border-color:rgba(242,202,80,0.3); color:#f2ca50; }
+        .social-post-menu-btn { display:grid; place-items:center; width:32px; height:32px; border:0; border-radius:50%; background:transparent; color:#a9afb8; font-size:22px; line-height:1; letter-spacing:2px; cursor:pointer; }
+        .social-post-menu-btn:hover, .social-post-menu-btn:focus-visible { background:transparent; border-color:transparent; color:#f2ca50; }
         .social-post-menu { position:absolute; top:38px; right:0; z-index:20; min-width:178px; padding:6px; border:1px solid rgba(255,255,255,0.12); border-radius:12px; background:#191919; box-shadow:0 14px 32px rgba(0,0,0,0.42); }
         .social-post-menu[hidden] { display:none; }
         .social-post-menu button { display:block; width:100%; padding:10px 11px; border:0; border-radius:8px; background:transparent; color:#d8dbe1; text-align:left; font-size:12px; cursor:pointer; }
