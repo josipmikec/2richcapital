@@ -1159,7 +1159,7 @@ $home_feed_posts = array_map(static function ($row) {
             background: none; border: none;
             font-family: "Montserrat", sans-serif; letter-spacing: 0.04em; padding: 0;
         }
-        .post-action-btn:hover { color: #ccc; }
+        .post-action-btn:hover { color: #f2ca50; }
         .post-action-btn.liked { color: #f87171; }
         .post-action-btn.liked svg { fill: #f87171; }
         .post-action-btn.bookmarked { color: #F2CA50; }
