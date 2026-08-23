@@ -4702,8 +4702,26 @@ $home_feed_posts = array_map(static function ($row) {
     }
 
     // Interactions
-    function toggleLike(btn) { btn.classList.toggle('liked'); const s=btn.querySelector('.like-count'),n=parseInt(s.textContent); s.textContent=btn.classList.contains('liked')?n+1:n-1; }
-    function toggleBookmark(btn) { btn.classList.toggle('bookmarked'); }
+    async function engagementRequest(action, postId, body = '') {
+        const response = await fetch('./../api/social/engagement.php', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action, post_id:Number(postId), body}) });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Could not update post.');
+        return data;
+    }
+    async function toggleLike(btn, postId) {
+        if (!postId || btn.disabled) return;
+        const liked = btn.classList.contains('liked'); btn.disabled = true;
+        try { const data = await engagementRequest(liked ? 'unlike' : 'like', postId); btn.classList.toggle('liked', !!data.is_liked); const count=btn.querySelector('.like-count'); if(count) count.textContent=Number(data.likes_count||0); } catch(error) { window.alert(error.message); } finally { btn.disabled=false; }
+    }
+    async function toggleBookmark(btn, postId) {
+        if (!postId || btn.disabled) return;
+        const saved = btn.classList.contains('bookmarked'); btn.disabled = true;
+        try { const data = await engagementRequest(saved ? 'unsave' : 'save', postId); btn.classList.toggle('bookmarked', !!data.is_saved); } catch(error) { window.alert(error.message); } finally { btn.disabled=false; }
+    }
+    async function sharePost(postId) {
+        const url = `${window.location.origin}${window.location.pathname}?post_id=${encodeURIComponent(postId)}`;
+        try { if(navigator.share) await navigator.share({title:'2RICH CAPITAL post',url}); else if(navigator.clipboard){await navigator.clipboard.writeText(url); window.alert('Post link copied.');} else window.prompt('Copy this post link:',url); await engagementRequest('share',postId); } catch(error) { if(error.name !== 'AbortError') window.alert(error.message || 'Could not share post.'); }
+    }
     function toggleFollow(btn) { btn.classList.toggle('following'); btn.textContent=btn.classList.contains('following')?'Following':'Follow'; }
 
     document.addEventListener('keydown', e => { if(e.key==='Escape'){closeStory();document.getElementById('searchOverlay').classList.remove('active');closeCreateModal();closeGroupSignalModal();} });
