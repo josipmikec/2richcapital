@@ -1949,11 +1949,11 @@ $home_feed_posts = array_map(static function ($row) {
             </div>
 
             <div class="right-footer-links">
-                <span class="right-footer-link">About</span>
-                <span class="right-footer-link">Help</span>
-                <span class="right-footer-link">Privacy</span>
-                <span class="right-footer-link">Terms</span>
-                <span class="right-footer-link">© 2Rich Capital</span>
+                <a class="right-footer-link" href="https://2rich.capital/inside-the-desk/" target="_blank" rel="noopener noreferrer">About</a>
+                <a class="right-footer-link" href="https://help.2rich.capital" target="_blank" rel="noopener noreferrer">Help</a>
+                <a class="right-footer-link" href="https://2rich.capital/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy</a>
+                <a class="right-footer-link" href="https://2rich.capital/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms</a>
+                <a class="right-footer-link" href="https://2rich.capital" target="_blank" rel="noopener noreferrer">© 2Rich Capital</a>
             </div>
         </aside>
 
