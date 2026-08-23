@@ -1848,8 +1848,16 @@ $home_feed_posts = array_map(static function ($row) {
             </div>
             <?php endif; ?>
 
-            <!-- Stories -->
-            <div class="stories-row">
+            <?php
+            $stories_feature_enabled = function_exists('rich_feature_enabled') ? rich_feature_enabled('trading-floor-stories', true, $user_id) : true;
+            $stories_overlay = function_exists('rich_feature_overlay') ? rich_feature_overlay('trading-floor-stories', $user_id) : null;
+            $stories_overlay_enabled = is_array($stories_overlay);
+            $stories_overlay_message = $stories_overlay_enabled ? (string)$stories_overlay['message'] : 'Stories are temporarily unavailable.';
+            ?>
+            <div class="stories-row-wrap">
+                <div class="stories-row<?php echo (!$stories_feature_enabled || $stories_overlay_enabled) ? ' stories-row-disabled' : ''; ?>" aria-disabled="<?php echo (!$stories_feature_enabled || $stories_overlay_enabled) ? 'true' : 'false'; ?>">
+            <?php if ($stories_feature_enabled && !$stories_overlay_enabled): ?>
+
                 <div class="story-item">
                     <div class="story-ring add-story" style="position:relative;">
                         <div class="story-avatar"><?php echo strtoupper(substr($user_name,0,1)); ?></div>
@@ -1880,6 +1888,13 @@ $home_feed_posts = array_map(static function ($row) {
                     <span class="story-name"><?= $s['name'] ?></span>
                 </div>
                 <?php endforeach; ?>
+            <?php else: ?>
+                <div class="stories-row-overlay" role="status">
+                    <strong>Stories unavailable</strong>
+                    <span><?php echo htmlspecialchars($stories_overlay_message); ?></span>
+                </div>
+            <?php endif; ?>
+                </div>
             </div>
 
             <!-- Posts -->
