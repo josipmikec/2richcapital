@@ -273,12 +273,12 @@ $useremail  = $_SESSION['user_email'] ?? '';
 
                 <!-- Interval selector -->
                 <div class="md-interval-wrap">
-                    <button class="md-interval-btn" data-interval="1"   onclick="changeInterval(1)">1m</button>
-                    <button class="md-interval-btn" data-interval="5"   onclick="changeInterval(5)">5m</button>
-                    <button class="md-interval-btn active" data-interval="15"  onclick="changeInterval(15)">15m</button>
-                    <button class="md-interval-btn" data-interval="60"  onclick="changeInterval(60)">1H</button>
-                    <button class="md-interval-btn" data-interval="240" onclick="changeInterval(240)">4H</button>
-                    <button class="md-interval-btn" data-interval="D"   onclick="changeInterval('D')">D</button>
+                    <button class="md-interval-btn active" data-interval="H8" onclick="changeInterval('H8')">8H</button>
+                    <button class="md-interval-btn" data-interval="D1" onclick="changeInterval('D1')">D</button>
+                    <button class="md-interval-btn" data-interval="W1" onclick="changeInterval('W1')">W</button>
+                    <button class="md-interval-btn" data-interval="MN1" onclick="changeInterval('MN1')">MN</button>
+                    
+                    
                 </div>
 
                 <!-- Live Feed badge -->
@@ -518,8 +518,21 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // CHART STATE
 // ═══════════════════════════════════════════════════════════════════════════
 let tvWidget       = null;
-let currentSymbol  = 'FX:EURUSD';
-let currentInterval= 15;
+let currentSymbol  = 'EURUSD';
+let currentInterval= 'D1';
+let marketSymbols = [];
+let marketDataReady = false;
+
+class TwoRichUDFDatafeed {
+    constructor(base) { this.base = base; this.listeners = {}; }
+    onReady(cb) { setTimeout(() => cb({ supported_resolutions: ['H8','D','W','M'], supports_marks: false, supports_timescale_marks: false, supports_time: false }), 0); }
+    searchSymbols(userInput, exchange, symbolType, onResultReadyCallback) { fetch(this.base + '/symbols.php').then(r => r.json()).then(x => onResultReadyCallback((x.symbols || []).filter(s => s.display_symbol.toLowerCase().includes(userInput.toLowerCase())).map(s => ({ symbol: s.display_symbol, full_name: s.display_symbol, description: s.mt5_symbol, exchange: 'MT5', ticker: s.display_symbol, type: 'forex' })))); }
+    resolveSymbol(symbolName, onResolve, onError) { fetch(this.base + '/symbols.php').then(r => r.json()).then(x => { const s=(x.symbols||[]).find(v=>v.display_symbol===symbolName)||{display_symbol:symbolName,mt5_symbol:symbolName,digits:5}; onResolve({name:s.display_symbol,ticker:s.display_symbol,description:s.mt5_symbol,exchange:'MT5',type:'forex',session:'24x7',timezone:'Etc/UTC',minmov:1,pricescale:Math.pow(10,Number(s.digits||5)),has_intraday:false,has_daily:true,has_weekly_and_monthly:true,supported_resolutions:['H8','D','W','M'],volume_precision:0,data_status:'streaming'}); }).catch(onError); }
+    getBars(info, resolution, periodParams, onHistoryCallback, onErrorCallback) { const tf=resolution==='H8'?'H8':resolution==='W'?'W1':resolution==='M'?'MN1':'D1'; const url=this.base+'/candles.php?symbol='+encodeURIComponent(info.ticker||info.name)+'&timeframe='+tf+'&limit='+Math.min(2000,periodParams.countBack||500); fetch(url).then(r=>r.json()).then(x=>onHistoryCallback((x.candles||[]).map(c=>({time:Math.floor(Date.parse(c.time)/1000)*1000,open:c.open,high:c.high,low:c.low,close:c.close,volume:c.volume})),{noData:!(x.candles||[]).length})).catch(onErrorCallback); }
+    subscribeBars(info, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) { this.listeners[subscriberUID]=setInterval(()=>this.getBars(info,resolution,{countBack:2},bars=>bars.length&&onRealtimeCallback(bars[bars.length-1]),()=>{}),90000); }
+    unsubscribeBars(id) { if(this.listeners[id]) clearInterval(this.listeners[id]); delete this.listeners[id]; }
+    getServerTime(cb) { cb(Math.floor(Date.now()/1000)); }
+}
 
 function initChart() {
     if (tvWidget) { tvWidget.remove(); tvWidget = null; }
@@ -527,7 +540,7 @@ function initChart() {
         container:       'tv_chart_container',
         locale:          'en',
         library_path:    '../assets/charting_library/',
-        datafeed:        new Datafeeds.UDFCompatibleDatafeed('https://demo_feed.tradingview.com'),
+        datafeed:        new TwoRichUDFDatafeed('/app/api/market'),
         symbol:          currentSymbol,
         interval:        currentInterval,
         fullscreen:      false,
@@ -987,5 +1000,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.head.appendChild(udfScript);
 });
 </script>
+
+
 </body>
 </html>

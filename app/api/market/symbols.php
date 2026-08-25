@@ -1,0 +1,2 @@
+<?php
+define('WP_USE_THEMES', false); require_once dirname(__DIR__, 3) . '/wp-load.php'; global $wpdb; header('Content-Type: application/json; charset=utf-8'); $table=$wpdb->prefix.'rich_market_symbols'; $rows=$wpdb->get_results("SELECT display_symbol, mt5_symbol, asset_class, digits, timezone FROM {$table} WHERE enabled=1 ORDER BY display_symbol ASC", ARRAY_A); wp_send_json(['ok'=>true,'symbols'=>$rows?:[]]);

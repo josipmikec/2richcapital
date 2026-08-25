@@ -85,6 +85,49 @@ function mt5_get_user_journal_id($user_id, $wpdb) {
     ]);
 
     return (int)$wpdb->insert_id;
+
+}
+
+function mt5_market_install_tables($wpdb) {
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    $charset = $wpdb->get_charset_collate();
+    $symbols = $wpdb->prefix . 'rich_market_symbols';
+    $candles = $wpdb->prefix . 'rich_market_candles';
+    $sync = $wpdb->prefix . 'rich_market_sync_state';
+    dbDelta("CREATE TABLE {$symbols} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, provider VARCHAR(20) NOT NULL DEFAULT 'mt5', broker_account_id BIGINT UNSIGNED NULL, mt5_symbol VARCHAR(80) NOT NULL, display_symbol VARCHAR(40) NOT NULL, asset_class VARCHAR(20) NULL, digits TINYINT NULL, point_size DECIMAL(24,12) NULL, timezone VARCHAR(64) NULL, enabled TINYINT(1) NOT NULL DEFAULT 1, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, PRIMARY KEY(id), UNIQUE KEY broker_symbol(provider,broker_account_id,mt5_symbol), KEY display_symbol(display_symbol)) {$charset}");
+    dbDelta("CREATE TABLE {$candles} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, symbol_id BIGINT UNSIGNED NOT NULL, timeframe VARCHAR(8) NOT NULL, candle_time_utc DATETIME NOT NULL, open_price DECIMAL(30,12) NOT NULL, high_price DECIMAL(30,12) NOT NULL, low_price DECIMAL(30,12) NOT NULL, close_price DECIMAL(30,12) NOT NULL, tick_volume BIGINT UNSIGNED NULL, real_volume BIGINT UNSIGNED NULL, spread_points INT NULL, is_closed TINYINT(1) NOT NULL DEFAULT 1, source VARCHAR(20) NOT NULL DEFAULT 'mt5', created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, PRIMARY KEY(id), UNIQUE KEY candle_unique(symbol_id,timeframe,candle_time_utc,source), KEY lookup(symbol_id,timeframe,candle_time_utc)) {$charset}");
+    dbDelta("CREATE TABLE {$sync} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, symbol_id BIGINT UNSIGNED NOT NULL, timeframe VARCHAR(8) NOT NULL, last_closed_candle_utc DATETIME NULL, last_attempt_at DATETIME NULL, last_success_at DATETIME NULL, last_error_code VARCHAR(64) NULL, last_error_message TEXT NULL, consecutive_failures INT NOT NULL DEFAULT 0, rows_synced BIGINT UNSIGNED NOT NULL DEFAULT 0, locked_until DATETIME NULL, PRIMARY KEY(id), UNIQUE KEY sync_unique(symbol_id,timeframe)) {$charset}");
+}
+
+function mt5_market_sync_candles($payload, $connection, $wpdb) {
+    $bars = isset($payload['candles']) && is_array($payload['candles']) ? $payload['candles'] : [];
+    if (!$bars) {
+        return ['received' => 0, 'saved' => 0];
+    }
+    mt5_market_install_tables($wpdb);
+    $symbols = $wpdb->prefix . 'rich_market_symbols';
+    $candles = $wpdb->prefix . 'rich_market_candles';
+    $sync = $wpdb->prefix . 'rich_market_sync_state';
+    $allowed = ['H8', 'D1', 'W1', 'MN1'];
+    $received = 0;
+    $saved = 0;
+    $now = current_time('mysql', true);
+    foreach ($bars as $bar) {
+        $received++;
+        $mt5_symbol = mt5_clean_text($bar['symbol'] ?? '', 80);
+        $timeframe = strtoupper(mt5_clean_text($bar['timeframe'] ?? '', 8));
+        $timestamp = isset($bar['time']) && is_numeric($bar['time']) ? gmdate('Y-m-d H:i:s', (int) $bar['time']) : gmdate('Y-m-d H:i:s', strtotime((string) ($bar['time'] ?? '')));
+        if ($mt5_symbol === '' || !in_array($timeframe, $allowed, true) || $timestamp === '1970-01-01 00:00:00') continue;
+        if (!is_numeric($bar['open'] ?? null) || !is_numeric($bar['high'] ?? null) || !is_numeric($bar['low'] ?? null) || !is_numeric($bar['close'] ?? null)) continue;
+        $display_symbol = preg_replace('/[^A-Za-z0-9._-]/', '', (string) ($bar['display_symbol'] ?? $mt5_symbol));
+        $wpdb->query($wpdb->prepare("INSERT INTO {$symbols} (provider, broker_account_id, mt5_symbol, display_symbol, asset_class, digits, point_size, timezone, enabled, created_at, updated_at) VALUES ('mt5', %d, %s, %s, %s, %d, %f, 'UTC', 1, %s, %s) ON DUPLICATE KEY UPDATE display_symbol = VALUES(display_symbol), digits = VALUES(digits), point_size = VALUES(point_size), updated_at = VALUES(updated_at)", (int) $connection['id'], $mt5_symbol, $display_symbol, mt5_clean_text($bar['asset_class'] ?? '', 20), (int) ($bar['digits'] ?? 0), (float) ($bar['point_size'] ?? 0), $now, $now));
+        $symbol_id = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$symbols} WHERE mt5_symbol = %s AND broker_account_id = %d LIMIT 1", $mt5_symbol, (int) $connection['id']));
+        if ($symbol_id <= 0) continue;
+        $wpdb->query($wpdb->prepare("INSERT INTO {$candles} (symbol_id, timeframe, candle_time_utc, open_price, high_price, low_price, close_price, tick_volume, real_volume, spread_points, is_closed, source, created_at, updated_at) VALUES (%d, %s, %s, %f, %f, %f, %f, %d, %d, %d, 1, 'mt5', %s, %s) ON DUPLICATE KEY UPDATE open_price = VALUES(open_price), high_price = VALUES(high_price), low_price = VALUES(low_price), close_price = VALUES(close_price), tick_volume = VALUES(tick_volume), real_volume = VALUES(real_volume), spread_points = VALUES(spread_points), updated_at = VALUES(updated_at)", $symbol_id, $timeframe, $timestamp, (float) $bar['open'], (float) $bar['high'], (float) $bar['low'], (float) $bar['close'], (int) ($bar['tick_volume'] ?? 0), (int) ($bar['real_volume'] ?? 0), (int) ($bar['spread_points'] ?? 0), $now, $now));
+        $saved++;
+        $wpdb->query($wpdb->prepare("INSERT INTO {$sync} (symbol_id, timeframe, last_closed_candle_utc, last_attempt_at, last_success_at, last_error_code, last_error_message, consecutive_failures, rows_synced, locked_until) VALUES (%d, %s, %s, %s, %s, '', '', 0, %d, NULL) ON DUPLICATE KEY UPDATE last_closed_candle_utc = VALUES(last_closed_candle_utc), last_attempt_at = VALUES(last_attempt_at), last_success_at = VALUES(last_success_at), last_error_code = '', last_error_message = '', consecutive_failures = 0, rows_synced = rows_synced + VALUES(rows_synced), locked_until = NULL", $symbol_id, $timeframe, $timestamp, $now, $now, 1));
+    }
+    return ['received' => $received, 'saved' => $saved];
 }
 
 $raw = file_get_contents('php://input');
@@ -157,6 +200,7 @@ if ($journal_id <= 0) {
 $account = is_array($payload['account'] ?? null) ? $payload['account'] : [];
 $live_trades = isset($payload['live_trades']) && is_array($payload['live_trades']) ? $payload['live_trades'] : [];
 $closed_trades = isset($payload['closed_trades']) && is_array($payload['closed_trades']) ? $payload['closed_trades'] : [];
+$market_sync_result = ['received' => 0, 'saved' => 0];
 
 $account_login = mt5_int($account['login'] ?? 0);
 $account_server = mt5_clean_text($account['server'] ?? '', 120);
@@ -501,6 +545,8 @@ foreach ($live_trades as $index => $trade) {
     }
 }
 
+$market_sync_result = mt5_market_sync_candles($payload, $connection, $wpdb);
+
 $wpdb->update($conn_table, [
     'journal_id'   => $journal_id,
     'last_sync_at' => current_time('mysql'),
@@ -528,6 +574,8 @@ mt5_send([
     'closed_received' => count($closed_trades),
     'closed_inserted' => $inserted_closed,
     'closed_updated'  => $updated_closed,
+    'market_received' => (int) ($market_sync_result['received'] ?? 0),
+    'market_saved'    => (int) ($market_sync_result['saved'] ?? 0),
     'live_inserted'   => $inserted_live,
     'live_updated'    => $updated_live,
     'skipped_live'    => $skipped_live,
