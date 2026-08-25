@@ -540,7 +540,7 @@ function initChart() {
         container:       'tv_chart_container',
         locale:          'en',
         library_path:    '../assets/charting_library/',
-        datafeed:        new TwoRichUDFDatafeed('/app/api/market'),
+        datafeed:        new TwoRichUDFDatafeed('../api/market'),
         symbol:          currentSymbol,
         interval:        currentInterval,
         fullscreen:      false,
@@ -563,7 +563,7 @@ function initChart() {
             'mainSeriesProperties.candleStyle.wickDownColor':    '#ef4444',
         },
         disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button'],
-        enabled_features:  ['study_templates','hide_left_toolbar_by_default'],
+        enabled_features:  ['hide_left_toolbar_by_default'],
     });
 }
 
