@@ -618,8 +618,8 @@ class TwoRichUDFDatafeed {
     getBars(info, resolution, periodParams, onHistoryCallback, onErrorCallback) {
         const mapped = this.normalizeResolution(resolution);
         const symbol = encodeURIComponent(info.ticker || info.name || currentSymbol);
-        const limit = Math.min(2000, Number(periodParams?.countBack || 500));
-        const url = this.base + '/candles.php?symbol=' + symbol + '&timeframe=' + mapped.api + '&limit=' + limit;
+        const countBack = Math.min(2000, Number(periodParams?.countBack || 500));
+        const url = this.base + '/candles.php?symbol=' + symbol + '&timeframe=' + mapped.api + '&limit=' + countBack;
 
         console.log('[2RICH getBars]', { symbol: info.ticker || info.name || currentSymbol, resolution, mapped, url, periodParams });
         fetch(url, { credentials: 'same-origin' })
@@ -629,7 +629,9 @@ class TwoRichUDFDatafeed {
             })
             .then(x => {
                 if (!x || x.ok === false) throw new Error((x && x.message) ? x.message : 'Invalid candles response');
-                const bars = (x.candles || [])
+                const fromMs = Number(periodParams?.from || 0) * 1000;
+                const toMs = Number(periodParams?.to || 0) * 1000;
+                let bars = (x.candles || [])
                     .map(c => ({
                         time: new Date(c.time).getTime(),
                         open: Number(c.open),
@@ -640,8 +642,18 @@ class TwoRichUDFDatafeed {
                     }))
                     .filter(b => Number.isFinite(b.time) && Number.isFinite(b.open) && Number.isFinite(b.high) && Number.isFinite(b.low) && Number.isFinite(b.close))
                     .sort((a, b) => a.time - b.time);
-                console.log('[2RICH getBars result]', { count: bars.length, first: bars[0], last: bars[bars.length - 1] });
-                onHistoryCallback(bars, { noData: bars.length === 0 });
+
+                if (fromMs || toMs) {
+                    bars = bars.filter(b => (!fromMs || b.time >= fromMs) && (!toMs || b.time < toMs));
+                }
+
+                if (!bars.length && Array.isArray(x.candles) && x.candles.length) {
+                    console.warn('[2RICH getBars empty after range filter]', { fromMs, toMs, sampleFirst: x.candles[0], sampleLast: x.candles[x.candles.length - 1] });
+                }
+
+                const meta = { noData: bars.length === 0 };
+                console.log('[2RICH getBars result]', { count: bars.length, fromMs, toMs, first: bars[0], last: bars[bars.length - 1], meta });
+                onHistoryCallback(bars, meta);
             })
             .catch(err => onErrorCallback(err && err.message ? err.message : 'Failed to load bars'));
     }
