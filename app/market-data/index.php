@@ -273,10 +273,10 @@ $useremail  = $_SESSION['user_email'] ?? '';
 
                 <!-- Interval selector -->
                 <div class="md-interval-wrap">
-                    <button class="md-interval-btn active" data-interval="H8" onclick="changeInterval('H8')">8H</button>
-                    <button class="md-interval-btn" data-interval="D1" onclick="changeInterval('D1')">D</button>
-                    <button class="md-interval-btn" data-interval="W1" onclick="changeInterval('W1')">W</button>
-                    <button class="md-interval-btn" data-interval="MN1" onclick="changeInterval('MN1')">MN</button>
+                    <button class="md-interval-btn" data-interval="H8" onclick="changeInterval('H8')">8H</button>
+                    <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
+                    <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
+                    <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
                     
                     
                 </div>
@@ -606,7 +606,6 @@ class TwoRichUDFDatafeed {
                     has_intraday: true,
                     has_daily: true,
                     has_weekly_and_monthly: true,
-                    has_no_volume: false,
                     visible_plots_set: 'ohlcv',
                     supported_resolutions: ['H8', 'D', 'W', 'M'],
                     volume_precision: 0,
@@ -703,11 +702,12 @@ function changeSymbol(symbol) {
 }
 
 function changeInterval(interval) {
-    currentInterval = interval;
+    const mapped = new TwoRichUDFDatafeed('../api/market').normalizeResolution(interval);
+    currentInterval = mapped.tv;
     document.querySelectorAll('.md-interval-btn').forEach(b =>
-        b.classList.toggle('active', b.dataset.interval == interval)
+        b.classList.toggle('active', b.dataset.interval == currentInterval)
     );
-    if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setResolution(interval));
+    if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setResolution(mapped.tv));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
