@@ -519,19 +519,149 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // ═══════════════════════════════════════════════════════════════════════════
 let tvWidget       = null;
 let currentSymbol  = 'EURUSD';
-let currentInterval= 'D1';
+let currentInterval= 'D';
 let marketSymbols = [];
 let marketDataReady = false;
 
 class TwoRichUDFDatafeed {
-    constructor(base) { this.base = base; this.listeners = {}; }
-    onReady(cb) { setTimeout(() => cb({ supported_resolutions: ['H8','D','W','M'], supports_marks: false, supports_timescale_marks: false, supports_time: false }), 0); }
-    searchSymbols(userInput, exchange, symbolType, onResultReadyCallback) { fetch(this.base + '/symbols.php').then(r => r.json()).then(x => onResultReadyCallback((x.symbols || []).filter(s => s.display_symbol.toLowerCase().includes(userInput.toLowerCase())).map(s => ({ symbol: s.display_symbol, full_name: s.display_symbol, description: s.mt5_symbol, exchange: 'MT5', ticker: s.display_symbol, type: 'forex' })))); }
-    resolveSymbol(symbolName, onResolve, onError) { fetch(this.base + '/symbols.php').then(r => r.json()).then(x => { const s=(x.symbols||[]).find(v=>v.display_symbol===symbolName)||{display_symbol:symbolName,mt5_symbol:symbolName,digits:5}; onResolve({name:s.display_symbol,ticker:s.display_symbol,description:s.mt5_symbol,exchange:'MT5',type:'forex',session:'24x7',timezone:'Etc/UTC',minmov:1,pricescale:Math.pow(10,Number(s.digits||5)),has_intraday:false,has_daily:true,has_weekly_and_monthly:true,supported_resolutions:['H8','D','W','M'],volume_precision:0,data_status:'streaming'}); }).catch(onError); }
-    getBars(info, resolution, periodParams, onHistoryCallback, onErrorCallback) { const tf=resolution==='H8'?'H8':resolution==='W'?'W1':resolution==='M'?'MN1':'D1'; const url=this.base+'/candles.php?symbol='+encodeURIComponent(info.ticker||info.name)+'&timeframe='+tf+'&limit='+Math.min(2000,periodParams.countBack||500); fetch(url).then(r=>r.json()).then(x=>onHistoryCallback((x.candles||[]).map(c=>({time:Math.floor(Date.parse(c.time)/1000)*1000,open:c.open,high:c.high,low:c.low,close:c.close,volume:c.volume})),{noData:!(x.candles||[]).length})).catch(onErrorCallback); }
-    subscribeBars(info, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) { this.listeners[subscriberUID]=setInterval(()=>this.getBars(info,resolution,{countBack:2},bars=>bars.length&&onRealtimeCallback(bars[bars.length-1]),()=>{}),90000); }
-    unsubscribeBars(id) { if(this.listeners[id]) clearInterval(this.listeners[id]); delete this.listeners[id]; }
-    getServerTime(cb) { cb(Math.floor(Date.now()/1000)); }
+    constructor(base) {
+        this.base = base;
+        this.listeners = {};
+        this.symbolsPromise = null;
+    }
+
+    fetchSymbols() {
+        if (!this.symbolsPromise) {
+            this.symbolsPromise = fetch(this.base + '/symbols.php', { credentials: 'same-origin' })
+                .then(r => {
+                    if (!r.ok) throw new Error('symbols.php returned HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(x => Array.isArray(x.symbols) ? x.symbols : []);
+        }
+        return this.symbolsPromise;
+    }
+
+    normalizeResolution(resolution) {
+        const value = String(resolution || '').toUpperCase();
+        if (value === 'H8' || value === '480') return { tv: 'H8', api: 'H8' };
+        if (value === 'D' || value === '1D' || value === 'D1') return { tv: 'D', api: 'D1' };
+        if (value === 'W' || value === '1W' || value === 'W1') return { tv: 'W', api: 'W1' };
+        if (value === 'M' || value === '1M' || value === 'MN' || value === 'MN1') return { tv: 'M', api: 'MN1' };
+        return { tv: 'D', api: 'D1' };
+    }
+
+    onReady(cb) {
+        setTimeout(() => cb({
+            supported_resolutions: ['H8', 'D', 'W', 'M'],
+            exchanges: [{ value: 'MT5', name: 'MT5', desc: 'MT5 Broker Feed' }],
+            symbols_types: [{ name: 'Forex', value: 'forex' }],
+            supports_marks: false,
+            supports_timescale_marks: false,
+            supports_time: true
+        }), 0);
+    }
+
+    searchSymbols(userInput, exchange, symbolType, onResultReadyCallback) {
+        const query = String(userInput || '').toLowerCase();
+        this.fetchSymbols()
+            .then(symbols => {
+                const rows = symbols
+                    .filter(s => !query || String(s.display_symbol || '').toLowerCase().includes(query) || String(s.mt5_symbol || '').toLowerCase().includes(query))
+                    .map(s => ({
+                        symbol: s.display_symbol,
+                        full_name: s.display_symbol,
+                        description: s.mt5_symbol || s.display_symbol,
+                        exchange: 'MT5',
+                        ticker: s.display_symbol,
+                        type: 'forex'
+                    }));
+                onResultReadyCallback(rows);
+            })
+            .catch(() => onResultReadyCallback([]));
+    }
+
+    resolveSymbol(symbolName, onResolve, onError) {
+        this.fetchSymbols()
+            .then(symbols => {
+                const s = symbols.find(v => v.display_symbol === symbolName || v.mt5_symbol === symbolName) || {
+                    display_symbol: symbolName,
+                    mt5_symbol: symbolName,
+                    digits: 5
+                };
+                const digits = Number.isFinite(Number(s.digits)) ? Number(s.digits) : 5;
+                onResolve({
+                    name: s.display_symbol,
+                    full_name: s.display_symbol,
+                    ticker: s.display_symbol,
+                    description: s.mt5_symbol || s.display_symbol,
+                    exchange: 'MT5',
+                    listed_exchange: 'MT5',
+                    type: 'forex',
+                    session: '24x7',
+                    timezone: 'Etc/UTC',
+                    format: 'price',
+                    minmov: 1,
+                    pricescale: Math.pow(10, digits),
+                    has_intraday: true,
+                    has_daily: true,
+                    has_weekly_and_monthly: true,
+                    has_no_volume: false,
+                    visible_plots_set: 'ohlcv',
+                    supported_resolutions: ['H8', 'D', 'W', 'M'],
+                    volume_precision: 0,
+                    data_status: 'streaming'
+                });
+            })
+            .catch(err => onError(err && err.message ? err.message : 'Failed to resolve symbol'));
+    }
+
+    getBars(info, resolution, periodParams, onHistoryCallback, onErrorCallback) {
+        const mapped = this.normalizeResolution(resolution);
+        const symbol = encodeURIComponent(info.ticker || info.name || currentSymbol);
+        const limit = Math.min(2000, Number(periodParams?.countBack || 500));
+        const url = this.base + '/candles.php?symbol=' + symbol + '&timeframe=' + mapped.api + '&limit=' + limit;
+
+        fetch(url, { credentials: 'same-origin' })
+            .then(r => {
+                if (!r.ok) throw new Error('candles.php returned HTTP ' + r.status);
+                return r.json();
+            })
+            .then(x => {
+                if (!x || x.ok === false) throw new Error((x && x.message) ? x.message : 'Invalid candles response');
+                const bars = (x.candles || [])
+                    .map(c => ({
+                        time: new Date(c.time).getTime(),
+                        open: Number(c.open),
+                        high: Number(c.high),
+                        low: Number(c.low),
+                        close: Number(c.close),
+                        volume: Number(c.volume || 0)
+                    }))
+                    .filter(b => Number.isFinite(b.time) && Number.isFinite(b.open) && Number.isFinite(b.high) && Number.isFinite(b.low) && Number.isFinite(b.close))
+                    .sort((a, b) => a.time - b.time);
+                onHistoryCallback(bars, { noData: bars.length === 0 });
+            })
+            .catch(err => onErrorCallback(err && err.message ? err.message : 'Failed to load bars'));
+    }
+
+    subscribeBars(info, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) {
+        this.unsubscribeBars(subscriberUID);
+        this.listeners[subscriberUID] = setInterval(() => {
+            this.getBars(info, resolution, { countBack: 2 }, bars => {
+                if (bars.length) onRealtimeCallback(bars[bars.length - 1]);
+            }, () => {});
+        }, 90000);
+    }
+
+    unsubscribeBars(id) {
+        if (this.listeners[id]) clearInterval(this.listeners[id]);
+        delete this.listeners[id];
+    }
+
+    getServerTime(cb) {
+        cb(Math.floor(Date.now() / 1000));
+    }
 }
 
 function initChart() {
