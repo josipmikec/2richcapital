@@ -274,9 +274,9 @@ $useremail  = $_SESSION['user_email'] ?? '';
                 <!-- Interval selector -->
                 <div class="md-interval-wrap">
                     <button class="md-interval-btn" data-interval="H8" onclick="changeInterval('H8')">8H</button>
-                    <button class="md-interval-btn active" data-interval="1D" onclick="changeInterval('1D')">D</button>
-                    <button class="md-interval-btn" data-interval="1W" onclick="changeInterval('1W')">W</button>
-                    <button class="md-interval-btn" data-interval="1M" onclick="changeInterval('1M')">MN</button>
+                    <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
+                    <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
+                    <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
                     
                     
                 </div>
@@ -519,7 +519,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // ═══════════════════════════════════════════════════════════════════════════
 let tvWidget       = null;
 let currentSymbol  = 'EURUSD';
-let currentInterval= '1D';
+let currentInterval= 'D';
 let marketSymbols = [];
 let marketDataReady = false;
 
@@ -545,15 +545,15 @@ class TwoRichUDFDatafeed {
     normalizeResolution(resolution) {
         const value = String(resolution || '').toUpperCase();
         if (value === 'H8' || value === '480') return { tv: 'H8', api: 'H8' };
-        if (value === 'D' || value === '1D' || value === 'D1') return { tv: '1D', api: 'D1' };
-        if (value === 'W' || value === '1W' || value === 'W1') return { tv: '1W', api: 'W1' };
-        if (value === 'M' || value === '1M' || value === 'MN' || value === 'MN1') return { tv: '1M', api: 'MN1' };
+        if (value === 'D' || value === '1D' || value === 'D1') return { tv: 'D', api: 'D1' };
+        if (value === 'W' || value === '1W' || value === 'W1') return { tv: 'W', api: 'W1' };
+        if (value === 'M' || value === '1M' || value === 'MN' || value === 'MN1') return { tv: 'M', api: 'MN1' };
         return { tv: 'D', api: 'D1' };
     }
 
     onReady(cb) {
         setTimeout(() => cb({
-            supported_resolutions: ['H8', '1D', '1W', '1M'],
+            supported_resolutions: ['H8', 'D', 'W', 'M'],
             exchanges: [{ value: 'MT5', name: 'MT5', desc: 'MT5 Broker Feed' }],
             symbols_types: [{ name: 'Forex', value: 'forex' }],
             supports_marks: false,
@@ -607,7 +607,7 @@ class TwoRichUDFDatafeed {
                     has_daily: true,
                     has_weekly_and_monthly: true,
                     visible_plots_set: 'ohlcv',
-                    supported_resolutions: ['H8', '1D', '1W', '1M'],
+                    supported_resolutions: ['H8', 'D', 'W', 'M'],
                     volume_precision: 0,
                     data_status: 'streaming'
                 });
@@ -621,6 +621,7 @@ class TwoRichUDFDatafeed {
         const limit = Math.min(2000, Number(periodParams?.countBack || 500));
         const url = this.base + '/candles.php?symbol=' + symbol + '&timeframe=' + mapped.api + '&limit=' + limit;
 
+        console.log('[2RICH getBars]', { symbol: info.ticker || info.name || currentSymbol, resolution, mapped, url, periodParams });
         fetch(url, { credentials: 'same-origin' })
             .then(r => {
                 if (!r.ok) throw new Error('candles.php returned HTTP ' + r.status);
@@ -639,12 +640,14 @@ class TwoRichUDFDatafeed {
                     }))
                     .filter(b => Number.isFinite(b.time) && Number.isFinite(b.open) && Number.isFinite(b.high) && Number.isFinite(b.low) && Number.isFinite(b.close))
                     .sort((a, b) => a.time - b.time);
+                console.log('[2RICH getBars result]', { count: bars.length, first: bars[0], last: bars[bars.length - 1] });
                 onHistoryCallback(bars, { noData: bars.length === 0 });
             })
             .catch(err => onErrorCallback(err && err.message ? err.message : 'Failed to load bars'));
     }
 
     subscribeBars(info, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) {
+        console.log('[2RICH subscribeBars]', { symbol: info.ticker || info.name, resolution, subscriberUID });
         this.listeners[subscriberUID] = {
             symbol: info.ticker || info.name,
             resolution: this.normalizeResolution(resolution).tv,
@@ -706,8 +709,9 @@ function changeInterval(interval) {
     document.querySelectorAll('.md-interval-btn').forEach(b =>
         b.classList.toggle('active', b.dataset.interval == currentInterval)
     );
-    if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setResolution(mapped.tv));
+    if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setResolution(mapped.tv, () => {}, () => {}));
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TAB SWITCHING
