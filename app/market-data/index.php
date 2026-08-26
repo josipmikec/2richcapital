@@ -645,16 +645,15 @@ class TwoRichUDFDatafeed {
     }
 
     subscribeBars(info, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) {
-        this.unsubscribeBars(subscriberUID);
-        this.listeners[subscriberUID] = setInterval(() => {
-            this.getBars(info, resolution, { countBack: 2 }, bars => {
-                if (bars.length) onRealtimeCallback(bars[bars.length - 1]);
-            }, () => {});
-        }, 90000);
+        this.listeners[subscriberUID] = {
+            symbol: info.ticker || info.name,
+            resolution: this.normalizeResolution(resolution).tv,
+            active: true
+        };
     }
 
     unsubscribeBars(id) {
-        if (this.listeners[id]) clearInterval(this.listeners[id]);
+        if (this.listeners[id] && this.listeners[id].timer) clearInterval(this.listeners[id].timer);
         delete this.listeners[id];
     }
 
