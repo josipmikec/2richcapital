@@ -618,8 +618,9 @@ class TwoRichUDFDatafeed {
     getBars(info, resolution, periodParams, onHistoryCallback, onErrorCallback) {
         const mapped = this.normalizeResolution(resolution);
         const symbol = encodeURIComponent(info.ticker || info.name || currentSymbol);
-        const countBack = Math.min(2000, Number(periodParams?.countBack || 500));
-        const url = this.base + '/candles.php?symbol=' + symbol + '&timeframe=' + mapped.api + '&limit=' + countBack;
+        const requestedCountBack = Number(periodParams?.countBack || 500);
+        const countBack = Math.min(10000, Math.max(2000, requestedCountBack));
+        let url = this.base + '/candles.php?symbol=' + symbol + '&timeframe=' + mapped.api + '&limit=' + countBack;
 
         console.log('[2RICH getBars]', { symbol: info.ticker || info.name || currentSymbol, resolution, mapped, url, periodParams });
         fetch(url, { credentials: 'same-origin' })
@@ -631,6 +632,8 @@ class TwoRichUDFDatafeed {
                 if (!x || x.ok === false) throw new Error((x && x.message) ? x.message : 'Invalid candles response');
                 const fromMs = Number(periodParams?.from || 0) * 1000;
                 const toMs = Number(periodParams?.to || 0) * 1000;
+                if (fromMs) url += '&from=' + encodeURIComponent(Math.floor(fromMs / 1000));
+                if (toMs) url += '&to=' + encodeURIComponent(Math.floor(toMs / 1000));
                 let bars = (x.candles || [])
                     .map(c => ({
                         time: new Date(c.time).getTime(),
