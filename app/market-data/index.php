@@ -273,7 +273,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
 
                 <!-- Interval selector -->
                 <div class="md-interval-wrap">
-                    <button class="md-interval-btn" data-interval="H8" onclick="changeInterval('H8')">8H</button>
+                    <button class="md-interval-btn" data-interval="480" onclick="changeInterval('480')">8H</button>
                     <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
                     <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
                     <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
@@ -544,7 +544,7 @@ class TwoRichUDFDatafeed {
 
     normalizeResolution(resolution) {
         const value = String(resolution || '').toUpperCase();
-        if (value === 'H8' || value === '480') return { tv: 'H8', api: 'H8' };
+        if (value === 'H8' || value === '480') return { tv: '480', api: 'H8' };
         if (value === 'D' || value === '1D' || value === 'D1') return { tv: 'D', api: 'D1' };
         if (value === 'W' || value === '1W' || value === 'W1') return { tv: 'W', api: 'W1' };
         if (value === 'M' || value === '1M' || value === 'MN' || value === 'MN1') return { tv: 'M', api: 'MN1' };
@@ -553,7 +553,7 @@ class TwoRichUDFDatafeed {
 
     onReady(cb) {
         setTimeout(() => cb({
-            supported_resolutions: ['H8', 'D', 'W', 'M'],
+            supported_resolutions: ['480', 'D', 'W', 'M'],
             exchanges: [{ value: 'MT5', name: 'MT5', desc: 'MT5 Broker Feed' }],
             symbols_types: [{ name: 'Forex', value: 'forex' }],
             supports_marks: false,
@@ -607,7 +607,7 @@ class TwoRichUDFDatafeed {
                     has_daily: true,
                     has_weekly_and_monthly: true,
                     visible_plots_set: 'ohlcv',
-                    supported_resolutions: ['H8', 'D', 'W', 'M'],
+                    supported_resolutions: ['480', 'D', 'W', 'M'],
                     volume_precision: 0,
                     data_status: 'streaming'
                 });
