@@ -512,6 +512,15 @@ function getSymbolSelectElement() {
     return document.getElementById('symbolSelect');
 }
 
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function renderSymbolOptions(symbols, preferredSymbol) {
     const select = getSymbolSelectElement();
     if (!select) return;
