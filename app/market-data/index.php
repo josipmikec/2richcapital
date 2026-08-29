@@ -519,6 +519,49 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // ═══════════════════════════════════════════════════════════════════════════
 let tvWidget       = null;
 let currentSymbol  = 'EURUSD';
+
+function getSymbolSelectElement() {
+    return document.getElementById('symbolSelect');
+}
+
+function renderSymbolOptions(symbols, preferredSymbol) {
+    const select = getSymbolSelectElement();
+    if (!select) return;
+
+    const rows = Array.isArray(symbols) ? symbols.filter(Boolean) : [];
+    const options = rows.map((s) => {
+        const value = String(s.mt5_symbol || s.display_symbol || '').trim();
+        const label = String(s.display_symbol || s.mt5_symbol || value).trim();
+        return value ? { value, label } : null;
+    }).filter(Boolean);
+
+    if (!options.length) {
+        select.innerHTML = '<option value="">No symbols available</option>';
+        select.disabled = true;
+        return;
+    }
+
+    select.disabled = false;
+    select.innerHTML = options
+        .map((opt) => `<option value="${escapeHtml(opt.value)}">${escapeHtml(opt.label)}</option>`)
+        .join('');
+
+    const preferred = String(preferredSymbol || currentSymbol || '').trim();
+    const fallback = options[0].value;
+    const matched = options.find((opt) => opt.value === preferred || opt.label === preferred);
+    select.value = matched ? matched.value : fallback;
+    currentSymbol = select.value || fallback;
+}
+
+function syncSymbolSelectValue(symbol) {
+    const select = getSymbolSelectElement();
+    if (!select) return;
+    const normalized = String(symbol || '').trim();
+    if (!normalized) return;
+    const hasOption = Array.from(select.options).some((opt) => opt.value === normalized);
+    if (hasOption) select.value = normalized;
+}
+
 let currentInterval= 'D';
 let marketSymbols = [];
 let marketDataReady = false;
@@ -576,11 +619,11 @@ class TwoRichUDFDatafeed {
                 const rows = symbols
                     .filter(s => !query || String(s.display_symbol || '').toLowerCase().includes(query) || String(s.mt5_symbol || '').toLowerCase().includes(query))
                     .map(s => ({
-                        symbol: s.display_symbol,
-                        full_name: s.display_symbol,
+                        symbol: s.display_symbol || s.mt5_symbol,
+                        full_name: s.display_symbol || s.mt5_symbol,
                         description: s.mt5_symbol || s.display_symbol,
                         exchange: 'MT5',
-                        ticker: s.display_symbol,
+                        ticker: s.mt5_symbol || s.display_symbol,
                         type: 'forex'
                     }));
                 onResultReadyCallback(rows);
@@ -604,9 +647,9 @@ class TwoRichUDFDatafeed {
                 };
                 const digits = Number.isFinite(Number(s.digits)) ? Number(s.digits) : 5;
                 onResolve({
-                    name: s.display_symbol,
-                    full_name: s.display_symbol,
-                    ticker: s.display_symbol,
+                    name: s.display_symbol || s.mt5_symbol,
+                    full_name: s.display_symbol || s.mt5_symbol,
+                    ticker: s.mt5_symbol || s.display_symbol,
                     description: s.mt5_symbol || s.display_symbol,
                     exchange: 'MT5',
                     listed_exchange: 'MT5',
