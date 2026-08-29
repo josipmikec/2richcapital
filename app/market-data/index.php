@@ -680,15 +680,22 @@ class TwoRichUDFDatafeed {
     subscribeBars(info, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) {
         console.log('[2RICH subscribeBars]', { symbol: info.ticker || info.name, resolution, subscriberUID });
 
-        const symbol = info.ticker || info.name;
+        const symbol = this.normalizeSymbol(info.ticker || info.name || currentSymbol);
         const mapped = this.normalizeResolution(resolution);
         const pollMs = 15000;
+
+        if (this.listeners[subscriberUID] && this.listeners[subscriberUID].timer) {
+            clearInterval(this.listeners[subscriberUID].timer);
+        }
 
         const fetchLatestBar = () => {
             const url = `${this.base}/candles.php?symbol=${encodeURIComponent(symbol)}&timeframe=${mapped.api}&limit=2&_=${Date.now()}`;
 
-            fetch(url, { cache: 'no-store' })
-                .then(r => r.json())
+            fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+                .then(r => {
+                    if (!r.ok) throw new Error('candles.php returned HTTP ' + r.status);
+                    return r.json();
+                })
                 .then(x => {
                     if (!x || x.ok !== true || !Array.isArray(x.candles) || !x.candles.length) return;
 
