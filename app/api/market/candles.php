@@ -28,7 +28,8 @@ $candles = $wpdb->prefix . 'rich_market_candles';
 $sync = $wpdb->prefix . 'rich_market_sync_state';
 $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$symbols} WHERE enabled=1 AND (display_symbol=%s OR mt5_symbol=%s) ORDER BY id ASC LIMIT 1", $symbol, $symbol), ARRAY_A);
 if (!$row) wp_send_json(['ok'=>false,'message'=>'Symbol not available.'], 404);
-$where = "WHERE symbol_id=%d AND timeframe=%s AND is_closed=1";
+
+$where = "WHERE symbol_id=%d AND timeframe=%s";
 $params = [(int)$row['id'], $timeframe];
 if ($from_sql !== '') {
     $where .= " AND candle_time_utc >= %s";
@@ -38,11 +39,49 @@ if ($to_sql !== '') {
     $where .= " AND candle_time_utc < %s";
     $params[] = $to_sql;
 }
-$params[] = $limit;
-$sql = "SELECT candle_time_utc, open_price, high_price, low_price, close_price, tick_volume, real_volume, is_closed FROM {$candles} {$where} ORDER BY candle_time_utc DESC LIMIT %d";
-$rows = $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A);
-$rows = array_reverse($rows ?: []);
+
+$closed_params = $params;
+$closed_params[] = max(1, $limit);
+$closed_sql = "SELECT candle_time_utc, open_price, high_price, low_price, close_price, tick_volume, real_volume, is_closed FROM {$candles} {$where} AND is_closed=1 ORDER BY candle_time_utc DESC LIMIT %d";
+$closed_rows = $wpdb->get_results($wpdb->prepare($closed_sql, ...$closed_params), ARRAY_A);
+$closed_rows = array_reverse($closed_rows ?: []);
+
+$open_sql = "SELECT candle_time_utc, open_price, high_price, low_price, close_price, tick_volume, real_volume, is_closed FROM {$candles} {$where} AND is_closed=0 ORDER BY candle_time_utc DESC LIMIT 1";
+$open_row = $wpdb->get_row($wpdb->prepare($open_sql, ...$params), ARRAY_A);
+
+$rows = $closed_rows;
+if ($open_row) {
+    $last_index = count($rows) - 1;
+    if ($last_index >= 0 && ($rows[$last_index]['candle_time_utc'] ?? '') === ($open_row['candle_time_utc'] ?? '')) {
+        $rows[$last_index] = $open_row;
+    } else {
+        $rows[] = $open_row;
+    }
+}
+
 $state = $wpdb->get_row($wpdb->prepare("SELECT last_success_at, last_error_message, consecutive_failures FROM {$sync} WHERE symbol_id=%d AND timeframe=%s LIMIT 1", (int)$row['id'], $timeframe), ARRAY_A);
 $last = $state['last_success_at'] ?? null;
 $status = (!$last || strtotime($last) < time()-7200) ? 'stale' : ((int)($state['consecutive_failures'] ?? 0) > 0 ? 'degraded' : 'healthy');
-wp_send_json(['ok'=>true,'symbol'=>$row['display_symbol'],'mt5_symbol'=>$row['mt5_symbol'],'timeframe'=>$timeframe,'source'=>'mt5','timezone'=>'UTC','candles'=>array_map(static function($c){return ['time'=>gmdate('c',strtotime($c['candle_time_utc'])),'open'=>(float)$c['open_price'],'high'=>(float)$c['high_price'],'low'=>(float)$c['low_price'],'close'=>(float)$c['close_price'],'volume'=>(int)($c['real_volume'] ?: $c['tick_volume']),'closed'=>true];},$rows),'last_sync_at'=>$last,'status'=>$status,'last_error'=>$state['last_error_message'] ?? '']);
+
+wp_send_json([
+    'ok'=>true,
+    'symbol'=>$row['display_symbol'],
+    'mt5_symbol'=>$row['mt5_symbol'],
+    'timeframe'=>$timeframe,
+    'source'=>'mt5',
+    'timezone'=>'UTC',
+    'candles'=>array_map(static function($c){
+        return [
+            'time'=>gmdate('c',strtotime($c['candle_time_utc'])),
+            'open'=>(float)$c['open_price'],
+            'high'=>(float)$c['high_price'],
+            'low'=>(float)$c['low_price'],
+            'close'=>(float)$c['close_price'],
+            'volume'=>(int)($c['real_volume'] ?: $c['tick_volume']),
+            'closed'=>!empty($c['is_closed'])
+        ];
+    }, $rows),
+    'last_sync_at'=>$last,
+    'status'=>$status,
+    'last_error'=>$state['last_error_message'] ?? ''
+]);
