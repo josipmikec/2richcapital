@@ -837,7 +837,8 @@ function buildTwoRichMacdIndicator(PineJS) {
                 styles: {
                     plot_hist: {
                         plottype: 5,
-                        linewidth: 1,
+                        linewidth: 2,
+                        color: '#90BFF9',
                         trackPrice: false,
                         visible: true,
                     },
@@ -852,10 +853,10 @@ function buildTwoRichMacdIndicator(PineJS) {
                 palettes: {
                     histPalette: {
                         colors: {
-                            0: { color: '#90BFF9', width: 1, style: 0 },
-                            1: { color: '#6EA7F0', width: 1, style: 0 },
-                            2: { color: '#FFFFFF', width: 1, style: 0 },
-                            3: { color: '#CFCFCF', width: 1, style: 0 },
+                            0: { color: 'rgb(144,191,249)', width: 1, style: 0 },
+                            1: { color: 'rgb(110,167,240)', width: 1, style: 0 },
+                            2: { color: 'rgb(255,255,255)', width: 1, style: 0 },
+                            3: { color: 'rgb(207,207,207)', width: 1, style: 0 },
                         },
                     },
                 },
@@ -975,13 +976,14 @@ function initChart() {
         autosize:        true,
         theme:           'dark',
         timezone:        'Europe/London',
-        toolbar_bg:      '#0d0d0d',
+        toolbar_bg:      '#0e0e0e',
         overrides: {
-            'paneProperties.background':                '#0d0d0d',
+            'paneProperties.background':                '#0e0e0e',
             'paneProperties.backgroundType':            'solid',
-            'paneProperties.vertGridProperties.color':  '#111',
-            'paneProperties.horzGridProperties.color':  '#111',
-            'scalesProperties.textColor':               '#555',
+            'paneProperties.vertGridProperties.color':  '#111111',
+            'paneProperties.horzGridProperties.color':  '#111111',
+            'scalesProperties.backgroundColor':         '#0e0e0e',
+            'scalesProperties.textColor':               '#555555',
             'scalesProperties.lineColor':               '#1a1a1a',
             'mainSeriesProperties.candleStyle.upColor':          '#22c55e',
             'mainSeriesProperties.candleStyle.downColor':        '#ef4444',
@@ -990,13 +992,30 @@ function initChart() {
             'mainSeriesProperties.candleStyle.wickUpColor':      '#22c55e',
             'mainSeriesProperties.candleStyle.wickDownColor':    '#ef4444',
         },
-        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button'],
+        studies_overrides: {
+            'volume.volume.visible': false,
+            'volume.show ma': false,
+        },
+        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
         enabled_features:  ['hide_left_toolbar_by_default'],
     });
 
     tvWidget.onChartReady(() => {
         const chart = tvWidget.activeChart();
         if (!chart || typeof chart.createStudy !== 'function') return;
+
+        try {
+            const allStudies = typeof chart.getAllStudies === 'function' ? chart.getAllStudies() : [];
+            allStudies.forEach((study) => {
+                const name = String(study.name || '').toLowerCase();
+                if (name.includes('volume') && typeof chart.removeEntity === 'function') {
+                    chart.removeEntity(study.id);
+                }
+            });
+        } catch (error) {
+            console.warn('[2RICH] Could not remove default volume study', error);
+        }
+
         chart.createStudy('2rich MACD', false, false);
     });
 }
