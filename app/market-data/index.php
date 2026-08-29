@@ -689,7 +689,7 @@ function initChart() {
         container:       'tv_chart_container',
         locale:          'en',
         library_path:    '../assets/charting_library/',
-        datafeed:        new TwoRichUDFDatafeed('/app/api/market'),
+        datafeed:        new TwoRichUDFDatafeed('../api/market'),
         symbol:          currentSymbol,
         interval:        currentInterval,
         fullscreen:      false,
@@ -722,7 +722,7 @@ function changeSymbol(symbol) {
 }
 
 function changeInterval(interval) {
-    const mapped = new TwoRichUDFDatafeed('/app/api/market').normalizeResolution(interval);
+    const mapped = new TwoRichUDFDatafeed('../api/market').normalizeResolution(interval);
     currentInterval = mapped.tv;
     document.querySelectorAll('.md-interval-btn').forEach(b =>
         b.classList.toggle('active', b.dataset.interval == currentInterval)
