@@ -679,11 +679,56 @@ class TwoRichUDFDatafeed {
 
     subscribeBars(info, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) {
         console.log('[2RICH subscribeBars]', { symbol: info.ticker || info.name, resolution, subscriberUID });
-        this.listeners[subscriberUID] = {
-            symbol: info.ticker || info.name,
-            resolution: this.normalizeResolution(resolution).tv,
-            active: true
+
+        const symbol = info.ticker || info.name;
+        const mapped = this.normalizeResolution(resolution);
+        const pollMs = 15000;
+
+        const fetchLatestBar = () => {
+            const url = `${this.base}/candles.php?symbol=${encodeURIComponent(symbol)}&timeframe=${mapped.api}&limit=2&_=${Date.now()}`;
+
+            fetch(url, { cache: 'no-store' })
+                .then(r => r.json())
+                .then(x => {
+                    if (!x || x.ok !== true || !Array.isArray(x.candles) || !x.candles.length) return;
+
+                    const last = x.candles[x.candles.length - 1];
+                    const bar = {
+                        time: new Date(last.time).getTime(),
+                        open: Number(last.open),
+                        high: Number(last.high),
+                        low: Number(last.low),
+                        close: Number(last.close),
+                        volume: Number(last.volume || 0)
+                    };
+
+                    if (
+                        Number.isFinite(bar.time) &&
+                        Number.isFinite(bar.open) &&
+                        Number.isFinite(bar.high) &&
+                        Number.isFinite(bar.low) &&
+                        Number.isFinite(bar.close)
+                    ) {
+                        onRealtimeCallback(bar);
+                    }
+                })
+                .catch(err => {
+                    console.warn('[2RICH realtime poll failed]', {
+                        symbol,
+                        resolution,
+                        error: err && err.message ? err.message : err
+                    });
+                });
         };
+
+        this.listeners[subscriberUID] = {
+            symbol,
+            resolution: mapped.tv,
+            active: true,
+            timer: setInterval(fetchLatestBar, pollMs)
+        };
+
+        fetchLatestBar();
     }
 
     unsubscribeBars(id) {
