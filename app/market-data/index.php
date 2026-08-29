@@ -562,6 +562,7 @@ function syncSymbolSelectValue(symbol) {
 let currentInterval= 'D';
 let marketSymbols = [];
 let marketDataReady = false;
+const BROKER_LABEL = '2RICH Capital';
 
 class TwoRichUDFDatafeed {
     constructor(base) {
@@ -601,7 +602,7 @@ class TwoRichUDFDatafeed {
     onReady(cb) {
         setTimeout(() => cb({
             supported_resolutions: ['480', 'D', 'W', 'M'],
-            exchanges: [{ value: 'MT5', name: 'MT5', desc: 'MT5 Broker Feed' }],
+            exchanges: [{ value: '2RICH', name: BROKER_LABEL, desc: BROKER_LABEL + ' Market Feed' }],
             symbols_types: [{ name: 'Forex', value: 'forex' }],
             supports_marks: false,
             supports_timescale_marks: false,
@@ -618,8 +619,8 @@ class TwoRichUDFDatafeed {
                     .map(s => ({
                         symbol: s.display_symbol || s.mt5_symbol,
                         full_name: s.display_symbol || s.mt5_symbol,
-                        description: s.mt5_symbol || s.display_symbol,
-                        exchange: 'MT5',
+                        description: s.display_symbol || s.mt5_symbol,
+                        exchange: BROKER_LABEL,
                         ticker: s.mt5_symbol || s.display_symbol,
                         type: 'forex'
                     }));
@@ -647,9 +648,9 @@ class TwoRichUDFDatafeed {
                     name: s.display_symbol || s.mt5_symbol,
                     full_name: s.display_symbol || s.mt5_symbol,
                     ticker: s.mt5_symbol || s.display_symbol,
-                    description: s.mt5_symbol || s.display_symbol,
-                    exchange: 'MT5',
-                    listed_exchange: 'MT5',
+                    description: s.display_symbol || s.mt5_symbol,
+                    exchange: BROKER_LABEL,
+                    listed_exchange: BROKER_LABEL,
                     type: 'forex',
                     session: '24x7',
                     timezone: 'Etc/UTC',
