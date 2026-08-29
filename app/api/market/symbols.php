@@ -1,2 +1,20 @@
 <?php
-define('WP_USE_THEMES', false); require_once dirname(__DIR__, 3) . '/wp-load.php'; global $wpdb; header('Content-Type: application/json; charset=utf-8'); $table=$wpdb->prefix.'rich_market_symbols'; $rows=$wpdb->get_results("SELECT display_symbol, mt5_symbol, asset_class, digits, timezone, broker_name, broker_server FROM {$table} WHERE enabled=1 ORDER BY display_symbol ASC", ARRAY_A); wp_send_json(['ok'=>true,'symbols'=>$rows?:[]]);
+define('WP_USE_THEMES', false);
+require_once dirname(__DIR__, 3) . '/wp-load.php';
+global $wpdb;
+header('Content-Type: application/json; charset=utf-8');
+$table = $wpdb->prefix . 'rich_market_symbols';
+$rows = $wpdb->get_results(
+    "SELECT id, broker_account_id, display_symbol, mt5_symbol, asset_class, digits, timezone, broker_name, broker_server, enabled, updated_at
+     FROM {$table}
+     WHERE enabled = 1
+     ORDER BY display_symbol ASC",
+    ARRAY_A
+);
+wp_send_json([
+    'ok' => true,
+    'table' => $table,
+    'count' => is_array($rows) ? count($rows) : 0,
+    'db_error' => $wpdb->last_error,
+    'symbols' => $rows ?: []
+]);
