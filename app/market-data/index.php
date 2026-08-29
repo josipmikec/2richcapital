@@ -803,6 +803,136 @@ class TwoRichUDFDatafeed {
     }
 }
 
+function buildTwoRichMacdIndicator(PineJS) {
+    return {
+        name: '2rich MACD',
+        metainfo: {
+            _metainfoVersion: 51,
+            id: '2richMACD@tv-basicstudies-1',
+            description: '2rich MACD',
+            shortDescription: '2rich MACD',
+            isCustomIndicator: true,
+            is_price_study: false,
+            linkedToSeries: false,
+            format: {
+                type: 'price',
+                precision: 6,
+            },
+            plots: [
+                { id: 'plot_hist', type: 'line' },
+                { id: 'plot_hist_colorer', type: 'colorer', target: 'plot_hist', palette: 'histPalette' },
+                { id: 'plot_zero', type: 'line' },
+            ],
+            palettes: {
+                histPalette: {
+                    colors: {
+                        0: { name: 'Positive Rising' },
+                        1: { name: 'Positive Falling' },
+                        2: { name: 'Negative Rising' },
+                        3: { name: 'Negative Falling' },
+                    },
+                },
+            },
+            defaults: {
+                styles: {
+                    plot_hist: {
+                        plottype: 5,
+                        linewidth: 1,
+                        trackPrice: false,
+                        visible: true,
+                    },
+                    plot_zero: {
+                        plottype: 2,
+                        linewidth: 1,
+                        color: '#808080',
+                        trackPrice: false,
+                        visible: true,
+                    },
+                },
+                palettes: {
+                    histPalette: {
+                        colors: {
+                            0: { color: '#90bff9e5', width: 1, style: 0 },
+                            1: { color: '#90bff9b2', width: 1, style: 0 },
+                            2: { color: '#ffffffe4', width: 1, style: 0 },
+                            3: { color: '#ffffffb2', width: 1, style: 0 },
+                        },
+                    },
+                },
+                inputs: {},
+            },
+            styles: {
+                plot_hist: {
+                    title: 'Histogram',
+                    histogramBase: 0,
+                },
+                plot_zero: {
+                    title: 'Zero Line',
+                    histogramBase: 0,
+                },
+            },
+            inputs: [],
+        },
+        constructor: function () {
+            this.init = function (context, inputCallback) {
+                this._context = context;
+                this._input = inputCallback;
+                this._histSeries = null;
+            };
+
+            this.main = function (context, inputCallback) {
+                this._context = context;
+                this._input = inputCallback;
+
+                const fastLength = 1000;
+                const slowLength = 500;
+                const signalLength = 10;
+
+                const high = PineJS.Std.high(this._context);
+                const low = PineJS.Std.low(this._context);
+                const close = PineJS.Std.close(this._context);
+                const src = (high + low + close + close) / 4.0;
+
+                const srcVar = this._context.new_var(src);
+                const fastMa = PineJS.Std.ema(srcVar, fastLength, this._context);
+                const slowMa = PineJS.Std.ema(srcVar, slowLength, this._context);
+                const macd = fastMa - slowMa;
+
+                const macdVar = this._context.new_var(macd);
+                const signal = PineJS.Std.ema(macdVar, signalLength, this._context);
+                const hist = -(macd - signal);
+
+                if (!this._histSeries) {
+                    this._histSeries = this._context.new_var(hist);
+                } else {
+                    this._histSeries.set(hist);
+                }
+
+                const prevHist = this._histSeries.get(1);
+                let colorIndex = 0;
+
+                if (isNaN(hist) || isNaN(prevHist)) {
+                    colorIndex = 0;
+                } else if (hist >= 0) {
+                    colorIndex = prevHist < hist ? 0 : 1;
+                } else {
+                    colorIndex = prevHist < hist ? 2 : 3;
+                }
+
+                return [hist, colorIndex, 0];
+            };
+        },
+    };
+}
+
+function getTwoRichCustomIndicatorsGetter() {
+    return function (PineJS) {
+        return Promise.resolve([
+            buildTwoRichMacdIndicator(PineJS)
+        ]);
+    };
+}
+
 let sharedDatafeed = null;
 
 function bootstrapMarketChart() {
@@ -838,6 +968,7 @@ function initChart() {
         locale:          'en',
         library_path:    '../assets/charting_library/',
         datafeed:        sharedDatafeed,
+        custom_indicators_getter: getTwoRichCustomIndicatorsGetter(),
         symbol:          currentSymbol,
         interval:        currentInterval,
         fullscreen:      false,
@@ -861,6 +992,12 @@ function initChart() {
         },
         disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button'],
         enabled_features:  ['hide_left_toolbar_by_default'],
+    });
+
+    tvWidget.onChartReady(() => {
+        const chart = tvWidget.activeChart();
+        if (!chart || typeof chart.createStudy !== 'function') return;
+        chart.createStudy('2rich MACD', false, false);
     });
 }
 
