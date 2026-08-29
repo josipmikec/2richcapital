@@ -591,7 +591,15 @@ class TwoRichUDFDatafeed {
                     if (!r.ok) throw new Error('symbols.php returned HTTP ' + r.status);
                     return r.json();
                 })
-                .then(x => Array.isArray(x.symbols) ? x.symbols : []);
+                .then(x => {
+                    const rows = Array.isArray(x && x.symbols) ? x.symbols.filter(Boolean) : [];
+                    console.log('[2RICH symbols.php result]', {
+                        ok: !!(x && x.ok),
+                        count: rows.length,
+                        sample: rows.slice(0, 6)
+                    });
+                    return rows;
+                });
         }
         return this.symbolsPromise;
     }
