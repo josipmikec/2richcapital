@@ -852,10 +852,10 @@ function buildTwoRichMacdIndicator(PineJS) {
                 palettes: {
                     histPalette: {
                         colors: {
-                            0: { color: '#90bff9e5', width: 1, style: 0 },
-                            1: { color: '#90bff9b2', width: 1, style: 0 },
-                            2: { color: '#ffffffe4', width: 1, style: 0 },
-                            3: { color: '#ffffffb2', width: 1, style: 0 },
+                            0: { color: '#90BFF9', width: 1, style: 0 },
+                            1: { color: '#6EA7F0', width: 1, style: 0 },
+                            2: { color: '#FFFFFF', width: 1, style: 0 },
+                            3: { color: '#CFCFCF', width: 1, style: 0 },
                         },
                     },
                 },
