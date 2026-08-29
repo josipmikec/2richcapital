@@ -255,19 +255,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
                 <!-- Symbol selector -->
                 <div class="md-symbol-select-wrap">
                     <select id="symbolSelect" class="md-symbol-select" onchange="changeSymbol(this.value)">
-                        <option value="FX:EURUSD">EURUSD</option>
-                        <option value="FX:GBPUSD">GBPUSD</option>
-                        <option value="FX:USDJPY">USDJPY</option>
-                        <option value="FX:AUDUSD">AUDUSD</option>
-                        <option value="FX:USDCAD">USDCAD</option>
-                        <option value="FX:USDCHF">USDCHF</option>
-                        <option value="FX:NZDUSD">NZDUSD</option>
-                        <option value="TVC:GOLD">Gold (XAUUSD)</option>
-                        <option value="TVC:SILVER">Silver (XAGUSD)</option>
-                        <option value="OANDA:WTIUSD">WTI Crude Oil</option>
-                        <option value="NASDAQ:NDX">NAS100</option>
-                        <option value="DJ:DJI">US30</option>
-                        <option value="SP:SPX">SPX500</option>
+                        <option value="">Loading symbols...</option>
                     </select>
                 </div>
 
@@ -518,7 +506,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // CHART STATE
 // ═══════════════════════════════════════════════════════════════════════════
 let tvWidget       = null;
-let currentSymbol  = 'EURUSD';
+let currentSymbol  = '';
 
 function getSymbolSelectElement() {
     return document.getElementById('symbolSelect');
@@ -575,9 +563,9 @@ class TwoRichUDFDatafeed {
 
     normalizeSymbol(symbol) {
         const value = String(symbol || '').trim();
-        const upper = value.toUpperCase();
-        if (upper === 'TVC:GOLD' || upper === 'GOLD' || upper === 'XAUUSD' || upper === 'XAU/USD') return 'XAUUSD';
-        return value;
+        if (!value) return '';
+        const colon = value.lastIndexOf(':');
+        return colon >= 0 ? value.slice(colon + 1).trim() : value;
     }
 
     fetchSymbols() {
@@ -640,11 +628,11 @@ class TwoRichUDFDatafeed {
                     v.mt5_symbol === normalizedSymbol ||
                     v.display_symbol === symbolName ||
                     v.mt5_symbol === symbolName
-                ) || {
-                    display_symbol: normalizedSymbol,
-                    mt5_symbol: normalizedSymbol,
-                    digits: 5
-                };
+                );
+                if (!s) {
+                    onError('Symbol is not available in the MT5 market list');
+                    return;
+                }
                 const digits = Number.isFinite(Number(s.digits)) ? Number(s.digits) : 5;
                 onResolve({
                     name: s.display_symbol || s.mt5_symbol,
@@ -791,13 +779,41 @@ class TwoRichUDFDatafeed {
     }
 }
 
+let sharedDatafeed = null;
+
+function bootstrapMarketChart() {
+    sharedDatafeed = new TwoRichUDFDatafeed('../api/market');
+    sharedDatafeed.fetchSymbols()
+        .then((symbols) => {
+            marketSymbols = Array.isArray(symbols) ? symbols : [];
+            renderSymbolOptions(marketSymbols, currentSymbol);
+            if (!marketSymbols.length) {
+                throw new Error('The MT5 market list returned no enabled symbols');
+            }
+            if (!currentSymbol) {
+                const first = marketSymbols[0];
+                currentSymbol = String(first.mt5_symbol || first.display_symbol || '').trim();
+            }
+            syncSymbolSelectValue(currentSymbol);
+            initChart();
+        })
+        .catch((err) => {
+            console.error('[2RICH market bootstrap failed]', err);
+            const select = getSymbolSelectElement();
+            if (select) {
+                select.innerHTML = '<option value="">Market list unavailable</option>';
+                select.disabled = true;
+            }
+        });
+}
+
 function initChart() {
     if (tvWidget) { tvWidget.remove(); tvWidget = null; }
     tvWidget = new TradingView.widget({
         container:       'tv_chart_container',
         locale:          'en',
         library_path:    '../assets/charting_library/',
-        datafeed:        new TwoRichUDFDatafeed('../api/market'),
+        datafeed:        sharedDatafeed,
         symbol:          currentSymbol,
         interval:        currentInterval,
         fullscreen:      false,
@@ -825,8 +841,11 @@ function initChart() {
 }
 
 function changeSymbol(symbol) {
-    currentSymbol = symbol;
-    if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setSymbol(symbol));
+    const normalized = sharedDatafeed ? sharedDatafeed.normalizeSymbol(symbol) : String(symbol || '').trim();
+    if (!normalized) return;
+    currentSymbol = normalized;
+    syncSymbolSelectValue(normalized);
+    if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setSymbol(normalized));
 }
 
 function changeInterval(interval) {
@@ -1255,7 +1274,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Load TradingView UDF + init chart
     const udfScript = document.createElement('script');
     udfScript.src   = '../assets/datafeeds/udf/dist/bundle.js';
-    udfScript.onload = initChart;
+    udfScript.onload = bootstrapMarketChart;
     document.head.appendChild(udfScript);
 });
 </script>
