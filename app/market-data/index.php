@@ -530,6 +530,13 @@ class TwoRichUDFDatafeed {
         this.symbolsPromise = null;
     }
 
+    normalizeSymbol(symbol) {
+        const value = String(symbol || '').trim();
+        const upper = value.toUpperCase();
+        if (upper === 'TVC:GOLD' || upper === 'GOLD' || upper === 'XAUUSD' || upper === 'XAU/USD') return 'XAUUSD';
+        return value;
+    }
+
     fetchSymbols() {
         if (!this.symbolsPromise) {
             this.symbolsPromise = fetch(this.base + '/symbols.php', { credentials: 'same-origin' })
@@ -584,9 +591,15 @@ class TwoRichUDFDatafeed {
     resolveSymbol(symbolName, onResolve, onError) {
         this.fetchSymbols()
             .then(symbols => {
-                const s = symbols.find(v => v.display_symbol === symbolName || v.mt5_symbol === symbolName) || {
-                    display_symbol: symbolName,
-                    mt5_symbol: symbolName,
+                const normalizedSymbol = this.normalizeSymbol(symbolName);
+                const s = symbols.find(v =>
+                    v.display_symbol === normalizedSymbol ||
+                    v.mt5_symbol === normalizedSymbol ||
+                    v.display_symbol === symbolName ||
+                    v.mt5_symbol === symbolName
+                ) || {
+                    display_symbol: normalizedSymbol,
+                    mt5_symbol: normalizedSymbol,
                     digits: 5
                 };
                 const digits = Number.isFinite(Number(s.digits)) ? Number(s.digits) : 5;
@@ -617,7 +630,7 @@ class TwoRichUDFDatafeed {
 
     getBars(info, resolution, periodParams, onHistoryCallback, onErrorCallback) {
         const mapped = this.normalizeResolution(resolution);
-        const symbol = encodeURIComponent(info.ticker || info.name || currentSymbol);
+        const symbol = encodeURIComponent(this.normalizeSymbol(info.ticker || info.name || currentSymbol));
         const requestedCountBack = Number(periodParams?.countBack || 500);
         const countBack = Math.min(10000, Math.max(2000, requestedCountBack));
         const fromSec = Number(periodParams?.from || 0);
