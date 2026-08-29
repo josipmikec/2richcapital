@@ -521,6 +521,12 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+function symbolBrokerLabel(s) {
+    const name = String(s?.broker_name || '').trim();
+    const server = String(s?.broker_server || '').trim();
+    return name || server || 'MT5';
+}
+
 function renderSymbolOptions(symbols, preferredSymbol) {
     const select = getSymbolSelectElement();
     if (!select) return;
@@ -562,7 +568,7 @@ function syncSymbolSelectValue(symbol) {
 let currentInterval= 'D';
 let marketSymbols = [];
 let marketDataReady = false;
-const BROKER_LABEL = '2RICH Capital';
+const BROKER_LABEL = 'MT5';
 
 class TwoRichUDFDatafeed {
     constructor(base) {
@@ -620,7 +626,7 @@ class TwoRichUDFDatafeed {
                         symbol: s.display_symbol || s.mt5_symbol,
                         full_name: s.display_symbol || s.mt5_symbol,
                         description: s.display_symbol || s.mt5_symbol,
-                        exchange: BROKER_LABEL,
+                        exchange: symbolBrokerLabel(s),
                         ticker: s.mt5_symbol || s.display_symbol,
                         type: 'forex'
                     }));
@@ -649,8 +655,8 @@ class TwoRichUDFDatafeed {
                     full_name: s.display_symbol || s.mt5_symbol,
                     ticker: s.mt5_symbol || s.display_symbol,
                     description: s.display_symbol || s.mt5_symbol,
-                    exchange: BROKER_LABEL,
-                    listed_exchange: BROKER_LABEL,
+                    exchange: symbolBrokerLabel(s),
+                    listed_exchange: symbolBrokerLabel(s),
                     type: 'forex',
                     session: '24x7',
                     timezone: 'Etc/UTC',
