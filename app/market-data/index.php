@@ -764,6 +764,7 @@ function injectTwoRichTemplateOptions() {
             || applyDefaultsNode.closest('[class*="item"]')
             || applyDefaultsNode.parentElement;
         const menuContainer = applyDefaultsItem && applyDefaultsItem.parentElement ? applyDefaultsItem.parentElement : null;
+        const popupRoot = applyDefaultsItem ? applyDefaultsItem.closest('[class*="popup"], [class*="menu"], [data-name="popup-menu-container"]') : null;
 
         chartDebug('Template menu probe', {
             applyDefaultsFound: !!applyDefaultsNode,
@@ -772,7 +773,9 @@ function injectTwoRichTemplateOptions() {
             itemFound: !!applyDefaultsItem,
             itemClass: applyDefaultsItem ? applyDefaultsItem.className : null,
             containerFound: !!menuContainer,
-            containerClass: menuContainer ? menuContainer.className : null
+            containerClass: menuContainer ? menuContainer.className : null,
+            popupFound: !!popupRoot,
+            popupClass: popupRoot ? popupRoot.className : null
         });
 
         if (!applyDefaultsItem || !menuContainer) return false;
@@ -788,31 +791,32 @@ function injectTwoRichTemplateOptions() {
             item.innerHTML = applyDefaultsItem.innerHTML;
 
             const walker = doc.createTreeWalker(item, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
-            const replaceLabel = () => {
-                const textNodes = [];
-                while (walker.nextNode()) {
-                    textNodes.push(walker.currentNode);
-                }
-                let replaced = false;
-                textNodes.forEach((node) => {
-                    if (replaced) return;
-                    if (node.nodeType === 3) {
-                        const txt = (node.textContent || '').trim();
-                        if (txt === 'Apply defaults') {
-                            node.textContent = label;
-                            replaced = true;
-                        }
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+            let replaced = false;
+            nodes.forEach((node) => {
+                if (replaced) return;
+                if (node.nodeType === 3) {
+                    const txt = (node.textContent || '').trim();
+                    if (txt === 'Apply defaults') {
+                        node.textContent = label;
+                        replaced = true;
                     }
-                });
-                if (!replaced) {
-                    const fallback = item.querySelector('span, div');
-                    if (fallback) fallback.textContent = label;
-                    else item.textContent = label;
                 }
-            };
-            replaceLabel();
+            });
+            if (!replaced) {
+                const fallback = item.querySelector('span, div');
+                if (fallback) fallback.textContent = label;
+                else item.textContent = label;
+            }
 
             item.style.cssText = applyDefaultsItem.getAttribute('style') || '';
+            item.style.position = 'relative';
+            item.style.zIndex = '999999';
+            item.style.display = applyDefaultsItem.style.display || 'flex';
+            item.style.visibility = 'visible';
+            item.style.opacity = '1';
+
             item.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -825,10 +829,18 @@ function injectTwoRichTemplateOptions() {
             menuContainer.insertBefore(item, applyDefaultsItem);
         });
 
+        if (popupRoot) {
+            popupRoot.style.zIndex = '999999';
+            popupRoot.style.position = popupRoot.style.position || 'fixed';
+        }
+        menuContainer.style.zIndex = '999999';
+        menuContainer.style.position = menuContainer.style.position || 'relative';
+
         chartDebug('Injected 2RICH template options into TradingView iframe menu', {
             labels: optionLabels,
             itemClass: applyDefaultsItem.className,
-            containerChildren: menuContainer.children ? menuContainer.children.length : null
+            containerChildren: menuContainer.children ? menuContainer.children.length : null,
+            popupClass: popupRoot ? popupRoot.className : null
         });
         return true;
     };
