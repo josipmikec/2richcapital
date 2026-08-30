@@ -1145,6 +1145,48 @@ function initChart() {
         }
 
         const chart = tvWidget.activeChart();
+        if (chart) {
+            try {
+                if (typeof chart.onSymbolChanged === 'function') {
+                    chart.onSymbolChanged().subscribe(null, (symbolInfo) => {
+                        const nextSymbol = String(symbolInfo?.ticker || symbolInfo?.name || '').trim();
+                        if (!nextSymbol) return;
+                        currentSymbol = nextSymbol;
+                        syncSymbolSelectValue(nextSymbol);
+                        saveChartSettings({ symbol: nextSymbol });
+                    });
+                }
+                if (typeof chart.onIntervalChanged === 'function') {
+                    chart.onIntervalChanged().subscribe(null, (interval) => {
+                        const nextInterval = String(interval || '').trim();
+                        if (!nextInterval) return;
+                        currentInterval = nextInterval;
+                        document.querySelectorAll('.md-interval-btn').forEach(b =>
+                            b.classList.toggle('active', b.dataset.interval == nextInterval)
+                        );
+                        saveChartSettings({ interval: nextInterval });
+                    });
+                }
+                if (typeof tvWidget.subscribe === 'function') {
+                    tvWidget.subscribe('onAutoSaveNeeded', () => {
+                        const state = typeof tvWidget.symbolInterval === 'function' ? tvWidget.symbolInterval() : null;
+                        const symbol = String(state?.symbol || currentSymbol || '').trim();
+                        const interval = String(state?.interval || currentInterval || '').trim();
+                        if (symbol || interval) {
+                            if (symbol) currentSymbol = symbol;
+                            if (interval) currentInterval = interval;
+                            syncSymbolSelectValue(currentSymbol);
+                            document.querySelectorAll('.md-interval-btn').forEach(b =>
+                                b.classList.toggle('active', b.dataset.interval == currentInterval)
+                            );
+                            saveChartSettings({ symbol: currentSymbol, interval: currentInterval });
+                        }
+                    });
+                }
+            } catch (error) {
+                console.warn('[2RICH] Could not attach chart persistence listeners', error);
+            }
+        }
         if (chart && chartSettings && chartSettings.interval) {
             try { chart.setResolution(String(chartSettings.interval), () => {}, () => {}); } catch (e) {}
         }
