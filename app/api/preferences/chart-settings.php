@@ -118,86 +118,23 @@ if (!is_array($settings)) {
     exit;
 }
 
-$allowed_prefixes = [
-    'chart',
-    'linetool',
-    'study',
-    'trading',
-    'symbol',
-    'pane',
-    'scale',
-    'mainseries',
-    'session',
-    'editor',
-    'drawing',
-    'drawings',
-    'favorite',
-    'favourite',
-    'legend',
-    'priceaxis',
-    'time',
-    'timezone',
-    'watchlist',
-    'background',
-    'grid',
-];
-
-$allowed_exact = [
-    'interval',
-    'timeframe',
-    'symbol',
-    'timezone',
-    'favorites',
-    'favourites',
-];
-
 $sanitized = [];
 $debug_rejected = [];
 foreach ($settings as $setting_key => $value) {
     $setting_key = trim((string)$setting_key);
     if ($setting_key === '') continue;
 
-    $normalized = strtolower($setting_key);
-    $normalized_compact = preg_replace('/[^a-z0-9]+/', '', $normalized);
-    $allowed = in_array($normalized, $allowed_exact, true) || in_array($normalized_compact, $allowed_exact, true);
-    if (!$allowed) {
-        foreach ($allowed_prefixes as $prefix) {
-            if (strpos($normalized, $prefix) === 0 || strpos($normalized_compact, $prefix) === 0) {
-                $allowed = true;
-                break;
-            }
-        }
-    }
-    if (!$allowed) {
-        if ($debug_enabled) {
-            $debug_rejected[] = [
-                'original' => $setting_key,
-                'normalized' => $normalized,
-                'compact' => $normalized_compact,
-                'value_type' => gettype($value),
-            ];
-        }
-        continue;
-    }
-
     if (is_array($value) || is_object($value)) {
         $encoded = wp_json_encode($value);
         if ($encoded === false) continue;
         $sanitized[$setting_key] = $encoded;
-        continue;
-    }
-
-    if (is_bool($value)) {
+    } elseif (is_bool($value)) {
         $sanitized[$setting_key] = $value ? 'true' : 'false';
-        continue;
-    }
-
-    if ($value === null) {
+    } elseif ($value === null) {
         $sanitized[$setting_key] = '';
-        continue;
+    } else {
+        $sanitized[$setting_key] = (string)$value;
     }
-
-    $sanitized[$setting_key] = (string)$value;
 }
 
 $current_row = $wpdb->get_row($wpdb->prepare(
