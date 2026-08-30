@@ -207,19 +207,44 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .rich-native-timeframe-host,
         .rich-native-timeframe-host:hover,
         .rich-native-timeframe-host:focus,
-        .rich-native-timeframe-host > div {
+        .rich-native-timeframe-host:active,
+        .rich-native-timeframe-host > button,
+        .rich-native-timeframe-host > div,
+        .rich-native-timeframe-host > div > div,
+        .rich-native-timeframe-host > div > div > button {
             display:flex !important;
             align-items:center !important;
             min-height:42px !important;
             background:transparent !important;
+            background-color:transparent !important;
             border:0 !important;
             box-shadow:none !important;
         }
-        #rich-chart-toolbar button.is-active,
-        #rich-chart-toolbar .rich-toolbar-timeframes button.is-active,
+        .rich-native-timeframe-host button,
+        .rich-native-timeframe-host button:hover,
+        .rich-native-timeframe-host button:focus,
+        .rich-native-timeframe-host button:active,
         .rich-native-timeframe-host button.is-active {
-            color:#f1f1f1;
-            background:#1a1a1a;
+            background:transparent !important;
+            background-color:transparent !important;
+            color:#b8bac2 !important;
+            border:0 !important;
+            box-shadow:none !important;
+        }
+        .rich-native-timeframe-host button:hover,
+        .rich-native-timeframe-host button:focus-visible {
+            color:#f1f1f1 !important;
+            text-decoration:underline;
+            text-underline-offset:4px;
+        }
+        .rich-native-timeframe-host button:active {
+            color:#ffffff !important;
+            transform:translateY(1px);
+        }
+        .rich-native-timeframe-host button.is-active {
+            color:#f1f1f1 !important;
+            text-decoration:underline;
+            text-underline-offset:4px;
         }
         #rich-chart-toolbar .rich-icon { display:inline-flex; align-items:center; justify-content:center; min-width:16px; font-size:16px; line-height:1; }
         #rich-chart-toolbar .rich-icon-indicator { font-size:14px; font-weight:600; }
@@ -1342,6 +1367,7 @@ function mountNativeTimeframeGroup() {
             btn.type = 'button';
             btn.dataset.richInterval = value;
             btn.textContent = label;
+            btn.style.cssText = 'background:transparent!important;background-color:transparent!important;border:0!important;box-shadow:none!important;';
             btn.addEventListener('click', () => richSetInterval(value));
             group.appendChild(btn);
         });
@@ -1350,6 +1376,10 @@ function mountNativeTimeframeGroup() {
         host.title = 'Timeframes';
         host.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
         host.appendChild(group);
+        host.style.setProperty('background', 'transparent', 'important');
+        host.style.setProperty('background-color', 'transparent', 'important');
+        host.style.setProperty('border', '0', 'important');
+        host.style.setProperty('box-shadow', 'none', 'important');
         syncNativeTimeframeGroup();
     }).catch((err) => console.error('[2RICH native timeframe mount failed]', err));
 }
