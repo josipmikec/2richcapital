@@ -528,6 +528,15 @@ let chartSettingsTimer = null;
 let chartPermission = { sync: true, multi: false };
 let tvUserSettings = {};
 let tvSettingsTimer = null;
+const CHART_DEBUG = true;
+function chartDebug(label, payload) {
+    if (!CHART_DEBUG) return;
+    console.groupCollapsed('[2RICH chart debug] ' + label);
+    if (payload !== undefined) console.log(payload);
+    console.log(new Date().toISOString());
+    console.groupEnd();
+}
+
 
 function csrfHeaders() {
     const token = document.querySelector('meta[name=csrf-token]')?.content || '';
@@ -556,6 +565,7 @@ async function loadTvUserSettings() {
     try {
         const response = await fetch('../api/preferences/chart-settings.php', { credentials: 'same-origin' });
         const data = await response.json();
+        chartDebug('settings load response', { status: response.status, data });
         tvUserSettings = data && data.success && data.settings && typeof data.settings === 'object' ? data.settings : {};
     } catch (error) {
         tvUserSettings = {};
@@ -567,12 +577,16 @@ function persistTvUserSettings() {
     clearTimeout(tvSettingsTimer);
     tvSettingsTimer = setTimeout(async () => {
         try {
-            await fetch('../api/preferences/chart-settings.php', {
+            const payload = { settings: tvUserSettings };
+            chartDebug('settings save request', { keyCount: Object.keys(tvUserSettings).length, keys: Object.keys(tvUserSettings), payload });
+            const response = await fetch('../api/preferences/chart-settings.php', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders(),
-                body: JSON.stringify({ settings: tvUserSettings })
+                body: JSON.stringify(payload)
             });
+            const data = await response.json().catch(() => null);
+            chartDebug('settings save response', { status: response.status, data });
         } catch (error) {
             console.warn('[2RICH] TV user settings could not be saved', error);
         }
@@ -594,10 +608,12 @@ function chartSettingsAdapter() {
     return {
         initialSettings: tvUserSettings,
         setValue(key, value) {
+            chartDebug('TradingView settings_adapter.setValue', { key, value });
             tvUserSettings[key] = value;
             persistTvUserSettings();
         },
         removeValue(key) {
+            chartDebug('TradingView settings_adapter.removeValue', { key });
             delete tvUserSettings[key];
             persistTvUserSettings();
         }
@@ -1100,6 +1116,7 @@ function bootstrapMarketChart() {
 
 function initChart() {
     if (tvWidget) { tvWidget.remove(); tvWidget = null; }
+    chartDebug('widget init input', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
     tvWidget = new TradingView.widget({
         container:       'tv_chart_container',
         locale:          'en',
@@ -1123,6 +1140,7 @@ function initChart() {
     });
 
     tvWidget.onChartReady(() => {
+        chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
         if (typeof tvWidget.subscribe === 'function') {
             tvWidget.subscribe('onResetChartPreferences', () => {
                 resetTvUserSettings();
@@ -1134,6 +1152,7 @@ function initChart() {
             try {
                 if (typeof chart.onSymbolChanged === 'function') {
                     chart.onSymbolChanged().subscribe(null, (symbolInfo) => {
+                        chartDebug('TradingView symbol changed', symbolInfo);
                         const nextSymbol = String(symbolInfo?.ticker || symbolInfo?.name || '').trim();
                         if (!nextSymbol) return;
                         currentSymbol = nextSymbol;
@@ -1143,6 +1162,7 @@ function initChart() {
                 }
                 if (typeof chart.onIntervalChanged === 'function') {
                     chart.onIntervalChanged().subscribe(null, (interval) => {
+                        chartDebug('TradingView interval changed', interval);
                         const nextInterval = String(interval || '').trim();
                         if (!nextInterval) return;
                         currentInterval = nextInterval;
@@ -1155,6 +1175,7 @@ function initChart() {
                 if (typeof tvWidget.subscribe === 'function') {
                     tvWidget.subscribe('onAutoSaveNeeded', () => {
                         const state = typeof tvWidget.symbolInterval === 'function' ? tvWidget.symbolInterval() : null;
+                        chartDebug('TradingView onAutoSaveNeeded', state);
                         const symbol = String(state?.symbol || currentSymbol || '').trim();
                         const interval = String(state?.interval || currentInterval || '').trim();
                         if (symbol || interval) {

@@ -7,6 +7,7 @@ ob_end_clean();
 
 require_once '../csrf.php';
 header('Content-Type: application/json');
+$debug_enabled = isset($_GET['debug']) && $_GET['debug'] === '1';
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     http_response_code(401);
@@ -34,10 +35,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
     }
 
-    echo json_encode([
+    $response = [
         'success' => true,
         'settings' => $decoded,
-    ]);
+    ];
+    if ($debug_enabled) {
+        $response['debug'] = [
+            'user_id' => $user_id,
+            'pref_key' => $key,
+            'row_found' => (bool)$row,
+            'stored_bytes' => $row ? strlen((string)$row->pref_value) : 0,
+            'stored_keys' => array_keys($decoded),
+        ];
+    }
+    echo json_encode($response);
     exit;
 }
 
@@ -211,4 +222,13 @@ if ($wpdb->last_error) {
     exit;
 }
 
-echo json_encode(['success' => true, 'settings' => $sanitized]);
+$response = ['success' => true, 'settings' => $sanitized];
+if ($debug_enabled) {
+    $response['debug'] = [
+        'user_id' => $user_id,
+        'pref_key' => $key,
+        'saved_keys' => array_keys($sanitized),
+        'saved_bytes' => strlen($payload),
+    ];
+}
+echo json_encode($response);
