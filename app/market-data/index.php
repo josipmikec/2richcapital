@@ -578,7 +578,7 @@ function persistTvUserSettings() {
     tvSettingsTimer = setTimeout(async () => {
         try {
             const payload = { settings: tvUserSettings };
-            chartDebug('settings save request', { keyCount: Object.keys(tvUserSettings).length, keys: Object.keys(tvUserSettings), payload });
+            chartDebug('settings save request', { keyCount: Object.keys(tvUserSettings).length, keys: Object.keys(tvUserSettings), sampleEntries: Object.entries(tvUserSettings).slice(0, 20), payload });
             const response = await fetch('../api/preferences/chart-settings.php', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -608,7 +608,7 @@ function chartSettingsAdapter() {
     return {
         initialSettings: tvUserSettings,
         setValue(key, value) {
-            chartDebug('TradingView settings_adapter.setValue', { key, value });
+            chartDebug('TradingView settings_adapter.setValue', { key, value, keyType: typeof key });
             tvUserSettings[key] = value;
             persistTvUserSettings();
         },

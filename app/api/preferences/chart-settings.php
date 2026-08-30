@@ -145,6 +145,7 @@ $allowed_exact = [
 ];
 
 $sanitized = [];
+$debug_rejected = [];
 foreach ($settings as $setting_key => $value) {
     $setting_key = trim((string)$setting_key);
     if ($setting_key === '') continue;
@@ -160,7 +161,17 @@ foreach ($settings as $setting_key => $value) {
             }
         }
     }
-    if (!$allowed) continue;
+    if (!$allowed) {
+        if ($debug_enabled) {
+            $debug_rejected[] = [
+                'original' => $setting_key,
+                'normalized' => $normalized,
+                'compact' => $normalized_compact,
+                'value_type' => gettype($value),
+            ];
+        }
+        continue;
+    }
 
     if (is_array($value) || is_object($value)) {
         $encoded = wp_json_encode($value);
@@ -229,6 +240,7 @@ if ($debug_enabled) {
         'pref_key' => $key,
         'saved_keys' => array_keys($sanitized),
         'saved_bytes' => strlen($payload),
+        'rejected' => $debug_rejected,
     ];
 }
 echo json_encode($response);
