@@ -57,6 +57,68 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .md-feed-controls .md-interval-wrap      { margin: 0; }
         .md-feed-controls .md-live-badge         { margin: 0; }
 
+        .md-chart-wrap {
+            position: relative;
+        }
+        .md-chart-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 10px 16px;
+            background: #111;
+            border-bottom: 1px solid #1e1e1e;
+            flex-wrap: wrap;
+        }
+        .md-chart-toolbar-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .md-chart-toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+        .md-chart-toolbar .md-symbol-select-wrap,
+        .md-chart-toolbar .md-interval-wrap {
+            margin: 0;
+        }
+        .md-interval-wrap--expanded {
+            flex-wrap: nowrap;
+        }
+        .md-toolbar-chip {
+            border: 1px solid #1e1e1e;
+            background: rgba(255,255,255,0.03);
+            color: #aaa;
+            border-radius: 8px;
+            min-height: 30px;
+            padding: 6px 10px;
+            font: 700 9px/1 "Montserrat", sans-serif;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .md-toolbar-chip:hover {
+            color: #F2CA50;
+            border-color: rgba(242,202,80,.35);
+        }
+        .md-toolbar-separator {
+            width: 1px;
+            height: 22px;
+            background: #2a2a2a;
+            margin: 0 2px;
+        }
+        .md-toolbar-favourites {
+            font-size: 12px;
+            line-height: 1;
+            padding-inline: 10px;
+        }
+
         /* ── Calendar filter panel: hidden by default ──────────────────── */
         .md-cal-filters {
             display: none;
@@ -267,51 +329,58 @@ $useremail  = $_SESSION['user_email'] ?? '';
         ═══════════════════════════════════════════════════════════════ -->
         <div class="md-pane active" id="tab-feeds">
 
-            <!-- ── Feed controls (symbol + timeframe + live) live here ── -->
-            <div class="md-feed-controls">
-                <!-- Symbol selector -->
-                <div class="md-symbol-select-wrap">
-                    <select id="symbolSelect" class="md-symbol-select" onchange="changeSymbol(this.value)">
-                        <option value="">Loading symbols...</option>
-                    </select>
-                </div>
-
-                <button type="button" class="md-watchlist-btn" id="watchlistToggle" onclick="toggleWatchlist()" aria-expanded="false" title="Open watchlist">
-                    <span aria-hidden="true">★</span> Watchlist
-                </button>
-
-                <button type="button" class="md-watchlist-add" onclick="addCurrentToWatchlist()" title="Add current symbol to watchlist" aria-label="Add current symbol to watchlist">＋</button>
-
-                <div class="md-watchlist-panel" id="watchlistPanel" hidden>
-                    <div class="md-watchlist-heading">
-                        <span>Favourites</span>
-                        <button type="button" onclick="toggleWatchlist()" aria-label="Close watchlist">×</button>
-                    </div>
-                    <div id="watchlistItems" class="md-watchlist-items"><span class="md-watchlist-empty">No favourites yet</span></div>
-                </div>
-
-                <!-- Interval selector -->
-                <div class="md-interval-wrap">
-                    <button class="md-interval-btn" data-interval="15" onclick="changeInterval('15')">15m</button>
-                    <button class="md-interval-btn" data-interval="60" onclick="changeInterval('60')">1H</button>
-                    <button class="md-interval-btn" data-interval="240" onclick="changeInterval('240')">4H</button>
-                    <button class="md-interval-btn" data-interval="480" onclick="changeInterval('480')">8H</button>
-                    <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
-                    <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
-                    <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
-                    
-                    
-                </div>
-
-                <!-- Live Feed badge -->
-                <div class="md-live-badge">
-                    <div class="md-live-dot"></div>
-                    Live Feed
-                </div>
-            </div>
-
             <!-- Chart container -->
             <div class="md-chart-wrap">
+                <div class="md-chart-toolbar">
+                    <div class="md-chart-toolbar-main">
+                        <div class="md-symbol-select-wrap">
+                            <select id="symbolSelect" class="md-symbol-select" onchange="changeSymbol(this.value)">
+                                <option value="">Loading symbols...</option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="md-watchlist-btn" id="watchlistToggle" onclick="toggleWatchlist()" aria-expanded="false" title="Open watchlist">
+                            <span aria-hidden="true">★</span> Watchlist
+                        </button>
+
+                        <div class="md-watchlist-panel" id="watchlistPanel" hidden>
+                            <div class="md-watchlist-heading">
+                                <span>Favourites</span>
+                                <button type="button" onclick="toggleWatchlist()" aria-label="Close watchlist">×</button>
+                            </div>
+                            <div id="watchlistItems" class="md-watchlist-items"><span class="md-watchlist-empty">No favourites yet</span></div>
+                        </div>
+
+                        <div class="md-interval-wrap md-interval-wrap--expanded">
+                            <button class="md-interval-btn" data-interval="15" onclick="changeInterval('15')">15m</button>
+                            <button class="md-interval-btn" data-interval="60" onclick="changeInterval('60')">1H</button>
+                            <button class="md-interval-btn" data-interval="240" onclick="changeInterval('240')">4H</button>
+                            <button class="md-interval-btn" data-interval="480" onclick="changeInterval('480')">8H</button>
+                            <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
+                            <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
+                            <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
+                        </div>
+
+                        <button type="button" class="md-toolbar-chip md-toolbar-market-list" title="Market list">
+                            Market List
+                        </button>
+
+                        <button type="button" class="md-toolbar-chip md-toolbar-compare" title="Compare or add symbol">
+                            Compare / Add Symbol
+                        </button>
+
+                        <span class="md-toolbar-separator" aria-hidden="true"></span>
+
+                        <button type="button" class="md-watchlist-add md-toolbar-favourites" onclick="addCurrentToWatchlist()" title="Add current symbol to watchlist" aria-label="Add current symbol to watchlist">★</button>
+
+                        <button type="button" class="md-toolbar-chip md-toolbar-search" title="Quick search">
+                            Quick Search
+                        </button>
+                    </div>
+
+                    <div class="md-chart-toolbar-actions" aria-label="Chart utility actions"></div>
+                </div>
+
                 <div id="tv_chart_container"></div>
             </div>
 
