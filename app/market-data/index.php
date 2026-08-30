@@ -526,6 +526,8 @@ let currentSymbol  = '';
 let chartSettings  = {};
 let chartSettingsTimer = null;
 let chartPermission = { sync: true, multi: false };
+let tvUserSettings = {};
+let tvSettingsTimer = null;
 
 function csrfHeaders() {
     const token = document.querySelector('meta[name=csrf-token]')?.content || '';
@@ -550,8 +552,45 @@ async function saveChartSettings(settings) {
     }, 500);
 }
 
-function chartSaveLoadAdapter() {
-    return null;
+async function loadTvUserSettings() {
+    try {
+        const response = await fetch('../api/preferences/chart-settings.php', { credentials: 'same-origin' });
+        const data = await response.json();
+        tvUserSettings = data && data.success && data.settings && typeof data.settings === 'object' ? data.settings : {};
+    } catch (error) {
+        tvUserSettings = {};
+        console.warn('[2RICH] TV user settings unavailable', error);
+    }
+}
+
+function persistTvUserSettings() {
+    clearTimeout(tvSettingsTimer);
+    tvSettingsTimer = setTimeout(async () => {
+        try {
+            await fetch('../api/preferences/chart-settings.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: csrfHeaders(),
+                body: JSON.stringify({ settings: tvUserSettings })
+            });
+        } catch (error) {
+            console.warn('[2RICH] TV user settings could not be saved', error);
+        }
+    }, 700);
+}
+
+function chartSettingsAdapter() {
+    return {
+        initialSettings: tvUserSettings,
+        setValue(key, value) {
+            tvUserSettings[key] = value;
+            persistTvUserSettings();
+        },
+        removeValue(key) {
+            delete tvUserSettings[key];
+            persistTvUserSettings();
+        }
+    };
 }
 
 async function loadWatchlist() {
@@ -1082,8 +1121,9 @@ function initChart() {
             'volume.volume.visible': false,
             'volume.show ma': false,
         },
-        disabled_features: ['header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
+        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
+        settings_adapter: chartSettingsAdapter(),
     });
 
     tvWidget.onChartReady(() => {
@@ -1542,14 +1582,13 @@ document.addEventListener('DOMContentLoaded', function () {
     startNormalRefresh();
     startCountdownTick();
 
-    loadChartSettings();
-    loadWatchlist();
-
-    // Load TradingView UDF + init chart
-    const udfScript = document.createElement('script');
-    udfScript.src   = '../assets/datafeeds/udf/dist/bundle.js';
-    udfScript.onload = bootstrapMarketChart;
-    document.head.appendChild(udfScript);
+    Promise.all([loadChartSettings(), loadWatchlist(), loadTvUserSettings()]).finally(() => {
+        // Load TradingView UDF + init chart
+        const udfScript = document.createElement('script');
+        udfScript.src   = '../assets/datafeeds/udf/dist/bundle.js';
+        udfScript.onload = bootstrapMarketChart;
+        document.head.appendChild(udfScript);
+    });
 });
 </script>
 
