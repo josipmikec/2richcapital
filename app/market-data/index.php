@@ -194,9 +194,19 @@ $useremail  = $_SESSION['user_email'] ?? '';
             background:#1a1a1a;
             color:#f1f1f1;
         }
+        #rich-chart-toolbar button:focus-visible,
+        #rich-chart-toolbar select:focus-visible,
+        .rich-native-timeframe-host button:focus-visible {
+            outline:2px solid rgba(242,202,80,.78);
+            outline-offset:1px;
+            background:#1a1a1a !important;
+            color:#ffffff !important;
+        }
         #rich-chart-toolbar button:active,
         .rich-native-timeframe-host button:active {
             background:#242424;
+            color:#ffffff;
+            transform:translateY(1px);
         }
         #rich-chart-toolbar .rich-toolbar-spacer { flex:1; }
         #rich-chart-toolbar .rich-toolbar-divider { width:1px; height:20px; background:#303030; margin:0 4px; }
@@ -222,7 +232,6 @@ $useremail  = $_SESSION['user_email'] ?? '';
         }
         .rich-native-timeframe-host button,
         .rich-native-timeframe-host button:hover,
-        .rich-native-timeframe-host button:focus,
         .rich-native-timeframe-host button:active,
         .rich-native-timeframe-host button.is-active {
             background:transparent !important;
@@ -231,20 +240,24 @@ $useremail  = $_SESSION['user_email'] ?? '';
             border:0 !important;
             box-shadow:none !important;
         }
-        .rich-native-timeframe-host button:hover,
-        .rich-native-timeframe-host button:focus-visible {
+        .rich-native-timeframe-host button:hover {
+            background:#1a1a1a !important;
             color:#f1f1f1 !important;
-            text-decoration:underline;
-            text-underline-offset:4px;
+        }
+        .rich-native-timeframe-host button:focus-visible {
+            outline:2px solid rgba(242,202,80,.78) !important;
+            outline-offset:1px;
+            background:#1a1a1a !important;
+            color:#ffffff !important;
         }
         .rich-native-timeframe-host button:active {
+            background:#242424 !important;
             color:#ffffff !important;
             transform:translateY(1px);
         }
         .rich-native-timeframe-host button.is-active {
             color:#f1f1f1 !important;
-            text-decoration:underline;
-            text-underline-offset:4px;
+            border-bottom:2px solid #f2ca50 !important;
         }
         #rich-chart-toolbar .rich-icon { display:inline-flex; align-items:center; justify-content:center; min-width:16px; font-size:16px; line-height:1; }
         #rich-chart-toolbar .rich-icon-indicator { font-size:14px; font-weight:600; }
