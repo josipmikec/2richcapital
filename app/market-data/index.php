@@ -56,35 +56,6 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .md-feed-controls .md-symbol-select-wrap { margin: 0; }
         .md-feed-controls .md-interval-wrap      { margin: 0; }
         .md-feed-controls .md-live-badge         { margin: 0; }
-        .md-feed-controls { display: none; }
-
-        .tv-custom-toolbar-group { display:inline-flex; align-items:center; gap:2px; flex-wrap:nowrap; }
-        .tv-custom-toolbar-divider { width:1px; height:18px; background:rgba(255,255,255,.10); margin:0 6px; }
-        .tv-custom-toolbar-btn, .tv-custom-toolbar-select {
-            height: 28px;
-            border: 0;
-            background: transparent;
-            color: #b2b5be;
-            border-radius: 6px;
-            padding: 0 8px;
-            font: 500 11px/1 "Montserrat", sans-serif;
-            letter-spacing: 0;
-            text-transform: none;
-            white-space: nowrap;
-            cursor: pointer;
-            box-shadow: none;
-            outline: none;
-        }
-        .tv-custom-toolbar-btn:hover, .tv-custom-toolbar-select:hover {
-            background: rgba(255,255,255,.06);
-            color: #ffffff;
-        }
-        .tv-custom-toolbar-btn.is-active {
-            background: rgba(255,255,255,.10);
-            color: #ffffff;
-        }
-        .tv-custom-toolbar-btn--icon { min-width: 28px; padding: 0 7px; font-size: 13px; }
-        .tv-custom-toolbar-select { min-width: 44px; appearance: none; padding-right: 18px; background-image: linear-gradient(45deg, transparent 50%, #8f939d 50%), linear-gradient(135deg, #8f939d 50%, transparent 50%); background-position: calc(100% - 12px) 11px, calc(100% - 8px) 11px; background-size: 4px 4px, 4px 4px; background-repeat: no-repeat; }
 
         /* ── Calendar filter panel: hidden by default ──────────────────── */
         .md-cal-filters {
@@ -328,6 +299,14 @@ $useremail  = $_SESSION['user_email'] ?? '';
                     <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
                     <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
                     <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
+                    
+                    
+                </div>
+
+                <!-- Live Feed badge -->
+                <div class="md-live-badge">
+                    <div class="md-live-dot"></div>
+                    Live Feed
                 </div>
             </div>
 
@@ -543,7 +522,6 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // CHART STATE
 // ═══════════════════════════════════════════════════════════════════════════
 let tvWidget       = null;
-let tvHeaderControlsMounted = false;
 let currentSymbol  = '';
 let chartSettings  = {};
 let chartSettingsTimer = null;
@@ -806,20 +784,11 @@ function renderWatchlist() {
     target.innerHTML = list.length ? list.map(symbol => `<button type="button" class="md-watchlist-item" onclick="changeSymbol('${escapeHtml(symbol)}'); toggleWatchlist();"><span aria-hidden="true">★</span>${escapeHtml(symbol)}<span class="md-watchlist-remove" onclick="event.stopPropagation(); removeFromWatchlist('${escapeHtml(symbol)}')">×</span></button>`).join('') : '<span class="md-watchlist-empty">No favourites yet</span>';
 }
 
-function closeWatchlistPanel() {
-    const panel = document.getElementById('watchlistPanel');
-    const buttons = [document.getElementById('watchlistToggle'), document.getElementById('watchlistToggleNative')].filter(Boolean);
-    if (panel) panel.hidden = true;
-    buttons.forEach((button) => button.setAttribute('aria-expanded', 'false'));
-}
-
 function toggleWatchlist() {
     const panel = document.getElementById('watchlistPanel');
-    const buttons = [document.getElementById('watchlistToggle'), document.getElementById('watchlistToggleNative')].filter(Boolean);
-    if (!panel || !buttons.length) return;
-    const open = panel.hidden;
-    panel.hidden = !open;
-    buttons.forEach((button) => button.setAttribute('aria-expanded', String(open)));
+    const button = document.getElementById('watchlistToggle');
+    if (!panel || !button) return;
+    const open = panel.hidden; panel.hidden = !open; button.setAttribute('aria-expanded', String(open));
 }
 
 async function persistWatchlist() {
@@ -893,99 +862,6 @@ function syncSymbolSelectValue(symbol) {
     if (!normalized) return;
     const hasOption = Array.from(select.options).some((opt) => opt.value === normalized);
     if (hasOption) select.value = normalized;
-}
-
-function syncTvHeaderControls() {
-    const sourceSelect = document.getElementById('symbolSelect');
-    const headerSelect = document.getElementById('tvToolbarSymbolSelect');
-    if (sourceSelect && headerSelect) {
-        headerSelect.innerHTML = sourceSelect.innerHTML;
-        headerSelect.value = sourceSelect.value;
-        headerSelect.disabled = sourceSelect.disabled;
-    }
-    document.querySelectorAll('.tv-custom-toolbar-btn[data-interval]').forEach((btn) => {
-        btn.classList.toggle('is-active', String(btn.dataset.interval) === String(currentInterval));
-    });
-}
-
-function mountTradingViewHeaderControls() {
-    if (!tvWidget || tvHeaderControlsMounted || typeof tvWidget.headerReady !== 'function' || typeof tvWidget.createButton !== 'function') return;
-    tvWidget.headerReady().then(() => {
-        if (!tvWidget || tvHeaderControlsMounted) return;
-        const wrapper = document.createElement('div');
-        wrapper.className = 'tv-custom-toolbar-group';
-
-        const symbolSelect = document.createElement('select');
-        symbolSelect.id = 'tvToolbarSymbolSelect';
-        symbolSelect.className = 'tv-custom-toolbar-select';
-        symbolSelect.addEventListener('change', (e) => changeSymbol(e.target.value));
-        wrapper.appendChild(symbolSelect);
-
-        const watchlistBtn = document.createElement('button');
-        watchlistBtn.type = 'button';
-        watchlistBtn.id = 'watchlistToggleNative';
-        watchlistBtn.className = 'tv-custom-toolbar-btn';
-        watchlistBtn.innerHTML = '<span aria-hidden="true">★</span> Watchlist';
-        watchlistBtn.setAttribute('aria-expanded', 'false');
-        watchlistBtn.addEventListener('click', () => toggleWatchlist());
-        wrapper.appendChild(watchlistBtn);
-
-        [['15','15m'],['60','1H'],['240','4H'],['480','8H'],['D','D'],['W','W'],['M','MN']].forEach(([value,label]) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'tv-custom-toolbar-btn';
-            btn.dataset.interval = value;
-            btn.textContent = label;
-            btn.addEventListener('click', () => changeInterval(value));
-            wrapper.appendChild(btn);
-        });
-
-        const marketBtn = document.createElement('button');
-        marketBtn.type = 'button';
-        marketBtn.className = 'tv-custom-toolbar-btn';
-        marketBtn.textContent = 'Markets';
-        marketBtn.addEventListener('click', () => symbolSelect.focus());
-        wrapper.appendChild(marketBtn);
-
-        const compareBtn = document.createElement('button');
-        compareBtn.type = 'button';
-        compareBtn.className = 'tv-custom-toolbar-btn';
-        compareBtn.textContent = 'Compare';
-        compareBtn.addEventListener('click', () => symbolSelect.focus());
-        wrapper.appendChild(compareBtn);
-
-        const divider = document.createElement('span');
-        divider.className = 'tv-custom-toolbar-divider';
-        wrapper.appendChild(divider);
-
-        const favouritesBtn = document.createElement('button');
-        favouritesBtn.type = 'button';
-        favouritesBtn.className = 'tv-custom-toolbar-btn tv-custom-toolbar-btn--icon';
-        favouritesBtn.title = 'Add current symbol to watchlist';
-        favouritesBtn.setAttribute('aria-label', 'Add current symbol to watchlist');
-        favouritesBtn.textContent = '★';
-        favouritesBtn.addEventListener('click', () => addCurrentToWatchlist());
-        wrapper.appendChild(favouritesBtn);
-
-        const quickBtn = document.createElement('button');
-        quickBtn.type = 'button';
-        quickBtn.className = 'tv-custom-toolbar-btn';
-        quickBtn.textContent = 'Search';
-        quickBtn.addEventListener('click', () => symbolSelect.focus());
-        wrapper.appendChild(quickBtn);
-
-        const host = tvWidget.createButton();
-        host.setAttribute('title', '2RICH chart controls');
-        host.style.padding = '0';
-        host.style.border = '0';
-        host.style.background = 'transparent';
-        host.style.display = 'flex';
-        host.style.alignItems = 'center';
-        host.appendChild(wrapper);
-
-        tvHeaderControlsMounted = true;
-        syncTvHeaderControls();
-    }).catch((err) => console.error('[2RICH header controls mount failed]', err));
 }
 
 let currentInterval= 'D';
@@ -1373,7 +1249,6 @@ function bootstrapMarketChart() {
                 currentSymbol = String(first.mt5_symbol || first.display_symbol || '').trim();
             }
             syncSymbolSelectValue(currentSymbol);
-            syncTvHeaderControls();
             initChart();
         })
         .catch((err) => {
@@ -1408,15 +1283,13 @@ function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_symbol_search','create_volume_indicator_by_default'],
+        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
     });
 
     tvWidget.onChartReady(() => {
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
-        mountTradingViewHeaderControls();
-        syncTvHeaderControls();
         injectTwoRichTemplateOptions();
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
@@ -1439,7 +1312,6 @@ function initChart() {
                         if (!nextSymbol) return;
                         currentSymbol = nextSymbol;
                         syncSymbolSelectValue(nextSymbol);
-                        syncTvHeaderControls();
                         saveChartSettings({ symbol: nextSymbol });
                     });
                 }
@@ -1452,7 +1324,6 @@ function initChart() {
                         document.querySelectorAll('.md-interval-btn').forEach(b =>
                             b.classList.toggle('active', b.dataset.interval == nextInterval)
                         );
-                        syncTvHeaderControls();
                         saveChartSettings({ interval: nextInterval });
                     });
                 }
@@ -1466,7 +1337,6 @@ function initChart() {
                             if (symbol) currentSymbol = symbol;
                             if (interval) currentInterval = interval;
                             syncSymbolSelectValue(currentSymbol);
-                            syncTvHeaderControls();
                             document.querySelectorAll('.md-interval-btn').forEach(b =>
                                 b.classList.toggle('active', b.dataset.interval == currentInterval)
                             );
@@ -1505,7 +1375,6 @@ function changeSymbol(symbol) {
     if (!normalized) return;
     currentSymbol = normalized;
     syncSymbolSelectValue(normalized);
-    syncTvHeaderControls();
     if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setSymbol(normalized));
 }
 
