@@ -577,9 +577,9 @@ function persistTvUserSettings() {
     clearTimeout(tvSettingsTimer);
     tvSettingsTimer = setTimeout(async () => {
         try {
-            const payload = { settings: tvUserSettings };
+            const payload = { settings: { ...tvUserSettings } };
             chartDebug('settings save request', { keyCount: Object.keys(tvUserSettings).length, keys: Object.keys(tvUserSettings), sampleEntries: Object.entries(tvUserSettings).slice(0, 20), payload });
-            const response = await fetch('../api/preferences/chart-settings.php', {
+            const response = await fetch('../api/preferences/chart-settings.php?debug=1', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders(),
