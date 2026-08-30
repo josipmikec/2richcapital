@@ -765,38 +765,59 @@ function injectTwoRichTemplateOptions() {
             || applyDefaultsNode.parentElement;
         const menuContainer = applyDefaultsItem && applyDefaultsItem.parentElement ? applyDefaultsItem.parentElement : null;
 
+        chartDebug('Template menu probe', {
+            applyDefaultsFound: !!applyDefaultsNode,
+            applyDefaultsTag: applyDefaultsNode ? applyDefaultsNode.tagName : null,
+            applyDefaultsClass: applyDefaultsNode ? applyDefaultsNode.className : null,
+            itemFound: !!applyDefaultsItem,
+            itemClass: applyDefaultsItem ? applyDefaultsItem.className : null,
+            containerFound: !!menuContainer,
+            containerClass: menuContainer ? menuContainer.className : null
+        });
+
         if (!applyDefaultsItem || !menuContainer) return false;
         if (menuContainer.querySelector('[data-2rich-template-option]')) return true;
 
         optionLabels.forEach((label) => {
-            const item = applyDefaultsItem.cloneNode(true);
+            const templateId = label.toLowerCase().includes('light') ? 'light' : 'dark';
+            const item = doc.createElement(applyDefaultsItem.tagName || 'div');
             item.setAttribute('data-2rich-template-option', label);
-            item.setAttribute('data-2rich-template-id', label.toLowerCase().includes('light') ? 'light' : 'dark');
+            item.setAttribute('data-2rich-template-id', templateId);
+            if (applyDefaultsItem.getAttribute('role')) item.setAttribute('role', applyDefaultsItem.getAttribute('role'));
+            if (applyDefaultsItem.className) item.className = applyDefaultsItem.className;
+            item.innerHTML = applyDefaultsItem.innerHTML;
 
-            item.querySelectorAll('*').forEach((child) => {
-                if (child.children.length === 0) {
-                    const txt = (child.textContent || '').trim();
-                    if (txt === 'Apply defaults') {
-                        child.textContent = label;
-                    }
+            const walker = doc.createTreeWalker(item, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+            const replaceLabel = () => {
+                const textNodes = [];
+                while (walker.nextNode()) {
+                    textNodes.push(walker.currentNode);
                 }
-            });
-            if ((item.textContent || '').trim() === 'Apply defaults') {
-                item.textContent = label;
-            }
+                let replaced = false;
+                textNodes.forEach((node) => {
+                    if (replaced) return;
+                    if (node.nodeType === 3) {
+                        const txt = (node.textContent || '').trim();
+                        if (txt === 'Apply defaults') {
+                            node.textContent = label;
+                            replaced = true;
+                        }
+                    }
+                });
+                if (!replaced) {
+                    const fallback = item.querySelector('span, div');
+                    if (fallback) fallback.textContent = label;
+                    else item.textContent = label;
+                }
+            };
+            replaceLabel();
 
-            item.style.removeProperty('position');
-            item.style.removeProperty('left');
-            item.style.removeProperty('top');
-            item.style.removeProperty('right');
-            item.style.removeProperty('bottom');
-
+            item.style.cssText = applyDefaultsItem.getAttribute('style') || '';
             item.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                applyTwoRichTemplate(item.getAttribute('data-2rich-template-id') || 'dark');
+                applyTwoRichTemplate(templateId);
             }, true);
-
             item.addEventListener('mousedown', (event) => {
                 event.stopPropagation();
             }, true);
@@ -804,7 +825,11 @@ function injectTwoRichTemplateOptions() {
             menuContainer.insertBefore(item, applyDefaultsItem);
         });
 
-        chartDebug('Injected 2RICH template options into TradingView iframe menu', { labels: optionLabels, cloned: true });
+        chartDebug('Injected 2RICH template options into TradingView iframe menu', {
+            labels: optionLabels,
+            itemClass: applyDefaultsItem.className,
+            containerChildren: menuContainer.children ? menuContainer.children.length : null
+        });
         return true;
     };
 
