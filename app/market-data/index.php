@@ -78,16 +78,16 @@ $useremail  = $_SESSION['user_email'] ?? '';
             border-bottom: 1px solid transparent;
         }
         .tv-custom-toolbar-btn:hover, .tv-custom-toolbar-select:hover {
-            background: rgba(255,255,255,.04);
+            background: transparent;
             color: #d7d9df;
         }
         .tv-custom-toolbar-btn.is-active {
-            background: rgba(255,255,255,.08);
+            background: transparent;
             color: #f0f1f4;
             border-bottom-color: #f0f1f4;
         }
         .tv-custom-toolbar-btn--icon { min-width: 28px; padding: 0 7px; font-size: 13px; }
-        .tv-custom-toolbar-select { min-width: 44px; appearance: none; border-radius: 2px; padding-right: 18px; background-image: linear-gradient(45deg, transparent 50%, #8f939d 50%), linear-gradient(135deg, #8f939d 50%, transparent 50%); background-position: calc(100% - 12px) 11px, calc(100% - 8px) 11px; background-size: 4px 4px, 4px 4px; background-repeat: no-repeat; }
+        .tv-custom-toolbar-select { min-width: 180px; appearance: none; border-radius: 2px; background-color: transparent; padding-right: 18px; background-image: linear-gradient(45deg, transparent 50%, #8f939d 50%), linear-gradient(135deg, #8f939d 50%, transparent 50%); background-position: calc(100% - 12px) 11px, calc(100% - 8px) 11px; background-size: 4px 4px, 4px 4px; background-repeat: no-repeat; }
 
         /* ── Calendar filter panel: hidden by default ──────────────────── */
         .md-cal-filters {
@@ -921,6 +921,7 @@ function mountTradingViewHeaderControls() {
         const symbolSelect = document.createElement('select');
         symbolSelect.id = 'tvToolbarSymbolSelect';
         symbolSelect.className = 'tv-custom-toolbar-select';
+        symbolSelect.title = 'Select market symbol';
         symbolSelect.addEventListener('change', (e) => changeSymbol(e.target.value));
         wrapper.appendChild(symbolSelect);
 
@@ -949,13 +950,6 @@ function mountTradingViewHeaderControls() {
         marketBtn.textContent = 'Markets';
         marketBtn.addEventListener('click', () => symbolSelect.focus());
         wrapper.appendChild(marketBtn);
-
-        const compareBtn = document.createElement('button');
-        compareBtn.type = 'button';
-        compareBtn.className = 'tv-custom-toolbar-btn';
-        compareBtn.textContent = 'Compare';
-        compareBtn.addEventListener('click', () => symbolSelect.focus());
-        wrapper.appendChild(compareBtn);
 
         const divider = document.createElement('span');
         divider.className = 'tv-custom-toolbar-divider';
@@ -1411,7 +1405,7 @@ function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','header_resolutions','header_compare','create_volume_indicator_by_default'],
+        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
     });
