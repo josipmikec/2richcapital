@@ -825,10 +825,17 @@ function injectTwoRichTemplateOptions() {
             item.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
+                event.stopImmediatePropagation();
                 applyTwoRichTemplate(templateId);
+                return false;
             }, true);
             item.addEventListener('mousedown', (event) => {
                 event.stopPropagation();
+                event.stopImmediatePropagation();
+            }, true);
+            item.addEventListener('mouseup', (event) => {
+                event.stopPropagation();
+                event.stopImmediatePropagation();
             }, true);
 
             menuContainer.insertBefore(item, applyDefaultsItem);
