@@ -577,8 +577,9 @@ function persistTvUserSettings() {
     clearTimeout(tvSettingsTimer);
     tvSettingsTimer = setTimeout(async () => {
         try {
-            const payload = { settings: { ...tvUserSettings } };
-            chartDebug('settings save request', { keyCount: Object.keys(tvUserSettings).length, keys: Object.keys(tvUserSettings), sampleEntries: Object.entries(tvUserSettings).slice(0, 20), payload });
+            const settingsSnapshot = Object.fromEntries(Object.entries(tvUserSettings).map(([k, v]) => [String(k), v]));
+            const payload = { settings: settingsSnapshot };
+            chartDebug('settings save request', { keyCount: Object.keys(settingsSnapshot).length, keys: Object.keys(settingsSnapshot), sampleEntries: Object.entries(settingsSnapshot).slice(0, 20), payloadJson: JSON.stringify(payload) });
             const response = await fetch('../api/preferences/chart-settings.php?debug=1', {
                 method: 'POST',
                 credentials: 'same-origin',
