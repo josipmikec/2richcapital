@@ -528,6 +528,70 @@ let chartSettingsTimer = null;
 let chartPermission = { sync: true, multi: false };
 let tvUserSettings = {};
 let tvSettingsTimer = null;
+const TWO_RICH_TEMPLATES = {
+    dark: {
+        name: '2RICH Dark',
+        theme: 'dark',
+        toolbarBg: '#0F1A1B',
+        overrides: {
+            'paneProperties.background': '#0E1718',
+            'paneProperties.backgroundType': 'solid',
+            'paneProperties.vertGridProperties.color': '#233638',
+            'paneProperties.horzGridProperties.color': '#233638',
+            'paneProperties.crossHairProperties.color': '#6F8C89',
+            'scalesProperties.textColor': '#D7E4E3',
+            'scalesProperties.lineColor': '#1E3133',
+            'mainSeriesProperties.style': 1,
+            'mainSeriesProperties.candleStyle.upColor': '#23B38F',
+            'mainSeriesProperties.candleStyle.downColor': '#E07761',
+            'mainSeriesProperties.candleStyle.borderUpColor': '#23B38F',
+            'mainSeriesProperties.candleStyle.borderDownColor': '#E07761',
+            'mainSeriesProperties.candleStyle.wickUpColor': '#23B38F',
+            'mainSeriesProperties.candleStyle.wickDownColor': '#E07761',
+            'mainSeriesProperties.priceLineColor': '#19A39B',
+            'mainSeriesProperties.showPriceLine': true
+        },
+        studiesOverrides: {
+            'volume.volume.visible': false,
+            'volume.show ma': false
+        }
+    },
+    light: {
+        name: '2RICH Light',
+        theme: 'light',
+        toolbarBg: '#F4EDE4',
+        overrides: {
+            'paneProperties.background': '#F7F3EE',
+            'paneProperties.backgroundType': 'solid',
+            'paneProperties.vertGridProperties.color': '#E6DDD2',
+            'paneProperties.horzGridProperties.color': '#E6DDD2',
+            'paneProperties.crossHairProperties.color': '#8FA7A5',
+            'scalesProperties.textColor': '#1E2A2C',
+            'scalesProperties.lineColor': '#D8CEC1',
+            'mainSeriesProperties.style': 1,
+            'mainSeriesProperties.candleStyle.upColor': '#138A72',
+            'mainSeriesProperties.candleStyle.downColor': '#C35B4A',
+            'mainSeriesProperties.candleStyle.borderUpColor': '#138A72',
+            'mainSeriesProperties.candleStyle.borderDownColor': '#C35B4A',
+            'mainSeriesProperties.candleStyle.wickUpColor': '#138A72',
+            'mainSeriesProperties.candleStyle.wickDownColor': '#C35B4A',
+            'mainSeriesProperties.priceLineColor': '#0E6B68',
+            'mainSeriesProperties.showPriceLine': true
+        },
+        studiesOverrides: {
+            'volume.volume.visible': false,
+            'volume.show ma': false
+        }
+    }
+};
+const DEFAULT_CHART_THEME = {
+    theme: 'dark',
+    toolbarBg: '#0e0e0e',
+    studiesOverrides: {
+        'volume.volume.visible': false,
+        'volume.show ma': false
+    }
+};
 const CHART_DEBUG = true;
 function chartDebug(label, payload) {
     if (!CHART_DEBUG) return;
@@ -605,12 +669,148 @@ function resetTvUserSettings() {
     });
 }
 
+function getPreferredTwoRichTemplateId() {
+    const explicit = String(tvUserSettings['2rich.template'] || chartSettings.template || '').trim().toLowerCase();
+    if (explicit === 'light' || explicit === 'dark') return explicit;
+
+    const currentTheme = String(tvUserSettings['currenttheme.name'] || '').trim().toLowerCase();
+    if (currentTheme.includes('light')) return 'light';
+    if (currentTheme.includes('dark')) return 'dark';
+
+    return 'dark';
+}
+
+function hasPersistedTvUserSettings() {
+    return !!Object.keys(tvUserSettings || {}).length;
+}
+
+function rememberTwoRichTemplate(templateId) {
+    const normalized = templateId === 'light' ? 'light' : 'dark';
+    tvUserSettings['2rich.template'] = normalized;
+    tvUserSettings['currenttheme.name'] = TWO_RICH_TEMPLATES[normalized].name;
+    chartSettings = { ...chartSettings, template: normalized };
+    persistTvUserSettings();
+    saveChartSettings({ template: normalized });
+}
+
+function applyTwoRichTemplate(templateId, options = {}) {
+    const normalized = templateId === 'light' ? 'light' : 'dark';
+    const template = TWO_RICH_TEMPLATES[normalized];
+    const shouldPersist = options.persist !== false;
+
+    if (!tvWidget) return;
+
+    try {
+        if (typeof tvWidget.changeTheme === 'function') {
+            tvWidget.changeTheme(template.theme);
+        }
+    } catch (error) {
+        console.warn('[2RICH] Could not change TradingView theme', error);
+    }
+
+    try {
+        if (typeof tvWidget.applyOverrides === 'function') {
+            tvWidget.applyOverrides(template.overrides);
+        }
+    } catch (error) {
+        console.warn('[2RICH] Could not apply widget overrides', error);
+    }
+
+    try {
+        const chart = typeof tvWidget.activeChart === 'function' ? tvWidget.activeChart() : null;
+        if (chart && typeof chart.applyOverrides === 'function') {
+            chart.applyOverrides(template.overrides);
+        }
+    } catch (error) {
+        console.warn('[2RICH] Could not apply chart overrides', error);
+    }
+
+    const container = document.getElementById('tv_chart_container');
+    if (container) {
+        container.style.background = template.overrides['paneProperties.background'] || '';
+    }
+
+    if (shouldPersist) {
+        rememberTwoRichTemplate(normalized);
+    }
+}
+
+function registerTwoRichTemplatesMenu() {
+    if (!tvWidget || typeof tvWidget.createButton !== 'function') return;
+
+    const existing = document.getElementById('twoRichTemplateMenuButton');
+    if (existing) existing.remove();
+
+    const button = tvWidget.createButton();
+    button.id = 'twoRichTemplateMenuButton';
+    button.setAttribute('title', '2RICH templates');
+    button.classList.add('apply-common-tooltip');
+    button.textContent = '2RICH Themes';
+    button.style.position = 'relative';
+
+    const menu = document.createElement('div');
+    menu.id = 'twoRichTemplateMenu';
+    menu.style.cssText = [
+        'position:absolute',
+        'top:44px',
+        'right:0',
+        'min-width:180px',
+        'background:#101718',
+        'border:1px solid #233638',
+        'border-radius:10px',
+        'box-shadow:0 16px 40px rgba(0,0,0,.28)',
+        'padding:8px',
+        'display:none',
+        'z-index:50'
+    ].join(';');
+
+    menu.innerHTML = `
+        <button type="button" data-template="dark" style="display:block;width:100%;text-align:left;background:transparent;border:0;color:#d7e4e3;padding:10px 12px;border-radius:8px;cursor:pointer;">2RICH Dark</button>
+        <button type="button" data-template="light" style="display:block;width:100%;text-align:left;background:transparent;border:0;color:#d7e4e3;padding:10px 12px;border-radius:8px;cursor:pointer;">2RICH Light</button>
+    `;
+
+    button.appendChild(menu);
+
+    button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    menu.querySelectorAll('[data-template]').forEach((item) => {
+        item.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            applyTwoRichTemplate(item.dataset.template || 'dark');
+            menu.style.display = 'none';
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!button.contains(event.target)) {
+            menu.style.display = 'none';
+        }
+    });
+}
+
 function chartSettingsAdapter() {
     return {
         initialSettings: tvUserSettings,
         setValue(key, value) {
             chartDebug('TradingView settings_adapter.setValue', { key, value, keyType: typeof key });
             tvUserSettings[key] = value;
+
+            if (key === 'currenttheme.name') {
+                const nextTheme = String(value || '').toLowerCase();
+                if (nextTheme.includes('light')) {
+                    tvUserSettings['2rich.template'] = 'light';
+                    chartSettings = { ...chartSettings, template: 'light' };
+                } else if (nextTheme.includes('dark')) {
+                    tvUserSettings['2rich.template'] = 'dark';
+                    chartSettings = { ...chartSettings, template: 'dark' };
+                }
+            }
+
             persistTvUserSettings();
         },
         removeValue(key) {
@@ -1118,6 +1318,10 @@ function bootstrapMarketChart() {
 function initChart() {
     if (tvWidget) { tvWidget.remove(); tvWidget = null; }
     chartDebug('widget init input', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+    const preferredTemplateId = getPreferredTwoRichTemplateId();
+    const isFirstTimeUser = !hasPersistedTvUserSettings();
+    const initialTemplate = isFirstTimeUser ? TWO_RICH_TEMPLATES[preferredTemplateId] : null;
+
     tvWidget = new TradingView.widget({
         container:       'tv_chart_container',
         locale:          'en',
@@ -1128,13 +1332,11 @@ function initChart() {
         interval:        currentInterval,
         fullscreen:      false,
         autosize:        true,
-        theme:           'dark',
+        theme:           initialTemplate ? initialTemplate.theme : DEFAULT_CHART_THEME.theme,
         timezone:        'Europe/London',
-        toolbar_bg:      '#0e0e0e',
-        studies_overrides: {
-            'volume.volume.visible': false,
-            'volume.show ma': false,
-        },
+        toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
+        overrides:       initialTemplate ? initialTemplate.overrides : undefined,
+        studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
         disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
@@ -1142,9 +1344,15 @@ function initChart() {
 
     tvWidget.onChartReady(() => {
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+        registerTwoRichTemplatesMenu();
+        if (isFirstTimeUser) {
+            applyTwoRichTemplate(preferredTemplateId, { persist: true });
+        }
         if (typeof tvWidget.subscribe === 'function') {
             tvWidget.subscribe('onResetChartPreferences', () => {
-                resetTvUserSettings();
+                resetTvUserSettings().finally(() => {
+                    rememberTwoRichTemplate('dark');
+                });
             });
         }
 
