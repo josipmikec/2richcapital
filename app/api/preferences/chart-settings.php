@@ -101,35 +101,36 @@ if (!is_array($settings)) {
 }
 
 $allowed_prefixes = [
-    'chartproperties',
-    'chartproperty',
+    'chart',
     'linetool',
-    'study_',
-    'studyinputs',
-    'studyproperties',
-    'trading.',
-    'symbolwatermark',
-    'paneproperties',
-    'paneproperty',
-    'scalesproperties',
-    'scaleproperties',
-    'mainseriesproperties',
-    'mainseriesproperty',
-    'sessionsproperties',
-    'editorpositions',
+    'study',
+    'trading',
+    'symbol',
+    'pane',
+    'scale',
+    'mainseries',
+    'session',
+    'editor',
     'drawing',
     'drawings',
-    'favorites',
-    'interval',
-    'symbol',
-    'timeframe',
-    'legendproperties',
-    'timezoneproperties',
-    'priceaxisproperties',
-    'tradingproperties',
-    'gridproperties',
-    'background',
+    'favorite',
+    'favourite',
+    'legend',
+    'priceaxis',
+    'time',
+    'timezone',
     'watchlist',
+    'background',
+    'grid',
+];
+
+$allowed_exact = [
+    'interval',
+    'timeframe',
+    'symbol',
+    'timezone',
+    'favorites',
+    'favourites',
 ];
 
 $sanitized = [];
@@ -138,11 +139,14 @@ foreach ($settings as $setting_key => $value) {
     if ($setting_key === '') continue;
 
     $normalized = strtolower($setting_key);
-    $allowed = false;
-    foreach ($allowed_prefixes as $prefix) {
-        if (strpos($normalized, $prefix) === 0) {
-            $allowed = true;
-            break;
+    $normalized_compact = preg_replace('/[^a-z0-9]+/', '', $normalized);
+    $allowed = in_array($normalized, $allowed_exact, true) || in_array($normalized_compact, $allowed_exact, true);
+    if (!$allowed) {
+        foreach ($allowed_prefixes as $prefix) {
+            if (strpos($normalized, $prefix) === 0 || strpos($normalized_compact, $prefix) === 0) {
+                $allowed = true;
+                break;
+            }
         }
     }
     if (!$allowed) continue;
