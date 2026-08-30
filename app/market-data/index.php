@@ -579,6 +579,17 @@ function persistTvUserSettings() {
     }, 700);
 }
 
+function resetTvUserSettings() {
+    tvUserSettings = {};
+    return fetch('../api/preferences/chart-settings.php', {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: csrfHeaders()
+    }).catch((error) => {
+        console.warn('[2RICH] TV user settings reset failed', error);
+    });
+}
+
 function chartSettingsAdapter() {
     return {
         initialSettings: tvUserSettings,
@@ -1127,6 +1138,12 @@ function initChart() {
     });
 
     tvWidget.onChartReady(() => {
+        if (typeof tvWidget.subscribe === 'function') {
+            tvWidget.subscribe('onResetChartPreferences', () => {
+                resetTvUserSettings();
+            });
+        }
+
         const chart = tvWidget.activeChart();
         if (chart && chartSettings && chartSettings.interval) {
             try { chart.setResolution(String(chartSettings.interval), () => {}, () => {}); } catch (e) {}
@@ -1583,6 +1600,17 @@ document.addEventListener('DOMContentLoaded', function () {
     startCountdownTick();
 
     Promise.all([loadChartSettings(), loadWatchlist(), loadTvUserSettings()]).finally(() => {
+        if (chartSettings && typeof chartSettings === 'object') {
+            if (chartSettings.symbol) currentSymbol = String(chartSettings.symbol).trim();
+            if (chartSettings.interval) {
+                const mapped = new TwoRichUDFDatafeed('../api/market').normalizeResolution(chartSettings.interval);
+                currentInterval = mapped.tv;
+                document.querySelectorAll('.md-interval-btn').forEach(b =>
+                    b.classList.toggle('active', b.dataset.interval == currentInterval)
+                );
+            }
+        }
+
         // Load TradingView UDF + init chart
         const udfScript = document.createElement('script');
         udfScript.src   = '../assets/datafeeds/udf/dist/bundle.js';

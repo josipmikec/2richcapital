@@ -74,6 +74,7 @@ try {
     
     // Set new session data
     $_SESSION['user_id'] = $user->ID;
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     $_SESSION['user_email'] = $user->user_email;
     $_SESSION['user_name'] = $resolved_display_name;
     $_SESSION['user_login'] = $user->user_login;

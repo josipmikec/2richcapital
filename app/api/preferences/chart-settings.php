@@ -41,6 +41,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    verify_csrf();
+    $wpdb->delete(
+        $table,
+        [
+            'user_id' => $user_id,
+            'pref_key' => $key,
+        ],
+        ['%d', '%s']
+    );
+
+    if ($wpdb->last_error) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => $wpdb->last_error]);
+        exit;
+    }
+
+    echo json_encode(['success' => true, 'reset' => true]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
@@ -50,6 +71,27 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 verify_csrf();
 $input = json_decode(file_get_contents('php://input'), true);
 if (!is_array($input)) $input = $_POST;
+
+$reset = !empty($input['reset']);
+if ($reset) {
+    $wpdb->delete(
+        $table,
+        [
+            'user_id' => $user_id,
+            'pref_key' => $key,
+        ],
+        ['%d', '%s']
+    );
+
+    if ($wpdb->last_error) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => $wpdb->last_error]);
+        exit;
+    }
+
+    echo json_encode(['success' => true, 'reset' => true]);
+    exit;
+}
 
 $settings = $input['settings'] ?? null;
 if (!is_array($settings)) {
