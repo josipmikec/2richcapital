@@ -735,62 +735,67 @@ function applyTwoRichTemplate(templateId, options = {}) {
     }
 }
 
-function registerTwoRichTemplatesMenu() {
-    if (!tvWidget || typeof tvWidget.createButton !== 'function') return;
+function createTwoRichSaveLoadAdapter() {
+    const templates = {
+        '2RICH Dark': TWO_RICH_TEMPLATES.dark,
+        '2RICH Light': TWO_RICH_TEMPLATES.light
+    };
 
-    const existing = document.getElementById('twoRichTemplateMenuButton');
-    if (existing) existing.remove();
+    const templateContent = (templateId) => {
+        const template = TWO_RICH_TEMPLATES[templateId];
+        return {
+            version: 1,
+            chartProperties: {
+                paneProperties: {
+                    background: template.overrides['paneProperties.background'],
+                    backgroundType: template.overrides['paneProperties.backgroundType'],
+                    vertGridProperties: { color: template.overrides['paneProperties.vertGridProperties.color'] },
+                    horzGridProperties: { color: template.overrides['paneProperties.horzGridProperties.color'] },
+                    crossHairProperties: { color: template.overrides['paneProperties.crossHairProperties.color'] }
+                },
+                scalesProperties: {
+                    textColor: template.overrides['scalesProperties.textColor'],
+                    lineColor: template.overrides['scalesProperties.lineColor']
+                }
+            },
+            mainSourceProperties: {
+                style: template.overrides['mainSeriesProperties.style'],
+                candleStyle: {
+                    upColor: template.overrides['mainSeriesProperties.candleStyle.upColor'],
+                    downColor: template.overrides['mainSeriesProperties.candleStyle.downColor'],
+                    borderUpColor: template.overrides['mainSeriesProperties.candleStyle.borderUpColor'],
+                    borderDownColor: template.overrides['mainSeriesProperties.candleStyle.borderDownColor'],
+                    wickUpColor: template.overrides['mainSeriesProperties.candleStyle.wickUpColor'],
+                    wickDownColor: template.overrides['mainSeriesProperties.candleStyle.wickDownColor']
+                }
+            }
+        };
+    };
 
-    const button = tvWidget.createButton();
-    button.id = 'twoRichTemplateMenuButton';
-    button.setAttribute('title', '2RICH templates');
-    button.classList.add('apply-common-tooltip');
-    button.textContent = '2RICH Themes';
-    button.style.position = 'relative';
-
-    const menu = document.createElement('div');
-    menu.id = 'twoRichTemplateMenu';
-    menu.style.cssText = [
-        'position:absolute',
-        'top:44px',
-        'right:0',
-        'min-width:180px',
-        'background:#101718',
-        'border:1px solid #233638',
-        'border-radius:10px',
-        'box-shadow:0 16px 40px rgba(0,0,0,.28)',
-        'padding:8px',
-        'display:none',
-        'z-index:50'
-    ].join(';');
-
-    menu.innerHTML = `
-        <button type="button" data-template="dark" style="display:block;width:100%;text-align:left;background:transparent;border:0;color:#d7e4e3;padding:10px 12px;border-radius:8px;cursor:pointer;">2RICH Dark</button>
-        <button type="button" data-template="light" style="display:block;width:100%;text-align:left;background:transparent;border:0;color:#d7e4e3;padding:10px 12px;border-radius:8px;cursor:pointer;">2RICH Light</button>
-    `;
-
-    button.appendChild(menu);
-
-    button.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    });
-
-    menu.querySelectorAll('[data-template]').forEach((item) => {
-        item.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            applyTwoRichTemplate(item.dataset.template || 'dark');
-            menu.style.display = 'none';
-        });
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!button.contains(event.target)) {
-            menu.style.display = 'none';
-        }
-    });
+    return {
+        getAllCharts: async () => [],
+        removeChart: async () => {},
+        saveChart: async () => '2rich-default-chart',
+        getChartContent: async () => '',
+        getAllStudyTemplates: async () => [],
+        removeStudyTemplate: async () => {},
+        saveStudyTemplate: async () => {},
+        getStudyTemplateContent: async () => '',
+        getDrawingTemplates: async () => [],
+        loadDrawingTemplate: async () => '',
+        removeDrawingTemplate: async () => {},
+        saveDrawingTemplate: async () => {},
+        getAllChartTemplates: async () => Object.keys(templates),
+        getChartTemplateContent: async (templateName) => {
+            const template = templates[templateName] || templates['2RICH Dark'];
+            const templateId = template === TWO_RICH_TEMPLATES.light ? 'light' : 'dark';
+            return { content: templateContent(templateId) };
+        },
+        saveChartTemplate: async () => {},
+        removeChartTemplate: async () => {},
+        saveStudyTemplate: async () => {},
+        getStudyTemplateContent: async () => ''
+    };
 }
 
 function chartSettingsAdapter() {
@@ -1340,11 +1345,11 @@ function initChart() {
         disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
+        save_load_adapter: createTwoRichSaveLoadAdapter(),
     });
 
     tvWidget.onChartReady(() => {
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
-        registerTwoRichTemplatesMenu();
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
         }
