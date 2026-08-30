@@ -184,8 +184,9 @@ $useremail  = $_SESSION['user_email'] ?? '';
         #rich-chart-toolbar .rich-toolbar-divider { width:1px; height:20px; background:#303030; margin:0 4px; }
         #rich-chart-toolbar select { min-width:150px; appearance:none; }
         #rich-chart-toolbar .rich-toolbar-status { color:#777; font-size:10px; white-space:nowrap; }
-        #rich-chart-toolbar .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
-        #rich-chart-toolbar .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
+        .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
+        .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
+        .rich-native-timeframe-host, .rich-native-timeframe-host:hover, .rich-native-timeframe-host:focus, .rich-native-timeframe-host > div { background:transparent !important; border:0 !important; box-shadow:none !important; }
         #rich-chart-toolbar .rich-icon { display:inline-flex; align-items:center; justify-content:center; min-width:16px; font-size:16px; line-height:1; }
         #rich-chart-toolbar .rich-icon-indicator { font-size:14px; font-weight:600; }
         #rich-chart-toolbar button.is-active, #rich-chart-toolbar .rich-toolbar-timeframes button.is-active { color:#f1f1f1; background:#1a1a1a; }
@@ -1296,11 +1297,38 @@ function bootstrapMarketChart() {
         });
 }
 
+function mountNativeTimeframeGroup() {
+    if (!tvWidget || typeof tvWidget.headerReady !== 'function' || typeof tvWidget.createButton !== 'function') return;
+    tvWidget.headerReady().then(() => {
+        if (document.getElementById('rich-native-timeframes')) return;
+        const group = document.createElement('div');
+        group.id = 'rich-native-timeframes';
+        group.className = 'rich-toolbar-timeframes rich-native-timeframes';
+        [['15','15m'],['60','1H'],['240','4H'],['480','8H'],['D','D'],['W','W'],['M','MN']].forEach(([value,label]) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.dataset.richInterval = value;
+            btn.textContent = label;
+            btn.addEventListener('click', () => richSetInterval(value));
+            group.appendChild(btn);
+        });
+        const host = tvWidget.createButton();
+        host.className = 'rich-native-timeframe-host';
+        host.title = 'Timeframes';
+        host.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
+        host.appendChild(group);
+        syncNativeTimeframeGroup();
+    }).catch((err) => console.error('[2RICH native timeframe mount failed]', err));
+}
+function syncNativeTimeframeGroup() {
+    document.querySelectorAll('#rich-native-timeframes [data-rich-interval]').forEach(btn => btn.classList.toggle('is-active', String(btn.dataset.richInterval) === String(currentInterval)));
+}
+
 function richChartApi() { return tvWidget && typeof tvWidget.activeChart === 'function' ? tvWidget.activeChart() : null; }
 function richToolbarStatus(message) { const el=document.getElementById('richToolbarStatus'); if(el) el.textContent=message; }
 function richOpenSymbolModal() { const select=getSymbolSelectElement(); if(select){ select.hidden=false; select.size=Math.min(8, Math.max(4, select.options.length)); select.style.position='absolute'; select.style.zIndex='100'; select.style.display='block'; select.focus(); richToolbarStatus('Select symbol'); } }
 function richOpenSearchModal() { const select=getSymbolSelectElement(); if(select){ richOpenSymbolModal(); richToolbarStatus('Search symbols'); } }
-function richSetInterval(interval) { changeInterval(interval); document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.richInterval===String(interval))); }
+function richSetInterval(interval) { changeInterval(interval); document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.richInterval===String(interval))); syncNativeTimeframeGroup(); }
 function richSetCandles() { const chart=richChartApi(); try { if(chart && typeof chart.setChartType==='function') { chart.setChartType(1); richToolbarStatus('Candles'); } else if(chart && typeof chart.executeActionById==='function') { chart.executeActionById('chartType'); richToolbarStatus('Chart type'); } else richToolbarStatus('Chart type API unavailable'); } catch(e){ richToolbarStatus('Candles unavailable'); console.error(e); } }
 function richOpenIndicators() { const chart=richChartApi(); try { if(chart && typeof chart.executeActionById==='function') chart.executeActionById('insertIndicator'); else richToolbarStatus('Indicators API unavailable'); } catch(e){ richToolbarStatus('Indicators unavailable'); console.error(e); } }
 function richUndoRedo(action) { const chart=richChartApi(); try { if(chart && typeof chart.executeActionById==='function') chart.executeActionById(action); else richToolbarStatus(action+' API unavailable'); } catch(e){ richToolbarStatus(action+' unavailable'); console.error(e); } }
@@ -1342,13 +1370,14 @@ function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
+        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
     });
 
     tvWidget.onChartReady(() => {
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+        mountNativeTimeframeGroup();
         richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
         if (isFirstTimeUser) {
