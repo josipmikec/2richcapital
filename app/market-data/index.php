@@ -176,20 +176,53 @@ $useremail  = $_SESSION['user_email'] ?? '';
         }
 
         /* 2RICH chart toolbar — independent from TradingView's internal header */
-        #rich-chart-toolbar { display:flex; align-items:center; gap:4px; min-height:42px; padding:6px 10px; background:#0e0e0e; border:1px solid #202020; border-radius:8px 8px 0 0; color:#b8bac2; }
+        #rich-chart-toolbar button,
+        #rich-chart-toolbar select,
+        .rich-native-timeframe-host button {
+            min-height:30px;
+            border:1px solid transparent;
+            background:transparent;
+            color:#b8bac2;
+            border-radius:4px;
+            padding:0 9px;
+            font:500 11px/1 "Montserrat",sans-serif;
+            cursor:pointer;
+        }
+        #rich-chart-toolbar button:hover,
+        #rich-chart-toolbar select:hover,
+        .rich-native-timeframe-host button:hover {
+            background:#1a1a1a;
+            color:#f1f1f1;
+        }
+        #rich-chart-toolbar button:active,
+        .rich-native-timeframe-host button:active {
+            background:#242424;
+        }
         #rich-chart-toolbar .rich-toolbar-spacer { flex:1; }
-        #rich-chart-toolbar button, #rich-chart-toolbar select { min-height:30px; border:1px solid transparent; background:transparent; color:#b8bac2; border-radius:4px; padding:0 9px; font:500 11px/1 "Montserrat",sans-serif; cursor:pointer; }
-        #rich-chart-toolbar button:hover, #rich-chart-toolbar select:hover { background:#1a1a1a; color:#f1f1f1; }
-        #rich-chart-toolbar button:active { background:#242424; }
         #rich-chart-toolbar .rich-toolbar-divider { width:1px; height:20px; background:#303030; margin:0 4px; }
         #rich-chart-toolbar select { min-width:150px; appearance:none; }
         #rich-chart-toolbar .rich-toolbar-status { color:#777; font-size:10px; white-space:nowrap; }
         .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
         .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
-        .rich-native-timeframe-host, .rich-native-timeframe-host:hover, .rich-native-timeframe-host:focus, .rich-native-timeframe-host > div { background:transparent !important; border:0 !important; box-shadow:none !important; }
+        .rich-native-timeframe-host,
+        .rich-native-timeframe-host:hover,
+        .rich-native-timeframe-host:focus,
+        .rich-native-timeframe-host > div {
+            display:flex !important;
+            align-items:center !important;
+            min-height:42px !important;
+            background:transparent !important;
+            border:0 !important;
+            box-shadow:none !important;
+        }
+        #rich-chart-toolbar button.is-active,
+        #rich-chart-toolbar .rich-toolbar-timeframes button.is-active,
+        .rich-native-timeframe-host button.is-active {
+            color:#f1f1f1;
+            background:#1a1a1a;
+        }
         #rich-chart-toolbar .rich-icon { display:inline-flex; align-items:center; justify-content:center; min-width:16px; font-size:16px; line-height:1; }
         #rich-chart-toolbar .rich-icon-indicator { font-size:14px; font-weight:600; }
-        #rich-chart-toolbar button.is-active, #rich-chart-toolbar .rich-toolbar-timeframes button.is-active { color:#f1f1f1; background:#1a1a1a; }
     </style>
 </head>
 <body>
