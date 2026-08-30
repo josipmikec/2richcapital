@@ -737,29 +737,40 @@ function applyTwoRichTemplate(templateId, options = {}) {
 
 function injectTwoRichTemplateOptions() {
     const optionLabels = ['2RICH Dark', '2RICH Light'];
+    let iframeObserver = null;
+    let bodyObserver = null;
 
-    const attachTemplateOptions = () => {
-        const menus = Array.from(document.querySelectorAll('[role="listbox"], .menuWrap-Kq3ruQo8, .itemList-Kq3ruQo8, .scrollWrap-Kq3ruQo8'));
-        const applyDefaultsNode = Array.from(document.querySelectorAll('div, span, button')).find((el) => {
+    const findChartIframe = () => {
+        return Array.from(document.querySelectorAll('iframe')).find((frame) => {
+            try {
+                const doc = frame.contentDocument;
+                return !!doc && !!doc.body;
+            } catch (error) {
+                return false;
+            }
+        }) || null;
+    };
+
+    const attachIntoIframeDocument = (doc) => {
+        if (!doc || !doc.body) return false;
+
+        const applyDefaultsNode = Array.from(doc.querySelectorAll('div, span, button')).find((el) => {
             return (el.textContent || '').trim() === 'Apply defaults';
         });
 
         if (!applyDefaultsNode) return false;
 
         let menuContainer = applyDefaultsNode.closest('[role="listbox"]')
-            || applyDefaultsNode.closest('.menuWrap-Kq3ruQo8')
-            || applyDefaultsNode.closest('.itemList-Kq3ruQo8')
+            || applyDefaultsNode.closest('[data-name="menu-inner"]')
+            || applyDefaultsNode.closest('[class*="menuWrap"]')
+            || applyDefaultsNode.closest('[class*="itemList"]')
             || applyDefaultsNode.parentElement;
 
-        if (!menuContainer) {
-            menuContainer = menus.find(Boolean) || applyDefaultsNode.parentElement;
-        }
         if (!menuContainer) return false;
-
         if (menuContainer.querySelector('[data-2rich-template-option]')) return true;
 
         optionLabels.forEach((label) => {
-            const item = document.createElement('div');
+            const item = doc.createElement('div');
             item.setAttribute('data-2rich-template-option', label);
             item.setAttribute('role', 'option');
             item.tabIndex = 0;
@@ -770,7 +781,8 @@ function injectTwoRichTemplateOptions() {
                 'color:inherit',
                 'font:inherit',
                 'border-radius:6px',
-                'margin-bottom:2px'
+                'margin-bottom:2px',
+                'user-select:none'
             ].join(';');
 
             item.addEventListener('mouseenter', () => item.style.background = 'rgba(255,255,255,.06)');
@@ -790,24 +802,47 @@ function injectTwoRichTemplateOptions() {
             menuContainer.insertBefore(item, applyDefaultsNode.closest('[role="option"]') || applyDefaultsNode);
         });
 
-        chartDebug('Injected 2RICH template options into settings menu', { labels: optionLabels });
+        chartDebug('Injected 2RICH template options into TradingView iframe menu', { labels: optionLabels });
         return true;
     };
 
-    const watchForTemplateMenu = () => {
-        attachTemplateOptions();
+    const observeIframe = (frame) => {
+        if (!frame) return;
+        let doc;
+        try {
+            doc = frame.contentDocument;
+        } catch (error) {
+            chartDebug('Could not access TradingView iframe document', { message: error && error.message ? error.message : String(error) });
+            return;
+        }
+        if (!doc || !doc.body) return;
 
-        const observer = new MutationObserver(() => {
-            attachTemplateOptions();
+        attachIntoIframeDocument(doc);
+
+        if (iframeObserver) iframeObserver.disconnect();
+        iframeObserver = new MutationObserver(() => {
+            attachIntoIframeDocument(doc);
         });
-
-        observer.observe(document.body, { childList: true, subtree: true });
+        iframeObserver.observe(doc.body, { childList: true, subtree: true });
+        chartDebug('Watching TradingView iframe for Template menu', { iframeFound: true });
     };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', watchForTemplateMenu, { once: true });
-    } else {
-        watchForTemplateMenu();
+    const scan = () => {
+        const frame = findChartIframe();
+        if (frame) {
+            observeIframe(frame);
+            return true;
+        }
+        return false;
+    };
+
+    if (!scan()) {
+        if (bodyObserver) bodyObserver.disconnect();
+        bodyObserver = new MutationObserver(() => {
+            scan();
+        });
+        bodyObserver.observe(document.body, { childList: true, subtree: true });
+        chartDebug('Waiting for TradingView iframe before injecting template options', {});
     }
 }
 
