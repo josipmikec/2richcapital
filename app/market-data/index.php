@@ -56,38 +56,35 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .md-feed-controls .md-symbol-select-wrap { margin: 0; }
         .md-feed-controls .md-interval-wrap      { margin: 0; }
         .md-feed-controls .md-live-badge         { margin: 0; }
-        .md-feed-controls { display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border: 0 !important; overflow: hidden !important; }
+        .md-feed-controls { display: none; }
 
-        .tv-custom-toolbar-host,
-        .tv-custom-toolbar-host:hover,
-        .tv-custom-toolbar-host:focus,
-        .tv-custom-toolbar-host > button,
-        .tv-custom-toolbar-host > div {
-            background: transparent !important;
-            border: 0 !important;
-            box-shadow: none !important;
-        }
-        .tv-custom-toolbar-group { display:inline-flex; align-items:center; gap:0; flex-wrap:nowrap; margin:0 !important; padding:0 !important; background:transparent !important; border:0 !important; box-shadow:none !important; }
-        .tv-custom-toolbar-timeframes { border-left:1px solid rgba(255,255,255,.10) !important; border-right:1px solid rgba(255,255,255,.10) !important; }
-        .tv-custom-toolbar-auxiliary { gap:2px; }
+        .tv-custom-toolbar-group { display:inline-flex; align-items:center; gap:2px; flex-wrap:nowrap; }
+        .tv-custom-toolbar-divider { width:1px; height:18px; background:rgba(255,255,255,.10); margin:0 6px; }
         .tv-custom-toolbar-btn, .tv-custom-toolbar-select {
             height: 28px;
-            border: 0 !important;
-            background: transparent !important;
+            border: 0;
+            background: transparent;
             color: #b2b5be;
-            border-radius: 2px;
-            padding: 0 7px;
+            border-radius: 6px;
+            padding: 0 8px;
             font: 500 11px/1 "Montserrat", sans-serif;
             letter-spacing: 0;
             text-transform: none;
             white-space: nowrap;
             cursor: pointer;
-            box-shadow: none !important;
+            box-shadow: none;
             outline: none;
         }
-        .tv-custom-toolbar-btn:hover, .tv-custom-toolbar-select:hover { background: rgba(255,255,255,.04) !important; color: #d7d9df; }
-        .tv-custom-toolbar-btn.is-active { background: rgba(255,255,255,.07) !important; color: #f0f1f4; }
-        .tv-custom-toolbar-select { min-width: 180px; appearance:none; padding-right:18px; background-color:transparent !important; background-image:linear-gradient(45deg,transparent 50%,#8f939d 50%),linear-gradient(135deg,#8f939d 50%,transparent 50%) !important; background-position:calc(100% - 12px) 11px,calc(100% - 8px) 11px !important; background-size:4px 4px,4px 4px !important; background-repeat:no-repeat !important; }
+        .tv-custom-toolbar-btn:hover, .tv-custom-toolbar-select:hover {
+            background: rgba(255,255,255,.06);
+            color: #ffffff;
+        }
+        .tv-custom-toolbar-btn.is-active {
+            background: rgba(255,255,255,.10);
+            color: #ffffff;
+        }
+        .tv-custom-toolbar-btn--icon { min-width: 28px; padding: 0 7px; font-size: 13px; }
+        .tv-custom-toolbar-select { min-width: 44px; appearance: none; padding-right: 18px; background-image: linear-gradient(45deg, transparent 50%, #8f939d 50%), linear-gradient(135deg, #8f939d 50%, transparent 50%); background-position: calc(100% - 12px) 11px, calc(100% - 8px) 11px; background-size: 4px 4px, 4px 4px; background-repeat: no-repeat; }
 
         /* ── Calendar filter panel: hidden by default ──────────────────── */
         .md-cal-filters {
@@ -915,60 +912,76 @@ function mountTradingViewHeaderControls() {
     if (!tvWidget || tvHeaderControlsMounted || typeof tvWidget.headerReady !== 'function' || typeof tvWidget.createButton !== 'function') return;
     tvWidget.headerReady().then(() => {
         if (!tvWidget || tvHeaderControlsMounted) return;
-
-        const makeButton = (label, className = 'tv-custom-toolbar-btn') => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = className;
-            btn.textContent = label;
-            return btn;
-        };
-
-        const timeframeGroup = document.createElement('div');
-        timeframeGroup.className = 'tv-custom-toolbar-group tv-custom-toolbar-timeframes';
-        [['15','15m'],['60','1H'],['240','4H'],['480','8H'],['D','D'],['W','W'],['M','MN']].forEach(([value, label]) => {
-            const btn = makeButton(label);
-            btn.dataset.interval = value;
-            btn.title = label;
-            btn.addEventListener('click', () => changeInterval(value));
-            timeframeGroup.appendChild(btn);
-        });
-
-        const timeframeHost = tvWidget.createButton();
-        timeframeHost.className = 'tv-custom-toolbar-host tv-custom-toolbar-timeframe-host';
-        timeframeHost.title = 'Timeframe';
-        timeframeHost.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
-        timeframeHost.appendChild(timeframeGroup);
-
-        const auxiliaryGroup = document.createElement('div');
-        auxiliaryGroup.className = 'tv-custom-toolbar-group tv-custom-toolbar-auxiliary';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tv-custom-toolbar-group';
 
         const symbolSelect = document.createElement('select');
         symbolSelect.id = 'tvToolbarSymbolSelect';
         symbolSelect.className = 'tv-custom-toolbar-select';
-        symbolSelect.title = 'Select market symbol';
         symbolSelect.addEventListener('change', (e) => changeSymbol(e.target.value));
-        auxiliaryGroup.appendChild(symbolSelect);
+        wrapper.appendChild(symbolSelect);
 
-        const watchlistBtn = makeButton('★ Watchlist');
+        const watchlistBtn = document.createElement('button');
+        watchlistBtn.type = 'button';
         watchlistBtn.id = 'watchlistToggleNative';
+        watchlistBtn.className = 'tv-custom-toolbar-btn';
+        watchlistBtn.innerHTML = '<span aria-hidden="true">★</span> Watchlist';
         watchlistBtn.setAttribute('aria-expanded', 'false');
         watchlistBtn.addEventListener('click', () => toggleWatchlist());
-        auxiliaryGroup.appendChild(watchlistBtn);
+        wrapper.appendChild(watchlistBtn);
 
-        const marketBtn = makeButton('Markets');
+        [['15','15m'],['60','1H'],['240','4H'],['480','8H'],['D','D'],['W','W'],['M','MN']].forEach(([value,label]) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tv-custom-toolbar-btn';
+            btn.dataset.interval = value;
+            btn.textContent = label;
+            btn.addEventListener('click', () => changeInterval(value));
+            wrapper.appendChild(btn);
+        });
+
+        const marketBtn = document.createElement('button');
+        marketBtn.type = 'button';
+        marketBtn.className = 'tv-custom-toolbar-btn';
+        marketBtn.textContent = 'Markets';
         marketBtn.addEventListener('click', () => symbolSelect.focus());
-        auxiliaryGroup.appendChild(marketBtn);
+        wrapper.appendChild(marketBtn);
 
-        const quickBtn = makeButton('Search');
+        const compareBtn = document.createElement('button');
+        compareBtn.type = 'button';
+        compareBtn.className = 'tv-custom-toolbar-btn';
+        compareBtn.textContent = 'Compare';
+        compareBtn.addEventListener('click', () => symbolSelect.focus());
+        wrapper.appendChild(compareBtn);
+
+        const divider = document.createElement('span');
+        divider.className = 'tv-custom-toolbar-divider';
+        wrapper.appendChild(divider);
+
+        const favouritesBtn = document.createElement('button');
+        favouritesBtn.type = 'button';
+        favouritesBtn.className = 'tv-custom-toolbar-btn tv-custom-toolbar-btn--icon';
+        favouritesBtn.title = 'Add current symbol to watchlist';
+        favouritesBtn.setAttribute('aria-label', 'Add current symbol to watchlist');
+        favouritesBtn.textContent = '★';
+        favouritesBtn.addEventListener('click', () => addCurrentToWatchlist());
+        wrapper.appendChild(favouritesBtn);
+
+        const quickBtn = document.createElement('button');
+        quickBtn.type = 'button';
+        quickBtn.className = 'tv-custom-toolbar-btn';
+        quickBtn.textContent = 'Search';
         quickBtn.addEventListener('click', () => symbolSelect.focus());
-        auxiliaryGroup.appendChild(quickBtn);
+        wrapper.appendChild(quickBtn);
 
-        const auxiliaryHost = tvWidget.createButton();
-        auxiliaryHost.className = 'tv-custom-toolbar-host tv-custom-toolbar-auxiliary-host';
-        auxiliaryHost.title = '2RICH chart controls';
-        auxiliaryHost.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
-        auxiliaryHost.appendChild(auxiliaryGroup);
+        const host = tvWidget.createButton();
+        host.setAttribute('title', '2RICH chart controls');
+        host.style.padding = '0';
+        host.style.border = '0';
+        host.style.background = 'transparent';
+        host.style.display = 'flex';
+        host.style.alignItems = 'center';
+        host.appendChild(wrapper);
 
         tvHeaderControlsMounted = true;
         syncTvHeaderControls();
@@ -1395,7 +1408,7 @@ function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
+        disabled_features: ['use_localstorage_for_settings','header_symbol_search','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
     });
