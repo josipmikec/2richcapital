@@ -17,6 +17,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES); ?>">
     <title>Market Data - 2RICH CAPITAL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,6 +27,22 @@ $useremail  = $_SESSION['user_email'] ?? '';
     <!-- TradingView Charting Library -->
     <script src="../assets/charting_library/charting_library.standalone.js"></script>
     <style>
+
+        .md-watchlist-btn, .md-watchlist-add {
+            border: 1px solid #1e1e1e; background: rgba(255,255,255,0.03); color: #888; border-radius: 8px;
+            min-height: 30px; padding: 6px 10px; font: 700 9px/1 "Montserrat", sans-serif; letter-spacing: .08em; text-transform: uppercase;
+        }
+        .md-watchlist-btn:hover, .md-watchlist-add:hover, .md-watchlist-btn[aria-expanded="true"] { color: #F2CA50; border-color: rgba(242,202,80,.35); }
+        .md-watchlist-add { padding-inline: 9px; font-size: 16px; line-height: 16px; }
+        .md-watchlist-panel { position: absolute; z-index: 20; margin-top: 38px; min-width: 230px; background: #151515; border: 1px solid #292929; border-radius: 10px; box-shadow: 0 12px 35px rgba(0,0,0,.45); }
+        .md-watchlist-heading { display:flex; align-items:center; justify-content:space-between; padding: 10px 12px; border-bottom:1px solid #252525; color:#ccc; font:700 10px/1 "Montserrat",sans-serif; text-transform:uppercase; letter-spacing:.08em; }
+        .md-watchlist-heading button { color:#777; font-size:18px; padding:0 3px; }
+        .md-watchlist-items { padding: 6px; }
+        .md-watchlist-item { display:flex; align-items:center; gap:8px; width:100%; padding:8px; color:#aaa; border-radius:6px; text-align:left; font:600 10px/1.2 "Montserrat",sans-serif; }
+        .md-watchlist-item:hover { background:rgba(242,202,80,.08); color:#F2CA50; }
+        .md-watchlist-remove { margin-left:auto; color:#555; font-size:14px; }
+        .md-watchlist-empty { display:block; padding:12px 8px; color:#555; font:400 10px/1.4 "Montserrat",sans-serif; }
+
         /* ── Feed controls bar (inside Market Feeds pane) ─────────────── */
         .md-feed-controls {
             display: flex;
@@ -259,8 +276,25 @@ $useremail  = $_SESSION['user_email'] ?? '';
                     </select>
                 </div>
 
+                <button type="button" class="md-watchlist-btn" id="watchlistToggle" onclick="toggleWatchlist()" aria-expanded="false" title="Open watchlist">
+                    <span aria-hidden="true">★</span> Watchlist
+                </button>
+
+                <button type="button" class="md-watchlist-add" onclick="addCurrentToWatchlist()" title="Add current symbol to watchlist" aria-label="Add current symbol to watchlist">＋</button>
+
+                <div class="md-watchlist-panel" id="watchlistPanel" hidden>
+                    <div class="md-watchlist-heading">
+                        <span>Favourites</span>
+                        <button type="button" onclick="toggleWatchlist()" aria-label="Close watchlist">×</button>
+                    </div>
+                    <div id="watchlistItems" class="md-watchlist-items"><span class="md-watchlist-empty">No favourites yet</span></div>
+                </div>
+
                 <!-- Interval selector -->
                 <div class="md-interval-wrap">
+                    <button class="md-interval-btn" data-interval="15" onclick="changeInterval('15')">15m</button>
+                    <button class="md-interval-btn" data-interval="60" onclick="changeInterval('60')">1H</button>
+                    <button class="md-interval-btn" data-interval="240" onclick="changeInterval('240')">4H</button>
                     <button class="md-interval-btn" data-interval="480" onclick="changeInterval('480')">8H</button>
                     <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
                     <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
@@ -281,24 +315,6 @@ $useremail  = $_SESSION['user_email'] ?? '';
                 <div id="tv_chart_container"></div>
             </div>
 
-            <!-- Feature cards below chart -->
-            <div class="md-features">
-                <div class="md-feature-card">
-                    <div class="md-feature-label">Forex</div>
-                    <div class="md-feature-title">Major &amp; Minor Pairs</div>
-                    <div class="md-feature-desc">Live bid/ask spreads, pip movement, and session volume for all major Forex pairs.</div>
-                </div>
-                <div class="md-feature-card">
-                    <div class="md-feature-label">Commodities</div>
-                    <div class="md-feature-title">Gold, Silver &amp; Oil</div>
-                    <div class="md-feature-desc">Spot prices and futures data for XAUUSD, XAGUSD, WTI Crude, and Brent.</div>
-                </div>
-                <div class="md-feature-card">
-                    <div class="md-feature-label">Indices</div>
-                    <div class="md-feature-title">Global Stock Indices</div>
-                    <div class="md-feature-desc">Real-time data for NAS100, US30, SPX500, DAX40, and UK100.</div>
-                </div>
-            </div>
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════════
@@ -507,6 +523,76 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // ═══════════════════════════════════════════════════════════════════════════
 let tvWidget       = null;
 let currentSymbol  = '';
+let chartSettings  = {};
+let chartSettingsTimer = null;
+let chartPermission = { sync: true, multi: false };
+
+function csrfHeaders() {
+    const token = document.querySelector('meta[name=csrf-token]')?.content || '';
+    return token ? { 'X-CSRF-Token': token, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
+
+async function loadChartSettings() {
+    try {
+        const response = await fetch('../api/preferences/get.php?key=market_data_chart_settings', { credentials: 'same-origin' });
+        const data = await response.json();
+        if (data.success && data.value) chartSettings = JSON.parse(data.value);
+    } catch (error) { console.warn('[2RICH] Chart settings unavailable', error); }
+}
+
+async function saveChartSettings(settings) {
+    chartSettings = { ...chartSettings, ...settings };
+    clearTimeout(chartSettingsTimer);
+    chartSettingsTimer = setTimeout(async () => {
+        try {
+            await fetch('../api/preferences/set.php', { method: 'POST', credentials: 'same-origin', headers: csrfHeaders(), body: JSON.stringify({ key: 'market_data_chart_settings', value: JSON.stringify(chartSettings) }) });
+        } catch (error) { console.warn('[2RICH] Chart settings could not be saved', error); }
+    }, 500);
+}
+
+function chartSaveLoadAdapter() {
+    return null;
+}
+
+async function loadWatchlist() {
+    try {
+        const response = await fetch('../api/preferences/get.php?key=market_data_watchlist', { credentials: 'same-origin' });
+        const data = await response.json();
+        const list = data.success && data.value ? JSON.parse(data.value) : [];
+        window.marketWatchlist = Array.isArray(list) ? list : [];
+    } catch (error) { window.marketWatchlist = []; }
+    renderWatchlist();
+}
+
+function renderWatchlist() {
+    const target = document.getElementById('watchlistItems');
+    if (!target) return;
+    const list = Array.isArray(window.marketWatchlist) ? window.marketWatchlist : [];
+    target.innerHTML = list.length ? list.map(symbol => `<button type="button" class="md-watchlist-item" onclick="changeSymbol('${escapeHtml(symbol)}'); toggleWatchlist();"><span aria-hidden="true">★</span>${escapeHtml(symbol)}<span class="md-watchlist-remove" onclick="event.stopPropagation(); removeFromWatchlist('${escapeHtml(symbol)}')">×</span></button>`).join('') : '<span class="md-watchlist-empty">No favourites yet</span>';
+}
+
+function toggleWatchlist() {
+    const panel = document.getElementById('watchlistPanel');
+    const button = document.getElementById('watchlistToggle');
+    if (!panel || !button) return;
+    const open = panel.hidden; panel.hidden = !open; button.setAttribute('aria-expanded', String(open));
+}
+
+async function persistWatchlist() {
+    await fetch('../api/preferences/set.php', { method:'POST', credentials:'same-origin', headers: csrfHeaders(), body: JSON.stringify({ key:'market_data_watchlist', value:JSON.stringify(window.marketWatchlist || []) }) });
+}
+
+function addCurrentToWatchlist() {
+    const symbol = String(currentSymbol || '').trim();
+    if (!symbol) return;
+    window.marketWatchlist = Array.isArray(window.marketWatchlist) ? window.marketWatchlist : [];
+    if (!window.marketWatchlist.includes(symbol)) { window.marketWatchlist.push(symbol); persistWatchlist(); renderWatchlist(); }
+}
+
+function removeFromWatchlist(symbol) {
+    window.marketWatchlist = (window.marketWatchlist || []).filter(item => item !== symbol);
+    persistWatchlist(); renderWatchlist();
+}
 
 function getSymbolSelectElement() {
     return document.getElementById('symbolSelect');
@@ -996,12 +1082,15 @@ function initChart() {
             'volume.volume.visible': false,
             'volume.show ma': false,
         },
-        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
-        enabled_features:  ['hide_left_toolbar_by_default'],
+        disabled_features: ['header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
+        enabled_features:  ['items_favoriting'],
     });
 
     tvWidget.onChartReady(() => {
         const chart = tvWidget.activeChart();
+        if (chart && chartSettings && chartSettings.interval) {
+            try { chart.setResolution(String(chartSettings.interval), () => {}, () => {}); } catch (e) {}
+        }
         if (!chart || typeof chart.createStudy !== 'function') return;
 
         try {
@@ -1021,6 +1110,7 @@ function initChart() {
 }
 
 function changeSymbol(symbol) {
+    saveChartSettings({ symbol });
     const normalized = sharedDatafeed ? sharedDatafeed.normalizeSymbol(symbol) : String(symbol || '').trim();
     if (!normalized) return;
     currentSymbol = normalized;
@@ -1029,6 +1119,7 @@ function changeSymbol(symbol) {
 }
 
 function changeInterval(interval) {
+    saveChartSettings({ interval });
     const mapped = new TwoRichUDFDatafeed('../api/market').normalizeResolution(interval);
     currentInterval = mapped.tv;
     document.querySelectorAll('.md-interval-btn').forEach(b =>
@@ -1450,6 +1541,9 @@ document.addEventListener('DOMContentLoaded', function () {
     loadEconomicCalendar();
     startNormalRefresh();
     startCountdownTick();
+
+    loadChartSettings();
+    loadWatchlist();
 
     // Load TradingView UDF + init chart
     const udfScript = document.createElement('script');

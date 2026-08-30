@@ -31,7 +31,7 @@ if (!$key) {
     exit;
 }
 
-$allowed_keys = ['default_stop_distance'];
+$allowed_keys = ['default_stop_distance', 'market_data_chart_settings', 'market_data_watchlist'];
 if (!in_array($key, $allowed_keys)) {
     echo json_encode(['success' => false, 'message' => 'Invalid preference key']);
     exit;
