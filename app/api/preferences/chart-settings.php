@@ -82,6 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 verify_csrf();
 $input = json_decode(file_get_contents('php://input'), true);
 if (!is_array($input)) $input = $_POST;
+if ($debug_enabled) {
+    error_log('[2RICH chart-settings debug] raw_input=' . file_get_contents('php://input'));
+    error_log('[2RICH chart-settings debug] decoded_input=' . wp_json_encode($input));
+}
 
 $reset = !empty($input['reset']);
 if ($reset) {
@@ -105,6 +109,9 @@ if ($reset) {
 }
 
 $settings = $input['settings'] ?? null;
+if ($debug_enabled) {
+    error_log('[2RICH chart-settings debug] settings_type=' . gettype($settings));
+}
 if (!is_array($settings)) {
     http_response_code(422);
     echo json_encode(['success' => false, 'message' => 'Settings payload must be an object']);
@@ -241,6 +248,7 @@ if ($debug_enabled) {
         'saved_keys' => array_keys($sanitized),
         'saved_bytes' => strlen($payload),
         'rejected' => $debug_rejected,
+        'input_keys' => is_array($settings) ? array_keys($settings) : [],
     ];
 }
 echo json_encode($response);
