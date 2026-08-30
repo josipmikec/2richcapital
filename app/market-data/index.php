@@ -354,46 +354,22 @@ $useremail  = $_SESSION['user_email'] ?? '';
         ═══════════════════════════════════════════════════════════════ -->
         <div class="md-pane active" id="tab-feeds">
 
-            <!-- ── Feed controls (symbol + timeframe + live) live here ── -->
-            <div class="md-feed-controls">
-                <!-- Symbol selector -->
+            <div class="md-feed-controls" hidden>
                 <div class="md-symbol-select-wrap">
                     <select id="symbolSelect" class="md-symbol-select" onchange="changeSymbol(this.value)">
                         <option value="">Loading symbols...</option>
                     </select>
                 </div>
-
                 <button type="button" class="md-watchlist-btn" id="watchlistToggle" onclick="toggleWatchlist()" aria-expanded="false" title="Open watchlist">
                     <span aria-hidden="true">★</span> Watchlist
                 </button>
-
                 <button type="button" class="md-watchlist-add" onclick="addCurrentToWatchlist()" title="Add current symbol to watchlist" aria-label="Add current symbol to watchlist">＋</button>
-
                 <div class="md-watchlist-panel" id="watchlistPanel" hidden>
                     <div class="md-watchlist-heading">
                         <span>Favourites</span>
                         <button type="button" onclick="toggleWatchlist()" aria-label="Close watchlist">×</button>
                     </div>
                     <div id="watchlistItems" class="md-watchlist-items"><span class="md-watchlist-empty">No favourites yet</span></div>
-                </div>
-
-                <!-- Interval selector -->
-                <div class="md-interval-wrap">
-                    <button class="md-interval-btn" data-interval="15" onclick="changeInterval('15')">15m</button>
-                    <button class="md-interval-btn" data-interval="60" onclick="changeInterval('60')">1H</button>
-                    <button class="md-interval-btn" data-interval="240" onclick="changeInterval('240')">4H</button>
-                    <button class="md-interval-btn" data-interval="480" onclick="changeInterval('480')">8H</button>
-                    <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
-                    <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
-                    <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
-                    
-                    
-                </div>
-
-                <!-- Live Feed badge -->
-                <div class="md-live-badge">
-                    <div class="md-live-dot"></div>
-                    Live Feed
                 </div>
             </div>
 
@@ -1402,8 +1378,24 @@ function syncNativeTimeframeGroup() {
 
 function richChartApi() { return tvWidget && typeof tvWidget.activeChart === 'function' ? tvWidget.activeChart() : null; }
 function richToolbarStatus(message) { const el=document.getElementById('richToolbarStatus'); if(el) el.textContent=message; }
-function richOpenSymbolModal() { const select=getSymbolSelectElement(); if(select){ select.hidden=false; select.size=Math.min(8, Math.max(4, select.options.length)); select.style.position='absolute'; select.style.zIndex='100'; select.style.display='block'; select.focus(); richToolbarStatus('Select symbol'); } }
-function richOpenSearchModal() { const select=getSymbolSelectElement(); if(select){ richOpenSymbolModal(); richToolbarStatus('Search symbols'); } }
+function richOpenSymbolModal() {
+    const select = getSymbolSelectElement();
+    if (!select) return;
+    select.hidden = false;
+    select.size = Math.min(12, Math.max(6, select.options.length));
+    select.style.position = 'fixed';
+    select.style.left = '50%';
+    select.style.top = '96px';
+    select.style.transform = 'translateX(-50%)';
+    select.style.zIndex = '1000';
+    select.style.display = 'block';
+    select.focus();
+    richToolbarStatus('Select symbol');
+}
+function richOpenSearchModal() {
+    richOpenSymbolModal();
+    richToolbarStatus('Search symbols');
+}
 function richSetInterval(interval) { changeInterval(interval); document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.richInterval===String(interval))); syncNativeTimeframeGroup(); }
 function richSetCandles() { const chart=richChartApi(); try { if(chart && typeof chart.setChartType==='function') { chart.setChartType(1); richToolbarStatus('Candles'); } else if(chart && typeof chart.executeActionById==='function') { chart.executeActionById('chartType'); richToolbarStatus('Chart type'); } else richToolbarStatus('Chart type API unavailable'); } catch(e){ richToolbarStatus('Candles unavailable'); console.error(e); } }
 function richOpenIndicators() { const chart=richChartApi(); try { if(chart && typeof chart.executeActionById==='function') chart.executeActionById('insertIndicator'); else richToolbarStatus('Indicators API unavailable'); } catch(e){ richToolbarStatus('Indicators unavailable'); console.error(e); } }
