@@ -785,16 +785,22 @@ function createTwoRichSaveLoadAdapter() {
         loadDrawingTemplate: async () => '',
         removeDrawingTemplate: async () => {},
         saveDrawingTemplate: async () => {},
-        getAllChartTemplates: async () => Object.keys(templates),
+        getAllChartTemplates: async () => {
+            chartDebug('save_load_adapter.getAllChartTemplates', Object.keys(templates));
+            return Object.keys(templates);
+        },
         getChartTemplateContent: async (templateName) => {
+            chartDebug('save_load_adapter.getChartTemplateContent', { templateName });
             const template = templates[templateName] || templates['2RICH Dark'];
             const templateId = template === TWO_RICH_TEMPLATES.light ? 'light' : 'dark';
             return { content: templateContent(templateId) };
         },
-        saveChartTemplate: async () => {},
-        removeChartTemplate: async () => {},
-        saveStudyTemplate: async () => {},
-        getStudyTemplateContent: async () => ''
+        saveChartTemplate: async (newName, theme) => {
+            chartDebug('save_load_adapter.saveChartTemplate', { newName, theme });
+        },
+        removeChartTemplate: async (templateName) => {
+            chartDebug('save_load_adapter.removeChartTemplate', { templateName });
+        }
     };
 }
 
@@ -1350,6 +1356,15 @@ function initChart() {
 
     tvWidget.onChartReady(() => {
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+        window.twoRichChartDebug = {
+            loadTemplate(name) {
+                if (!tvWidget || typeof tvWidget.activeChart !== 'function') return Promise.resolve(false);
+                return tvWidget.activeChart().loadChartTemplate(name);
+            },
+            listTemplates() {
+                return ['2RICH Dark', '2RICH Light'];
+            }
+        };
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
         }
