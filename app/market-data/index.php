@@ -58,12 +58,33 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .md-feed-controls .md-live-badge         { margin: 0; }
         .md-feed-controls { display: none; }
 
-        .tv-custom-toolbar-group { display:inline-flex; align-items:center; gap:6px; flex-wrap:nowrap; }
-        .tv-custom-toolbar-divider { width:1px; height:22px; background:rgba(255,255,255,.12); margin:0 4px; }
-        .tv-custom-toolbar-btn, .tv-custom-toolbar-select { height:30px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03); color:#a8a8a8; border-radius:8px; padding:0 10px; font:700 9px/1 "Montserrat", sans-serif; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
-        .tv-custom-toolbar-btn:hover, .tv-custom-toolbar-select:hover, .tv-custom-toolbar-btn.is-active { color:#F2CA50; border-color:rgba(242,202,80,.35); }
-        .tv-custom-toolbar-btn--icon { min-width:30px; padding:0 9px; font-size:12px; }
-        .tv-custom-toolbar-select { min-width:130px; appearance:none; }
+        .tv-custom-toolbar-group { display:inline-flex; align-items:center; gap:2px; flex-wrap:nowrap; }
+        .tv-custom-toolbar-divider { width:1px; height:18px; background:rgba(255,255,255,.10); margin:0 6px; }
+        .tv-custom-toolbar-btn, .tv-custom-toolbar-select {
+            height: 28px;
+            border: 0;
+            background: transparent;
+            color: #b2b5be;
+            border-radius: 6px;
+            padding: 0 8px;
+            font: 500 11px/1 "Montserrat", sans-serif;
+            letter-spacing: 0;
+            text-transform: none;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: none;
+            outline: none;
+        }
+        .tv-custom-toolbar-btn:hover, .tv-custom-toolbar-select:hover {
+            background: rgba(255,255,255,.06);
+            color: #ffffff;
+        }
+        .tv-custom-toolbar-btn.is-active {
+            background: rgba(255,255,255,.10);
+            color: #ffffff;
+        }
+        .tv-custom-toolbar-btn--icon { min-width: 28px; padding: 0 7px; font-size: 13px; }
+        .tv-custom-toolbar-select { min-width: 44px; appearance: none; padding-right: 18px; background-image: linear-gradient(45deg, transparent 50%, #8f939d 50%), linear-gradient(135deg, #8f939d 50%, transparent 50%); background-position: calc(100% - 12px) 11px, calc(100% - 8px) 11px; background-size: 4px 4px, 4px 4px; background-repeat: no-repeat; }
 
         /* ── Calendar filter panel: hidden by default ──────────────────── */
         .md-cal-filters {
@@ -922,14 +943,14 @@ function mountTradingViewHeaderControls() {
         const marketBtn = document.createElement('button');
         marketBtn.type = 'button';
         marketBtn.className = 'tv-custom-toolbar-btn';
-        marketBtn.textContent = 'Market List';
+        marketBtn.textContent = 'Markets';
         marketBtn.addEventListener('click', () => symbolSelect.focus());
         wrapper.appendChild(marketBtn);
 
         const compareBtn = document.createElement('button');
         compareBtn.type = 'button';
         compareBtn.className = 'tv-custom-toolbar-btn';
-        compareBtn.textContent = 'Compare / Add Symbol';
+        compareBtn.textContent = 'Compare';
         compareBtn.addEventListener('click', () => symbolSelect.focus());
         wrapper.appendChild(compareBtn);
 
@@ -949,7 +970,7 @@ function mountTradingViewHeaderControls() {
         const quickBtn = document.createElement('button');
         quickBtn.type = 'button';
         quickBtn.className = 'tv-custom-toolbar-btn';
-        quickBtn.textContent = 'Quick Search';
+        quickBtn.textContent = 'Search';
         quickBtn.addEventListener('click', () => symbolSelect.focus());
         wrapper.appendChild(quickBtn);
 
@@ -1387,7 +1408,7 @@ function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','create_volume_indicator_by_default'],
+        disabled_features: ['use_localstorage_for_settings','header_symbol_search','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
     });
