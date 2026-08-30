@@ -813,9 +813,14 @@ function injectTwoRichTemplateOptions() {
             item.style.cssText = applyDefaultsItem.getAttribute('style') || '';
             item.style.position = 'relative';
             item.style.zIndex = '999999';
-            item.style.display = applyDefaultsItem.style.display || 'flex';
+            item.style.display = 'flex';
+            item.style.width = '100%';
+            item.style.minWidth = '100%';
             item.style.visibility = 'visible';
             item.style.opacity = '1';
+            item.style.flex = '0 0 auto';
+            item.style.alignItems = 'center';
+            item.style.boxSizing = 'border-box';
 
             item.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -835,6 +840,10 @@ function injectTwoRichTemplateOptions() {
         }
         menuContainer.style.zIndex = '999999';
         menuContainer.style.position = menuContainer.style.position || 'relative';
+        menuContainer.style.display = 'flex';
+        menuContainer.style.flexDirection = 'column';
+        menuContainer.style.alignItems = 'stretch';
+        menuContainer.style.width = '100%';
 
         chartDebug('Injected 2RICH template options into TradingView iframe menu', {
             labels: optionLabels,
