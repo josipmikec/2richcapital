@@ -56,68 +56,14 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .md-feed-controls .md-symbol-select-wrap { margin: 0; }
         .md-feed-controls .md-interval-wrap      { margin: 0; }
         .md-feed-controls .md-live-badge         { margin: 0; }
+        .md-feed-controls { display: none; }
 
-        .md-chart-wrap {
-            position: relative;
-        }
-        .md-chart-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            padding: 10px 16px;
-            background: #111;
-            border-bottom: 1px solid #1e1e1e;
-            flex-wrap: wrap;
-        }
-        .md-chart-toolbar-main {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex: 1 1 auto;
-            min-width: 0;
-        }
-        .md-chart-toolbar-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: auto;
-        }
-        .md-chart-toolbar .md-symbol-select-wrap,
-        .md-chart-toolbar .md-interval-wrap {
-            margin: 0;
-        }
-        .md-interval-wrap--expanded {
-            flex-wrap: nowrap;
-        }
-        .md-toolbar-chip {
-            border: 1px solid #1e1e1e;
-            background: rgba(255,255,255,0.03);
-            color: #aaa;
-            border-radius: 8px;
-            min-height: 30px;
-            padding: 6px 10px;
-            font: 700 9px/1 "Montserrat", sans-serif;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-        .md-toolbar-chip:hover {
-            color: #F2CA50;
-            border-color: rgba(242,202,80,.35);
-        }
-        .md-toolbar-separator {
-            width: 1px;
-            height: 22px;
-            background: #2a2a2a;
-            margin: 0 2px;
-        }
-        .md-toolbar-favourites {
-            font-size: 12px;
-            line-height: 1;
-            padding-inline: 10px;
-        }
+        .tv-custom-toolbar-group { display:inline-flex; align-items:center; gap:6px; flex-wrap:nowrap; }
+        .tv-custom-toolbar-divider { width:1px; height:22px; background:rgba(255,255,255,.12); margin:0 4px; }
+        .tv-custom-toolbar-btn, .tv-custom-toolbar-select { height:30px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03); color:#a8a8a8; border-radius:8px; padding:0 10px; font:700 9px/1 "Montserrat", sans-serif; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+        .tv-custom-toolbar-btn:hover, .tv-custom-toolbar-select:hover, .tv-custom-toolbar-btn.is-active { color:#F2CA50; border-color:rgba(242,202,80,.35); }
+        .tv-custom-toolbar-btn--icon { min-width:30px; padding:0 9px; font-size:12px; }
+        .tv-custom-toolbar-select { min-width:130px; appearance:none; }
 
         /* ── Calendar filter panel: hidden by default ──────────────────── */
         .md-cal-filters {
@@ -329,58 +275,43 @@ $useremail  = $_SESSION['user_email'] ?? '';
         ═══════════════════════════════════════════════════════════════ -->
         <div class="md-pane active" id="tab-feeds">
 
-            <!-- Chart container -->
-            <div class="md-chart-wrap">
-                <div class="md-chart-toolbar">
-                    <div class="md-chart-toolbar-main">
-                        <div class="md-symbol-select-wrap">
-                            <select id="symbolSelect" class="md-symbol-select" onchange="changeSymbol(this.value)">
-                                <option value="">Loading symbols...</option>
-                            </select>
-                        </div>
-
-                        <button type="button" class="md-watchlist-btn" id="watchlistToggle" onclick="toggleWatchlist()" aria-expanded="false" title="Open watchlist">
-                            <span aria-hidden="true">★</span> Watchlist
-                        </button>
-
-                        <div class="md-watchlist-panel" id="watchlistPanel" hidden>
-                            <div class="md-watchlist-heading">
-                                <span>Favourites</span>
-                                <button type="button" onclick="toggleWatchlist()" aria-label="Close watchlist">×</button>
-                            </div>
-                            <div id="watchlistItems" class="md-watchlist-items"><span class="md-watchlist-empty">No favourites yet</span></div>
-                        </div>
-
-                        <div class="md-interval-wrap md-interval-wrap--expanded">
-                            <button class="md-interval-btn" data-interval="15" onclick="changeInterval('15')">15m</button>
-                            <button class="md-interval-btn" data-interval="60" onclick="changeInterval('60')">1H</button>
-                            <button class="md-interval-btn" data-interval="240" onclick="changeInterval('240')">4H</button>
-                            <button class="md-interval-btn" data-interval="480" onclick="changeInterval('480')">8H</button>
-                            <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
-                            <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
-                            <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
-                        </div>
-
-                        <button type="button" class="md-toolbar-chip md-toolbar-market-list" title="Market list">
-                            Market List
-                        </button>
-
-                        <button type="button" class="md-toolbar-chip md-toolbar-compare" title="Compare or add symbol">
-                            Compare / Add Symbol
-                        </button>
-
-                        <span class="md-toolbar-separator" aria-hidden="true"></span>
-
-                        <button type="button" class="md-watchlist-add md-toolbar-favourites" onclick="addCurrentToWatchlist()" title="Add current symbol to watchlist" aria-label="Add current symbol to watchlist">★</button>
-
-                        <button type="button" class="md-toolbar-chip md-toolbar-search" title="Quick search">
-                            Quick Search
-                        </button>
-                    </div>
-
-                    <div class="md-chart-toolbar-actions" aria-label="Chart utility actions"></div>
+            <!-- ── Feed controls (symbol + timeframe + live) live here ── -->
+            <div class="md-feed-controls">
+                <!-- Symbol selector -->
+                <div class="md-symbol-select-wrap">
+                    <select id="symbolSelect" class="md-symbol-select" onchange="changeSymbol(this.value)">
+                        <option value="">Loading symbols...</option>
+                    </select>
                 </div>
 
+                <button type="button" class="md-watchlist-btn" id="watchlistToggle" onclick="toggleWatchlist()" aria-expanded="false" title="Open watchlist">
+                    <span aria-hidden="true">★</span> Watchlist
+                </button>
+
+                <button type="button" class="md-watchlist-add" onclick="addCurrentToWatchlist()" title="Add current symbol to watchlist" aria-label="Add current symbol to watchlist">＋</button>
+
+                <div class="md-watchlist-panel" id="watchlistPanel" hidden>
+                    <div class="md-watchlist-heading">
+                        <span>Favourites</span>
+                        <button type="button" onclick="toggleWatchlist()" aria-label="Close watchlist">×</button>
+                    </div>
+                    <div id="watchlistItems" class="md-watchlist-items"><span class="md-watchlist-empty">No favourites yet</span></div>
+                </div>
+
+                <!-- Interval selector -->
+                <div class="md-interval-wrap">
+                    <button class="md-interval-btn" data-interval="15" onclick="changeInterval('15')">15m</button>
+                    <button class="md-interval-btn" data-interval="60" onclick="changeInterval('60')">1H</button>
+                    <button class="md-interval-btn" data-interval="240" onclick="changeInterval('240')">4H</button>
+                    <button class="md-interval-btn" data-interval="480" onclick="changeInterval('480')">8H</button>
+                    <button class="md-interval-btn active" data-interval="D" onclick="changeInterval('D')">D</button>
+                    <button class="md-interval-btn" data-interval="W" onclick="changeInterval('W')">W</button>
+                    <button class="md-interval-btn" data-interval="M" onclick="changeInterval('M')">MN</button>
+                </div>
+            </div>
+
+            <!-- Chart container -->
+            <div class="md-chart-wrap">
                 <div id="tv_chart_container"></div>
             </div>
 
@@ -591,6 +522,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // CHART STATE
 // ═══════════════════════════════════════════════════════════════════════════
 let tvWidget       = null;
+let tvHeaderControlsMounted = false;
 let currentSymbol  = '';
 let chartSettings  = {};
 let chartSettingsTimer = null;
@@ -853,11 +785,20 @@ function renderWatchlist() {
     target.innerHTML = list.length ? list.map(symbol => `<button type="button" class="md-watchlist-item" onclick="changeSymbol('${escapeHtml(symbol)}'); toggleWatchlist();"><span aria-hidden="true">★</span>${escapeHtml(symbol)}<span class="md-watchlist-remove" onclick="event.stopPropagation(); removeFromWatchlist('${escapeHtml(symbol)}')">×</span></button>`).join('') : '<span class="md-watchlist-empty">No favourites yet</span>';
 }
 
+function closeWatchlistPanel() {
+    const panel = document.getElementById('watchlistPanel');
+    const buttons = [document.getElementById('watchlistToggle'), document.getElementById('watchlistToggleNative')].filter(Boolean);
+    if (panel) panel.hidden = true;
+    buttons.forEach((button) => button.setAttribute('aria-expanded', 'false'));
+}
+
 function toggleWatchlist() {
     const panel = document.getElementById('watchlistPanel');
-    const button = document.getElementById('watchlistToggle');
-    if (!panel || !button) return;
-    const open = panel.hidden; panel.hidden = !open; button.setAttribute('aria-expanded', String(open));
+    const buttons = [document.getElementById('watchlistToggle'), document.getElementById('watchlistToggleNative')].filter(Boolean);
+    if (!panel || !buttons.length) return;
+    const open = panel.hidden;
+    panel.hidden = !open;
+    buttons.forEach((button) => button.setAttribute('aria-expanded', String(open)));
 }
 
 async function persistWatchlist() {
@@ -931,6 +872,99 @@ function syncSymbolSelectValue(symbol) {
     if (!normalized) return;
     const hasOption = Array.from(select.options).some((opt) => opt.value === normalized);
     if (hasOption) select.value = normalized;
+}
+
+function syncTvHeaderControls() {
+    const sourceSelect = document.getElementById('symbolSelect');
+    const headerSelect = document.getElementById('tvToolbarSymbolSelect');
+    if (sourceSelect && headerSelect) {
+        headerSelect.innerHTML = sourceSelect.innerHTML;
+        headerSelect.value = sourceSelect.value;
+        headerSelect.disabled = sourceSelect.disabled;
+    }
+    document.querySelectorAll('.tv-custom-toolbar-btn[data-interval]').forEach((btn) => {
+        btn.classList.toggle('is-active', String(btn.dataset.interval) === String(currentInterval));
+    });
+}
+
+function mountTradingViewHeaderControls() {
+    if (!tvWidget || tvHeaderControlsMounted || typeof tvWidget.headerReady !== 'function' || typeof tvWidget.createButton !== 'function') return;
+    tvWidget.headerReady().then(() => {
+        if (!tvWidget || tvHeaderControlsMounted) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tv-custom-toolbar-group';
+
+        const symbolSelect = document.createElement('select');
+        symbolSelect.id = 'tvToolbarSymbolSelect';
+        symbolSelect.className = 'tv-custom-toolbar-select';
+        symbolSelect.addEventListener('change', (e) => changeSymbol(e.target.value));
+        wrapper.appendChild(symbolSelect);
+
+        const watchlistBtn = document.createElement('button');
+        watchlistBtn.type = 'button';
+        watchlistBtn.id = 'watchlistToggleNative';
+        watchlistBtn.className = 'tv-custom-toolbar-btn';
+        watchlistBtn.innerHTML = '<span aria-hidden="true">★</span> Watchlist';
+        watchlistBtn.setAttribute('aria-expanded', 'false');
+        watchlistBtn.addEventListener('click', () => toggleWatchlist());
+        wrapper.appendChild(watchlistBtn);
+
+        [['15','15m'],['60','1H'],['240','4H'],['480','8H'],['D','D'],['W','W'],['M','MN']].forEach(([value,label]) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tv-custom-toolbar-btn';
+            btn.dataset.interval = value;
+            btn.textContent = label;
+            btn.addEventListener('click', () => changeInterval(value));
+            wrapper.appendChild(btn);
+        });
+
+        const marketBtn = document.createElement('button');
+        marketBtn.type = 'button';
+        marketBtn.className = 'tv-custom-toolbar-btn';
+        marketBtn.textContent = 'Market List';
+        marketBtn.addEventListener('click', () => symbolSelect.focus());
+        wrapper.appendChild(marketBtn);
+
+        const compareBtn = document.createElement('button');
+        compareBtn.type = 'button';
+        compareBtn.className = 'tv-custom-toolbar-btn';
+        compareBtn.textContent = 'Compare / Add Symbol';
+        compareBtn.addEventListener('click', () => symbolSelect.focus());
+        wrapper.appendChild(compareBtn);
+
+        const divider = document.createElement('span');
+        divider.className = 'tv-custom-toolbar-divider';
+        wrapper.appendChild(divider);
+
+        const favouritesBtn = document.createElement('button');
+        favouritesBtn.type = 'button';
+        favouritesBtn.className = 'tv-custom-toolbar-btn tv-custom-toolbar-btn--icon';
+        favouritesBtn.title = 'Add current symbol to watchlist';
+        favouritesBtn.setAttribute('aria-label', 'Add current symbol to watchlist');
+        favouritesBtn.textContent = '★';
+        favouritesBtn.addEventListener('click', () => addCurrentToWatchlist());
+        wrapper.appendChild(favouritesBtn);
+
+        const quickBtn = document.createElement('button');
+        quickBtn.type = 'button';
+        quickBtn.className = 'tv-custom-toolbar-btn';
+        quickBtn.textContent = 'Quick Search';
+        quickBtn.addEventListener('click', () => symbolSelect.focus());
+        wrapper.appendChild(quickBtn);
+
+        const host = tvWidget.createButton();
+        host.setAttribute('title', '2RICH chart controls');
+        host.style.padding = '0';
+        host.style.border = '0';
+        host.style.background = 'transparent';
+        host.style.display = 'flex';
+        host.style.alignItems = 'center';
+        host.appendChild(wrapper);
+
+        tvHeaderControlsMounted = true;
+        syncTvHeaderControls();
+    }).catch((err) => console.error('[2RICH header controls mount failed]', err));
 }
 
 let currentInterval= 'D';
@@ -1318,6 +1352,7 @@ function bootstrapMarketChart() {
                 currentSymbol = String(first.mt5_symbol || first.display_symbol || '').trim();
             }
             syncSymbolSelectValue(currentSymbol);
+            syncTvHeaderControls();
             initChart();
         })
         .catch((err) => {
@@ -1359,6 +1394,8 @@ function initChart() {
 
     tvWidget.onChartReady(() => {
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+        mountTradingViewHeaderControls();
+        syncTvHeaderControls();
         injectTwoRichTemplateOptions();
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
@@ -1381,6 +1418,7 @@ function initChart() {
                         if (!nextSymbol) return;
                         currentSymbol = nextSymbol;
                         syncSymbolSelectValue(nextSymbol);
+                        syncTvHeaderControls();
                         saveChartSettings({ symbol: nextSymbol });
                     });
                 }
@@ -1393,6 +1431,7 @@ function initChart() {
                         document.querySelectorAll('.md-interval-btn').forEach(b =>
                             b.classList.toggle('active', b.dataset.interval == nextInterval)
                         );
+                        syncTvHeaderControls();
                         saveChartSettings({ interval: nextInterval });
                     });
                 }
@@ -1406,6 +1445,7 @@ function initChart() {
                             if (symbol) currentSymbol = symbol;
                             if (interval) currentInterval = interval;
                             syncSymbolSelectValue(currentSymbol);
+                            syncTvHeaderControls();
                             document.querySelectorAll('.md-interval-btn').forEach(b =>
                                 b.classList.toggle('active', b.dataset.interval == currentInterval)
                             );
@@ -1444,6 +1484,7 @@ function changeSymbol(symbol) {
     if (!normalized) return;
     currentSymbol = normalized;
     syncSymbolSelectValue(normalized);
+    syncTvHeaderControls();
     if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setSymbol(normalized));
 }
 
