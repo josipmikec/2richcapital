@@ -174,6 +174,19 @@ $useremail  = $_SESSION['user_email'] ?? '';
             margin-left: 4px;
             align-self: center;
         }
+
+        /* 2RICH chart toolbar — independent from TradingView's internal header */
+        #rich-chart-toolbar { display:flex; align-items:center; gap:4px; min-height:42px; padding:6px 10px; background:#0e0e0e; border:1px solid #202020; border-radius:8px 8px 0 0; color:#b8bac2; }
+        #rich-chart-toolbar .rich-toolbar-spacer { flex:1; }
+        #rich-chart-toolbar button, #rich-chart-toolbar select { min-height:30px; border:1px solid transparent; background:transparent; color:#b8bac2; border-radius:4px; padding:0 9px; font:500 11px/1 "Montserrat",sans-serif; cursor:pointer; }
+        #rich-chart-toolbar button:hover, #rich-chart-toolbar select:hover { background:#1a1a1a; color:#f1f1f1; }
+        #rich-chart-toolbar button:active { background:#242424; }
+        #rich-chart-toolbar .rich-toolbar-divider { width:1px; height:20px; background:#303030; margin:0 4px; }
+        #rich-chart-toolbar select { min-width:150px; appearance:none; }
+        #rich-chart-toolbar .rich-toolbar-status { color:#777; font-size:10px; white-space:nowrap; }
+        #rich-chart-toolbar .rich-toolbar-menu { position:relative; }
+        #rich-chart-toolbar .rich-toolbar-menu-panel { display:none; position:absolute; top:36px; left:0; z-index:50; min-width:180px; padding:6px; background:#151515; border:1px solid #303030; border-radius:6px; box-shadow:0 12px 30px rgba(0,0,0,.45); }
+        #rich-chart-toolbar .rich-toolbar-menu.is-open .rich-toolbar-menu-panel { display:grid; gap:2px; }
     </style>
 </head>
 <body>
@@ -312,6 +325,27 @@ $useremail  = $_SESSION['user_email'] ?? '';
 
             <!-- Chart container -->
             <div class="md-chart-wrap">
+            <div id="rich-chart-toolbar" role="toolbar" aria-label="2RICH chart controls">
+                <button type="button" id="richCompareBtn">Compare/Add</button>
+                <button type="button" id="richSymbolsBtn">Symbols</button>
+                <span class="rich-toolbar-divider"></span>
+                <div class="rich-toolbar-menu" id="richTimeframeMenu">
+                    <button type="button" id="richTimeframeBtn">Timeframe</button>
+                    <div class="rich-toolbar-menu-panel">
+                        <button type="button" data-rich-interval="15">15m</button><button type="button" data-rich-interval="60">1H</button><button type="button" data-rich-interval="240">4H</button><button type="button" data-rich-interval="480">8H</button><button type="button" data-rich-interval="D">D</button><button type="button" data-rich-interval="W">W</button><button type="button" data-rich-interval="M">MN</button>
+                    </div>
+                </div>
+                <button type="button" id="richCandlesBtn">Candles</button>
+                <button type="button" id="richIndicatorsBtn">Indicators</button>
+                <button type="button" id="richUndoBtn">Undo</button>
+                <button type="button" id="richRedoBtn">Redo</button>
+                <span class="rich-toolbar-spacer"></span>
+                <button type="button" id="richSearchBtn">Quick Search</button>
+                <button type="button" id="richSettingsBtn">Settings</button>
+                <button type="button" id="richFullscreenBtn">Fullscreen</button>
+                <button type="button" id="richCaptureBtn">Capture</button>
+                <span class="rich-toolbar-status" id="richToolbarStatus">Chart ready</span>
+            </div>
                 <div id="tv_chart_container"></div>
             </div>
 
@@ -1235,6 +1269,8 @@ function getTwoRichCustomIndicatorsGetter() {
 
 let sharedDatafeed = null;
 
+wireRichToolbar();
+
 function bootstrapMarketChart() {
     sharedDatafeed = new TwoRichUDFDatafeed('../api/market');
     sharedDatafeed.fetchSymbols()
@@ -1259,6 +1295,29 @@ function bootstrapMarketChart() {
                 select.disabled = true;
             }
         });
+}
+
+function richChartApi() { return tvWidget && typeof tvWidget.activeChart === 'function' ? tvWidget.activeChart() : null; }
+function richToolbarStatus(message) { const el=document.getElementById('richToolbarStatus'); if(el) el.textContent=message; }
+function richOpenSymbolModal() { const select=getSymbolSelectElement(); if(select){ select.focus(); select.click(); richToolbarStatus('Select symbol'); } }
+function richSetInterval(interval) { changeInterval(interval); document.getElementById('richTimeframeMenu')?.classList.remove('is-open'); }
+function richSetCandles() { const chart=richChartApi(); try { if(chart && typeof chart.setChartType==='function') chart.setChartType(1); else richToolbarStatus('Candles API unavailable'); } catch(e){ richToolbarStatus('Candles unavailable'); console.error(e); } }
+function richOpenIndicators() { const chart=richChartApi(); try { if(chart && typeof chart.executeActionById==='function') chart.executeActionById('insertIndicator'); else richToolbarStatus('Indicators API unavailable'); } catch(e){ richToolbarStatus('Indicators unavailable'); console.error(e); } }
+function richUndoRedo(action) { const chart=richChartApi(); try { if(chart && typeof chart.executeActionById==='function') chart.executeActionById(action); else richToolbarStatus(action+' API unavailable'); } catch(e){ richToolbarStatus(action+' unavailable'); console.error(e); } }
+function richCapture() { const chart=richChartApi(); try { if(chart && typeof chart.takeClientScreenshot==='function') chart.takeClientScreenshot().then((canvas)=>{ const a=document.createElement('a'); a.download='2rich-chart.png'; a.href=canvas.toDataURL('image/png'); a.click(); }); else richToolbarStatus('Capture API unavailable'); } catch(e){ richToolbarStatus('Capture unavailable'); console.error(e); } }
+function wireRichToolbar() {
+    document.getElementById('richSymbolsBtn')?.addEventListener('click', richOpenSymbolModal);
+    document.getElementById('richCompareBtn')?.addEventListener('click', () => richToolbarStatus('Compare modal pending API verification'));
+    document.getElementById('richTimeframeBtn')?.addEventListener('click', () => document.getElementById('richTimeframeMenu')?.classList.toggle('is-open'));
+    document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.addEventListener('click',()=>richSetInterval(btn.dataset.richInterval)));
+    document.getElementById('richCandlesBtn')?.addEventListener('click', richSetCandles);
+    document.getElementById('richIndicatorsBtn')?.addEventListener('click', richOpenIndicators);
+    document.getElementById('richUndoBtn')?.addEventListener('click', ()=>richUndoRedo('undo'));
+    document.getElementById('richRedoBtn')?.addEventListener('click', ()=>richUndoRedo('redo'));
+    document.getElementById('richSearchBtn')?.addEventListener('click', richOpenSymbolModal);
+    document.getElementById('richSettingsBtn')?.addEventListener('click', ()=>richToolbarStatus('Settings API pending verification'));
+    document.getElementById('richFullscreenBtn')?.addEventListener('click', ()=>{ const el=document.getElementById('tv_chart_container'); if(el?.requestFullscreen) el.requestFullscreen(); });
+    document.getElementById('richCaptureBtn')?.addEventListener('click', richCapture);
 }
 
 function initChart() {
@@ -1290,6 +1349,7 @@ function initChart() {
 
     tvWidget.onChartReady(() => {
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+        richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
