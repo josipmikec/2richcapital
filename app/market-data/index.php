@@ -760,49 +760,51 @@ function injectTwoRichTemplateOptions() {
 
         if (!applyDefaultsNode) return false;
 
-        let menuContainer = applyDefaultsNode.closest('[role="listbox"]')
-            || applyDefaultsNode.closest('[data-name="menu-inner"]')
-            || applyDefaultsNode.closest('[class*="menuWrap"]')
-            || applyDefaultsNode.closest('[class*="itemList"]')
+        const applyDefaultsItem = applyDefaultsNode.closest('[role="option"]')
+            || applyDefaultsNode.closest('[class*="item"]')
             || applyDefaultsNode.parentElement;
+        const menuContainer = applyDefaultsItem && applyDefaultsItem.parentElement ? applyDefaultsItem.parentElement : null;
 
-        if (!menuContainer) return false;
+        if (!applyDefaultsItem || !menuContainer) return false;
         if (menuContainer.querySelector('[data-2rich-template-option]')) return true;
 
         optionLabels.forEach((label) => {
-            const item = doc.createElement('div');
+            const item = applyDefaultsItem.cloneNode(true);
             item.setAttribute('data-2rich-template-option', label);
-            item.setAttribute('role', 'option');
-            item.tabIndex = 0;
-            item.textContent = label;
-            item.style.cssText = [
-                'padding:8px 12px',
-                'cursor:pointer',
-                'color:inherit',
-                'font:inherit',
-                'border-radius:6px',
-                'margin-bottom:2px',
-                'user-select:none'
-            ].join(';');
+            item.setAttribute('data-2rich-template-id', label.toLowerCase().includes('light') ? 'light' : 'dark');
 
-            item.addEventListener('mouseenter', () => item.style.background = 'rgba(255,255,255,.06)');
-            item.addEventListener('mouseleave', () => item.style.background = '');
+            item.querySelectorAll('*').forEach((child) => {
+                if (child.children.length === 0) {
+                    const txt = (child.textContent || '').trim();
+                    if (txt === 'Apply defaults') {
+                        child.textContent = label;
+                    }
+                }
+            });
+            if ((item.textContent || '').trim() === 'Apply defaults') {
+                item.textContent = label;
+            }
+
+            item.style.removeProperty('position');
+            item.style.removeProperty('left');
+            item.style.removeProperty('top');
+            item.style.removeProperty('right');
+            item.style.removeProperty('bottom');
+
             item.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                applyTwoRichTemplate(label.toLowerCase().includes('light') ? 'light' : 'dark');
-            });
-            item.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    applyTwoRichTemplate(label.toLowerCase().includes('light') ? 'light' : 'dark');
-                }
-            });
+                applyTwoRichTemplate(item.getAttribute('data-2rich-template-id') || 'dark');
+            }, true);
 
-            menuContainer.insertBefore(item, applyDefaultsNode.closest('[role="option"]') || applyDefaultsNode);
+            item.addEventListener('mousedown', (event) => {
+                event.stopPropagation();
+            }, true);
+
+            menuContainer.insertBefore(item, applyDefaultsItem);
         });
 
-        chartDebug('Injected 2RICH template options into TradingView iframe menu', { labels: optionLabels });
+        chartDebug('Injected 2RICH template options into TradingView iframe menu', { labels: optionLabels, cloned: true });
         return true;
     };
 
