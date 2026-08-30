@@ -58,14 +58,11 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .md-feed-controls .md-live-badge         { margin: 0; }
         .md-feed-controls { display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border: 0 !important; overflow: hidden !important; }
 
-        .layout__area--top .tv-custom-toolbar-host,
-        .layout__area--top .tv-custom-toolbar-host:hover,
-        .layout__area--top .tv-custom-toolbar-host:focus,
-        .layout__area--top .tv-custom-toolbar-host:active,
-        .layout__area--top .tv-custom-toolbar-host > button,
-        .layout__area--top .tv-custom-toolbar-host > div,
-        .layout__area--top .innerWrap-OhqNVIYA,
-        .layout__area--top .group-MBOVGQRI {
+        .tv-custom-toolbar-host,
+        .tv-custom-toolbar-host:hover,
+        .tv-custom-toolbar-host:focus,
+        .tv-custom-toolbar-host > button,
+        .tv-custom-toolbar-host > div {
             background: transparent !important;
             border: 0 !important;
             box-shadow: none !important;
@@ -88,9 +85,8 @@ $useremail  = $_SESSION['user_email'] ?? '';
             box-shadow: none !important;
             outline: none;
         }
-        .layout__area--top .tv-custom-toolbar-btn:hover,
-        .layout__area--top .tv-custom-toolbar-select:hover { background: transparent !important; color: #d7d9df; }
-        .layout__area--top .tv-custom-toolbar-btn.is-active { background: transparent !important; color: #f0f1f4; }
+        .tv-custom-toolbar-btn:hover, .tv-custom-toolbar-select:hover { background: rgba(255,255,255,.04) !important; color: #d7d9df; }
+        .tv-custom-toolbar-btn.is-active { background: rgba(255,255,255,.07) !important; color: #f0f1f4; }
         .tv-custom-toolbar-select { min-width: 180px; appearance:none; padding-right:18px; background-color:transparent !important; background-image:linear-gradient(45deg,transparent 50%,#8f939d 50%),linear-gradient(135deg,#8f939d 50%,transparent 50%) !important; background-position:calc(100% - 12px) 11px,calc(100% - 8px) 11px !important; background-size:4px 4px,4px 4px !important; background-repeat:no-repeat !important; }
 
         /* ── Calendar filter panel: hidden by default ──────────────────── */
@@ -920,9 +916,6 @@ function mountTradingViewHeaderControls() {
     tvWidget.headerReady().then(() => {
         if (!tvWidget || tvHeaderControlsMounted) return;
 
-        const toolbarTop = document.querySelector('.layout__area--top');
-        const topGroups = toolbarTop ? Array.from(toolbarTop.querySelectorAll('[class*="group-"]')) : [];
-
         const makeButton = (label, className = 'tv-custom-toolbar-btn') => {
             const btn = document.createElement('button');
             btn.type = 'button';
@@ -976,20 +969,6 @@ function mountTradingViewHeaderControls() {
         auxiliaryHost.title = '2RICH chart controls';
         auxiliaryHost.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
         auxiliaryHost.appendChild(auxiliaryGroup);
-
-        requestAnimationFrame(() => {
-            const refreshGroups = toolbarTop ? Array.from(toolbarTop.querySelectorAll('[class*="group-"]')) : [];
-            const timeframeNode = timeframeHost.closest('[class*="group-"]') || timeframeHost.parentElement;
-            if (timeframeNode && refreshGroups.length >= 4) {
-                const candlesGroup = refreshGroups.find((node) => node.textContent && node.textContent.includes('Candles'));
-                const compareGroup = refreshGroups.find((node) => node.textContent && (node.textContent.includes('Compare') || node.textContent.includes('Add symbol')));
-                if (candlesGroup && compareGroup && candlesGroup.parentNode === compareGroup.parentNode) {
-                    candlesGroup.parentNode.insertBefore(timeframeNode, candlesGroup);
-                } else if (candlesGroup && candlesGroup.parentNode) {
-                    candlesGroup.parentNode.insertBefore(timeframeNode, candlesGroup);
-                }
-            }
-        });
 
         tvHeaderControlsMounted = true;
         syncTvHeaderControls();
