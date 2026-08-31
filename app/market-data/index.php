@@ -1393,42 +1393,6 @@ function mountNativeTimeframeGroup() {
     if (!tvWidget || typeof tvWidget.headerReady !== 'function' || typeof tvWidget.createButton !== 'function') return;
     tvWidget.headerReady().then(() => {
         if (document.getElementById('rich-native-timeframes')) return;
-
-        const makeNativeHost = (className, title, ariaLabel) => {
-            const host = tvWidget.createButton();
-            host.className = className;
-            host.title = title;
-            host.setAttribute('aria-label', ariaLabel);
-            host.style.cssText = 'display:flex;align-items:center;min-height:42px;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
-            return host;
-        };
-
-        // TradingView creates controls in insertion order. Keep the requested sequence:
-        // COMPARE / CANDLES / INDICATORS / TIMEFRAMES / WATCHLIST / UNDO / REDO.
-        const compareHost = makeNativeHost('rich-native-compare-host', 'Compare or add symbol', 'Compare or add symbol');
-        const compareButton = document.createElement('button');
-        compareButton.type = 'button';
-        compareButton.className = 'rich-native-toolbar-button';
-        compareButton.innerHTML = '<span aria-hidden="true">☆</span>';
-        compareButton.addEventListener('click', () => richOpenSymbolModal());
-        compareHost.appendChild(compareButton);
-
-        const candlesHost = makeNativeHost('rich-native-candles-host', 'Chart type', 'Chart type');
-        const candlesButton = document.createElement('button');
-        candlesButton.type = 'button';
-        candlesButton.className = 'rich-native-toolbar-button';
-        candlesButton.innerHTML = '<span aria-hidden="true">▥</span>';
-        candlesButton.addEventListener('click', () => richSetCandles());
-        candlesHost.appendChild(candlesButton);
-
-        const indicatorsHost = makeNativeHost('rich-native-indicators-host', 'Indicators', 'Indicators');
-        const indicatorsButton = document.createElement('button');
-        indicatorsButton.type = 'button';
-        indicatorsButton.className = 'rich-native-toolbar-button';
-        indicatorsButton.innerHTML = '<span aria-hidden="true">ƒx</span>';
-        indicatorsButton.addEventListener('click', () => richOpenIndicators());
-        indicatorsHost.appendChild(indicatorsButton);
-
         const group = document.createElement('div');
         group.id = 'rich-native-timeframes';
         group.className = 'rich-toolbar-timeframes rich-native-timeframes';
@@ -1437,40 +1401,33 @@ function mountNativeTimeframeGroup() {
             btn.type = 'button';
             btn.dataset.richInterval = value;
             btn.textContent = label;
-            btn.addEventListener('click', (event) => { event.stopPropagation(); richSetInterval(value); });
+            btn.style.cssText = 'background:transparent!important;background-color:transparent!important;border:1px solid transparent!important;box-shadow:none!important;';
+            btn.addEventListener('click', () => richSetInterval(value));
             group.appendChild(btn);
         });
-        const timeframeHost = makeNativeHost('rich-native-timeframe-host', 'Timeframes', 'Timeframes');
-        timeframeHost.appendChild(group);
-
-        const watchHost = makeNativeHost('rich-native-watchlist-host', 'Open watchlist', 'Open watchlist');
+        const host = tvWidget.createButton();
+        host.className = 'rich-native-timeframe-host';
+        host.title = 'Timeframes';
+        host.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
+        host.appendChild(group);
+        host.style.setProperty('background', 'transparent', 'important');
+        host.style.setProperty('background-color', 'transparent', 'important');
+        host.style.setProperty('border', '0', 'important');
+        host.style.setProperty('box-shadow', 'none', 'important');
+        const watchHost = tvWidget.createButton();
+        watchHost.className = 'rich-native-watchlist-host';
+        watchHost.title = 'Open watchlist';
+        watchHost.setAttribute('aria-label', 'Open watchlist');
+        watchHost.style.cssText = 'display:flex;align-items:center;min-height:42px;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
         const watchButton = document.createElement('button');
         watchButton.type = 'button';
-        watchButton.className = 'rich-native-toolbar-button rich-native-watchlist-button';
-        watchButton.innerHTML = '<span aria-hidden="true">☆</span>';
+        watchButton.className = 'rich-native-watchlist-button';
+        watchButton.innerHTML = '<span class="rich-watchlist-icon" aria-hidden="true">☆</span>';
         watchButton.addEventListener('click', (event) => { event.stopPropagation(); toggleWatchlist(); });
         watchHost.appendChild(watchButton);
-
-        const undoHost = makeNativeHost('rich-native-undo-host', 'Undo', 'Undo');
-        const undoButton = document.createElement('button');
-        undoButton.type = 'button';
-        undoButton.className = 'rich-native-toolbar-button';
-        undoButton.innerHTML = '<span aria-hidden="true">↶</span>';
-        undoButton.addEventListener('click', () => richUndoRedo('undo'));
-        undoHost.appendChild(undoButton);
-
-        const redoHost = makeNativeHost('rich-native-redo-host', 'Redo', 'Redo');
-        const redoButton = document.createElement('button');
-        redoButton.type = 'button';
-        redoButton.className = 'rich-native-toolbar-button';
-        redoButton.innerHTML = '<span aria-hidden="true">↷</span>';
-        redoButton.addEventListener('click', () => richUndoRedo('redo'));
-        redoHost.appendChild(redoButton);
-
         syncNativeTimeframeGroup();
-    }).catch((err) => console.error('[2RICH native toolbar mount failed]', err));
+    }).catch((err) => console.error('[2RICH native timeframe mount failed]', err));
 }
-
 function syncNativeTimeframeGroup() {
     document.querySelectorAll('#rich-native-timeframes [data-rich-interval]').forEach(btn => btn.classList.toggle('is-active', String(btn.dataset.richInterval) === String(currentInterval)));
 }
