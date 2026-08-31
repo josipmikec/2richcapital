@@ -212,6 +212,45 @@ $useremail  = $_SESSION['user_email'] ?? '';
         #rich-chart-toolbar .rich-toolbar-divider { width:1px; height:20px; background:#303030; margin:0 4px; }
         #rich-chart-toolbar select { min-width:150px; appearance:none; }
         #rich-chart-toolbar .rich-toolbar-status { color:#777; font-size:10px; white-space:nowrap; }
+        .rich-native-watchlist-host,
+        .rich-native-watchlist-host:hover,
+        .rich-native-watchlist-host:focus,
+        .rich-native-watchlist-host:active {
+            display:flex !important;
+            align-items:center !important;
+            min-height:42px !important;
+            background:transparent !important;
+            border:0 !important;
+            box-shadow:none !important;
+        }
+        .rich-native-watchlist-button {
+            display:flex;
+            align-items:center;
+            gap:5px;
+            min-height:30px;
+            padding:0 9px;
+            border:1px solid transparent;
+            border-radius:4px;
+            background:transparent !important;
+            color:#b8bac2;
+            font:500 11px/1 "Montserrat",sans-serif;
+            cursor:pointer;
+        }
+        .rich-native-watchlist-button:hover,
+        .rich-native-watchlist-button:focus-visible {
+            background:#1a1a1a !important;
+            color:#f1f1f1;
+        }
+        .rich-native-watchlist-button:active {
+            background:#242424 !important;
+            color:#fff;
+            transform:translateY(1px);
+        }
+        .rich-native-watchlist-button.is-open {
+            color:#f1f1f1;
+            border-bottom:2px solid #f2ca50;
+        }
+        .rich-native-watchlist-label { white-space:nowrap; }
         .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
         .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
         .rich-native-timeframe-host,
@@ -375,7 +414,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
 
             <!-- Chart container -->
             <div class="md-chart-wrap">
-            <div id="rich-chart-toolbar" role="toolbar" aria-label="2RICH chart controls">
+            <div id="rich-chart-toolbar" role="toolbar" aria-label="2RICH chart controls" hidden>
                 <button type="button" id="richCompareBtn" aria-label="Compare or add symbol" title="Compare or add symbol"><span class="rich-icon rich-icon-compare">☆</span></button>
                 <button type="button" id="richSymbolsBtn" aria-label="Open symbols" title="Open symbols"><span class="rich-icon">⌕</span></button>
                 <span class="rich-toolbar-divider"></span>
@@ -1360,6 +1399,17 @@ function mountNativeTimeframeGroup() {
             btn.addEventListener('click', () => richSetInterval(value));
             group.appendChild(btn);
         });
+        const watchHost = tvWidget.createButton();
+        watchHost.className = 'rich-native-watchlist-host';
+        watchHost.title = 'Open watchlist';
+        watchHost.setAttribute('aria-label', 'Open watchlist');
+        watchHost.style.cssText = 'display:flex;align-items:center;min-height:42px;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
+        const watchButton = document.createElement('button');
+        watchButton.type = 'button';
+        watchButton.className = 'rich-native-watchlist-button';
+        watchButton.innerHTML = '<span aria-hidden="true">★</span><span class="rich-native-watchlist-label">Watchlist</span>';
+        watchButton.addEventListener('click', (event) => { event.stopPropagation(); toggleWatchlist(); });
+        watchHost.appendChild(watchButton);
         const host = tvWidget.createButton();
         host.className = 'rich-native-timeframe-host';
         host.title = 'Timeframes';
@@ -1379,6 +1429,7 @@ function syncNativeTimeframeGroup() {
 function richChartApi() { return tvWidget && typeof tvWidget.activeChart === 'function' ? tvWidget.activeChart() : null; }
 function richToolbarStatus(message) { const el=document.getElementById('richToolbarStatus'); if(el) el.textContent=message; }
 function richOpenSymbolModal() {
+    if (marketSymbols.length) renderSymbolOptions(marketSymbols, currentSymbol);
     const select = getSymbolSelectElement();
     if (!select) return;
     select.hidden = false;
