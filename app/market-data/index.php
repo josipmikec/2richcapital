@@ -53,9 +53,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
             border-bottom: 1px solid #1e1e1e;
             flex-wrap: wrap;
         }
-        .md-feed-controls[hidden] {
-            display: none;
-        }
+
         .md-feed-controls .md-symbol-select-wrap { margin: 0; }
         .md-feed-controls .md-interval-wrap      { margin: 0; }
         .md-feed-controls .md-live-badge         { margin: 0; }
@@ -225,6 +223,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
             background:transparent !important;
             border:0 !important;
             box-shadow:none !important;
+            pointer-events:none !important;
         }
         .rich-native-watchlist-button {
             display:flex;
@@ -239,6 +238,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
             background:transparent !important;
             color:#b8bac2;
             cursor:pointer;
+            pointer-events:auto !important;
         }
         .rich-native-watchlist-button:hover,
         .rich-native-watchlist-button:focus-visible {
@@ -274,6 +274,16 @@ $useremail  = $_SESSION['user_email'] ?? '';
             background:currentColor;
         }
         .rich-native-watchlist-label { display:none; }
+        /* Neutralise TradingView's parent wrapper hover on watchlist host */
+        div:has(> .rich-native-watchlist-host),
+        div:has(> .rich-native-watchlist-host):hover,
+        div:has(> .rich-native-watchlist-host):focus-within,
+        div:has(> .rich-native-watchlist-host):active {
+            background:transparent !important;
+            background-color:transparent !important;
+            border:0 !important;
+            box-shadow:none !important;
+        }
         .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
         .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
         .rich-native-timeframe-host,
@@ -284,6 +294,17 @@ $useremail  = $_SESSION['user_email'] ?? '';
             padding:0 !important;
             margin:0 !important;
             background:transparent !important;
+            border:0 !important;
+            box-shadow:none !important;
+            pointer-events:none !important;
+        }
+        /* Neutralise TradingView's parent wrapper hover on timeframe host */
+        div:has(> .rich-native-timeframe-host),
+        div:has(> .rich-native-timeframe-host):hover,
+        div:has(> .rich-native-timeframe-host):focus-within,
+        div:has(> .rich-native-timeframe-host):active {
+            background:transparent !important;
+            background-color:transparent !important;
             border:0 !important;
             box-shadow:none !important;
         }
@@ -304,6 +325,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
             background-color:transparent !important;
             color:#b8bac2 !important;
             box-shadow:none !important;
+            pointer-events:auto !important;
             transition:background .16s ease,color .16s ease,transform .08s ease,outline .16s ease !important;
         }
         .rich-native-timeframe-host button:hover {
@@ -420,7 +442,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
         ═══════════════════════════════════════════════════════════════ -->
         <div class="md-pane active" id="tab-feeds">
 
-            <div class="md-feed-controls" hidden>
+            <div class="md-feed-controls">
                 <div class="md-symbol-select-wrap">
                     <select id="symbolSelect" class="md-symbol-select" onchange="changeSymbol(this.value)">
                         <option value="">Loading symbols...</option>
