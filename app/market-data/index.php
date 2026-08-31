@@ -213,77 +213,6 @@ $useremail  = $_SESSION['user_email'] ?? '';
         #rich-chart-toolbar .rich-toolbar-divider { width:1px; height:20px; background:#303030; margin:0 4px; }
         #rich-chart-toolbar select { min-width:150px; appearance:none; }
         #rich-chart-toolbar .rich-toolbar-status { color:#777; font-size:10px; white-space:nowrap; }
-        .rich-native-watchlist-host,
-        .rich-native-watchlist-host:hover,
-        .rich-native-watchlist-host:focus,
-        .rich-native-watchlist-host:active {
-            min-height:42px !important;
-            padding:0 4px !important;
-            margin:0 !important;
-            background:transparent !important;
-            border:0 !important;
-            box-shadow:none !important;
-            pointer-events:none !important;
-        }
-        .rich-native-watchlist-button {
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            width:30px;
-            min-width:30px;
-            min-height:30px;
-            padding:0;
-            border:1px solid transparent;
-            border-radius:4px;
-            background:transparent !important;
-            color:#b8bac2;
-            cursor:pointer;
-            pointer-events:auto !important;
-        }
-        .rich-native-watchlist-button:hover,
-        .rich-native-watchlist-button:focus-visible {
-            background:#1a1a1a !important;
-            color:#f1f1f1;
-        }
-        .rich-native-watchlist-button:active {
-            background:#242424 !important;
-            color:#fff;
-            transform:translateY(1px);
-        }
-        .rich-native-watchlist-button.is-open {
-            color:#f1f1f1;
-            border-bottom:2px solid #f2ca50;
-        }
-        .rich-native-watchlist-button .rich-watchlist-flag {
-            display:block;
-            width:15px;
-            height:12px;
-            position:relative;
-            border:1.5px solid currentColor;
-            border-left:0;
-            background:transparent;
-            clip-path:polygon(0 0,100% 0,100% 62%,0 62%);
-        }
-        .rich-native-watchlist-button .rich-watchlist-flag::before {
-            content:"";
-            position:absolute;
-            left:0;
-            top:-1.5px;
-            width:1.5px;
-            height:16px;
-            background:currentColor;
-        }
-        .rich-native-watchlist-label { display:none; }
-        /* Neutralise TradingView's parent wrapper hover on watchlist host */
-        div:has(> .rich-native-watchlist-host),
-        div:has(> .rich-native-watchlist-host):hover,
-        div:has(> .rich-native-watchlist-host):focus-within,
-        div:has(> .rich-native-watchlist-host):active {
-            background:transparent !important;
-            background-color:transparent !important;
-            border:0 !important;
-            box-shadow:none !important;
-        }
         .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
         .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
         .rich-native-timeframe-host,
@@ -1445,17 +1374,6 @@ function mountNativeTimeframeGroup() {
         host.style.setProperty('background-color', 'transparent', 'important');
         host.style.setProperty('border', '0', 'important');
         host.style.setProperty('box-shadow', 'none', 'important');
-        const watchHost = tvWidget.createButton();
-        watchHost.className = 'rich-native-watchlist-host';
-        watchHost.title = 'Open watchlist';
-        watchHost.setAttribute('aria-label', 'Open watchlist');
-        watchHost.style.cssText = 'display:flex;align-items:center;min-height:42px;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
-        const watchButton = document.createElement('button');
-        watchButton.type = 'button';
-        watchButton.className = 'rich-native-watchlist-button';
-        watchButton.innerHTML = '<span class="rich-watchlist-icon" aria-hidden="true">☆</span>';
-        watchButton.addEventListener('click', (event) => { event.stopPropagation(); toggleWatchlist(); });
-        watchHost.appendChild(watchButton);
         syncNativeTimeframeGroup();
     }).catch((err) => console.error('[2RICH native timeframe mount failed]', err));
 }
@@ -1480,10 +1398,6 @@ function richOpenSymbolModal() {
     select.focus();
     richToolbarStatus('Select symbol');
 }
-function richOpenSearchModal() {
-    richOpenSymbolModal();
-    richToolbarStatus('Search symbols');
-}
 function richSetInterval(interval) { changeInterval(interval); document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.richInterval===String(interval))); syncNativeTimeframeGroup(); }
 function richSetCandles() { const chart=richChartApi(); try { if(chart && typeof chart.setChartType==='function') { chart.setChartType(1); richToolbarStatus('Candles'); } else if(chart && typeof chart.executeActionById==='function') { chart.executeActionById('chartType'); richToolbarStatus('Chart type'); } else richToolbarStatus('Chart type API unavailable'); } catch(e){ richToolbarStatus('Candles unavailable'); console.error(e); } }
 function richOpenIndicators() { const chart=richChartApi(); try { if(chart && typeof chart.executeActionById==='function') chart.executeActionById('insertIndicator'); else richToolbarStatus('Indicators API unavailable'); } catch(e){ richToolbarStatus('Indicators unavailable'); console.error(e); } }
@@ -1491,13 +1405,12 @@ function richUndoRedo(action) { const chart=richChartApi(); try { if(chart && ty
 function richCapture() { const chart=richChartApi(); try { if(chart && typeof chart.takeClientScreenshot==='function') chart.takeClientScreenshot().then((canvas)=>{ const a=document.createElement('a'); a.download='2rich-chart.png'; a.href=canvas.toDataURL('image/png'); a.click(); }); else richToolbarStatus('Capture API unavailable'); } catch(e){ richToolbarStatus('Capture unavailable'); console.error(e); } }
 function wireRichToolbar() {
     document.getElementById('richSymbolsBtn')?.addEventListener('click', richOpenSymbolModal);
-    document.getElementById('richCompareBtn')?.addEventListener('click', () => richToolbarStatus('Compare modal pending API verification'));
     document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.addEventListener('click',()=>richSetInterval(btn.dataset.richInterval)));
     document.getElementById('richCandlesBtn')?.addEventListener('click', richSetCandles);
     document.getElementById('richIndicatorsBtn')?.addEventListener('click', richOpenIndicators);
     document.getElementById('richUndoBtn')?.addEventListener('click', ()=>richUndoRedo('undo'));
     document.getElementById('richRedoBtn')?.addEventListener('click', ()=>richUndoRedo('redo'));
-    document.getElementById('richSearchBtn')?.addEventListener('click', richOpenSearchModal);
+    document.getElementById('richSearchBtn')?.addEventListener('click', richOpenSymbolModal);
     document.getElementById('richSettingsBtn')?.addEventListener('click', ()=>richToolbarStatus('Settings API pending verification'));
     document.getElementById('richFullscreenBtn')?.addEventListener('click', ()=>{ const el=document.getElementById('tv_chart_container'); if(el?.requestFullscreen) el.requestFullscreen(); });
     document.getElementById('richCaptureBtn')?.addEventListener('click', richCapture);
