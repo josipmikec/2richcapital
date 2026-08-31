@@ -55,6 +55,9 @@ $useremail  = $_SESSION['user_email'] ?? '';
         }
 
         .md-feed-controls .md-symbol-select-wrap { margin: 0; }
+        .md-symbol-native-btn { display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 12px; border:1px solid #2a2a2a; border-radius:8px; background:#151515; color:#d8d8d8; font:600 11px/1 "Montserrat",sans-serif; letter-spacing:.04em; text-transform:uppercase; cursor:pointer; }
+        .md-symbol-native-btn:hover, .md-symbol-native-btn:focus-visible { background:#1b1b1b; border-color:#3a3a3a; color:#fff; }
+        .md-symbol-native-btn span[aria-hidden="true"] { font-size:13px; color:#F2CA50; }
         .md-feed-controls .md-interval-wrap      { margin: 0; }
         .md-feed-controls .md-live-badge         { margin: 0; }
 
@@ -372,11 +375,10 @@ $useremail  = $_SESSION['user_email'] ?? '';
         <div class="md-pane active" id="tab-feeds">
 
             <div class="md-feed-controls">
-                <div class="md-symbol-select-wrap">
-                    <select id="symbolSelect" class="md-symbol-select" onchange="changeSymbol(this.value)">
-                        <option value="">Loading symbols...</option>
-                    </select>
-                </div>
+                <button type="button" class="md-symbol-native-btn" id="symbolSelectBtn" title="Open symbol search" aria-label="Open symbol search">
+                    <span aria-hidden="true">⌕</span>
+                    <span id="symbolSelectBtnLabel">Loading symbol…</span>
+                </button>
                 <button type="button" class="md-watchlist-btn" id="watchlistToggle" onclick="toggleWatchlist()" aria-expanded="false" title="Open watchlist">
                     <span aria-hidden="true">★</span> Watchlist
                 </button>
@@ -1337,6 +1339,7 @@ function bootstrapMarketChart() {
                 currentSymbol = String(first.mt5_symbol || first.display_symbol || '').trim();
             }
             syncSymbolSelectValue(currentSymbol);
+            syncSymbolSearchButtonLabel(currentSymbol);
             initChart();
         })
         .catch((err) => {
@@ -1384,19 +1387,20 @@ function syncNativeTimeframeGroup() {
 function richChartApi() { return tvWidget && typeof tvWidget.activeChart === 'function' ? tvWidget.activeChart() : null; }
 function richToolbarStatus(message) { const el=document.getElementById('richToolbarStatus'); if(el) el.textContent=message; }
 function richOpenSymbolModal() {
-    if (marketSymbols.length) renderSymbolOptions(marketSymbols, currentSymbol);
-    const select = getSymbolSelectElement();
-    if (!select) return;
-    select.hidden = false;
-    select.size = Math.min(12, Math.max(6, select.options.length));
-    select.style.position = 'fixed';
-    select.style.left = '50%';
-    select.style.top = '96px';
-    select.style.transform = 'translateX(-50%)';
-    select.style.zIndex = '1000';
-    select.style.display = 'block';
-    select.focus();
-    richToolbarStatus('Select symbol');
+    const chart = richChartApi();
+    try {
+        if (chart?.executeActionById) chart.executeActionById('chartDialogSearch');
+        else richToolbarStatus('Symbol search API unavailable');
+    } catch (e) {
+        richToolbarStatus('Symbol search unavailable');
+        console.error(e);
+    }
+}
+function syncSymbolSearchButtonLabel(symbol) {
+    const label = document.getElementById('symbolSelectBtnLabel');
+    if (!label) return;
+    const value = String(symbol || currentSymbol || '').trim();
+    label.textContent = value || 'Symbols';
 }
 function richSetInterval(interval) { changeInterval(interval); document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.richInterval===String(interval))); syncNativeTimeframeGroup(); }
 function richSetCandles() { const chart=richChartApi(); try { if(chart && typeof chart.setChartType==='function') { chart.setChartType(1); richToolbarStatus('Candles'); } else if(chart && typeof chart.executeActionById==='function') { chart.executeActionById('chartType'); richToolbarStatus('Chart type'); } else richToolbarStatus('Chart type API unavailable'); } catch(e){ richToolbarStatus('Candles unavailable'); console.error(e); } }
@@ -1405,6 +1409,7 @@ function richUndoRedo(action) { const chart=richChartApi(); try { if(chart && ty
 function richCapture() { const chart=richChartApi(); try { if(chart && typeof chart.takeClientScreenshot==='function') chart.takeClientScreenshot().then((canvas)=>{ const a=document.createElement('a'); a.download='2rich-chart.png'; a.href=canvas.toDataURL('image/png'); a.click(); }); else richToolbarStatus('Capture API unavailable'); } catch(e){ richToolbarStatus('Capture unavailable'); console.error(e); } }
 function wireRichToolbar() {
     document.getElementById('richSymbolsBtn')?.addEventListener('click', richOpenSymbolModal);
+    document.getElementById('symbolSelectBtn')?.addEventListener('click', richOpenSymbolModal);
     document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.addEventListener('click',()=>richSetInterval(btn.dataset.richInterval)));
     document.getElementById('richCandlesBtn')?.addEventListener('click', richSetCandles);
     document.getElementById('richIndicatorsBtn')?.addEventListener('click', richOpenIndicators);
@@ -1449,7 +1454,7 @@ function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_symbol_search','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
+        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
     });
@@ -1543,6 +1548,7 @@ function changeSymbol(symbol) {
     if (!normalized) return;
     currentSymbol = normalized;
     syncSymbolSelectValue(normalized);
+    syncSymbolSearchButtonLabel(normalized);
     if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setSymbol(normalized));
 }
 
