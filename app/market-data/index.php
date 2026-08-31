@@ -216,6 +216,40 @@ $useremail  = $_SESSION['user_email'] ?? '';
         #rich-chart-toolbar .rich-toolbar-divider { width:1px; height:20px; background:#303030; margin:0 4px; }
         #rich-chart-toolbar select { min-width:150px; appearance:none; }
         #rich-chart-toolbar .rich-toolbar-status { color:#777; font-size:10px; white-space:nowrap; }
+        .rich-native-compare-host,
+        .rich-native-compare-host:hover,
+        .rich-native-compare-host:focus,
+        .rich-native-compare-host:active {
+            min-height:42px !important;
+            padding:0 4px !important;
+            margin:0 !important;
+            background:transparent !important;
+            border:0 !important;
+            box-shadow:none !important;
+        }
+        .rich-native-compare-button {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            min-height:30px;
+            padding:0 10px;
+            border:1px solid transparent;
+            background:transparent !important;
+            color:#b8bac2;
+            font:500 11px/1 "Montserrat",sans-serif;
+            cursor:pointer;
+        }
+        .rich-native-compare-button:hover,
+        .rich-native-compare-button:focus-visible {
+            background:#1a1a1a !important;
+            color:#f1f1f1;
+        }
+        .rich-native-compare-button:active {
+            background:#242424 !important;
+            color:#ffffff;
+            transform:translateY(1px);
+        }
+        .rich-native-compare-button .rich-icon { min-width:14px; }
         .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
         .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
         .rich-native-timeframe-host,
@@ -1368,6 +1402,34 @@ function mountNativeTimeframeGroup() {
             btn.addEventListener('click', () => richSetInterval(value));
             group.appendChild(btn);
         });
+        const compareHost = tvWidget.createButton();
+        compareHost.className = 'rich-native-compare-host';
+        compareHost.title = 'Compare symbols';
+        compareHost.setAttribute('aria-label', 'Compare symbols');
+        compareHost.style.cssText = 'display:flex;align-items:center;min-height:42px;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
+        const compareButton = document.createElement('button');
+        compareButton.type = 'button';
+        compareButton.className = 'rich-native-compare-button';
+        compareButton.innerHTML = '<span class="rich-icon">+</span><span>Compare</span>';
+        compareButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const chart = richChartApi();
+            try {
+                const openCompare = () => {
+                    if (chart?.executeActionById) chart.executeActionById('compare');
+                    else richToolbarStatus('Compare API unavailable');
+                };
+                if (sharedDatafeed?.fetchSymbols) {
+                    sharedDatafeed.fetchSymbols().finally(() => setTimeout(openCompare, 0));
+                } else {
+                    openCompare();
+                }
+            } catch (e) {
+                richToolbarStatus('Compare unavailable');
+            }
+        });
+        compareHost.appendChild(compareButton);
+
         const host = tvWidget.createButton();
         host.className = 'rich-native-timeframe-host';
         host.title = 'Timeframes';
@@ -1408,7 +1470,6 @@ function richOpenIndicators() { const chart=richChartApi(); try { if(chart && ty
 function richUndoRedo(action) { const chart=richChartApi(); try { if(chart && typeof chart.executeActionById==='function') chart.executeActionById(action); else richToolbarStatus(action+' API unavailable'); } catch(e){ richToolbarStatus(action+' unavailable'); console.error(e); } }
 function richCapture() { const chart=richChartApi(); try { if(chart && typeof chart.takeClientScreenshot==='function') chart.takeClientScreenshot().then((canvas)=>{ const a=document.createElement('a'); a.download='2rich-chart.png'; a.href=canvas.toDataURL('image/png'); a.click(); }); else richToolbarStatus('Capture API unavailable'); } catch(e){ richToolbarStatus('Capture unavailable'); console.error(e); } }
 function wireRichToolbar() {
-    document.getElementById('richSymbolsBtn')?.addEventListener('click', richOpenSymbolModal);
     document.getElementById('symbolSelectBtn')?.addEventListener('click', richOpenSymbolModal);
     document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.addEventListener('click',()=>richSetInterval(btn.dataset.richInterval)));
     document.getElementById('richCandlesBtn')?.addEventListener('click', richSetCandles);
