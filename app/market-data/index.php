@@ -226,14 +226,15 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .rich-native-watchlist-button {
             display:flex;
             align-items:center;
-            gap:5px;
+            justify-content:center;
+            width:30px;
+            min-width:30px;
             min-height:30px;
-            padding:0 9px;
+            padding:0;
             border:1px solid transparent;
             border-radius:4px;
             background:transparent !important;
             color:#b8bac2;
-            font:500 11px/1 "Montserrat",sans-serif;
             cursor:pointer;
         }
         .rich-native-watchlist-button:hover,
@@ -250,7 +251,25 @@ $useremail  = $_SESSION['user_email'] ?? '';
             color:#f1f1f1;
             border-bottom:2px solid #f2ca50;
         }
-        .rich-native-watchlist-label { white-space:nowrap; }
+        .rich-native-watchlist-button .rich-watchlist-flag {
+            display:block;
+            width:14px;
+            height:16px;
+            position:relative;
+            border:1.5px solid currentColor;
+            border-left:0;
+            clip-path:polygon(0 0,100% 0,100% 62%,0 62%);
+        }
+        .rich-native-watchlist-button .rich-watchlist-flag::before {
+            content:"";
+            position:absolute;
+            left:0;
+            top:0;
+            width:1.5px;
+            height:16px;
+            background:currentColor;
+        }
+        .rich-native-watchlist-label { display:none; }
         .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
         .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
         .rich-native-timeframe-host,
@@ -1407,7 +1426,7 @@ function mountNativeTimeframeGroup() {
         const watchButton = document.createElement('button');
         watchButton.type = 'button';
         watchButton.className = 'rich-native-watchlist-button';
-        watchButton.innerHTML = '<span aria-hidden="true">★</span><span class="rich-native-watchlist-label">Watchlist</span>';
+        watchButton.innerHTML = '<span class="rich-watchlist-flag" aria-hidden="true"></span>';
         watchButton.addEventListener('click', (event) => { event.stopPropagation(); toggleWatchlist(); });
         watchHost.appendChild(watchButton);
         const host = tvWidget.createButton();
