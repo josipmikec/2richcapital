@@ -611,6 +611,8 @@ let chartSettings  = {};
 let chartSettingsTimer = null;
 let chartPermission = { sync: true, multi: false };
 let tvUserSettings = {};
+let chartState = {};
+let chartStateTimer = null;
 let tvSettingsTimer = null;
 const TWO_RICH_TEMPLATES = {
     dark: {
@@ -707,6 +709,70 @@ async function saveChartSettings(settings) {
             await fetch('../api/preferences/set.php', { method: 'POST', credentials: 'same-origin', headers: csrfHeaders(), body: JSON.stringify({ key: 'market_data_chart_settings', value: JSON.stringify(chartSettings) }) });
         } catch (error) { console.warn('[2RICH] Chart settings could not be saved', error); }
     }, 500);
+}
+
+function getChartStateKey() {
+    const symbol = String(currentSymbol || chartSettings.symbol || '').trim();
+    return ['market_data_chart_state', currentUserId || 'anonymous', symbol || 'global'].join('::');
+}
+
+async function loadChartState() {
+    try {
+        const response = await fetch(`../api/preferences/get.php?key=${encodeURIComponent(getChartStateKey())}`, { credentials: 'same-origin' });
+        const data = await response.json();
+        if (data.success && data.value) {
+            const parsed = JSON.parse(data.value);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        }
+    } catch (error) {
+        console.warn('[2RICH] Chart state unavailable', error);
+    }
+    return {};
+}
+
+async function saveChartState(state) {
+    chartState = { ...chartState, ...state };
+    clearTimeout(chartStateTimer);
+    chartStateTimer = setTimeout(async () => {
+        try {
+            await fetch('../api/preferences/set.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: csrfHeaders(),
+                body: JSON.stringify({ key: getChartStateKey(), value: JSON.stringify(chartState) })
+            });
+        } catch (error) {
+            console.warn('[2RICH] Chart state could not be saved', error);
+        }
+    }, 700);
+}
+
+function snapshotChartState() {
+    const chart = richChartApi();
+    const state = {
+        symbol: currentSymbol,
+        interval: currentInterval,
+        chart_type: null,
+        visible_panes: null,
+        studies: null,
+        drawings: null,
+    };
+    try {
+        if (chart && typeof chart.getChartType === 'function') state.chart_type = chart.getChartType();
+    } catch (e) {}
+    try {
+        if (chart && typeof chart.getAllPanesHeight === 'function') state.visible_panes = chart.getAllPanesHeight();
+    } catch (e) {}
+    try {
+        if (chart && typeof chart.getAllStudies === 'function') {
+            const studies = chart.getAllStudies();
+            state.studies = Array.isArray(studies) ? studies.map(s => ({ name: s.name?.() || null, id: s.id?.() || null })) : null;
+        }
+    } catch (e) {}
+    try {
+        if (chart && typeof chart.getLineToolsState === 'function') state.drawings = chart.getLineToolsState();
+    } catch (e) {}
+    return state;
 }
 
 async function loadTvUserSettings() {
@@ -847,6 +913,14 @@ function chartSettingsAdapter() {
             chartDebug('TradingView settings_adapter.removeValue', { key });
             delete tvUserSettings[key];
             persistTvUserSettings();
+        },
+        save() {
+            const state = snapshotChartState();
+            saveChartState(state);
+            return state;
+        },
+        load() {
+            return loadChartState();
         }
     };
 }
@@ -1445,6 +1519,7 @@ function initChart() {
         mountNativeTimeframeGroup();
         richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
+        saveChartState(snapshotChartState());
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
         }
@@ -1467,6 +1542,7 @@ function initChart() {
                         currentSymbol = nextSymbol;
                         syncSymbolSelectValue(nextSymbol);
                         saveChartSettings({ symbol: nextSymbol });
+                        saveChartState(snapshotChartState());
                     });
                 }
                 if (typeof chart.onIntervalChanged === 'function') {
@@ -1479,6 +1555,7 @@ function initChart() {
                             b.classList.toggle('active', b.dataset.interval == nextInterval)
                         );
                         saveChartSettings({ interval: nextInterval });
+                        saveChartState(snapshotChartState());
                     });
                 }
                 if (typeof tvWidget.subscribe === 'function') {
@@ -1495,6 +1572,7 @@ function initChart() {
                                 b.classList.toggle('active', b.dataset.interval == currentInterval)
                             );
                             saveChartSettings({ symbol: currentSymbol, interval: currentInterval });
+                            saveChartState(snapshotChartState());
                         }
                     });
                 }
@@ -1525,6 +1603,7 @@ function initChart() {
 
 function changeSymbol(symbol) {
     saveChartSettings({ symbol });
+    saveChartState(snapshotChartState());
     const normalized = sharedDatafeed ? sharedDatafeed.normalizeSymbol(symbol) : String(symbol || '').trim();
     if (!normalized) return;
     currentSymbol = normalized;
@@ -1534,6 +1613,7 @@ function changeSymbol(symbol) {
 
 function changeInterval(interval) {
     saveChartSettings({ interval });
+    saveChartState(snapshotChartState());
     const mapped = new TwoRichUDFDatafeed('../api/market').normalizeResolution(interval);
     currentInterval = mapped.tv;
     document.querySelectorAll('.md-interval-btn').forEach(b =>
