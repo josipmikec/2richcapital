@@ -224,15 +224,17 @@ $useremail  = $_SESSION['user_email'] ?? '';
             box-shadow:none !important;
         }
         .rich-native-watchlist-button {
-            display:block;
-            min-width:70px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            width:30px;
+            min-width:30px;
             min-height:30px;
-            padding:0 8px;
+            padding:0;
             border:1px solid transparent;
             border-radius:4px;
             background:transparent !important;
             color:#b8bac2;
-            font:500 11px/30px "Montserrat",sans-serif;
             cursor:pointer;
         }
         .rich-native-watchlist-button:hover,
@@ -249,7 +251,26 @@ $useremail  = $_SESSION['user_email'] ?? '';
             color:#f1f1f1;
             border-bottom:2px solid #f2ca50;
         }
-        .rich-native-watchlist-text { white-space:nowrap; }
+        .rich-native-watchlist-button .rich-watchlist-flag {
+            display:block;
+            width:15px;
+            height:12px;
+            position:relative;
+            border:1.5px solid currentColor;
+            border-left:0;
+            background:transparent;
+            clip-path:polygon(0 0,100% 0,100% 62%,0 62%);
+        }
+        .rich-native-watchlist-button .rich-watchlist-flag::before {
+            content:"";
+            position:absolute;
+            left:0;
+            top:-1.5px;
+            width:1.5px;
+            height:16px;
+            background:currentColor;
+        }
+        .rich-native-watchlist-label { display:none; }
         .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
         .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
         .rich-native-timeframe-host,
@@ -1398,26 +1419,30 @@ function mountNativeTimeframeGroup() {
             btn.type = 'button';
             btn.dataset.richInterval = value;
             btn.textContent = label;
+            btn.style.cssText = 'background:transparent!important;background-color:transparent!important;border:1px solid transparent!important;box-shadow:none!important;';
             btn.addEventListener('click', () => richSetInterval(value));
             group.appendChild(btn);
         });
-        const separator = document.createElement('span');
-        separator.className = 'rich-native-toolbar-separator';
         const watchHost = tvWidget.createButton();
         watchHost.className = 'rich-native-watchlist-host';
         watchHost.title = 'Open watchlist';
         watchHost.setAttribute('aria-label', 'Open watchlist');
+        watchHost.style.cssText = 'display:flex;align-items:center;min-height:42px;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
         const watchButton = document.createElement('button');
         watchButton.type = 'button';
         watchButton.className = 'rich-native-watchlist-button';
-        watchButton.setAttribute('aria-label', 'Open watchlist');
-        watchButton.innerHTML = '<span class="rich-native-watchlist-text">Watchlist</span>';
+        watchButton.innerHTML = '<span class="rich-watchlist-flag" aria-hidden="true"></span>';
         watchButton.addEventListener('click', (event) => { event.stopPropagation(); toggleWatchlist(); });
         watchHost.appendChild(watchButton);
         const host = tvWidget.createButton();
         host.className = 'rich-native-timeframe-host';
         host.title = 'Timeframes';
+        host.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
         host.appendChild(group);
+        host.style.setProperty('background', 'transparent', 'important');
+        host.style.setProperty('background-color', 'transparent', 'important');
+        host.style.setProperty('border', '0', 'important');
+        host.style.setProperty('box-shadow', 'none', 'important');
         syncNativeTimeframeGroup();
     }).catch((err) => console.error('[2RICH native timeframe mount failed]', err));
 }
