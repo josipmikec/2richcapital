@@ -438,24 +438,6 @@ $useremail  = $_SESSION['user_email'] ?? '';
 
             <!-- Chart container -->
             <div class="md-chart-wrap">
-            <div id="rich-chart-toolbar" role="toolbar" aria-label="2RICH chart controls" hidden>
-                <button type="button" id="richCompareBtn" aria-label="Compare or add symbol" title="Compare or add symbol"><span class="rich-icon rich-icon-compare">☆</span></button>
-                <button type="button" id="richSymbolsBtn" aria-label="Open symbols" title="Open symbols"><span class="rich-icon">⌕</span></button>
-                <span class="rich-toolbar-divider"></span>
-                <div class="rich-toolbar-timeframes" aria-label="Timeframes">
-                    <button type="button" data-rich-interval="15">15m</button><button type="button" data-rich-interval="60">1H</button><button type="button" data-rich-interval="240">4H</button><button type="button" data-rich-interval="480">8H</button><button type="button" data-rich-interval="D">D</button><button type="button" data-rich-interval="W">W</button><button type="button" data-rich-interval="M">MN</button>
-                </div>
-                <button type="button" id="richCandlesBtn" aria-label="Chart type" title="Chart type"><span class="rich-icon">▥</span></button>
-                <button type="button" id="richIndicatorsBtn" aria-label="Indicators" title="Indicators"><span class="rich-icon rich-icon-indicator">ƒx</span></button>
-                <button type="button" id="richUndoBtn" aria-label="Undo" title="Undo"><span class="rich-icon">↶</span></button>
-                <button type="button" id="richRedoBtn" aria-label="Redo" title="Redo"><span class="rich-icon">↷</span></button>
-                <span class="rich-toolbar-spacer"></span>
-                <button type="button" id="richSearchBtn" aria-label="Quick search" title="Quick search"><span class="rich-icon">⌕</span></button>
-                <button type="button" id="richSettingsBtn" aria-label="Settings" title="Settings"><span class="rich-icon">⬡</span></button>
-                <button type="button" id="richFullscreenBtn" aria-label="Fullscreen" title="Fullscreen"><span class="rich-icon">⛶</span></button>
-                <button type="button" id="richCaptureBtn" aria-label="Capture" title="Capture"><span class="rich-icon">▣</span></button>
-                <span class="rich-toolbar-status" id="richToolbarStatus">Chart ready</span>
-            </div>
                 <div id="tv_chart_container"></div>
             </div>
 
@@ -1423,17 +1405,6 @@ function mountNativeTimeframeGroup() {
             btn.addEventListener('click', () => richSetInterval(value));
             group.appendChild(btn);
         });
-        const watchHost = tvWidget.createButton();
-        watchHost.className = 'rich-native-watchlist-host';
-        watchHost.title = 'Open watchlist';
-        watchHost.setAttribute('aria-label', 'Open watchlist');
-        watchHost.style.cssText = 'display:flex;align-items:center;min-height:42px;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
-        const watchButton = document.createElement('button');
-        watchButton.type = 'button';
-        watchButton.className = 'rich-native-watchlist-button';
-        watchButton.innerHTML = '<span class="rich-watchlist-flag" aria-hidden="true"></span>';
-        watchButton.addEventListener('click', (event) => { event.stopPropagation(); toggleWatchlist(); });
-        watchHost.appendChild(watchButton);
         const host = tvWidget.createButton();
         host.className = 'rich-native-timeframe-host';
         host.title = 'Timeframes';
@@ -1443,6 +1414,17 @@ function mountNativeTimeframeGroup() {
         host.style.setProperty('background-color', 'transparent', 'important');
         host.style.setProperty('border', '0', 'important');
         host.style.setProperty('box-shadow', 'none', 'important');
+        const watchHost = tvWidget.createButton();
+        watchHost.className = 'rich-native-watchlist-host';
+        watchHost.title = 'Open watchlist';
+        watchHost.setAttribute('aria-label', 'Open watchlist');
+        watchHost.style.cssText = 'display:flex;align-items:center;min-height:42px;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
+        const watchButton = document.createElement('button');
+        watchButton.type = 'button';
+        watchButton.className = 'rich-native-watchlist-button';
+        watchButton.innerHTML = '<span class="rich-watchlist-icon" aria-hidden="true">☆</span>';
+        watchButton.addEventListener('click', (event) => { event.stopPropagation(); toggleWatchlist(); });
+        watchHost.appendChild(watchButton);
         syncNativeTimeframeGroup();
     }).catch((err) => console.error('[2RICH native timeframe mount failed]', err));
 }
