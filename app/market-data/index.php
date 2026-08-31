@@ -53,6 +53,9 @@ $useremail  = $_SESSION['user_email'] ?? '';
             border-bottom: 1px solid #1e1e1e;
             flex-wrap: wrap;
         }
+        .md-feed-controls[hidden] {
+            display: none;
+        }
         .md-feed-controls .md-symbol-select-wrap { margin: 0; }
         .md-feed-controls .md-interval-wrap      { margin: 0; }
         .md-feed-controls .md-live-badge         { margin: 0; }
