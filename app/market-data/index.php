@@ -1068,6 +1068,8 @@ class TwoRichUDFDatafeed {
             supported_resolutions: ['480', 'D', 'W', 'M'],
             exchanges: [{ value: '2RICH', name: BROKER_LABEL, desc: BROKER_LABEL + ' Market Feed' }],
             symbols_types: [{ name: 'Forex', value: 'forex' }],
+            supports_search: true,
+            supports_group_request: false,
             supports_marks: false,
             supports_timescale_marks: false,
             supports_time: true
@@ -1499,7 +1501,17 @@ function wireRichToolbar() {
     document.getElementById('richSettingsBtn')?.addEventListener('click', ()=>richToolbarStatus('Settings API pending verification'));
     document.getElementById('richFullscreenBtn')?.addEventListener('click', ()=>{ const el=document.getElementById('tv_chart_container'); if(el?.requestFullscreen) el.requestFullscreen(); });
     document.getElementById('richCaptureBtn')?.addEventListener('click', richCapture);
-    document.getElementById('richCompareBtn')?.addEventListener('click', ()=>{ const chart=richChartApi(); try { if(chart?.executeActionById) chart.executeActionById('compare'); else richToolbarStatus('Compare API unavailable'); } catch(e){ richToolbarStatus('Compare unavailable'); } });
+    document.getElementById('richCompareBtn')?.addEventListener('click', ()=>{ const chart=richChartApi(); try {
+        const openCompare = () => {
+            if (chart?.executeActionById) chart.executeActionById('compare');
+            else richToolbarStatus('Compare API unavailable');
+        };
+        if (sharedDatafeed?.fetchSymbols) {
+            sharedDatafeed.fetchSymbols().finally(() => setTimeout(openCompare, 0));
+        } else {
+            openCompare();
+        }
+    } catch(e){ richToolbarStatus('Compare unavailable'); } });
 }
 
 function initChart() {
