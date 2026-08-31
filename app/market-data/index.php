@@ -613,6 +613,16 @@ let chartPermission = { sync: true, multi: false };
 let tvUserSettings = {};
 let chartState = {};
 let chartStateTimer = null;
+let currentUserId = (() => {
+    try {
+        if (typeof window !== 'undefined' && window.currentUserId != null) return String(window.currentUserId);
+        const bodyId = typeof document !== 'undefined' ? document.body?.dataset?.userId : null;
+        if (bodyId != null && String(bodyId).trim() !== '') return String(bodyId).trim();
+        const meta = typeof document !== 'undefined' ? document.querySelector('meta[name=\"current-user-id\"]') : null;
+        if (meta?.content) return String(meta.content).trim();
+    } catch (e) {}
+    return 'authenticated-user';
+})();
 let tvSettingsTimer = null;
 const TWO_RICH_TEMPLATES = {
     dark: {
@@ -711,14 +721,14 @@ async function saveChartSettings(settings) {
     }, 500);
 }
 
-function getChartStateKey() {
-    const symbol = String(currentSymbol || chartSettings.symbol || '').trim();
+function getChartStateKey(symbolOverride = null) {
+    const symbol = String(symbolOverride || currentSymbol || chartSettings.symbol || '').trim();
     return ['market_data_chart_state', currentUserId || 'anonymous', symbol || 'global'].join('::');
 }
 
-async function loadChartState() {
+async function loadChartState(symbolOverride = null) {
     try {
-        const response = await fetch(`../api/preferences/get.php?key=${encodeURIComponent(getChartStateKey())}`, { credentials: 'same-origin' });
+        const response = await fetch(`../api/preferences/get.php?key=${encodeURIComponent(getChartStateKey(symbolOverride))}`, { credentials: 'same-origin' });
         const data = await response.json();
         if (data.success && data.value) {
             const parsed = JSON.parse(data.value);
@@ -731,7 +741,8 @@ async function loadChartState() {
 }
 
 async function saveChartState(state) {
-    chartState = { ...chartState, ...state };
+    const nextState = state && typeof state === 'object' ? state : {};
+    chartState = { ...chartState, ...nextState };
     clearTimeout(chartStateTimer);
     chartStateTimer = setTimeout(async () => {
         try {
@@ -739,7 +750,7 @@ async function saveChartState(state) {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders(),
-                body: JSON.stringify({ key: getChartStateKey(), value: JSON.stringify(chartState) })
+                body: JSON.stringify({ key: getChartStateKey(nextState.symbol || chartState.symbol || null), value: JSON.stringify(chartState) })
             });
         } catch (error) {
             console.warn('[2RICH] Chart state could not be saved', error);
@@ -756,6 +767,7 @@ function snapshotChartState() {
         visible_panes: null,
         studies: null,
         drawings: null,
+        snapshot_version: 1,
     };
     try {
         if (chart && typeof chart.getChartType === 'function') state.chart_type = chart.getChartType();
