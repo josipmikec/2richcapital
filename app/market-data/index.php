@@ -1076,20 +1076,24 @@ class TwoRichUDFDatafeed {
 
     searchSymbols(userInput, exchange, symbolType, onResultReadyCallback) {
         const query = String(userInput || '').toLowerCase();
+        const buildRows = (symbols) => (Array.isArray(symbols) ? symbols : [])
+            .filter(s => !query || String(s.display_symbol || '').toLowerCase().includes(query) || String(s.mt5_symbol || '').toLowerCase().includes(query))
+            .map(s => ({
+                symbol: s.display_symbol || s.mt5_symbol,
+                full_name: s.display_symbol || s.mt5_symbol,
+                description: s.display_symbol || s.mt5_symbol,
+                exchange: symbolBrokerLabel(s),
+                ticker: s.mt5_symbol || s.display_symbol,
+                type: 'forex'
+            }));
+
+        if (Array.isArray(this.symbolsCache) && this.symbolsCache.length) {
+            onResultReadyCallback(buildRows(this.symbolsCache));
+            return;
+        }
+
         this.fetchSymbols()
-            .then(symbols => {
-                const rows = symbols
-                    .filter(s => !query || String(s.display_symbol || '').toLowerCase().includes(query) || String(s.mt5_symbol || '').toLowerCase().includes(query))
-                    .map(s => ({
-                        symbol: s.display_symbol || s.mt5_symbol,
-                        full_name: s.display_symbol || s.mt5_symbol,
-                        description: s.display_symbol || s.mt5_symbol,
-                        exchange: symbolBrokerLabel(s),
-                        ticker: s.mt5_symbol || s.display_symbol,
-                        type: 'forex'
-                    }));
-                onResultReadyCallback(rows);
-            })
+            .then(symbols => onResultReadyCallback(buildRows(symbols)))
             .catch(() => onResultReadyCallback([]));
     }
 
