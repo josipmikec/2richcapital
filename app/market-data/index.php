@@ -215,10 +215,17 @@ $useremail  = $_SESSION['user_email'] ?? '';
         .rich-native-watchlist-host,
         .rich-native-watchlist-host:hover,
         .rich-native-watchlist-host:focus,
-        .rich-native-watchlist-host:active {
+        .rich-native-watchlist-host:active,
+        .rich-native-timeframe-host,
+        .rich-native-timeframe-host:hover,
+        .rich-native-timeframe-host:focus,
+        .rich-native-timeframe-host:active {
             display:flex !important;
             align-items:center !important;
+            justify-content:center !important;
             min-height:42px !important;
+            padding:0 2px !important;
+            margin:0 !important;
             background:transparent !important;
             border:0 !important;
             box-shadow:none !important;
@@ -256,8 +263,8 @@ $useremail  = $_SESSION['user_email'] ?? '';
             width:14px;
             height:16px;
             position:relative;
-            border:1.5px solid currentColor;
-            border-left:0;
+            border:0;
+            background:currentColor;
             clip-path:polygon(0 0,100% 0,100% 62%,0 62%);
         }
         .rich-native-watchlist-button .rich-watchlist-flag::before {
@@ -270,21 +277,15 @@ $useremail  = $_SESSION['user_email'] ?? '';
             background:currentColor;
         }
         .rich-native-watchlist-label { display:none; }
-        .rich-toolbar-timeframes { display:inline-flex; align-items:center; gap:0; }
+        .rich-toolbar-timeframes { display:inline-flex; align-items:center; justify-content:center; gap:0; }
         .rich-toolbar-timeframes button { min-width:36px; padding:0 6px; }
-        .rich-native-timeframe-host,
-        .rich-native-timeframe-host:hover,
-        .rich-native-timeframe-host:focus,
-        .rich-native-timeframe-host:active,
-        .rich-native-timeframe-host > button,
         .rich-native-timeframe-host > div,
         .rich-native-timeframe-host > div > div,
         .rich-native-timeframe-host > div > div > button {
             display:flex !important;
             align-items:center !important;
-            min-height:42px !important;
+            justify-content:center !important;
             background:transparent !important;
-            background-color:transparent !important;
             border:0 !important;
             box-shadow:none !important;
         }
@@ -295,8 +296,9 @@ $useremail  = $_SESSION['user_email'] ?? '';
             background:transparent !important;
             background-color:transparent !important;
             color:#b8bac2 !important;
-            border:0 !important;
+            border:1px solid transparent !important;
             box-shadow:none !important;
+            transition:background .16s ease,color .16s ease,transform .08s ease,outline .16s ease !important;
         }
         .rich-native-timeframe-host button:hover {
             background:#1a1a1a !important;
@@ -1414,7 +1416,7 @@ function mountNativeTimeframeGroup() {
             btn.type = 'button';
             btn.dataset.richInterval = value;
             btn.textContent = label;
-            btn.style.cssText = 'background:transparent!important;background-color:transparent!important;border:0!important;box-shadow:none!important;';
+            btn.style.cssText = 'display:flex;align-items:center;justify-content:center;background:transparent!important;background-color:transparent!important;border:1px solid transparent!important;box-shadow:none!important;';
             btn.addEventListener('click', () => richSetInterval(value));
             group.appendChild(btn);
         });
