@@ -1717,19 +1717,34 @@ function initChart() {
             try {
                 if (typeof chart.onSymbolChanged === 'function') {
                     chart.onSymbolChanged().subscribe(null, (symbolInfo) => {
-                        chartDebug('TradingView symbol changed', symbolInfo);
+                        chartDebug('TradingView symbol changed', {
+                            symbolInfo,
+                            isApplyingChartState,
+                            isRestoringDrawings
+                        });
                         const nextSymbol = String(symbolInfo?.ticker || symbolInfo?.name || '').trim();
                         if (!nextSymbol) return;
                         currentSymbol = nextSymbol;
                         syncSymbolSelectValue(nextSymbol);
                         saveChartSettings({ symbol: nextSymbol });
+                        if (isApplyingChartState || isRestoringDrawings) {
+                            chartDebug('TradingView symbol changed skipped save/apply', {
+                                nextSymbol,
+                                reason: isApplyingChartState ? 'applying-chart-state' : 'restoring-drawings'
+                            });
+                            return;
+                        }
                         saveChartState(snapshotChartState());
                         setTimeout(() => { applyChartState(nextSymbol); }, 250);
                     });
                 }
                 if (typeof chart.onIntervalChanged === 'function') {
                     chart.onIntervalChanged().subscribe(null, (interval) => {
-                        chartDebug('TradingView interval changed', interval);
+                        chartDebug('TradingView interval changed', {
+                            interval,
+                            isApplyingChartState,
+                            isRestoringDrawings
+                        });
                         const nextInterval = String(interval || '').trim();
                         if (!nextInterval) return;
                         currentInterval = nextInterval;
@@ -1737,6 +1752,13 @@ function initChart() {
                             b.classList.toggle('active', b.dataset.interval == nextInterval)
                         );
                         saveChartSettings({ interval: nextInterval });
+                        if (isApplyingChartState || isRestoringDrawings) {
+                            chartDebug('TradingView interval changed skipped save', {
+                                nextInterval,
+                                reason: isApplyingChartState ? 'applying-chart-state' : 'restoring-drawings'
+                            });
+                            return;
+                        }
                         saveChartState(snapshotChartState());
                     });
                 }
