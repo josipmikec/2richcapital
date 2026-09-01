@@ -807,8 +807,20 @@ function snapshotChartState() {
         visible_panes: null,
         studies: null,
         drawings: null,
-        snapshot_version: 1,
+        snapshot_version: 2,
+        capabilities: {},
     };
+    try {
+        state.capabilities = chart ? {
+            getChartType: typeof chart.getChartType === 'function',
+            getAllPanesHeight: typeof chart.getAllPanesHeight === 'function',
+            getAllStudies: typeof chart.getAllStudies === 'function',
+            getLineToolsState: typeof chart.getLineToolsState === 'function',
+            applyLineToolsState: typeof chart.applyLineToolsState === 'function',
+            save: typeof chart.save === 'function',
+            load: typeof chart.load === 'function',
+        } : {};
+    } catch (e) {}
     try {
         if (chart && typeof chart.getChartType === 'function') state.chart_type = chart.getChartType();
     } catch (e) {}
@@ -822,8 +834,16 @@ function snapshotChartState() {
         }
     } catch (e) {}
     try {
-        if (chart && typeof chart.getLineToolsState === 'function') state.drawings = chart.getLineToolsState();
-    } catch (e) {}
+        if (chart && typeof chart.getLineToolsState === 'function') {
+            const raw = chart.getLineToolsState();
+            state.drawings = raw ?? null;
+            chartDebug('chart drawing snapshot', { hasDrawings: !!raw, type: typeof raw, raw });
+        } else {
+            chartDebug('chart drawing snapshot unavailable', { reason: 'getLineToolsState missing', capabilities: state.capabilities });
+        }
+    } catch (e) {
+        chartDebug('chart drawing snapshot error', { message: e?.message || String(e) });
+    }
     return state;
 }
 
