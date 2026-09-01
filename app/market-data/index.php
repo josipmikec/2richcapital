@@ -727,9 +727,11 @@ function getChartStateKey(symbolOverride = null) {
 }
 
 async function loadChartState(symbolOverride = null) {
+    const key = getChartStateKey(symbolOverride);
     try {
-        const response = await fetch(`../api/preferences/get.php?key=${encodeURIComponent(getChartStateKey(symbolOverride))}`, { credentials: 'same-origin' });
+        const response = await fetch(`../api/preferences/get.php?key=${encodeURIComponent(key)}`, { credentials: 'same-origin' });
         const data = await response.json();
+        chartDebug('chart state load response', { key, status: response.status, data });
         if (data.success && data.value) {
             const parsed = JSON.parse(data.value);
             return parsed && typeof parsed === 'object' ? parsed : {};
@@ -745,17 +747,56 @@ async function saveChartState(state) {
     chartState = { ...chartState, ...nextState };
     clearTimeout(chartStateTimer);
     chartStateTimer = setTimeout(async () => {
+        const key = getChartStateKey(nextState.symbol || chartState.symbol || null);
+        const payload = { key, value: JSON.stringify(chartState) };
+        chartDebug('chart state save request', { key, snapshot: chartState, payload });
         try {
-            await fetch('../api/preferences/set.php', {
+            const response = await fetch('../api/preferences/set.php', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders(),
-                body: JSON.stringify({ key: getChartStateKey(nextState.symbol || chartState.symbol || null), value: JSON.stringify(chartState) })
+                body: JSON.stringify(payload)
             });
+            const data = await response.json().catch(() => null);
+            chartDebug('chart state save response', { key, status: response.status, data });
         } catch (error) {
             console.warn('[2RICH] Chart state could not be saved', error);
         }
     }, 700);
+}
+
+async function applyChartState(symbolOverride = null) {
+    const nextState = await loadChartState(symbolOverride);
+    if (!nextState || typeof nextState !== 'object' || !Object.keys(nextState).length) return;
+    chartState = { ...nextState };
+    chartDebug('chart state apply start', { symbolOverride, nextState });
+
+    const chart = richChartApi();
+    if (!chart) return;
+
+    try {
+        if (nextState.interval && typeof chart.setResolution === 'function') {
+            chart.setResolution(String(nextState.interval), () => {}, () => {});
+        }
+    } catch (error) {
+        console.warn('[2RICH] Could not restore interval from chart state', error);
+    }
+
+    try {
+        if (nextState.chart_type != null && typeof chart.setChartType === 'function') {
+            chart.setChartType(nextState.chart_type);
+        }
+    } catch (error) {
+        console.warn('[2RICH] Could not restore chart type', error);
+    }
+
+    try {
+        if (Array.isArray(nextState.drawings) && typeof chart.applyLineToolsState === 'function') {
+            chart.applyLineToolsState(nextState.drawings);
+        }
+    } catch (error) {
+        console.warn('[2RICH] Could not restore drawings', error);
+    }
 }
 
 function snapshotChartState() {
@@ -1532,6 +1573,7 @@ function initChart() {
         richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
         saveChartState(snapshotChartState());
+        setTimeout(() => { applyChartState(currentSymbol); }, 250);
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
         }
@@ -1555,6 +1597,7 @@ function initChart() {
                         syncSymbolSelectValue(nextSymbol);
                         saveChartSettings({ symbol: nextSymbol });
                         saveChartState(snapshotChartState());
+                        setTimeout(() => { applyChartState(nextSymbol); }, 250);
                     });
                 }
                 if (typeof chart.onIntervalChanged === 'function') {
