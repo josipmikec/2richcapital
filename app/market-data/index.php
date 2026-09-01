@@ -1014,6 +1014,8 @@ async function applyChartState(symbolOverride = null) {
 }
 
 function serializeLineToolsState(value, key = '') {
+    if (!value || typeof value !== 'object') return value;
+
     if (value instanceof Map) {
         const obj = {};
         for (const [k, v] of value.entries()) {
@@ -1021,20 +1023,20 @@ function serializeLineToolsState(value, key = '') {
         }
         return obj;
     }
+
     if (value instanceof Set) {
         return Array.from(value.values());
     }
+
     if (Array.isArray(value)) {
         return value.map(item => serializeLineToolsState(item));
     }
-    if (value && typeof value === 'object') {
-        const result = {};
-        for (const [k, v] of Object.entries(value)) {
-            result[k] = serializeLineToolsState(v, k);
-        }
-        return result;
+
+    const result = {};
+    for (const [k, v] of Object.entries(value)) {
+        result[k] = serializeLineToolsState(v, k);
     }
-    return value;
+    return result;
 }
 
 function snapshotChartState() {
