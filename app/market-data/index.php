@@ -1040,6 +1040,7 @@ function serializeLineToolsState(value, key = '') {
 }
 
 function snapshotChartState() {
+    console.log('[2RICH chart debug] >>> SNAPSHOT FUNCTION CALLED v2 <<<');
     const chart = richChartApi();
     const state = {
         symbol: currentSymbol,
