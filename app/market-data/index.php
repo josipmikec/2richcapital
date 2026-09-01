@@ -617,6 +617,8 @@ let tvSettingsTimer = null;
 let isApplyingChartState = false;
 let isRestoringDrawings = false;
 let drawingRestorePromise = Promise.resolve();
+let chartRestoreSettlingUntil = 0;
+const CHART_RESTORE_SETTLE_MS = 1800;
 let lastAppliedChartStateSignature = '';
 let chartStateApplyTimers = [];
 const TWO_RICH_TEMPLATES = {
@@ -693,6 +695,29 @@ function chartDebug(label, payload) {
 }
 
 
+function isChartRestoreSettling() {
+    return Date.now() < chartRestoreSettlingUntil;
+}
+
+function isChartPersistenceBlocked() {
+    return isApplyingChartState || isRestoringDrawings || isChartRestoreSettling();
+}
+
+function getChartPersistenceBlockReason() {
+    if (isApplyingChartState) return 'applying-chart-state';
+    if (isRestoringDrawings) return 'restoring-drawings';
+    if (isChartRestoreSettling()) return 'restore-settling';
+    return null;
+}
+
+function markChartRestoreSettling(delayMs = CHART_RESTORE_SETTLE_MS) {
+    chartRestoreSettlingUntil = Date.now() + Math.max(0, Number(delayMs) || 0);
+    chartDebug('chart restore settling window', {
+        delayMs,
+        settleUntil: new Date(chartRestoreSettlingUntil).toISOString()
+    });
+}
+
 function csrfHeaders() {
     const token = document.querySelector('meta[name=csrf-token]')?.content || '';
     return token ? { 'X-CSRF-Token': token, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
@@ -747,6 +772,14 @@ async function loadChartState(symbolOverride = null) {
 async function saveChartState(state) {
     const nextState = state && typeof state === 'object' ? state : {};
     const symbolKey = getChartStateSymbol(nextState.symbol || null);
+    if (isChartPersistenceBlocked()) {
+        chartDebug('chart state save skipped', {
+            reason: getChartPersistenceBlockReason(),
+            symbolKey,
+            snapshot: nextState
+        });
+        return;
+    }
     chartState = { ...chartState, ...nextState };
     clearTimeout(chartStateTimer);
     chartStateTimer = setTimeout(async () => {
@@ -882,7 +915,11 @@ async function applyChartState(symbolOverride = null) {
                 .then(() => dispatchDrawings('chart drawings apply late'))
                 .finally(() => {
                     isRestoringDrawings = false;
-                    chartDebug('chart drawings restore settled', { symbolOverride });
+                    markChartRestoreSettling();
+                    chartDebug('chart drawings restore settled', {
+                        symbolOverride,
+                        settleMs: CHART_RESTORE_SETTLE_MS
+                    });
                 });
         }
     } catch (error) {
@@ -1727,10 +1764,10 @@ function initChart() {
                         currentSymbol = nextSymbol;
                         syncSymbolSelectValue(nextSymbol);
                         saveChartSettings({ symbol: nextSymbol });
-                        if (isApplyingChartState || isRestoringDrawings) {
+                        if (isChartPersistenceBlocked()) {
                             chartDebug('TradingView symbol changed skipped save/apply', {
                                 nextSymbol,
-                                reason: isApplyingChartState ? 'applying-chart-state' : 'restoring-drawings'
+                                reason: getChartPersistenceBlockReason()
                             });
                             return;
                         }
@@ -1752,10 +1789,10 @@ function initChart() {
                             b.classList.toggle('active', b.dataset.interval == nextInterval)
                         );
                         saveChartSettings({ interval: nextInterval });
-                        if (isApplyingChartState || isRestoringDrawings) {
+                        if (isChartPersistenceBlocked()) {
                             chartDebug('TradingView interval changed skipped save', {
                                 nextInterval,
-                                reason: isApplyingChartState ? 'applying-chart-state' : 'restoring-drawings'
+                                reason: getChartPersistenceBlockReason()
                             });
                             return;
                         }
@@ -1783,16 +1820,16 @@ function initChart() {
                             );
                             saveChartSettings({ symbol: currentSymbol, interval: currentInterval });
                         }
-                        if (isApplyingChartState || isRestoringDrawings) {
+                        if (isChartPersistenceBlocked()) {
                             chartDebug('TradingView onAutoSaveNeeded skipped', {
-                                reason: isApplyingChartState ? 'applying-chart-state' : 'restoring-drawings',
+                                reason: getChartPersistenceBlockReason(),
                                 symbol: currentSymbol,
                                 interval: currentInterval
                             });
                             return;
                         }
                         Promise.resolve(drawingRestorePromise).finally(() => {
-                            if (isApplyingChartState || isRestoringDrawings) return;
+                            if (isChartPersistenceBlocked()) return;
                             saveChartState(snapshotChartState());
                         });
                     });
