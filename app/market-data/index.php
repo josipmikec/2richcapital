@@ -618,6 +618,7 @@ let isApplyingChartState = false;
 let isRestoringDrawings = false;
 let drawingRestorePromise = Promise.resolve();
 let chartRestoreSettlingUntil = 0;
+let chartPersistenceArmTimer = null;
 const CHART_RESTORE_SETTLE_MS = 1800;
 let hasCompletedInitialChartRestore = false;
 let hasArmedChartPersistence = false;
@@ -733,6 +734,39 @@ function markChartRestoreSettling(delayMs = CHART_RESTORE_SETTLE_MS) {
     });
 }
 
+function resetChartPersistenceArmTimer() {
+    if (chartPersistenceArmTimer) {
+        clearTimeout(chartPersistenceArmTimer);
+        chartPersistenceArmTimer = null;
+    }
+}
+
+function scheduleChartPersistenceArm(reason = 'restore-settled', delayMs = CHART_RESTORE_SETTLE_MS) {
+    resetChartPersistenceArmTimer();
+    const armDelay = Math.max(0, Number(delayMs) || 0);
+    chartPersistenceArmTimer = setTimeout(() => {
+        chartPersistenceArmTimer = null;
+        armChartPersistence(reason);
+    }, armDelay);
+    chartDebug('chart persistence arm scheduled', {
+        reason,
+        delayMs: armDelay,
+        settleUntil: chartRestoreSettlingUntil ? new Date(chartRestoreSettlingUntil).toISOString() : null
+    });
+}
+
+function resetChartPersistenceState(reason = 'reset') {
+    resetChartPersistenceArmTimer();
+    hasCompletedInitialChartRestore = false;
+    hasArmedChartPersistence = false;
+    chartRestoreSettlingUntil = 0;
+    chartDebug('chart persistence reset', {
+        reason,
+        hasCompletedInitialChartRestore,
+        hasArmedChartPersistence
+    });
+}
+
 function csrfHeaders() {
     const token = document.querySelector('meta[name=csrf-token]')?.content || '';
     return token ? { 'X-CSRF-Token': token, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
@@ -822,6 +856,8 @@ async function applyChartState(symbolOverride = null) {
         chartDebug('chart state apply skipped', { reason: 'already-applying', symbolOverride });
         return;
     }
+
+    resetChartPersistenceState('apply-chart-state');
 
     const nextState = await loadChartState(symbolOverride);
     if (!nextState || typeof nextState !== 'object' || !Object.keys(nextState).length) return;
@@ -919,6 +955,7 @@ async function applyChartState(symbolOverride = null) {
                 }
             };
             isRestoringDrawings = true;
+            resetChartPersistenceArmTimer();
             const waitMs = (ms) => new Promise(resolve => {
                 const timer = setTimeout(resolve, ms);
                 chartStateApplyTimers.push(timer);
@@ -932,6 +969,7 @@ async function applyChartState(symbolOverride = null) {
                     isRestoringDrawings = false;
                     markChartRestoreSettling();
                     hasCompletedInitialChartRestore = true;
+                    scheduleChartPersistenceArm('restore-settled', CHART_RESTORE_SETTLE_MS);
                     chartDebug('chart drawings restore settled', {
                         symbolOverride,
                         settleMs: CHART_RESTORE_SETTLE_MS,
