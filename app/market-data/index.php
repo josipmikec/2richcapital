@@ -801,7 +801,30 @@ async function applyChartState(symbolOverride = null) {
             canApply: typeof chart.applyLineToolsState === 'function'
         });
         if (hasDrawingPayload && typeof chart.applyLineToolsState === 'function') {
-            chart.applyLineToolsState(drawingState);
+            const normalizedDrawingState = drawingState && typeof drawingState.sources?.keys === 'function'
+                ? drawingState
+                : (drawingState?.sources && typeof drawingState.sources === 'object'
+                    ? {
+                        ...drawingState,
+                        sources: new Map(Object.entries(drawingState.sources)),
+                        groups: drawingState?.groups && typeof drawingState.groups === 'object' && typeof drawingState.groups.keys !== 'function'
+                            ? new Map(Object.entries(drawingState.groups))
+                            : drawingState.groups,
+                        lineToolsToValidate: Array.isArray(drawingState?.lineToolsToValidate)
+                            ? new Set(drawingState.lineToolsToValidate)
+                            : drawingState.lineToolsToValidate,
+                        groupsToValidate: Array.isArray(drawingState?.groupsToValidate)
+                            ? new Set(drawingState.groupsToValidate)
+                            : drawingState.groupsToValidate,
+                    }
+                    : drawingState);
+            chartDebug('chart drawings apply normalized', {
+                sourcesIsMap: !!normalizedDrawingState?.sources && typeof normalizedDrawingState.sources.keys === 'function',
+                groupsIsMap: !!normalizedDrawingState?.groups && typeof normalizedDrawingState.groups.keys === 'function',
+                lineToolsToValidateIsSet: !!normalizedDrawingState?.lineToolsToValidate && typeof normalizedDrawingState.lineToolsToValidate.values === 'function',
+                groupsToValidateIsSet: !!normalizedDrawingState?.groupsToValidate && typeof normalizedDrawingState.groupsToValidate.values === 'function',
+            });
+            chart.applyLineToolsState(normalizedDrawingState);
             chartDebug('chart drawings apply dispatched', { rawKeys: Object.keys(drawingState) });
         }
     } catch (error) {
