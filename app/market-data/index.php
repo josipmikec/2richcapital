@@ -1015,19 +1015,23 @@ async function applyChartState(symbolOverride = null) {
 
 function serializeLineToolsState(value, key = '') {
     if (value instanceof Map) {
-        return Object.fromEntries(Array.from(value.entries()).map(([entryKey, entryValue]) => [entryKey, serializeLineToolsState(entryValue, entryKey)]));
+        const obj = {};
+        for (const [k, v] of value.entries()) {
+            obj[k] = serializeLineToolsState(v, k);
+        }
+        return obj;
     }
     if (value instanceof Set) {
-        return Array.from(value.values()).map(item => serializeLineToolsState(item));
+        return Array.from(value.values());
     }
     if (Array.isArray(value)) {
         return value.map(item => serializeLineToolsState(item));
     }
     if (value && typeof value === 'object') {
         const result = {};
-        Object.entries(value).forEach(([entryKey, entryValue]) => {
-            result[entryKey] = serializeLineToolsState(entryValue, entryKey);
-        });
+        for (const [k, v] of Object.entries(value)) {
+            result[k] = serializeLineToolsState(v, k);
+        }
         return result;
     }
     return value;
