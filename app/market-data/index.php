@@ -790,11 +790,23 @@ async function applyChartState(symbolOverride = null) {
     }
 
     try {
-        if (Array.isArray(nextState.drawings) && typeof chart.applyLineToolsState === 'function') {
-            chart.applyLineToolsState(nextState.drawings);
+        const drawingState = nextState.drawings;
+        const hasDrawingPayload = !!(drawingState && typeof drawingState === 'object' && Object.keys(drawingState).length);
+        chartDebug('chart drawings apply candidate', {
+            hasDrawingPayload,
+            type: typeof drawingState,
+            rawKeys: drawingState && typeof drawingState === 'object' ? Object.keys(drawingState) : [],
+            sourcesCount: Array.isArray(drawingState?.sources) ? drawingState.sources.length : null,
+            stateSourcesCount: Array.isArray(drawingState?.state?.sources) ? drawingState.state.sources.length : null,
+            canApply: typeof chart.applyLineToolsState === 'function'
+        });
+        if (hasDrawingPayload && typeof chart.applyLineToolsState === 'function') {
+            chart.applyLineToolsState(drawingState);
+            chartDebug('chart drawings apply dispatched', { rawKeys: Object.keys(drawingState) });
         }
     } catch (error) {
         console.warn('[2RICH] Could not restore drawings', error);
+        chartDebug('chart drawings apply error', { message: error?.message || String(error) });
     }
 }
 
@@ -837,7 +849,15 @@ function snapshotChartState() {
         if (chart && typeof chart.getLineToolsState === 'function') {
             const raw = chart.getLineToolsState();
             state.drawings = raw ?? null;
-            chartDebug('chart drawing snapshot', { hasDrawings: !!raw, type: typeof raw, raw });
+            const rawKeys = raw && typeof raw === 'object' ? Object.keys(raw) : [];
+            chartDebug('chart drawing snapshot', {
+                hasDrawings: !!raw,
+                type: typeof raw,
+                rawKeys,
+                sourcesCount: Array.isArray(raw?.sources) ? raw.sources.length : null,
+                stateSourcesCount: Array.isArray(raw?.state?.sources) ? raw.state.sources.length : null,
+                raw
+            });
         } else {
             chartDebug('chart drawing snapshot unavailable', { reason: 'getLineToolsState missing', capabilities: state.capabilities });
         }
