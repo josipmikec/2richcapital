@@ -619,6 +619,8 @@ let isRestoringDrawings = false;
 let drawingRestorePromise = Promise.resolve();
 let chartRestoreSettlingUntil = 0;
 const CHART_RESTORE_SETTLE_MS = 1800;
+let hasCompletedInitialChartRestore = false;
+let hasArmedChartPersistence = false;
 let lastAppliedChartStateSignature = '';
 let chartStateApplyTimers = [];
 const TWO_RICH_TEMPLATES = {
@@ -697,6 +699,19 @@ function chartDebug(label, payload) {
 
 function isChartRestoreSettling() {
     return Date.now() < chartRestoreSettlingUntil;
+}
+
+function canPersistChartState() {
+    return hasCompletedInitialChartRestore && hasArmedChartPersistence && !isChartPersistenceBlocked();
+}
+
+function armChartPersistence(reason = 'manual') {
+    hasArmedChartPersistence = true;
+    chartDebug('chart persistence armed', {
+        reason,
+        hasCompletedInitialChartRestore,
+        hasArmedChartPersistence
+    });
 }
 
 function isChartPersistenceBlocked() {
@@ -916,9 +931,11 @@ async function applyChartState(symbolOverride = null) {
                 .finally(() => {
                     isRestoringDrawings = false;
                     markChartRestoreSettling();
+                    hasCompletedInitialChartRestore = true;
                     chartDebug('chart drawings restore settled', {
                         symbolOverride,
-                        settleMs: CHART_RESTORE_SETTLE_MS
+                        settleMs: CHART_RESTORE_SETTLE_MS,
+                        hasCompletedInitialChartRestore
                     });
                 });
         }
@@ -1736,7 +1753,7 @@ function initChart() {
         mountNativeTimeframeGroup();
         richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
-        saveChartState(snapshotChartState());
+        richToolbarStatus('Restoring saved chart state');
         setTimeout(() => { applyChartState(currentSymbol); }, 250);
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
@@ -1771,6 +1788,8 @@ function initChart() {
                             });
                             return;
                         }
+                        armChartPersistence('symbol-change');
+                        armChartPersistence('interval-change');
                         saveChartState(snapshotChartState());
                         setTimeout(() => { applyChartState(nextSymbol); }, 250);
                     });
@@ -1820,16 +1839,18 @@ function initChart() {
                             );
                             saveChartSettings({ symbol: currentSymbol, interval: currentInterval });
                         }
-                        if (isChartPersistenceBlocked()) {
+                        if (!canPersistChartState()) {
                             chartDebug('TradingView onAutoSaveNeeded skipped', {
-                                reason: getChartPersistenceBlockReason(),
+                                reason: isChartPersistenceBlocked() ? getChartPersistenceBlockReason() : (!hasCompletedInitialChartRestore ? 'initial-restore-incomplete' : 'persistence-not-armed'),
                                 symbol: currentSymbol,
-                                interval: currentInterval
+                                interval: currentInterval,
+                                hasCompletedInitialChartRestore,
+                                hasArmedChartPersistence
                             });
                             return;
                         }
                         Promise.resolve(drawingRestorePromise).finally(() => {
-                            if (isChartPersistenceBlocked()) return;
+                            if (!canPersistChartState()) return;
                             saveChartState(snapshotChartState());
                         });
                     });
@@ -1861,6 +1882,7 @@ function initChart() {
 
 function changeSymbol(symbol) {
     saveChartSettings({ symbol });
+    armChartPersistence('changeSymbol');
     saveChartState(snapshotChartState());
     const normalized = sharedDatafeed ? sharedDatafeed.normalizeSymbol(symbol) : String(symbol || '').trim();
     if (!normalized) return;
@@ -1871,6 +1893,7 @@ function changeSymbol(symbol) {
 
 function changeInterval(interval) {
     saveChartSettings({ interval });
+    armChartPersistence('changeInterval');
     saveChartState(snapshotChartState());
     const mapped = new TwoRichUDFDatafeed('../api/market').normalizeResolution(interval);
     currentInterval = mapped.tv;
