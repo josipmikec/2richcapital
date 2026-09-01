@@ -613,16 +613,6 @@ let chartPermission = { sync: true, multi: false };
 let tvUserSettings = {};
 let chartState = {};
 let chartStateTimer = null;
-let currentUserId = (() => {
-    try {
-        if (typeof window !== 'undefined' && window.currentUserId != null) return String(window.currentUserId);
-        const bodyId = typeof document !== 'undefined' ? document.body?.dataset?.userId : null;
-        if (bodyId != null && String(bodyId).trim() !== '') return String(bodyId).trim();
-        const meta = typeof document !== 'undefined' ? document.querySelector('meta[name=\"current-user-id\"]') : null;
-        if (meta?.content) return String(meta.content).trim();
-    } catch (e) {}
-    return 'authenticated-user';
-})();
 let tvSettingsTimer = null;
 const TWO_RICH_TEMPLATES = {
     dark: {
@@ -721,17 +711,17 @@ async function saveChartSettings(settings) {
     }, 500);
 }
 
-function getChartStateKey(symbolOverride = null) {
-    const symbol = String(symbolOverride || currentSymbol || chartSettings.symbol || '').trim();
-    return ['market_data_chart_state', currentUserId || 'anonymous', symbol || 'global'].join('::');
+const CHART_STATE_STORAGE_KEY = 'market_data_chart_state';
+
+function getChartStateSymbol(symbolOverride = null) {
+    return String(symbolOverride || currentSymbol || chartSettings.symbol || '').trim() || 'global';
 }
 
-async function loadChartState(symbolOverride = null) {
-    const key = getChartStateKey(symbolOverride);
+async function loadChartStateMap() {
     try {
-        const response = await fetch(`../api/preferences/get.php?key=${encodeURIComponent(key)}`, { credentials: 'same-origin' });
+        const response = await fetch(`../api/preferences/get.php?key=${encodeURIComponent(CHART_STATE_STORAGE_KEY)}`, { credentials: 'same-origin' });
         const data = await response.json();
-        chartDebug('chart state load response', { key, status: response.status, data });
+        chartDebug('chart state load response', { key: CHART_STATE_STORAGE_KEY, status: response.status, data });
         if (data.success && data.value) {
             const parsed = JSON.parse(data.value);
             return parsed && typeof parsed === 'object' ? parsed : {};
@@ -742,15 +732,24 @@ async function loadChartState(symbolOverride = null) {
     return {};
 }
 
+async function loadChartState(symbolOverride = null) {
+    const stateMap = await loadChartStateMap();
+    const symbolKey = getChartStateSymbol(symbolOverride);
+    const nextState = stateMap && typeof stateMap === 'object' ? stateMap[symbolKey] : null;
+    return nextState && typeof nextState === 'object' ? nextState : {};
+}
+
 async function saveChartState(state) {
     const nextState = state && typeof state === 'object' ? state : {};
+    const symbolKey = getChartStateSymbol(nextState.symbol || null);
     chartState = { ...chartState, ...nextState };
     clearTimeout(chartStateTimer);
     chartStateTimer = setTimeout(async () => {
-        const key = getChartStateKey(nextState.symbol || chartState.symbol || null);
-        const payload = { key, value: JSON.stringify(chartState) };
-        chartDebug('chart state save request', { key, snapshot: chartState, payload });
         try {
+            const stateMap = await loadChartStateMap();
+            const nextMap = { ...(stateMap || {}), [symbolKey]: { ...chartState, symbol: symbolKey } };
+            const payload = { key: CHART_STATE_STORAGE_KEY, value: JSON.stringify(nextMap) };
+            chartDebug('chart state save request', { key: CHART_STATE_STORAGE_KEY, symbolKey, snapshot: chartState, payload });
             const response = await fetch('../api/preferences/set.php', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -758,7 +757,7 @@ async function saveChartState(state) {
                 body: JSON.stringify(payload)
             });
             const data = await response.json().catch(() => null);
-            chartDebug('chart state save response', { key, status: response.status, data });
+            chartDebug('chart state save response', { key: CHART_STATE_STORAGE_KEY, symbolKey, status: response.status, data });
         } catch (error) {
             console.warn('[2RICH] Chart state could not be saved', error);
         }
