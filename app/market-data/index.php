@@ -1071,6 +1071,7 @@ function snapshotChartState() {
     try {
         if (chart && typeof chart.getLineToolsState === 'function') {
             const raw = chart.getLineToolsState();
+            console.log('[2RICH chart debug] getLineToolsState raw full', raw);
             const serializedRaw = serializeLineToolsState(raw);
             state.drawings = serializedRaw ?? null;
             const rawKeys = raw && typeof raw === 'object' ? Object.keys(raw) : [];
