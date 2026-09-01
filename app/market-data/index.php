@@ -614,6 +614,9 @@ let tvUserSettings = {};
 let chartState = {};
 let chartStateTimer = null;
 let tvSettingsTimer = null;
+let isApplyingChartState = false;
+let lastAppliedChartStateSignature = '';
+let chartStateApplyTimers = [];
 const TWO_RICH_TEMPLATES = {
     dark: {
         name: '2RICH Dark',
@@ -765,13 +768,36 @@ async function saveChartState(state) {
 }
 
 async function applyChartState(symbolOverride = null) {
+    if (isApplyingChartState) {
+        chartDebug('chart state apply skipped', { reason: 'already-applying', symbolOverride });
+        return;
+    }
+
     const nextState = await loadChartState(symbolOverride);
     if (!nextState || typeof nextState !== 'object' || !Object.keys(nextState).length) return;
+
+    const stateSignature = JSON.stringify({
+        symbol: nextState.symbol || null,
+        interval: nextState.interval || null,
+        chart_type: nextState.chart_type ?? null,
+        drawings: nextState.drawings || null,
+    });
+    if (stateSignature === lastAppliedChartStateSignature) {
+        chartDebug('chart state apply skipped', { reason: 'same-signature', symbolOverride });
+        return;
+    }
+
+    chartStateApplyTimers.forEach((timer) => clearTimeout(timer));
+    chartStateApplyTimers = [];
+    isApplyingChartState = true;
     chartState = { ...nextState };
     chartDebug('chart state apply start', { symbolOverride, nextState });
 
     const chart = richChartApi();
-    if (!chart) return;
+    if (!chart) {
+        isApplyingChartState = false;
+        return;
+    }
 
     try {
         if (nextState.interval && typeof chart.setResolution === 'function') {
@@ -834,25 +860,19 @@ async function applyChartState(symbolOverride = null) {
                 }
             };
             dispatchDrawings('chart drawings apply immediate');
-            setTimeout(() => dispatchDrawings('chart drawings apply delayed'), 750);
-            setTimeout(() => {
-                try {
-                    const activeChart = richChartApi();
-                    if (activeChart && typeof activeChart.resetData === 'function') {
-                        activeChart.resetData();
-                        chartDebug('chart drawings post-apply resetData', { invoked: true });
-                    } else {
-                        chartDebug('chart drawings post-apply resetData', { invoked: false });
-                    }
-                } catch (error) {
-                    chartDebug('chart drawings post-apply resetData error', { message: error?.message || String(error) });
-                }
-            }, 900);
-            setTimeout(() => dispatchDrawings('chart drawings apply late'), 1400);
+            chartStateApplyTimers.push(setTimeout(() => dispatchDrawings('chart drawings apply delayed'), 750));
+            chartStateApplyTimers.push(setTimeout(() => dispatchDrawings('chart drawings apply late'), 1400));
         }
     } catch (error) {
         console.warn('[2RICH] Could not restore drawings', error);
         chartDebug('chart drawings apply error', { message: error?.message || String(error) });
+    } finally {
+        lastAppliedChartStateSignature = stateSignature;
+        chartStateApplyTimers.push(setTimeout(() => {
+            isApplyingChartState = false;
+            chartStateApplyTimers = [];
+            chartDebug('chart state apply complete', { symbolOverride, stateSignature });
+        }, 1600));
     }
 }
 
