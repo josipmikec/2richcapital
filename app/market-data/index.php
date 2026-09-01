@@ -835,6 +835,20 @@ async function applyChartState(symbolOverride = null) {
             };
             dispatchDrawings('chart drawings apply immediate');
             setTimeout(() => dispatchDrawings('chart drawings apply delayed'), 750);
+            setTimeout(() => {
+                try {
+                    const activeChart = richChartApi();
+                    if (activeChart && typeof activeChart.resetData === 'function') {
+                        activeChart.resetData();
+                        chartDebug('chart drawings post-apply resetData', { invoked: true });
+                    } else {
+                        chartDebug('chart drawings post-apply resetData', { invoked: false });
+                    }
+                } catch (error) {
+                    chartDebug('chart drawings post-apply resetData error', { message: error?.message || String(error) });
+                }
+            }, 900);
+            setTimeout(() => dispatchDrawings('chart drawings apply late'), 1400);
         }
     } catch (error) {
         console.warn('[2RICH] Could not restore drawings', error);
