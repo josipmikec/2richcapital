@@ -1077,9 +1077,25 @@ function snapshotChartState() {
     try {
         if (chart && typeof chart.getLineToolsState === 'function') {
             const raw = chart.getLineToolsState();
-            console.log('[2RICH chart debug] getLineToolsState raw full', raw);
-            const serializedRaw = serializeLineToolsState(raw);
+
+            // Explicit serialization for TradingView line-tools shape
+            const serializedRaw = raw && typeof raw === 'object' ? {
+                sources: raw.sources instanceof Map
+                    ? Object.fromEntries(Array.from(raw.sources.entries()).map(([id, tool]) => [id, tool]))
+                    : raw.sources,
+                groups: raw.groups instanceof Map
+                    ? Object.fromEntries(Array.from(raw.groups.entries()).map(([id, g]) => [id, g]))
+                    : raw.groups,
+                lineToolsToValidate: Array.isArray(raw.lineToolsToValidate)
+                    ? raw.lineToolsToValidate.slice()
+                    : raw.lineToolsToValidate,
+                groupsToValidate: Array.isArray(raw.groupsToValidate)
+                    ? raw.groupsToValidate.slice()
+                    : raw.groupsToValidate
+            } : raw;
+
             state.drawings = serializedRaw ?? null;
+
             const rawKeys = raw && typeof raw === 'object' ? Object.keys(raw) : [];
             chartDebug('chart drawing snapshot', {
                 hasDrawings: !!raw,
@@ -1093,8 +1109,6 @@ function snapshotChartState() {
                 raw,
                 serializedRaw
             });
-        } else {
-            chartDebug('chart drawing snapshot unavailable', { reason: 'getLineToolsState missing', capabilities: state.capabilities });
         }
     } catch (e) {
         chartDebug('chart drawing snapshot error', { message: e?.message || String(e) });
