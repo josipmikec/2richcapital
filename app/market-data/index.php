@@ -1041,6 +1041,39 @@ function serializeLineToolsState(value, key = '') {
 
 function snapshotChartState() {
     console.log('[2RICH chart debug] >>> SNAPSHOT FUNCTION CALLED v2 <<<');
+    if (chart && typeof chart.getLineToolsState === 'function') {
+        const raw = chart.getLineToolsState();
+        const serializedRaw = raw && typeof raw === 'object' ? {
+            sources: raw.sources instanceof Map
+                ? Object.fromEntries(Array.from(raw.sources.entries()).map(([id, tool]) => [id, tool]))
+                : raw.sources,
+            groups: raw.groups instanceof Map
+                ? Object.fromEntries(Array.from(raw.groups.entries()).map(([id, g]) => [id, g]))
+                : raw.groups,
+            lineToolsToValidate: Array.isArray(raw.lineToolsToValidate)
+                ? raw.lineToolsToValidate.slice()
+                : raw.lineToolsToValidate,
+            groupsToValidate: Array.isArray(raw.groupsToValidate)
+                ? raw.groupsToValidate.slice()
+                : raw.groupsToValidate
+        } : raw;
+        state.drawings = serializedRaw ?? null;
+
+        const rawKeys = raw && typeof raw === 'object' ? Object.keys(raw) : [];
+        chartDebug('chart drawing snapshot', {
+            hasDrawings: !!raw,
+            type: typeof raw,
+            rawKeys,
+            sourcesCount: raw?.sources instanceof Map ? raw.sources.size : (Array.isArray(raw?.sources) ? raw.sources.length : null),
+            groupsCount: raw?.groups instanceof Map ? raw.groups.size : (Array.isArray(raw?.groups) ? raw.groups.length : null),
+            stateSourcesCount: Array.isArray(raw?.state?.sources) ? raw.state.sources.length : null,
+            serializedSourcesCount: serializedRaw?.sources && typeof serializedRaw.sources === 'object' ? Object.keys(serializedRaw.sources).length : null,
+            serializedGroupsCount: serializedRaw?.groups && typeof serializedRaw.groups === 'object' ? Object.keys(serializedRaw.groups).length : null,
+            raw,
+            serializedRaw
+        });
+        return state;
+    }
     const chart = richChartApi();
     const state = {
         symbol: currentSymbol,
