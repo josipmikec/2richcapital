@@ -615,6 +615,8 @@ let chartState = {};
 let chartStateTimer = null;
 let tvSettingsTimer = null;
 let isApplyingChartState = false;
+let isRestoringDrawings = false;
+let drawingRestorePromise = Promise.resolve();
 let lastAppliedChartStateSignature = '';
 let chartStateApplyTimers = [];
 const TWO_RICH_TEMPLATES = {
@@ -856,7 +858,7 @@ async function applyChartState(symbolOverride = null) {
                         lineToolsToValidateType: normalizedDrawingState?.lineToolsToValidate ? Object.prototype.toString.call(normalizedDrawingState.lineToolsToValidate) : null,
                         groupsToValidateType: normalizedDrawingState?.groupsToValidate ? Object.prototype.toString.call(normalizedDrawingState.groupsToValidate) : null,
                     });
-                    Promise.resolve(chart.applyLineToolsState(normalizedDrawingState))
+                    return Promise.resolve(chart.applyLineToolsState(normalizedDrawingState))
                         .then(() => chartDebug('chart drawings apply dispatched', { label, rawKeys: Object.keys(drawingState) }))
                         .catch(error => {
                             console.warn('[2RICH] Could not restore drawings', error);
@@ -865,11 +867,23 @@ async function applyChartState(symbolOverride = null) {
                 } catch (error) {
                     console.warn('[2RICH] Could not restore drawings', error);
                     chartDebug('chart drawings apply error', { label, message: error?.message || String(error) });
+                    return Promise.resolve();
                 }
             };
-            dispatchDrawings('chart drawings apply immediate');
-            chartStateApplyTimers.push(setTimeout(() => dispatchDrawings('chart drawings apply delayed'), 750));
-            chartStateApplyTimers.push(setTimeout(() => dispatchDrawings('chart drawings apply late'), 1400));
+            isRestoringDrawings = true;
+            const waitMs = (ms) => new Promise(resolve => {
+                const timer = setTimeout(resolve, ms);
+                chartStateApplyTimers.push(timer);
+            });
+            drawingRestorePromise = dispatchDrawings('chart drawings apply immediate')
+                .then(() => waitMs(750))
+                .then(() => dispatchDrawings('chart drawings apply delayed'))
+                .then(() => waitMs(1400))
+                .then(() => dispatchDrawings('chart drawings apply late'))
+                .finally(() => {
+                    isRestoringDrawings = false;
+                    chartDebug('chart drawings restore settled', { symbolOverride });
+                });
         }
     } catch (error) {
         console.warn('[2RICH] Could not restore drawings', error);
@@ -880,7 +894,7 @@ async function applyChartState(symbolOverride = null) {
             isApplyingChartState = false;
             chartStateApplyTimers = [];
             chartDebug('chart state apply complete', { symbolOverride, stateSignature });
-        }, 1600));
+        }, 2600));
     }
 }
 
@@ -1729,9 +1743,15 @@ function initChart() {
                 if (typeof tvWidget.subscribe === 'function') {
                     tvWidget.subscribe('onAutoSaveNeeded', () => {
                         const state = typeof tvWidget.symbolInterval === 'function' ? tvWidget.symbolInterval() : null;
-                        chartDebug('TradingView onAutoSaveNeeded', state);
                         const symbol = String(state?.symbol || currentSymbol || '').trim();
                         const interval = String(state?.interval || currentInterval || '').trim();
+                        chartDebug('TradingView onAutoSaveNeeded', {
+                            ...state,
+                            symbol,
+                            interval,
+                            isApplyingChartState,
+                            isRestoringDrawings
+                        });
                         if (symbol || interval) {
                             if (symbol) currentSymbol = symbol;
                             if (interval) currentInterval = interval;
@@ -1740,8 +1760,19 @@ function initChart() {
                                 b.classList.toggle('active', b.dataset.interval == currentInterval)
                             );
                             saveChartSettings({ symbol: currentSymbol, interval: currentInterval });
-                            saveChartState(snapshotChartState());
                         }
+                        if (isApplyingChartState || isRestoringDrawings) {
+                            chartDebug('TradingView onAutoSaveNeeded skipped', {
+                                reason: isApplyingChartState ? 'applying-chart-state' : 'restoring-drawings',
+                                symbol: currentSymbol,
+                                interval: currentInterval
+                            });
+                            return;
+                        }
+                        Promise.resolve(drawingRestorePromise).finally(() => {
+                            if (isApplyingChartState || isRestoringDrawings) return;
+                            saveChartState(snapshotChartState());
+                        });
                     });
                 }
             } catch (error) {
