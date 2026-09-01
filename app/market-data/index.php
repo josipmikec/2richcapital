@@ -827,7 +827,25 @@ async function applyChartState(symbolOverride = null) {
             canApply: typeof chart.applyLineToolsState === 'function'
         });
         if (hasDrawingPayload && typeof chart.applyLineToolsState === 'function') {
-            const normalizedDrawingState = drawingState;
+            const normalizeLineToolsState = (value, key = '') => {
+                if (!value || typeof value !== 'object') return value;
+                if (value instanceof Map || value instanceof Set) return value;
+                if (key === 'sources' || key === 'groups') {
+                    const map = new Map();
+                    Object.entries(value).forEach(([entryKey, entryValue]) => map.set(entryKey, entryValue));
+                    return map;
+                }
+                if (key === 'lineToolsToValidate' || key === 'groupsToValidate') {
+                    return new Set(Array.isArray(value) ? value : Object.values(value));
+                }
+                if (Array.isArray(value)) return value.map(item => normalizeLineToolsState(item));
+                const result = {};
+                Object.entries(value).forEach(([entryKey, entryValue]) => {
+                    result[entryKey] = normalizeLineToolsState(entryValue, entryKey);
+                });
+                return result;
+            };
+            const normalizedDrawingState = normalizeLineToolsState(drawingState);
             const dispatchDrawings = (label) => {
                 try {
                     chartDebug(label, {
@@ -838,8 +856,12 @@ async function applyChartState(symbolOverride = null) {
                         lineToolsToValidateType: normalizedDrawingState?.lineToolsToValidate ? Object.prototype.toString.call(normalizedDrawingState.lineToolsToValidate) : null,
                         groupsToValidateType: normalizedDrawingState?.groupsToValidate ? Object.prototype.toString.call(normalizedDrawingState.groupsToValidate) : null,
                     });
-                    chart.applyLineToolsState(normalizedDrawingState);
-                    chartDebug('chart drawings apply dispatched', { label, rawKeys: Object.keys(drawingState) });
+                    Promise.resolve(chart.applyLineToolsState(normalizedDrawingState))
+                        .then(() => chartDebug('chart drawings apply dispatched', { label, rawKeys: Object.keys(drawingState) }))
+                        .catch(error => {
+                            console.warn('[2RICH] Could not restore drawings', error);
+                            chartDebug('chart drawings apply error', { label, message: error?.message || String(error) });
+                        });
                 } catch (error) {
                     console.warn('[2RICH] Could not restore drawings', error);
                     chartDebug('chart drawings apply error', { label, message: error?.message || String(error) });
