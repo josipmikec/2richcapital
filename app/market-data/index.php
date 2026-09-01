@@ -1793,8 +1793,8 @@ function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
-        enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
+        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default','saveload_separate_drawings_storage'],
+        enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
     });
 
