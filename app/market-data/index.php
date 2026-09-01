@@ -917,12 +917,15 @@ async function applyChartState(symbolOverride = null) {
                 if (!value || typeof value !== 'object') return value;
                 if (value instanceof Map || value instanceof Set) return value;
                 if (key === 'sources' || key === 'groups') {
-                    const map = new Map();
-                    Object.entries(value).forEach(([entryKey, entryValue]) => map.set(entryKey, entryValue));
-                    return map;
+                    if (Array.isArray(value)) {
+                        return new Map(value.map(entry => Array.isArray(entry) ? entry : [entry?.id ?? entry?.name ?? String(Math.random()), entry]));
+                    }
+                    return new Map(Object.entries(value));
                 }
                 if (key === 'lineToolsToValidate' || key === 'groupsToValidate') {
-                    return new Set(Array.isArray(value) ? value : Object.values(value));
+                    if (value instanceof Set) return value;
+                    if (Array.isArray(value)) return new Set(value);
+                    return new Set(Object.values(value));
                 }
                 if (Array.isArray(value)) return value.map(item => normalizeLineToolsState(item));
                 const result = {};
@@ -941,9 +944,18 @@ async function applyChartState(symbolOverride = null) {
                         groupsType: normalizedDrawingState?.groups ? Object.prototype.toString.call(normalizedDrawingState.groups) : null,
                         lineToolsToValidateType: normalizedDrawingState?.lineToolsToValidate ? Object.prototype.toString.call(normalizedDrawingState.lineToolsToValidate) : null,
                         groupsToValidateType: normalizedDrawingState?.groupsToValidate ? Object.prototype.toString.call(normalizedDrawingState.groupsToValidate) : null,
+                        sourcesSize: normalizedDrawingState?.sources instanceof Map ? normalizedDrawingState.sources.size : null,
+                        groupsSize: normalizedDrawingState?.groups instanceof Map ? normalizedDrawingState.groups.size : null,
+                        lineToolsToValidateSize: normalizedDrawingState?.lineToolsToValidate instanceof Set ? normalizedDrawingState.lineToolsToValidate.size : null,
+                        groupsToValidateSize: normalizedDrawingState?.groupsToValidate instanceof Set ? normalizedDrawingState.groupsToValidate.size : null,
                     });
                     return Promise.resolve(chart.applyLineToolsState(normalizedDrawingState))
-                        .then(() => chartDebug('chart drawings apply dispatched', { label, rawKeys: Object.keys(drawingState) }))
+                        .then(() => chartDebug('chart drawings apply dispatched', {
+                            label,
+                            rawKeys: Object.keys(drawingState),
+                            normalizedSourcesSize: normalizedDrawingState?.sources instanceof Map ? normalizedDrawingState.sources.size : null,
+                            normalizedGroupsSize: normalizedDrawingState?.groups instanceof Map ? normalizedDrawingState.groups.size : null
+                        }))
                         .catch(error => {
                             console.warn('[2RICH] Could not restore drawings', error);
                             chartDebug('chart drawings apply error', { label, message: error?.message || String(error) });
