@@ -818,14 +818,23 @@ async function applyChartState(symbolOverride = null) {
                             : drawingState.groupsToValidate,
                     }
                     : drawingState);
-            chartDebug('chart drawings apply normalized', {
-                sourcesIsMap: !!normalizedDrawingState?.sources && typeof normalizedDrawingState.sources.keys === 'function',
-                groupsIsMap: !!normalizedDrawingState?.groups && typeof normalizedDrawingState.groups.keys === 'function',
-                lineToolsToValidateIsSet: !!normalizedDrawingState?.lineToolsToValidate && typeof normalizedDrawingState.lineToolsToValidate.values === 'function',
-                groupsToValidateIsSet: !!normalizedDrawingState?.groupsToValidate && typeof normalizedDrawingState.groupsToValidate.values === 'function',
-            });
-            chart.applyLineToolsState(normalizedDrawingState);
-            chartDebug('chart drawings apply dispatched', { rawKeys: Object.keys(drawingState) });
+            const dispatchDrawings = (label) => {
+                try {
+                    chartDebug(label, {
+                        sourcesIsMap: !!normalizedDrawingState?.sources && typeof normalizedDrawingState.sources.keys === 'function',
+                        groupsIsMap: !!normalizedDrawingState?.groups && typeof normalizedDrawingState.groups.keys === 'function',
+                        lineToolsToValidateIsSet: !!normalizedDrawingState?.lineToolsToValidate && typeof normalizedDrawingState.lineToolsToValidate.values === 'function',
+                        groupsToValidateIsSet: !!normalizedDrawingState?.groupsToValidate && typeof normalizedDrawingState.groupsToValidate.values === 'function',
+                    });
+                    chart.applyLineToolsState(normalizedDrawingState);
+                    chartDebug('chart drawings apply dispatched', { label, rawKeys: Object.keys(drawingState) });
+                } catch (error) {
+                    console.warn('[2RICH] Could not restore drawings', error);
+                    chartDebug('chart drawings apply error', { label, message: error?.message || String(error) });
+                }
+            };
+            dispatchDrawings('chart drawings apply immediate');
+            setTimeout(() => dispatchDrawings('chart drawings apply delayed'), 750);
         }
     } catch (error) {
         console.warn('[2RICH] Could not restore drawings', error);
