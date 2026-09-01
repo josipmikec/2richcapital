@@ -1002,6 +1002,26 @@ async function applyChartState(symbolOverride = null) {
     }
 }
 
+function serializeLineToolsState(value, key = '') {
+    if (value instanceof Map) {
+        return Object.fromEntries(Array.from(value.entries()).map(([entryKey, entryValue]) => [entryKey, serializeLineToolsState(entryValue, entryKey)]));
+    }
+    if (value instanceof Set) {
+        return Array.from(value.values()).map(item => serializeLineToolsState(item));
+    }
+    if (Array.isArray(value)) {
+        return value.map(item => serializeLineToolsState(item));
+    }
+    if (value && typeof value === 'object') {
+        const result = {};
+        Object.entries(value).forEach(([entryKey, entryValue]) => {
+            result[entryKey] = serializeLineToolsState(entryValue, entryKey);
+        });
+        return result;
+    }
+    return value;
+}
+
 function snapshotChartState() {
     const chart = richChartApi();
     const state = {
@@ -1040,15 +1060,20 @@ function snapshotChartState() {
     try {
         if (chart && typeof chart.getLineToolsState === 'function') {
             const raw = chart.getLineToolsState();
-            state.drawings = raw ?? null;
+            const serializedRaw = serializeLineToolsState(raw);
+            state.drawings = serializedRaw ?? null;
             const rawKeys = raw && typeof raw === 'object' ? Object.keys(raw) : [];
             chartDebug('chart drawing snapshot', {
                 hasDrawings: !!raw,
                 type: typeof raw,
                 rawKeys,
-                sourcesCount: Array.isArray(raw?.sources) ? raw.sources.length : null,
+                sourcesCount: raw?.sources instanceof Map ? raw.sources.size : (Array.isArray(raw?.sources) ? raw.sources.length : null),
+                groupsCount: raw?.groups instanceof Map ? raw.groups.size : (Array.isArray(raw?.groups) ? raw.groups.length : null),
                 stateSourcesCount: Array.isArray(raw?.state?.sources) ? raw.state.sources.length : null,
-                raw
+                serializedSourcesCount: serializedRaw?.sources && typeof serializedRaw.sources === 'object' ? Object.keys(serializedRaw.sources).length : null,
+                serializedGroupsCount: serializedRaw?.groups && typeof serializedRaw.groups === 'object' ? Object.keys(serializedRaw.groups).length : null,
+                raw,
+                serializedRaw
             });
         } else {
             chartDebug('chart drawing snapshot unavailable', { reason: 'getLineToolsState missing', capabilities: state.capabilities });
@@ -1793,8 +1818,8 @@ function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default','saveload_separate_drawings_storage'],
-        enabled_features:  ['items_favoriting'],
+        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
+        enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
         settings_adapter: chartSettingsAdapter(),
     });
 
