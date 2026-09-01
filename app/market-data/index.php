@@ -988,6 +988,17 @@ async function applyChartState(symbolOverride = null) {
                         hasCompletedInitialChartRestore
                     });
                 });
+        } else {
+            isRestoringDrawings = false;
+            markChartRestoreSettling();
+            hasCompletedInitialChartRestore = true;
+            scheduleChartPersistenceArm('restore-empty', CHART_RESTORE_SETTLE_MS);
+            chartDebug('chart drawings restore settled', {
+                symbolOverride,
+                settleMs: CHART_RESTORE_SETTLE_MS,
+                hasCompletedInitialChartRestore,
+                reason: 'no-drawing-payload'
+            });
         }
     } catch (error) {
         console.warn('[2RICH] Could not restore drawings', error);
