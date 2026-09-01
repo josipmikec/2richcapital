@@ -1079,7 +1079,6 @@ function snapshotChartState() {
         if (chart && typeof chart.getLineToolsState === 'function') {
             const raw = chart.getLineToolsState();
 
-            // Explicit serialization for TradingView line-tools shape
             const serializedRaw = raw && typeof raw === 'object' ? {
                 sources: raw.sources instanceof Map
                     ? Object.fromEntries(Array.from(raw.sources.entries()).map(([id, tool]) => [id, tool]))
