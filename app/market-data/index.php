@@ -876,6 +876,7 @@ async function applyChartState(symbolOverride = null) {
     chartStateApplyTimers.forEach((timer) => clearTimeout(timer));
     chartStateApplyTimers = [];
     isApplyingChartState = true;
+    window._latestTvDrawingState = null;
     chartState = { ...nextState };
     chartDebug('chart state apply start', { symbolOverride, nextState });
 
@@ -1076,7 +1077,13 @@ function snapshotChartState() {
     } catch (e) {}
     try {
         if (chart && typeof chart.getLineToolsState === 'function') {
-            const raw = chart.getLineToolsState();
+            let raw = chart.getLineToolsState();
+            
+            // Fallback to intercepted drawing state from save_load_adapter if empty
+            if (raw && raw.sources instanceof Map && raw.sources.size === 0 && window._latestTvDrawingState) {
+                raw = window._latestTvDrawingState;
+            }
+
             const serialized = serializeLineToolsState(raw);
             state.drawings = serialized ?? null;
 
@@ -1833,6 +1840,22 @@ function initChart() {
         disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
         enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
         settings_adapter: chartSettingsAdapter(),
+        save_load_adapter: {
+            chartsCount: () => Promise.resolve(0),
+            getAllCharts: () => Promise.resolve([]),
+            removeChart: () => Promise.resolve(),
+            saveChart: () => Promise.resolve(1),
+            getChartContent: () => Promise.resolve(''),
+            saveLineToolsAndGroups: (layoutId, chartId, state) => {
+                chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size });
+                window._latestTvDrawingState = state;
+                return Promise.resolve();
+            },
+            loadLineToolsAndGroups: (layoutId, chartId, requestType, requestContext) => {
+                chartDebug('save_load_adapter loadLineToolsAndGroups', { layoutId, chartId, requestType });
+                return Promise.resolve(null);
+            }
+        }
     });
 
     tvWidget.onChartReady(() => {
