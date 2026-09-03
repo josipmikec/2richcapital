@@ -939,11 +939,17 @@ async function applyChartState(symbolOverride = null) {
 
 function serializeLineToolsState(value) {
     return JSON.stringify(value, (key, val) => {
-        if (val instanceof Map) {
-            return Object.fromEntries(val);
+        // Native Map, or a TradingView custom Map-like collection
+        if (val instanceof Map || (val && typeof val === 'object' && typeof val.size === 'number' && typeof val.entries === 'function')) {
+            const obj = {};
+            for (const [k, v] of val.entries()) {
+                obj[k] = v;
+            }
+            return obj;
         }
-        if (val instanceof Set) {
-            return Array.from(val);
+        // Native Set, or a TradingView custom Set-like collection
+        if (val instanceof Set || (val && typeof val === 'object' && typeof val.size === 'number' && typeof val.values === 'function' && typeof val.add === 'function')) {
+            return Array.from(val.values());
         }
         return val;
     });
@@ -1768,6 +1774,18 @@ function initChart() {
             getChartContent: () => Promise.resolve(''),
             saveLineToolsAndGroups: (layoutId, chartId, state, requestContext) => {
                 chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size, requestContext });
+                
+                // Deep introspection of the state object
+                if (state && state.sources) {
+                    const entries = typeof state.sources.entries === 'function' ? Array.from(state.sources.entries()) : Object.entries(state.sources);
+                    chartDebug('saveLineToolsAndGroups RAW SOURCES', { 
+                        isArray: Array.isArray(state.sources),
+                        isMap: state.sources instanceof Map,
+                        keys: typeof state.sources.keys === 'function' ? Array.from(state.sources.keys()) : Object.keys(state.sources),
+                        firstEntry: entries.length > 0 ? entries[0] : null
+                    });
+                }
+                
                 window._latestTvDrawingState = state;
                 
                 // CRITICAL: TradingView line tool state objects can be complex class instances with getters, setters,
