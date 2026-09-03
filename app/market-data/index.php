@@ -1029,7 +1029,31 @@ function snapshotChartState() {
             state.studies = Array.isArray(studies) ? studies.map(s => ({ name: s.name?.() || null, id: s.id?.() || null })) : null;
         }
     } catch (e) {}
-    // We no longer snapshot drawings here; it is handled entirely by save_load_adapter
+    try {
+        if (chart && typeof chart.getLineToolsState === 'function') {
+            let raw = chart.getLineToolsState();
+            
+            // Fallback to intercepted drawing state from save_load_adapter if empty or null
+            if ((!raw || (raw.sources instanceof Map && raw.sources.size === 0)) && window._latestTvDrawingState) {
+                raw = window._latestTvDrawingState;
+            }
+
+            const serialized = serializeLineToolsState(raw);
+            state.drawings = serialized ?? null;
+
+            chartDebug('chart drawing snapshot', {
+                hasDrawings: !!raw,
+                type: typeof raw,
+                rawKeys: raw && typeof raw === 'object' ? Object.keys(raw) : [],
+                sourcesCount: raw?.sources instanceof Map ? raw.sources.size : (raw?.sources && typeof raw.sources === 'object' ? Object.keys(raw.sources).length : null),
+                groupsCount: raw?.groups instanceof Map ? raw.groups.size : (raw?.groups && typeof raw.groups === 'object' ? Object.keys(raw.groups).length : null),
+                serializedSourcesCount: serialized?.sources && typeof serialized.sources === 'object' ? Object.keys(serialized.sources).length : null,
+                serializedGroupsCount: serialized?.groups && typeof serialized.groups === 'object' ? Object.keys(serialized.groups).length : null,
+            });
+        }
+    } catch (e) {
+        chartDebug('chart drawing snapshot error', { message: e?.message || String(e) });
+    }
     return state;
 }
 
