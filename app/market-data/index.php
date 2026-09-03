@@ -993,12 +993,6 @@ function normalizeLineToolsState(value, key = '') {
     return result;
 }
 
-    const result = {};
-    for (const [k, v] of Object.entries(value)) {
-        result[k] = serializeLineToolsState(v, k);
-    }
-    return result;
-}
 
 function snapshotChartState() {
     const chart = richChartApi();
