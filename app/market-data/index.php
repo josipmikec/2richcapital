@@ -856,11 +856,20 @@ async function saveChartState(state) {
             const data = await response.json().catch(() => null);
             chartDebug('chart state save response', { key: CHART_STATE_STORAGE_KEY, symbolKey, status: response.status, data });
 
-            // Force TradingView to flush drawings to the save_load_adapter
-            if (tvWidget && typeof tvWidget.save === 'function') {
-                tvWidget.save(() => {
-                    chartDebug('tvWidget.save() complete - drawings flushed');
+            // Save drawings to new dedicated API manually
+            const drawings = nextState.drawings;
+            if (drawings) {
+                const drawingsResponse = await fetch('../api/drawings/set.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: csrfHeaders(),
+                    body: JSON.stringify({ symbol: symbolKey, drawings: JSON.stringify(drawings) })
                 });
+                if (!drawingsResponse.ok) {
+                    console.warn('[2RICH] Failed to save drawings to dedicated API', drawingsResponse.status);
+                } else {
+                    chartDebug('chart drawings saved to dedicated API', { symbolKey });
+                }
             }
         } catch (error) {
             console.warn('[2RICH] Chart state could not be saved', error);
@@ -919,8 +928,23 @@ async function applyChartState(symbolOverride = null) {
         console.warn('[2RICH] Could not restore chart type', error);
     }
 
-    // We no longer manually restore drawings here.
-    // The TradingView save_load_adapter now handles all drawing restoration via loadLineToolsAndGroups.
+    try {
+        const symbolKey = getChartStateSymbol(symbolOverride || currentSymbol);
+        const drawingsResponse = await fetch(`../api/drawings/get.php?symbol=${encodeURIComponent(symbolKey)}`, { credentials: 'same-origin' });
+        const drawingsData = await drawingsResponse.json().catch(() => null);
+        
+        if (drawingsData && drawingsData.success && drawingsData.drawings) {
+            const parsed = typeof drawingsData.drawings === 'string' ? JSON.parse(drawingsData.drawings) : drawingsData.drawings;
+            const normalized = normalizeLineToolsState(parsed);
+            
+            if (chart && typeof chart.applyLineToolsState === 'function') {
+                chart.applyLineToolsState(normalized);
+                chartDebug('chart drawings apply complete', { symbolKey });
+            }
+        }
+    } catch (e) {
+        console.warn('[2RICH] Failed to apply chart drawings from dedicated API', e);
+    }
     isRestoringDrawings = false;
     markChartRestoreSettling();
     hasCompletedInitialChartRestore = true;
@@ -1036,6 +1060,22 @@ function snapshotChartState() {
             state.studies = Array.isArray(studies) ? studies.map(s => ({ name: s.name?.() || null, id: s.id?.() || null })) : null;
         }
     } catch (e) {}
+    try {
+        if (chart && typeof chart.getLineToolsState === 'function') {
+            const raw = chart.getLineToolsState();
+            const serialized = serializeLineToolsState(raw);
+            state.drawings = serialized ?? null;
+
+            chartDebug('chart drawing snapshot', {
+                hasDrawings: !!raw,
+                type: typeof raw,
+                sourcesCount: raw?.sources instanceof Map ? raw.sources.size : (raw?.sources && typeof raw.sources === 'object' ? Object.keys(raw.sources).length : null),
+                serializedSourcesCount: serialized?.sources && typeof serialized.sources === 'object' ? Object.keys(serialized.sources).length : null
+            });
+        }
+    } catch (e) {
+        chartDebug('chart drawing snapshot error', { message: e?.message || String(e) });
+    }
     return state;
 }
 
@@ -1774,7 +1814,7 @@ function initChart() {
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
         disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
-        enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
+        enabled_features:  ['items_favoriting'],
         settings_adapter: chartSettingsAdapter(),
         save_load_adapter: {
             chartsCount: () => Promise.resolve(0),
