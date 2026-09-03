@@ -919,9 +919,16 @@ async function applyChartState(symbolOverride = null) {
                 if (value instanceof Map || value instanceof Set) return value;
                 if (key === 'sources' || key === 'groups') {
                     if (Array.isArray(value)) {
-                        return new Map(value.map(entry => Array.isArray(entry) ? entry : [entry?.id ?? entry?.name ?? String(Math.random()), entry]));
+                        return new Map(value.map(entry => {
+                            const pair = Array.isArray(entry) ? entry : [entry?.id ?? entry?.name ?? String(Math.random()), entry];
+                            return [pair[0], normalizeLineToolsState(pair[1], key)];
+                        }));
                     }
-                    return new Map(Object.entries(value));
+                    const map = new Map();
+                    Object.entries(value).forEach(([k, v]) => {
+                        map.set(k, normalizeLineToolsState(v, k));
+                    });
+                    return map;
                 }
                 if (key === 'lineToolsToValidate' || key === 'groupsToValidate') {
                     if (value instanceof Set) return value;
