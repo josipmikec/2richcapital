@@ -855,6 +855,13 @@ async function saveChartState(state) {
             });
             const data = await response.json().catch(() => null);
             chartDebug('chart state save response', { key: CHART_STATE_STORAGE_KEY, symbolKey, status: response.status, data });
+
+            // Force TradingView to flush drawings to the save_load_adapter
+            if (tvWidget && typeof tvWidget.save === 'function') {
+                tvWidget.save(() => {
+                    chartDebug('tvWidget.save() complete - drawings flushed');
+                });
+            }
         } catch (error) {
             console.warn('[2RICH] Chart state could not be saved', error);
         }
@@ -1029,31 +1036,6 @@ function snapshotChartState() {
             state.studies = Array.isArray(studies) ? studies.map(s => ({ name: s.name?.() || null, id: s.id?.() || null })) : null;
         }
     } catch (e) {}
-    try {
-        if (chart && typeof chart.getLineToolsState === 'function') {
-            let raw = chart.getLineToolsState();
-            
-            // Fallback to intercepted drawing state from save_load_adapter if empty or null
-            if ((!raw || (raw.sources instanceof Map && raw.sources.size === 0)) && window._latestTvDrawingState) {
-                raw = window._latestTvDrawingState;
-            }
-
-            const serialized = serializeLineToolsState(raw);
-            state.drawings = serialized ?? null;
-
-            chartDebug('chart drawing snapshot', {
-                hasDrawings: !!raw,
-                type: typeof raw,
-                rawKeys: raw && typeof raw === 'object' ? Object.keys(raw) : [],
-                sourcesCount: raw?.sources instanceof Map ? raw.sources.size : (raw?.sources && typeof raw.sources === 'object' ? Object.keys(raw.sources).length : null),
-                groupsCount: raw?.groups instanceof Map ? raw.groups.size : (raw?.groups && typeof raw.groups === 'object' ? Object.keys(raw.groups).length : null),
-                serializedSourcesCount: serialized?.sources && typeof serialized.sources === 'object' ? Object.keys(serialized.sources).length : null,
-                serializedGroupsCount: serialized?.groups && typeof serialized.groups === 'object' ? Object.keys(serialized.groups).length : null,
-            });
-        }
-    } catch (e) {
-        chartDebug('chart drawing snapshot error', { message: e?.message || String(e) });
-    }
     return state;
 }
 
@@ -1800,8 +1782,8 @@ function initChart() {
             removeChart: () => Promise.resolve(),
             saveChart: () => Promise.resolve(1),
             getChartContent: () => Promise.resolve(''),
-            saveLineToolsAndGroups: (layoutId, chartId, state) => {
-                chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size });
+            saveLineToolsAndGroups: (layoutId, chartId, state, requestContext) => {
+                chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size, requestContext });
                 window._latestTvDrawingState = state;
                 const serialized = serializeLineToolsState(state);
                 const symbolKey = getChartStateSymbol(currentSymbol);
