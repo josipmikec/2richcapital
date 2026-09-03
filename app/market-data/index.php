@@ -895,7 +895,13 @@ async function applyChartState(symbolOverride = null) {
 
     try {
         if (tvWidget && typeof tvWidget.load === 'function') {
-            tvWidget.load(nextState);
+            // Only attempt to load if it's a native TradingView state object.
+            // Our older custom state objects (which only had {symbol, interval, chart_type}) will crash tvWidget.load
+            if (nextState.charts || nextState.panes) {
+                tvWidget.load(nextState);
+            } else {
+                chartDebug('chart state apply aborted - legacy custom state detected, skipping load', { nextState });
+            }
         }
     } catch (e) {
         console.warn('[2RICH] Failed to native load chart state', e);
