@@ -879,12 +879,8 @@ async function applyChartState(symbolOverride = null) {
     const nextState = await loadChartState(symbolOverride);
     if (!nextState || typeof nextState !== 'object' || !Object.keys(nextState).length) return;
 
-    const stateSignature = JSON.stringify({
-        symbol: nextState.symbol || null,
-        interval: nextState.interval || null,
-        chart_type: nextState.chart_type ?? null,
-        drawings: nextState.drawings || null,
-    });
+    // Use stringified state as signature to avoid redundant reloads
+    const stateSignature = JSON.stringify(nextState);
     if (stateSignature === lastAppliedChartStateSignature) {
         chartDebug('chart state apply skipped', { reason: 'same-signature', symbolOverride });
         return;
@@ -895,28 +891,14 @@ async function applyChartState(symbolOverride = null) {
     isApplyingChartState = true;
     window._latestTvDrawingState = null;
     chartState = { ...nextState };
-    chartDebug('chart state apply start', { symbolOverride, nextState });
-
-    const chart = richChartApi();
-    if (!chart) {
-        isApplyingChartState = false;
-        return;
-    }
+    chartDebug('chart state apply start', { symbolOverride });
 
     try {
-        if (nextState.interval && typeof chart.setResolution === 'function') {
-            chart.setResolution(String(nextState.interval), () => {}, () => {});
+        if (tvWidget && typeof tvWidget.load === 'function') {
+            tvWidget.load(nextState);
         }
-    } catch (error) {
-        console.warn('[2RICH] Could not restore interval from chart state', error);
-    }
-
-    try {
-        if (nextState.chart_type != null && typeof chart.setChartType === 'function') {
-            chart.setChartType(nextState.chart_type);
-        }
-    } catch (error) {
-        console.warn('[2RICH] Could not restore chart type', error);
+    } catch (e) {
+        console.warn('[2RICH] Failed to native load chart state', e);
     }
 
     isRestoringDrawings = false;
