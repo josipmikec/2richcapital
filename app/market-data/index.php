@@ -912,28 +912,24 @@ async function applyChartState(symbolOverride = null) {
         console.warn('[2RICH] Could not restore chart type', error);
     }
 
-        // We no longer manually restore drawings here.
-        // The TradingView save_load_adapter now handles all drawing restoration via loadLineToolsAndGroups.
-        isRestoringDrawings = false;
-        markChartRestoreSettling();
-        hasCompletedInitialChartRestore = true;
-        scheduleChartPersistenceArm('restore-settled', CHART_RESTORE_SETTLE_MS);
-        chartDebug('chart state restore settled', {
-            symbolOverride,
-            settleMs: CHART_RESTORE_SETTLE_MS,
-            hasCompletedInitialChartRestore
-        });
-    } catch (error) {
-        console.warn('[2RICH] Could not restore drawings', error);
-        chartDebug('chart drawings apply error', { message: error?.message || String(error) });
-    } finally {
-        lastAppliedChartStateSignature = stateSignature;
-        chartStateApplyTimers.push(setTimeout(() => {
-            isApplyingChartState = false;
-            chartStateApplyTimers = [];
-            chartDebug('chart state apply complete', { symbolOverride, stateSignature });
-        }, 2600));
-    }
+    // We no longer manually restore drawings here.
+    // The TradingView save_load_adapter now handles all drawing restoration via loadLineToolsAndGroups.
+    isRestoringDrawings = false;
+    markChartRestoreSettling();
+    hasCompletedInitialChartRestore = true;
+    scheduleChartPersistenceArm('restore-settled', CHART_RESTORE_SETTLE_MS);
+    chartDebug('chart state restore settled', {
+        symbolOverride,
+        settleMs: CHART_RESTORE_SETTLE_MS,
+        hasCompletedInitialChartRestore
+    });
+
+    lastAppliedChartStateSignature = stateSignature;
+    chartStateApplyTimers.push(setTimeout(() => {
+        isApplyingChartState = false;
+        chartStateApplyTimers = [];
+        chartDebug('chart state apply complete', { symbolOverride, stateSignature });
+    }, 2600));
 }
 
 function serializeLineToolsState(value, key = '') {
