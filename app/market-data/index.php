@@ -1795,12 +1795,11 @@ function initChart() {
             loadLineToolsAndGroups: (layoutId, chartId, requestType, requestContext) => {
                 chartDebug('save_load_adapter loadLineToolsAndGroups', { layoutId, chartId, requestType });
                 
-                // CRITICAL: TradingView requests drawings multiple times for different pane types.
-                // Since we store all drawings in a single blob per symbol, we MUST only return them
-                // for the main series to prevent TradingView from silently dropping duplicates.
-                if (requestType !== 'mainSeriesLineTools') {
-                    return Promise.resolve(null);
-                }
+                // CRITICAL: Temporarily return drawings for all request types to see what TradingView does.
+                // We will inspect the UUIDs and properties in the console.
+                // if (requestType !== 'mainSeriesLineTools') {
+                //     return Promise.resolve(null);
+                // }
 
                 const symbolKey = getChartStateSymbol(currentSymbol);
                 return fetch(`../api/drawings/get.php?symbol=${encodeURIComponent(symbolKey)}`, { credentials: 'same-origin' })
@@ -1808,8 +1807,15 @@ function initChart() {
                     .then(data => {
                         if (data.success && data.drawings) {
                             const parsed = typeof data.drawings === 'string' ? JSON.parse(data.drawings) : data.drawings;
-                            return normalizeLineToolsState(parsed);
+                            const normalized = normalizeLineToolsState(parsed);
+                            chartDebug('loadLineToolsAndGroups resolved data', { 
+                                requestType, 
+                                sources: Array.from(normalized.sources?.entries() || []),
+                                sourceCount: normalized.sources?.size
+                            });
+                            return normalized;
                         }
+                        chartDebug('loadLineToolsAndGroups resolved null (no drawings)', { requestType });
                         return null;
                     })
                     .catch(e => {
