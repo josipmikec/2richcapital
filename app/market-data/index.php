@@ -1774,25 +1774,12 @@ function initChart() {
             getChartContent: () => Promise.resolve(''),
             saveLineToolsAndGroups: (layoutId, chartId, state, requestContext) => {
                 chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size, requestContext });
-                
-                // Deep introspection of the state object
-                if (state && state.sources) {
-                    const entries = typeof state.sources.entries === 'function' ? Array.from(state.sources.entries()) : Object.entries(state.sources);
-                    chartDebug('saveLineToolsAndGroups RAW SOURCES', { 
-                        isArray: Array.isArray(state.sources),
-                        isMap: state.sources instanceof Map,
-                        keys: typeof state.sources.keys === 'function' ? Array.from(state.sources.keys()) : Object.keys(state.sources),
-                        firstEntry: entries.length > 0 ? entries[0] : null
-                    });
-                }
-                
                 window._latestTvDrawingState = state;
                 
                 // CRITICAL: TradingView line tool state objects can be complex class instances with getters, setters,
                 // or custom toJSON methods. Using a manual recursive clone will strip these and destroy the drawings.
                 // Using a native JSON.stringify replacer preserves them perfectly.
                 const stringified = serializeLineToolsState(state);
-                chartDebug('saveLineToolsAndGroups serialized payload', { stringified });
                 
                 const symbolKey = getChartStateSymbol(currentSymbol);
                 return fetch('../api/drawings/set.php', {
