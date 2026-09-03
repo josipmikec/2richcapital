@@ -812,10 +812,28 @@ async function loadChartStateMap() {
 }
 
 async function loadChartState(symbolOverride = null) {
-    const stateMap = await loadChartStateMap();
     const symbolKey = getChartStateSymbol(symbolOverride);
-    const nextState = stateMap && typeof stateMap === 'object' ? stateMap[symbolKey] : null;
-    return nextState && typeof nextState === 'object' ? nextState : {};
+    
+    // Load chart state (without drawings) from preferences
+    const stateMap = await loadChartStateMap();
+    let nextState = stateMap && typeof stateMap === 'object' ? stateMap[symbolKey] : null;
+    nextState = nextState && typeof nextState === 'object' ? nextState : {};
+    
+    // Load drawings from new table
+    try {
+        const response = await fetch(`../api/drawings/get.php?symbol=${encodeURIComponent(symbolKey)}`, { credentials: 'same-origin' });
+        const data = await response.json();
+        if (data.success && data.drawings) {
+            nextState.drawings = typeof data.drawings === 'string' ? JSON.parse(data.drawings) : data.drawings;
+        } else {
+            nextState.drawings = null;
+        }
+    } catch (e) {
+        console.warn('[2RICH] Failed to load drawings', e);
+        nextState.drawings = null;
+    }
+
+    return nextState;
 }
 
 async function saveChartState(state) {
@@ -829,14 +847,23 @@ async function saveChartState(state) {
         });
         return;
     }
-    chartState = { ...chartState, ...nextState };
+    
+    // Extract drawings from state so they don't get saved in preferences
+    const drawings = nextState.drawings;
+    const stateWithoutDrawings = { ...nextState };
+    delete stateWithoutDrawings.drawings;
+    
+    chartState = { ...chartState, ...stateWithoutDrawings };
+    
     clearTimeout(chartStateTimer);
     chartStateTimer = setTimeout(async () => {
         try {
+            // Save core chart settings
             const stateMap = await loadChartStateMap();
             const nextMap = { ...(stateMap || {}), [symbolKey]: { ...chartState, symbol: symbolKey } };
             const payload = { key: CHART_STATE_STORAGE_KEY, value: JSON.stringify(nextMap) };
             chartDebug('chart state save request', { key: CHART_STATE_STORAGE_KEY, symbolKey, snapshot: chartState, payload });
+            
             const response = await fetch('../api/preferences/set.php', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -845,6 +872,18 @@ async function saveChartState(state) {
             });
             const data = await response.json().catch(() => null);
             chartDebug('chart state save response', { key: CHART_STATE_STORAGE_KEY, symbolKey, status: response.status, data });
+            
+            // Save drawings to new dedicated API
+            if (drawings) {
+                const drawingsResponse = await fetch('../api/drawings/set.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: csrfHeaders(),
+                    body: JSON.stringify({ symbol: symbolKey, drawings: JSON.stringify(drawings) })
+                });
+                const drawingsData = await drawingsResponse.json().catch(() => null);
+                chartDebug('drawings save response', { symbolKey, status: drawingsResponse.status, data: drawingsData });
+            }
         } catch (error) {
             console.warn('[2RICH] Chart state could not be saved', error);
         }
@@ -1086,8 +1125,8 @@ function snapshotChartState() {
         if (chart && typeof chart.getLineToolsState === 'function') {
             let raw = chart.getLineToolsState();
             
-            // Fallback to intercepted drawing state from save_load_adapter if empty
-            if (raw && raw.sources instanceof Map && raw.sources.size === 0 && window._latestTvDrawingState) {
+            // Fallback to intercepted drawing state from save_load_adapter if empty or null
+            if ((!raw || (raw.sources instanceof Map && raw.sources.size === 0)) && window._latestTvDrawingState) {
                 raw = window._latestTvDrawingState;
             }
 
