@@ -958,6 +958,48 @@ function serializeLineToolsState(value, key = '') {
     return result;
 }
 
+function normalizeLineToolsState(value, key = '') {
+    if (!value || typeof value !== 'object') return value;
+    if (value instanceof Map || value instanceof Set) return value;
+    
+    if (key === 'sources' || key === 'groups') {
+        if (Array.isArray(value)) {
+            return new Map(value.map(entry => {
+                const pair = Array.isArray(entry) ? entry : [entry?.id ?? entry?.name ?? String(Math.random()), entry];
+                return [pair[0], normalizeLineToolsState(pair[1], key)];
+            }));
+        }
+        const map = new Map();
+        Object.entries(value).forEach(([k, v]) => {
+            map.set(k, normalizeLineToolsState(v, k));
+        });
+        return map;
+    }
+    
+    if (key === 'lineToolsToValidate' || key === 'groupsToValidate') {
+        if (value instanceof Set) return value;
+        if (Array.isArray(value)) return new Set(value);
+        return new Set(Object.values(value));
+    }
+    
+    if (Array.isArray(value)) {
+        return value.map(item => normalizeLineToolsState(item));
+    }
+    
+    const result = {};
+    Object.entries(value).forEach(([entryKey, entryValue]) => {
+        result[entryKey] = normalizeLineToolsState(entryValue, entryKey);
+    });
+    return result;
+}
+
+    const result = {};
+    for (const [k, v] of Object.entries(value)) {
+        result[k] = serializeLineToolsState(v, k);
+    }
+    return result;
+}
+
 function snapshotChartState() {
     const chart = richChartApi();
     const state = {
@@ -1759,7 +1801,8 @@ function initChart() {
                     .then(res => res.json())
                     .then(data => {
                         if (data.success && data.drawings) {
-                            return typeof data.drawings === 'string' ? JSON.parse(data.drawings) : data.drawings;
+                            const parsed = typeof data.drawings === 'string' ? JSON.parse(data.drawings) : data.drawings;
+                            return normalizeLineToolsState(parsed);
                         }
                         return null;
                     })
