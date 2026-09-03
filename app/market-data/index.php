@@ -1784,12 +1784,15 @@ function initChart() {
                 chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size, requestContext });
                 window._latestTvDrawingState = state;
                 const serialized = serializeLineToolsState(state);
+                const stringified = JSON.stringify(serialized);
+                chartDebug('saveLineToolsAndGroups serialized payload', { stringified });
+                
                 const symbolKey = getChartStateSymbol(currentSymbol);
                 return fetch('../api/drawings/set.php', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: csrfHeaders(),
-                    body: JSON.stringify({ symbol: symbolKey, drawings: JSON.stringify(serialized) })
+                    body: JSON.stringify({ symbol: symbolKey, drawings: stringified })
                 }).then(() => {});
             },
             loadLineToolsAndGroups: (layoutId, chartId, requestType, requestContext) => {
