@@ -937,30 +937,16 @@ async function applyChartState(symbolOverride = null) {
     }, 2600));
 }
 
-function serializeLineToolsState(value, key = '') {
-    if (!value || typeof value !== 'object') return value;
-
-    if (value instanceof Map) {
-        const obj = {};
-        for (const [k, v] of value.entries()) {
-            obj[k] = serializeLineToolsState(v, k);
+function serializeLineToolsState(value) {
+    return JSON.stringify(value, (key, val) => {
+        if (val instanceof Map) {
+            return Object.fromEntries(val);
         }
-        return obj;
-    }
-
-    if (value instanceof Set) {
-        return Array.from(value.values());
-    }
-
-    if (Array.isArray(value)) {
-        return value.map(item => serializeLineToolsState(item));
-    }
-
-    const result = {};
-    for (const [k, v] of Object.entries(value)) {
-        result[k] = serializeLineToolsState(v, k);
-    }
-    return result;
+        if (val instanceof Set) {
+            return Array.from(val);
+        }
+        return val;
+    });
 }
 
 function normalizeLineToolsState(value, key = '') {
@@ -1783,8 +1769,11 @@ function initChart() {
             saveLineToolsAndGroups: (layoutId, chartId, state, requestContext) => {
                 chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size, requestContext });
                 window._latestTvDrawingState = state;
-                const serialized = serializeLineToolsState(state);
-                const stringified = JSON.stringify(serialized);
+                
+                // CRITICAL: TradingView line tool state objects can be complex class instances with getters, setters,
+                // or custom toJSON methods. Using a manual recursive clone will strip these and destroy the drawings.
+                // Using a native JSON.stringify replacer preserves them perfectly.
+                const stringified = serializeLineToolsState(state);
                 chartDebug('saveLineToolsAndGroups serialized payload', { stringified });
                 
                 const symbolKey = getChartStateSymbol(currentSymbol);
@@ -1798,8 +1787,8 @@ function initChart() {
             loadLineToolsAndGroups: (layoutId, chartId, requestType, requestContext) => {
                 chartDebug('save_load_adapter loadLineToolsAndGroups', { layoutId, chartId, requestType });
                 
-                // CRITICAL: Temporarily return drawings for all request types to see what TradingView does.
-                // We will inspect the UUIDs and properties in the console.
+                // CRITICAL: Temporarily return drawings for all request types so they load on the main chart,
+                // regardless of what requestType TradingView asks for (since we store them globally per symbol).
                 // if (requestType !== 'mainSeriesLineTools') {
                 //     return Promise.resolve(null);
                 // }
