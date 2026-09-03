@@ -1794,6 +1794,14 @@ function initChart() {
             },
             loadLineToolsAndGroups: (layoutId, chartId, requestType, requestContext) => {
                 chartDebug('save_load_adapter loadLineToolsAndGroups', { layoutId, chartId, requestType });
+                
+                // CRITICAL: TradingView requests drawings multiple times for different pane types.
+                // Since we store all drawings in a single blob per symbol, we MUST only return them
+                // for the main series to prevent TradingView from silently dropping duplicates.
+                if (requestType !== 'mainSeriesLineTools') {
+                    return Promise.resolve(null);
+                }
+
                 const symbolKey = getChartStateSymbol(currentSymbol);
                 return fetch(`../api/drawings/get.php?symbol=${encodeURIComponent(symbolKey)}`, { credentials: 'same-origin' })
                     .then(res => res.json())
