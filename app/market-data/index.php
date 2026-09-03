@@ -817,23 +817,7 @@ async function loadChartState(symbolOverride = null) {
     // Load chart state (without drawings) from preferences
     const stateMap = await loadChartStateMap();
     let nextState = stateMap && typeof stateMap === 'object' ? stateMap[symbolKey] : null;
-    nextState = nextState && typeof nextState === 'object' ? nextState : {};
-    
-    // Load drawings from new table
-    try {
-        const response = await fetch(`../api/drawings/get.php?symbol=${encodeURIComponent(symbolKey)}`, { credentials: 'same-origin' });
-        const data = await response.json();
-        if (data.success && data.drawings) {
-            nextState.drawings = typeof data.drawings === 'string' ? JSON.parse(data.drawings) : data.drawings;
-        } else {
-            nextState.drawings = null;
-        }
-    } catch (e) {
-        console.warn('[2RICH] Failed to load drawings', e);
-        nextState.drawings = null;
-    }
-
-    return nextState;
+    return nextState && typeof nextState === 'object' ? nextState : {};
 }
 
 async function saveChartState(state) {
@@ -849,7 +833,6 @@ async function saveChartState(state) {
     }
     
     // Extract drawings from state so they don't get saved in preferences
-    const drawings = nextState.drawings;
     const stateWithoutDrawings = { ...nextState };
     delete stateWithoutDrawings.drawings;
     
@@ -872,18 +855,6 @@ async function saveChartState(state) {
             });
             const data = await response.json().catch(() => null);
             chartDebug('chart state save response', { key: CHART_STATE_STORAGE_KEY, symbolKey, status: response.status, data });
-            
-            // Save drawings to new dedicated API
-            if (drawings) {
-                const drawingsResponse = await fetch('../api/drawings/set.php', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: csrfHeaders(),
-                    body: JSON.stringify({ symbol: symbolKey, drawings: JSON.stringify(drawings) })
-                });
-                const drawingsData = await drawingsResponse.json().catch(() => null);
-                chartDebug('drawings save response', { symbolKey, status: drawingsResponse.status, data: drawingsData });
-            }
         } catch (error) {
             console.warn('[2RICH] Chart state could not be saved', error);
         }
@@ -941,112 +912,17 @@ async function applyChartState(symbolOverride = null) {
         console.warn('[2RICH] Could not restore chart type', error);
     }
 
-    try {
-        const drawingState = nextState.drawings;
-        const hasDrawingPayload = !!(drawingState && typeof drawingState === 'object' && Object.keys(drawingState).length);
-        chartDebug('chart drawings apply candidate', {
-            hasDrawingPayload,
-            type: typeof drawingState,
-            rawKeys: drawingState && typeof drawingState === 'object' ? Object.keys(drawingState) : [],
-            sourcesCount: Array.isArray(drawingState?.sources) ? drawingState.sources.length : null,
-            stateSourcesCount: Array.isArray(drawingState?.state?.sources) ? drawingState.state.sources.length : null,
-            canApply: typeof chart.applyLineToolsState === 'function'
+        // We no longer manually restore drawings here.
+        // The TradingView save_load_adapter now handles all drawing restoration via loadLineToolsAndGroups.
+        isRestoringDrawings = false;
+        markChartRestoreSettling();
+        hasCompletedInitialChartRestore = true;
+        scheduleChartPersistenceArm('restore-settled', CHART_RESTORE_SETTLE_MS);
+        chartDebug('chart state restore settled', {
+            symbolOverride,
+            settleMs: CHART_RESTORE_SETTLE_MS,
+            hasCompletedInitialChartRestore
         });
-        if (hasDrawingPayload && typeof chart.applyLineToolsState === 'function') {
-            const normalizeLineToolsState = (value, key = '') => {
-                if (!value || typeof value !== 'object') return value;
-                if (value instanceof Map || value instanceof Set) return value;
-                if (key === 'sources' || key === 'groups') {
-                    if (Array.isArray(value)) {
-                        return new Map(value.map(entry => {
-                            const pair = Array.isArray(entry) ? entry : [entry?.id ?? entry?.name ?? String(Math.random()), entry];
-                            return [pair[0], normalizeLineToolsState(pair[1], key)];
-                        }));
-                    }
-                    const map = new Map();
-                    Object.entries(value).forEach(([k, v]) => {
-                        map.set(k, normalizeLineToolsState(v, k));
-                    });
-                    return map;
-                }
-                if (key === 'lineToolsToValidate' || key === 'groupsToValidate') {
-                    if (value instanceof Set) return value;
-                    if (Array.isArray(value)) return new Set(value);
-                    return new Set(Object.values(value));
-                }
-                if (Array.isArray(value)) return value.map(item => normalizeLineToolsState(item));
-                const result = {};
-                Object.entries(value).forEach(([entryKey, entryValue]) => {
-                    result[entryKey] = normalizeLineToolsState(entryValue, entryKey);
-                });
-                return result;
-            };
-            const normalizedDrawingState = normalizeLineToolsState(drawingState);
-            const dispatchDrawings = (label) => {
-                try {
-                    chartDebug(label, {
-                        rawType: typeof normalizedDrawingState,
-                        rawKeys: normalizedDrawingState && typeof normalizedDrawingState === 'object' ? Object.keys(normalizedDrawingState) : [],
-                        sourcesType: normalizedDrawingState?.sources ? Object.prototype.toString.call(normalizedDrawingState.sources) : null,
-                        groupsType: normalizedDrawingState?.groups ? Object.prototype.toString.call(normalizedDrawingState.groups) : null,
-                        lineToolsToValidateType: normalizedDrawingState?.lineToolsToValidate ? Object.prototype.toString.call(normalizedDrawingState.lineToolsToValidate) : null,
-                        groupsToValidateType: normalizedDrawingState?.groupsToValidate ? Object.prototype.toString.call(normalizedDrawingState.groupsToValidate) : null,
-                        sourcesSize: normalizedDrawingState?.sources instanceof Map ? normalizedDrawingState.sources.size : null,
-                        groupsSize: normalizedDrawingState?.groups instanceof Map ? normalizedDrawingState.groups.size : null,
-                        lineToolsToValidateSize: normalizedDrawingState?.lineToolsToValidate instanceof Set ? normalizedDrawingState.lineToolsToValidate.size : null,
-                        groupsToValidateSize: normalizedDrawingState?.groupsToValidate instanceof Set ? normalizedDrawingState.groupsToValidate.size : null,
-                    });
-                    return Promise.resolve(chart.applyLineToolsState(normalizedDrawingState))
-                        .then(() => chartDebug('chart drawings apply dispatched', {
-                            label,
-                            rawKeys: Object.keys(drawingState),
-                            normalizedSourcesSize: normalizedDrawingState?.sources instanceof Map ? normalizedDrawingState.sources.size : null,
-                            normalizedGroupsSize: normalizedDrawingState?.groups instanceof Map ? normalizedDrawingState.groups.size : null
-                        }))
-                        .catch(error => {
-                            console.warn('[2RICH] Could not restore drawings', error);
-                            chartDebug('chart drawings apply error', { label, message: error?.message || String(error) });
-                        });
-                } catch (error) {
-                    console.warn('[2RICH] Could not restore drawings', error);
-                    chartDebug('chart drawings apply error', { label, message: error?.message || String(error) });
-                    return Promise.resolve();
-                }
-            };
-            isRestoringDrawings = true;
-            resetChartPersistenceArmTimer();
-            const waitMs = (ms) => new Promise(resolve => {
-                const timer = setTimeout(resolve, ms);
-                chartStateApplyTimers.push(timer);
-            });
-            drawingRestorePromise = dispatchDrawings('chart drawings apply immediate')
-                .then(() => waitMs(750))
-                .then(() => dispatchDrawings('chart drawings apply delayed'))
-                .then(() => waitMs(1400))
-                .then(() => dispatchDrawings('chart drawings apply late'))
-                .finally(() => {
-                    isRestoringDrawings = false;
-                    markChartRestoreSettling();
-                    hasCompletedInitialChartRestore = true;
-                    scheduleChartPersistenceArm('restore-settled', CHART_RESTORE_SETTLE_MS);
-                    chartDebug('chart drawings restore settled', {
-                        symbolOverride,
-                        settleMs: CHART_RESTORE_SETTLE_MS,
-                        hasCompletedInitialChartRestore
-                    });
-                });
-        } else {
-            isRestoringDrawings = false;
-            markChartRestoreSettling();
-            hasCompletedInitialChartRestore = true;
-            scheduleChartPersistenceArm('restore-empty', CHART_RESTORE_SETTLE_MS);
-            chartDebug('chart drawings restore settled', {
-                symbolOverride,
-                settleMs: CHART_RESTORE_SETTLE_MS,
-                hasCompletedInitialChartRestore,
-                reason: 'no-drawing-payload'
-            });
-        }
     } catch (error) {
         console.warn('[2RICH] Could not restore drawings', error);
         chartDebug('chart drawings apply error', { message: error?.message || String(error) });
@@ -1121,31 +997,7 @@ function snapshotChartState() {
             state.studies = Array.isArray(studies) ? studies.map(s => ({ name: s.name?.() || null, id: s.id?.() || null })) : null;
         }
     } catch (e) {}
-    try {
-        if (chart && typeof chart.getLineToolsState === 'function') {
-            let raw = chart.getLineToolsState();
-            
-            // Fallback to intercepted drawing state from save_load_adapter if empty or null
-            if ((!raw || (raw.sources instanceof Map && raw.sources.size === 0)) && window._latestTvDrawingState) {
-                raw = window._latestTvDrawingState;
-            }
-
-            const serialized = serializeLineToolsState(raw);
-            state.drawings = serialized ?? null;
-
-            chartDebug('chart drawing snapshot', {
-                hasDrawings: !!raw,
-                type: typeof raw,
-                rawKeys: raw && typeof raw === 'object' ? Object.keys(raw) : [],
-                sourcesCount: raw?.sources instanceof Map ? raw.sources.size : (raw?.sources && typeof raw.sources === 'object' ? Object.keys(raw.sources).length : null),
-                groupsCount: raw?.groups instanceof Map ? raw.groups.size : (raw?.groups && typeof raw.groups === 'object' ? Object.keys(raw.groups).length : null),
-                serializedSourcesCount: serialized?.sources && typeof serialized.sources === 'object' ? Object.keys(serialized.sources).length : null,
-                serializedGroupsCount: serialized?.groups && typeof serialized.groups === 'object' ? Object.keys(serialized.groups).length : null,
-            });
-        }
-    } catch (e) {
-        chartDebug('chart drawing snapshot error', { message: e?.message || String(e) });
-    }
+    // We no longer snapshot drawings here; it is handled entirely by save_load_adapter
     return state;
 }
 
@@ -1895,11 +1747,30 @@ function initChart() {
             saveLineToolsAndGroups: (layoutId, chartId, state) => {
                 chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size });
                 window._latestTvDrawingState = state;
-                return Promise.resolve();
+                const serialized = serializeLineToolsState(state);
+                const symbolKey = getChartStateSymbol(currentSymbol);
+                return fetch('../api/drawings/set.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: csrfHeaders(),
+                    body: JSON.stringify({ symbol: symbolKey, drawings: JSON.stringify(serialized) })
+                }).then(() => {});
             },
             loadLineToolsAndGroups: (layoutId, chartId, requestType, requestContext) => {
                 chartDebug('save_load_adapter loadLineToolsAndGroups', { layoutId, chartId, requestType });
-                return Promise.resolve(null);
+                const symbolKey = getChartStateSymbol(currentSymbol);
+                return fetch(`../api/drawings/get.php?symbol=${encodeURIComponent(symbolKey)}`, { credentials: 'same-origin' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.drawings) {
+                            return typeof data.drawings === 'string' ? JSON.parse(data.drawings) : data.drawings;
+                        }
+                        return null;
+                    })
+                    .catch(e => {
+                        console.warn('[2RICH] Failed to load drawings for TV adapter', e);
+                        return null;
+                    });
             }
         }
     });
