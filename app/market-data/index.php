@@ -858,7 +858,9 @@ async function saveChartState(state) {
 
             // Force TradingView to flush drawings via the save_load_adapter
             if (tvWidget && typeof tvWidget.saveChartToServer === 'function') {
-                tvWidget.saveChartToServer();
+                tvWidget.saveChartToServer(() => {
+                    chartDebug('tvWidget.saveChartToServer() complete - adapter triggered');
+                }, () => {}, { defaultChartName: 'default' });
             }
         } catch (error) {
             console.warn('[2RICH] Chart state could not be saved', error);
