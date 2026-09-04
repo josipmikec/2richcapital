@@ -86,7 +86,8 @@ rich_add_column($wpdb, $memberships_table, 'approved_by',     "approved_by INT N
 rich_add_column($wpdb, $memberships_table, 'approved_at',     "approved_at TIMESTAMP NULL AFTER approved_by", $log);
 rich_add_column($wpdb, $memberships_table, 'cancelled_at',    "cancelled_at TIMESTAMP NULL AFTER approved_at", $log);
 
-// ── 2. Extend rich_signals ────────────────────────────────────────────────
+// ── 2.5 Extend rich_signals ────────────────────────────────────────────────
+$signals_table = $wpdb->prefix . 'rich_signals';
 rich_add_column($wpdb, $signals_table, 'external_id', "external_id VARCHAR(120) NULL AFTER result", $log);
 
 // ── 3. New tables ──────────────────────────────────────────────────────────
