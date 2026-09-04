@@ -3141,7 +3141,20 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                             <label><input type="checkbox" name="requires_stop_loss" ${current.requires_stop_loss ? 'checked' : ''}> Requires stop loss</label>
                             <label><input type="checkbox" name="requires_take_profit" ${current.requires_take_profit ? 'checked' : ''}> Requires take profit</label>
                         </div>
-                        <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
+                        
+                        <div style="display:grid;gap:8px;margin-top:12px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
+                            <div class="group-card-kicker">API Integrations</div>
+                            <p style="margin:0;color:#bcc1ca;font-size:13px;">Connect trading bots or external tools to send signals automatically via Webhook.</p>
+                            <div style="display:flex;gap:12px;align-items:center;margin-top:4px;">
+                                <button class="group-ghost-btn" type="button" onclick="generateFloorGroupApiKey(${String(current.id || current.group_id || '')})" ${isGroupsBusy(`apikey:${String(current.id || current.group_id || '')}`) ? 'disabled' : ''}>
+                                    ${isGroupsBusy(`apikey:${String(current.id || current.group_id || '')}`) ? 'Generating...' : 'Generate New API Key'}
+                                </button>
+                                ${current.api_key ? `<span style="font-size:13px;color:#f2ca50;background:rgba(242,202,80,0.1);padding:4px 8px;border-radius:6px;font-family:monospace;">${current.api_key}</span>` : ''}
+                            </div>
+                            <p style="margin:4px 0 0 0;color:#88919e;font-size:11px;">Endpoint: <code>POST https://2rich.capital/app/api/signals/webhook.php</code></p>
+                        </div>
+
+                        <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:8px;">
                             <button class="group-pill-btn" type="submit" ${isGroupsBusy(`settings:${String(current.id || current.group_id || '')}`) ? 'disabled' : ''}>${isGroupsBusy(`settings:${String(current.id || current.group_id || '')}`) ? 'Saving…' : 'Save settings'}</button>
                             ${current.is_owner ? `<button class="group-ghost-btn" type="button" ${isGroupsBusy(`archive:${String(current.id || current.group_id || '')}`) ? 'disabled' : ''} onclick='archiveFloorSignalGroup(${JSON.stringify(String(current.id || current.group_id || ''))}, ${JSON.stringify(String(current.name || 'this group'))})'>${isGroupsBusy(`archive:${String(current.id || current.group_id || '')}`) ? 'Archiving…' : 'Archive group'}</button>` : ''}
                     ${current.is_owner ? `<button class="group-ghost-btn" type="button" ${isGroupsBusy(`delete:${String(current.id || current.group_id || '')}`) ? 'disabled' : ''} onclick='deleteFloorSignalGroup(${JSON.stringify(String(current.id || current.group_id || ''))}, ${JSON.stringify(String(current.name || 'this group'))})'>${isGroupsBusy(`delete:${String(current.id || current.group_id || '')}`) ? 'Deleting…' : 'Delete group'}</button>` : ''}
@@ -3621,6 +3634,39 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             renderGroupsPanel();
         } finally {
             clearGroupsBusy(`settings:${groupId}`);
+            renderGroupsPanel();
+        }
+    }
+
+    async function generateFloorGroupApiKey(groupId) {
+        if (!confirm('Generating a new API key will invalidate the old one. Bots using the old key will fail. Continue?')) return;
+        
+        setGroupsBusy(`apikey:${groupId}`);
+        renderGroupsPanel();
+        try {
+            const res = await fetch(signalsUrl('generate-key.php'), {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': SIGNALS_CSRF
+                },
+                body: JSON.stringify({ group_id: groupId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const idx = floorSignalsState.myGroups.findIndex(g => String(g.id || g.group_id) === String(groupId));
+                if (idx > -1) {
+                    floorSignalsState.myGroups[idx].api_key = data.api_key;
+                }
+            } else {
+                alert(data.message || 'Failed to generate API key');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to generate API key');
+        } finally {
+            clearGroupsBusy(`apikey:${groupId}`);
             renderGroupsPanel();
         }
     }

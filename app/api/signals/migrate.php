@@ -58,6 +58,7 @@ rich_add_column($wpdb, $groups_table, 'requires_stop_loss',    "requires_stop_lo
 rich_add_column($wpdb, $groups_table, 'requires_take_profit',  "requires_take_profit TINYINT(1) NOT NULL DEFAULT 0 AFTER requires_stop_loss", $log);
 rich_add_column($wpdb, $groups_table, 'allowed_symbols_json',  "allowed_symbols_json TEXT NULL AFTER requires_take_profit", $log);
 rich_add_column($wpdb, $groups_table, 'posted_signals_count',  "posted_signals_count INT NOT NULL DEFAULT 0 AFTER allowed_symbols_json", $log);
+rich_add_column($wpdb, $groups_table, 'api_key',               "api_key VARCHAR(64) NULL AFTER posted_signals_count", $log);
 rich_add_column($wpdb, $groups_table, 'last_signal_at',        "last_signal_at TIMESTAMP NULL AFTER posted_signals_count", $log);
 rich_add_column($wpdb, $groups_table, 'verification_status',  "verification_status ENUM('none','pending','verified','rejected') NOT NULL DEFAULT 'none' AFTER last_signal_at", $log);
 rich_add_column($wpdb, $groups_table, 'verification_note',    "verification_note VARCHAR(500) NULL AFTER verification_status", $log);
@@ -84,6 +85,9 @@ rich_add_column($wpdb, $memberships_table, 'billing_status',  "billing_status VA
 rich_add_column($wpdb, $memberships_table, 'approved_by',     "approved_by INT NULL AFTER billing_status", $log);
 rich_add_column($wpdb, $memberships_table, 'approved_at',     "approved_at TIMESTAMP NULL AFTER approved_by", $log);
 rich_add_column($wpdb, $memberships_table, 'cancelled_at',    "cancelled_at TIMESTAMP NULL AFTER approved_at", $log);
+
+// ── 2. Extend rich_signals ────────────────────────────────────────────────
+rich_add_column($wpdb, $signals_table, 'external_id', "external_id VARCHAR(120) NULL AFTER result", $log);
 
 // ── 3. New tables ──────────────────────────────────────────────────────────
 $sql_requests = "CREATE TABLE IF NOT EXISTS {$requests_table} (
