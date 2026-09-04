@@ -2275,6 +2275,26 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         </div>
     </div>
 
+    <div class="group-signal-modal" id="groupAutomationModal" aria-hidden="true">
+        <div class="group-signal-dialog">
+            <div class="group-signal-head">
+                <div>
+                    <div class="section-kicker">Automation setup</div>
+                    <h3>API Integrations</h3>
+                    <p>Connect trading bots or external tools to send signals automatically via Webhook.</p>
+                </div>
+                <button class="modal-close-btn" type="button" onclick="closeGroupAutomationModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="group-signal-body" id="groupAutomationBody">
+                <!-- Populated dynamically via openGroupAutomationModal -->
+            </div>
+        </div>
+    </div>
+
     <div class="social-list-modal" id="socialListModal" aria-hidden="true">
         <div class="social-list-dialog" role="dialog" aria-modal="true" aria-labelledby="socialListTitle">
             <div class="social-list-head">
@@ -2992,7 +3012,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                     <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                                     <span>Post</span>
                                 </button>
-                                <button class="group-workspace-signal-action group-workspace-signal-action--mt5" type="button" aria-label="Automation settings">
+                                <button class="group-workspace-signal-action group-workspace-signal-action--mt5" type="button" aria-label="Automation settings" onclick="openGroupAutomationModal()">
                                     <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10.9 2.4a2.8 2.8 0 0 0-3.45 3.45L3.2 10.1a1.6 1.6 0 0 0 0 2.26l.44.44a1.6 1.6 0 0 0 2.26 0l4.25-4.25A2.8 2.8 0 0 0 13.6 5.1l-1.72 1.72-1.6-.18-.18-1.6L10.9 2.4Z" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     <span>AUTOMATION</span>
                                 </button>
@@ -3142,18 +3162,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                             <label><input type="checkbox" name="requires_take_profit" ${current.requires_take_profit ? 'checked' : ''}> Requires take profit</label>
                         </div>
                         
-                        <div style="display:grid;gap:8px;margin-top:12px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
-                            <div class="group-card-kicker">API Integrations</div>
-                            <p style="margin:0;color:#bcc1ca;font-size:13px;">Connect trading bots or external tools to send signals automatically via Webhook.</p>
-                            <div style="display:flex;gap:12px;align-items:center;margin-top:4px;">
-                                <button class="group-ghost-btn" type="button" onclick="generateFloorGroupApiKey(${String(current.id || current.group_id || '')})" ${isGroupsBusy(`apikey:${String(current.id || current.group_id || '')}`) ? 'disabled' : ''}>
-                                    ${isGroupsBusy(`apikey:${String(current.id || current.group_id || '')}`) ? 'Generating...' : 'Generate New API Key'}
-                                </button>
-                                ${current.api_key ? `<span style="font-size:13px;color:#f2ca50;background:rgba(242,202,80,0.1);padding:4px 8px;border-radius:6px;font-family:monospace;">${current.api_key}</span>` : ''}
-                            </div>
-                            <p style="margin:4px 0 0 0;color:#88919e;font-size:11px;">Endpoint: <code>POST https://2rich.capital/app/api/signals/webhook.php</code></p>
-                        </div>
-
                         <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:8px;">
                             <button class="group-pill-btn" type="submit" ${isGroupsBusy(`settings:${String(current.id || current.group_id || '')}`) ? 'disabled' : ''}>${isGroupsBusy(`settings:${String(current.id || current.group_id || '')}`) ? 'Saving…' : 'Save settings'}</button>
                             ${current.is_owner ? `<button class="group-ghost-btn" type="button" ${isGroupsBusy(`archive:${String(current.id || current.group_id || '')}`) ? 'disabled' : ''} onclick='archiveFloorSignalGroup(${JSON.stringify(String(current.id || current.group_id || ''))}, ${JSON.stringify(String(current.name || 'this group'))})'>${isGroupsBusy(`archive:${String(current.id || current.group_id || '')}`) ? 'Archiving…' : 'Archive group'}</button>` : ''}
@@ -4673,6 +4681,48 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         modal.setAttribute('aria-hidden', 'true');
         if (status) status.textContent = '';
     }
+
+    window.openGroupAutomationModal = function() {
+        const modal = document.getElementById('groupAutomationModal');
+        const body = document.getElementById('groupAutomationBody');
+        const current = getActiveSignalGroup();
+        if (!modal || !body || !current) return;
+        
+        const isBusy = isGroupsBusy(`apikey:${String(current.id || current.group_id || '')}`);
+        const btnText = isBusy ? 'Generating...' : 'Generate New API Key';
+        const apiKeyHtml = current.api_key ? `<div style="margin-top:12px;padding:12px;background:rgba(242,202,80,0.1);border:1px solid rgba(242,202,80,0.2);border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <code style="color:#f2ca50;font-size:14px;word-break:break-all;">${current.api_key}</code>
+        </div>` : '';
+        
+        body.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <p style="color:#bcc1ca;font-size:14px;line-height:1.5;margin:0;">Use this API Key to authenticate external trading bots or tools via Webhook. Only the group owner can generate or view this key.</p>
+                
+                <div style="background:#111827;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;">
+                    <div style="font-size:12px;color:#8f95a3;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Endpoint URL</div>
+                    <code style="color:#f5f5f5;font-size:13px;">POST https://2rich.capital/app/api/signals/webhook.php</code>
+                </div>
+                
+                <div>
+                    <button class="group-pill-btn" type="button" style="width:100%;justify-content:center;" onclick="generateFloorGroupApiKey(${String(current.id || current.group_id || '')}); setTimeout(()=>openGroupAutomationModal(), 1000);" ${isBusy ? 'disabled' : ''}>
+                        ${btnText}
+                    </button>
+                    ${apiKeyHtml}
+                </div>
+            </div>
+        `;
+        
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
+    window.closeGroupAutomationModal = function() {
+        const modal = document.getElementById('groupAutomationModal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+    };
 
 
 
