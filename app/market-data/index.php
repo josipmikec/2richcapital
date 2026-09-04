@@ -1709,9 +1709,15 @@ function wireRichToolbar() {
     document.getElementById('richCaptureBtn')?.addEventListener('click', richCapture);
 }
 
-function initChart() {
+async function initChart() {
     if (tvWidget) { tvWidget.remove(); tvWidget = null; }
-    chartDebug('widget init input', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+    
+    const stateMap = await loadChartStateMap();
+    const symbolKey = getChartStateSymbol(currentSymbol);
+    const savedState = stateMap && typeof stateMap === 'object' ? stateMap[symbolKey] : null;
+    const hasValidState = savedState && (savedState.charts || savedState.panes);
+    
+    chartDebug('widget init input', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings), hasSavedState: !!hasValidState });
     const preferredTemplateId = getPreferredTwoRichTemplateId();
     const isFirstTimeUser = !hasPersistedTvUserSettings();
     const initialTemplate = isFirstTimeUser ? TWO_RICH_TEMPLATES[preferredTemplateId] : null;
@@ -1726,6 +1732,7 @@ function initChart() {
         interval:        currentInterval,
         fullscreen:      false,
         autosize:        true,
+        saved_data:      hasValidState ? savedState : undefined,
         theme:           initialTemplate ? initialTemplate.theme : DEFAULT_CHART_THEME.theme,
         timezone:        'Europe/London',
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
@@ -1796,8 +1803,14 @@ function initChart() {
         mountNativeTimeframeGroup();
         richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
-        richToolbarStatus('Restoring saved chart state');
-        setTimeout(() => { applyChartState(currentSymbol); }, 250);
+        
+        // Mark as settled without calling applyChartState since saved_data handled it natively
+        isRestoringDrawings = false;
+        hasCompletedInitialChartRestore = true;
+        markChartRestoreSettling();
+        scheduleChartPersistenceArm('restore-settled', CHART_RESTORE_SETTLE_MS);
+        chartDebug('chart state restore settled natively', { settleMs: CHART_RESTORE_SETTLE_MS });
+
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
         }
