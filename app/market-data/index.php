@@ -1927,19 +1927,26 @@ function initChart() {
         }
         if (!chart || typeof chart.createStudy !== 'function') return;
 
-        try {
-            const allStudies = typeof chart.getAllStudies === 'function' ? chart.getAllStudies() : [];
-            allStudies.forEach((study) => {
-                const name = String(study.name || '').toLowerCase();
-                if (name.includes('volume') && typeof chart.removeEntity === 'function') {
-                    chart.removeEntity(study.id);
+        loadChartStateMap().then(stateMap => {
+            const symbolKey = getChartStateSymbol(currentSymbol);
+            const savedState = stateMap && typeof stateMap === 'object' ? stateMap[symbolKey] : null;
+            // Only inject default studies if the user doesn't have a valid native saved state
+            if (!savedState || (!savedState.charts && !savedState.panes)) {
+                try {
+                    const allStudies = typeof chart.getAllStudies === 'function' ? chart.getAllStudies() : [];
+                    allStudies.forEach((study) => {
+                        const name = String(study.name || '').toLowerCase();
+                        if (name.includes('volume') && typeof chart.removeEntity === 'function') {
+                            chart.removeEntity(study.id);
+                        }
+                    });
+                } catch (error) {
+                    console.warn('[2RICH] Could not remove default volume study', error);
                 }
-            });
-        } catch (error) {
-            console.warn('[2RICH] Could not remove default volume study', error);
-        }
 
-        chart.createStudy('2rich MACD', false, false);
+                chart.createStudy('2rich MACD', false, false);
+            }
+        });
     });
 }
 
