@@ -980,40 +980,20 @@ function normalizeLineToolsState(value, key = '') {
 
 
 function snapshotChartState() {
-    const chart = richChartApi();
-    const state = {
-        symbol: currentSymbol,
-        interval: currentInterval,
-        chart_type: null,
-        visible_panes: null,
-        studies: null,
-        drawings: null,
-        snapshot_version: 3,
-        capabilities: {},
-    };
+    if (!tvWidget || !hasCompletedInitialChartRestore) return null;
+
+    let state = null;
     try {
-        state.capabilities = chart ? {
-            getChartType: typeof chart.getChartType === 'function',
-            getAllPanesHeight: typeof chart.getAllPanesHeight === 'function',
-            getAllStudies: typeof chart.getAllStudies === 'function',
-            getLineToolsState: typeof chart.getLineToolsState === 'function',
-            applyLineToolsState: typeof chart.applyLineToolsState === 'function',
-            save: typeof chart.save === 'function',
-            load: typeof chart.load === 'function',
-        } : {};
-    } catch (e) {}
-    try {
-        if (chart && typeof chart.getChartType === 'function') state.chart_type = chart.getChartType();
-    } catch (e) {}
-    try {
-        if (chart && typeof chart.getAllPanesHeight === 'function') state.visible_panes = chart.getAllPanesHeight();
-    } catch (e) {}
-    try {
-        if (chart && typeof chart.getAllStudies === 'function') {
-            const studies = chart.getAllStudies();
-            state.studies = Array.isArray(studies) ? studies.map(s => ({ name: s.name?.() || null, id: s.id?.() || null })) : null;
+        if (typeof tvWidget.save === 'function') {
+            const res = tvWidget.save(s => { state = s; });
+            if (res && typeof res === 'object') {
+                state = res;
+            }
         }
-    } catch (e) {}
+    } catch (e) {
+        console.warn('[2RICH] Failed to native save chart state', e);
+    }
+    
     return state;
 }
 
