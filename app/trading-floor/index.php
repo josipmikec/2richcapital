@@ -3663,10 +3663,17 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             });
             const data = await res.json();
             if (data.success) {
-                const idx = floorSignalsState.myGroups.findIndex(g => String(g.id || g.group_id) === String(groupId));
-                if (idx > -1) {
-                    floorSignalsState.myGroups[idx].api_key = data.api_key;
-                }
+                const groups = Array.isArray(floorSignalsState.groups) ? floorSignalsState.groups : [];
+                const memberships = Array.isArray(floorSignalsState.memberships) ? floorSignalsState.memberships : [];
+                
+                const grp = groups.find(g => String(g.id) === String(groupId));
+                if (grp) grp.api_key = data.api_key;
+                
+                const mem = memberships.find(m => String(m.group_id || m.id) === String(groupId));
+                if (mem) mem.api_key = data.api_key;
+                
+                // Re-render the automation modal with the new key
+                openGroupAutomationModal();
             } else {
                 alert(data.message || 'Failed to generate API key');
             }
