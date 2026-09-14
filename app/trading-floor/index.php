@@ -5009,11 +5009,15 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
     });
 
     // Setup message polling
-    setInterval(() => {
+    const workerBlob = new Blob([`
+        setInterval(() => postMessage('tick'), 4000);
+    `], { type: 'application/javascript' });
+    const pollWorker = new Worker(URL.createObjectURL(workerBlob));
+    pollWorker.onmessage = () => {
         if (typeof floorSignalsState !== 'undefined' && floorSignalsState.activeView === 'workspace' && floorSignalsState.activeWorkspaceTab === 'room' && floorSignalsState.activeGroupId) {
             if (typeof pollGroupMessages === 'function') pollGroupMessages(floorSignalsState.activeGroupId);
         }
-    }, 4000);
+    };
     </script>
 
 </body>

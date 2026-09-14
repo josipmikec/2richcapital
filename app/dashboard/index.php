@@ -1550,8 +1550,14 @@ foreach ($_dashboard_initial_order as $card_id) {
         async function sendMessage() { const value = input.value.trim(); if (!value || !selectedGroupId) return; send.disabled = true; try { const r = await fetch(messagesUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:selectedGroupId, message:value})}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to send message'); input.value = ''; await loadMessages(); } catch(e) { showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); } finally { send.disabled = false; } }
         send.addEventListener('click', sendMessage); input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
         init();
-        setInterval(loadMessages, 4000);
-    })();
+        // Use Web Worker for background-friendly polling
+        const workerBlob = new Blob([`
+            setInterval(() => postMessage('tick'), 4000);
+        `], { type: 'application/javascript' });
+        const pollWorker = new Worker(URL.createObjectURL(workerBlob));
+        pollWorker.onmessage = () => {
+            loadMessages();
+        };    })();
 
 	    function openNewsWindow() {
 	        window.open(

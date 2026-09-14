@@ -25,7 +25,8 @@ if (
             font-family: Montserrat, -apple-system, BlinkMacSystemFont, sans-serif;
             background: #0E0E0E;
             color: #f4f4f4;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             background-image:
