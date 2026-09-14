@@ -65,12 +65,11 @@ if (!$symbol) {
     exit;
 }
 
-$notes_data = [
-    'alert_type' => $alert_type,
-    'timeframe' => $timeframe,
-    'source' => $source
-];
-$notes = wp_json_encode($notes_data);
+$notes_parts = [];
+if (!empty($alert_type)) $notes_parts[] = "Alert: " . $alert_type;
+if (!empty($timeframe)) $notes_parts[] = "Timeframe: " . $timeframe;
+if (!empty($source)) $notes_parts[] = "Source: " . $source;
+$notes = implode(" | ", $notes_parts);
 
 // Map status from Jake's bot ("active", "hit TP", "hit SL", "expired")
 $status = 'open';

@@ -200,6 +200,11 @@ $mt5_conn = $wpdb->get_row($wpdb->prepare(
     $user_id
 ), ARRAY_A);
 
+$user_journals = $wpdb->get_results($wpdb->prepare(
+    "SELECT id, name FROM {$wpdb->prefix}rich_journals WHERE user_id = %d ORDER BY created_at DESC",
+    $user_id
+), ARRAY_A) ?: [];
+
 $mt5_sync_url = home_url('/app/api/trades/mt5-sync.php');
 
 // Fetch real stats from journal
