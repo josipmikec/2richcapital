@@ -821,6 +821,9 @@ async function loadChartState(symbolOverride = null) {
 }
 
 async function saveChartState(state) {
+    if (state instanceof Promise) {
+        state = await state;
+    }
     const nextState = state && typeof state === 'object' ? state : {};
     const symbolKey = getChartStateSymbol(nextState.symbol || null);
     if (isChartPersistenceBlocked()) {
@@ -979,22 +982,24 @@ function normalizeLineToolsState(value, key = '') {
 }
 
 
-function snapshotChartState() {
+async function snapshotChartState() {
     if (!tvWidget || !hasCompletedInitialChartRestore) return null;
 
-    let state = null;
-    try {
-        if (typeof tvWidget.save === 'function') {
-            const res = tvWidget.save(s => { state = s; });
-            if (res && typeof res === 'object') {
-                state = res;
+    return new Promise((resolve) => {
+        try {
+            if (typeof tvWidget.save === 'function') {
+                const res = tvWidget.save(s => { resolve(s); });
+                if (res && typeof res === 'object') {
+                    resolve(res);
+                }
+            } else {
+                resolve(null);
             }
+        } catch (e) {
+            console.warn('[2RICH] Failed to native save chart state', e);
+            resolve(null);
         }
-    } catch (e) {
-        console.warn('[2RICH] Failed to native save chart state', e);
-    }
-    
-    return state;
+    });
 }
 
 async function loadTvUserSettings() {
@@ -1136,8 +1141,8 @@ function chartSettingsAdapter() {
             delete tvUserSettings[key];
             persistTvUserSettings();
         },
-        save() {
-            const state = snapshotChartState();
+        async save() {
+            const state = await snapshotChartState();
             saveChartState(state);
             return state;
         },
