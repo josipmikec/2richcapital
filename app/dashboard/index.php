@@ -1598,15 +1598,18 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            `;
 	
 	            if (isNew) {
-	                list.prepend(div);
+	                const isScrolledToBottom = list.scrollHeight - list.clientHeight <= list.scrollTop + 10;
+	                list.appendChild(div);
+	                if (isScrolledToBottom) list.scrollTop = list.scrollHeight;
 	                setTimeout(() => div.classList.remove('new-item'), 4000);
 	            } else {
-	                list.appendChild(div);
+	                list.prepend(div);
+	                list.scrollTop = list.scrollHeight;
 	            }
 	
 	            const items = list.querySelectorAll('.news-item');
 	            if (items.length > 100) {
-	                items[items.length - 1].remove();
+	                items[0].remove();
 	            }
 	        }
 	

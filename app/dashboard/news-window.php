@@ -208,15 +208,18 @@ if (
             `;
 
             if (isNew) {
-                feed.prepend(div);
+                const isScrolledToBottom = feed.scrollHeight - feed.clientHeight <= feed.scrollTop + 10;
+                feed.appendChild(div);
+                if (isScrolledToBottom) feed.scrollTop = feed.scrollHeight;
                 setTimeout(() => div.classList.remove('new-item'), 4000);
             } else {
-                feed.appendChild(div);
+                feed.prepend(div);
+                feed.scrollTop = feed.scrollHeight;
             }
 
             const items = feed.querySelectorAll('.news-item');
             if (items.length > 150) {
-                items[items.length - 1].remove();
+                items[0].remove();
             }
         }
 
