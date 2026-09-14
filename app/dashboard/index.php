@@ -1189,12 +1189,8 @@ foreach ($_dashboard_initial_order as $card_id) {
                                     <span class="dashboard-journal-curve-label">Equity curve</span>
                                 </div>
                             </div>
-                            <div class="dashboard-journal-curve-wrap" style="position:relative;" aria-hidden="true">
+                            <div class="dashboard-journal-curve-wrap" aria-hidden="true">
                                 <svg class="dashboard-journal-curve" id="dashboardJournalCurve" viewBox="0 0 120 40" preserveAspectRatio="none" role="img" aria-label="Equity curve based on all closed trades"></svg>
-                                <div id="dashboardJournalEmpty" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;background:rgba(21,21,21,0.8);border-radius:inherit;z-index:2;">
-                                    <span style="font-size:13px;font-weight:600;color:#989da5;margin-bottom:8px;">No Trades Yet</span>
-                                    <a href="../journal/" class="btn-primary" style="font-size:11px;padding:4px 10px;min-height:24px;text-decoration:none;">Add Trade</a>
-                                </div>
                             </div>
                             <div class="dashboard-journal-stats" aria-live="polite">
                                 <div class="dashboard-journal-stat dashboard-journal-stat-wide"><span class="dashboard-journal-stat-value dashboard-journal-stat-dual-value"><span id="dashboardJournalTotalTrades">—</span><span class="dashboard-journal-stat-slash">/</span><span id="dashboardJournalClosedTrades">—</span></span><span class="dashboard-journal-stat-label">Trades / Closed</span></div>
@@ -1338,19 +1334,19 @@ foreach ($_dashboard_initial_order as $card_id) {
                 equity += pl;
                 values.push(equity);
             });
-            const emptyOverlay = document.getElementById('dashboardJournalEmpty');
-            if (!ordered.length || values.length < 2) {
-                svg.style.display = 'none';
-                if (emptyOverlay) emptyOverlay.style.display = 'flex';
-                return;
-            }
-            svg.style.display = 'block';
-            if (emptyOverlay) emptyOverlay.style.display = 'none';
-            const min = Math.min(0, ...values);
-            const max = Math.max(0, ...values);
             const width = 120;
             const height = 40;
             const pad = 4;
+            if (!ordered.length || values.length < 2) {
+                const zeroY = height / 2;
+                svg.innerHTML = `
+                    <path d="M ${pad},${zeroY} L ${width - pad},${zeroY}" fill="none" stroke="#2f9d6d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M ${pad},${zeroY} L ${width - pad},${zeroY} L ${width - pad},${height} L ${pad},${height} Z" fill="rgba(47,157,109,0.12)" />
+                `;
+                return;
+            }
+            const min = Math.min(0, ...values);
+            const max = Math.max(0, ...values);
             const range = Math.max(1e-6, max - min);
             const pts = values.map((v, i) => {
                 const x = pad + (i * (width - pad * 2)) / Math.max(1, values.length - 1);
@@ -1398,13 +1394,13 @@ foreach ($_dashboard_initial_order as $card_id) {
                 const journalsData = await journalsResponse.json();
                 if (!journalsData.success || !Array.isArray(journalsData.journals) || !journalsData.journals.length) {
                     nameEl.textContent = 'No journals yet';
-                    ctaEl.onclick = () => { window.location.href = '/journal/'; };
+                    ctaEl.innerHTML = 'IMPORT TRADES <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+                    ctaEl.onclick = () => { window.location.href = '/journal/#log-trade'; };
                     return;
                 }
                 const journal = journalsData.journals.find(item => Number(item.is_default) === 1) || journalsData.journals[0];
                 const journalId = Number(journal.id || 0);
                 nameEl.textContent = journal.name || 'Default Journal';
-                ctaEl.onclick = () => { window.location.href = journalId ? `/journal/?journal_id=${encodeURIComponent(journalId)}` : '/journal/'; };
                 if (!journalId) return;
                 const statsResponse = await fetch(`/api/trades/stats.php?journal_id=${encodeURIComponent(journalId)}`, { credentials: 'include' });
                 const statsData = await statsResponse.json();
@@ -1422,6 +1418,14 @@ foreach ($_dashboard_initial_order as $card_id) {
                 const curveTrades = Array.isArray(curveData.trades) ? curveData.trades : [];
                 renderJournalCurve(curveTrades);
                 renderJournalSnapshot(curveTrades);
+                
+                if (curveTrades.length === 0) {
+                    ctaEl.innerHTML = 'IMPORT TRADES <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+                    ctaEl.onclick = () => { window.location.href = journalId ? `/journal/?journal_id=${encodeURIComponent(journalId)}#log-trade` : '/journal/#log-trade'; };
+                } else {
+                    ctaEl.innerHTML = 'VIEW ALL IN JOURNAL <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+                    ctaEl.onclick = () => { window.location.href = journalId ? `/journal/?journal_id=${encodeURIComponent(journalId)}` : '/journal/'; };
+                }
             } catch (error) {
                 console.error('Dashboard journal card error:', error);
                 nameEl.textContent = 'Unable to load journal';
