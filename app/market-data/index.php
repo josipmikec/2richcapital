@@ -1937,7 +1937,6 @@ async function initChart() {
                     console.warn('[2RICH] Could not remove default volume study', error);
                 }
 
-                chart.createStudy('2rich MACD', false, false);
             }
         });
     });
