@@ -490,14 +490,13 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }
         .tf-topbar-create:hover { background: rgba(242,202,80,0.12); color: #F2CA50; }
         @keyframes unreadPulse {
-            0% { background-color: rgba(242, 202, 80, 0.4); }
+            0% { background-color: rgba(242, 202, 80, 0.25); }
+            80% { background-color: rgba(242, 202, 80, 0.1); }
             100% { background-color: transparent; }
         }
         .unread-highlight {
-            animation: unreadPulse 3s ease-out forwards;
-            padding: 4px 6px;
+            animation: unreadPulse 5s ease-out forwards;
             border-radius: 6px;
-            margin: -4px -6px;
         }
         .tf-topbar-avatar {
             width: 32px; height: 32px; border-radius: 50%;
@@ -3412,6 +3411,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 ${activeView !== 'workspace' && activeTab === 'requests' ? `<div class="group-list">${requestsHtml}</div>` : ''}
                 ${activeView !== 'workspace' && activeTab === 'manager' ? managerHtml : ''}
             </div>`;
+
+        if (activeView === 'workspace' && floorSignalsState.activeWorkspaceTab === 'room') {
+            const chatContainer = document.getElementById('groupChatMessagesContainer');
+            if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
 
         bindGroupColorPickers(mount);
         const form = document.getElementById('groupCreateForm');

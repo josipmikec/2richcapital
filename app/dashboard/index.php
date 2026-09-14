@@ -99,14 +99,12 @@ foreach ($_dashboard_initial_order as $card_id) {
     <style>
         /* ── Dashboard Settings Panel ───────────────────────────── */
         @keyframes unreadPulse {
-            0% { background-color: rgba(242, 202, 80, 0.4); }
-            100% { background-color: transparent; }
+            0% { background-color: rgba(242, 202, 80, 0.25); border-color: rgba(242, 202, 80, 0.5); }
+            80% { background-color: rgba(242, 202, 80, 0.1); border-color: rgba(242, 202, 80, 0.2); }
+            100% { background-color: rgba(255, 255, 255, 0.025); border-color: #242424; }
         }
         .unread-highlight {
-            animation: unreadPulse 3s ease-out forwards;
-            padding: 4px 6px;
-            border-radius: 6px;
-            margin: -4px -6px;
+            animation: unreadPulse 5s ease-out forwards !important;
         }
 
         .dashboard-settings-overlay {
