@@ -4000,12 +4000,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             osc.connect(gain);
             gain.connect(tfAudioCtx.destination);
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, tfAudioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(300, tfAudioCtx.currentTime + 0.05);
-            gain.gain.setValueAtTime(0.1, tfAudioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, tfAudioCtx.currentTime + 0.05);
+            osc.frequency.setValueAtTime(1200, tfAudioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, tfAudioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, tfAudioCtx.currentTime + 0.015);
             osc.start(tfAudioCtx.currentTime);
-            osc.stop(tfAudioCtx.currentTime + 0.05);
+            osc.stop(tfAudioCtx.currentTime + 0.015);
         } catch (e) {}
     }
 
