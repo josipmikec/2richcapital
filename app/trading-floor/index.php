@@ -2747,6 +2747,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             countContainer.textContent = (messages ? messages.length : 0) + ' in room';
         }
 
+        let previousLastSeenId = groupChatLastSeenId;
         if (messages && messages.length) {
             groupChatLastSeenId = Math.max(...messages.map(m => Number(m.id)));
         }
@@ -2760,7 +2761,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 const timestamp = msg.created_at ? new Date(String(msg.created_at).replace(' ', 'T')).toLocaleString() : 'Just now';
                 const initial = String(author).trim().charAt(0).toUpperCase() || 'M';
                 const bubbleBg = String(msg.user_id || '') === String(CURRENT_USER_ID) ? 'rgba(242,202,80,0.16)' : 'rgba(255,255,255,0.08)';
-                const isNew = groupChatLastSeenId > 0 && Number(msg.id) > groupChatLastSeenId;
+                const isNew = previousLastSeenId > 0 && Number(msg.id) > previousLastSeenId;
                 const highlightClass = isNew ? ' unread-highlight' : '';
                 return '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
                     + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;">' + initial + '</div>'
@@ -3106,13 +3107,14 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                 } else if (floorSignalsState.groupMessagesError) {
                                     messagesMarkup = '<div style="font-size:13px;color:#F2CA50;">' + floorSignalsState.groupMessagesError + '</div>';
                                 } else if (roomMessages.length) {
+                                    let previousLastSeenId = groupChatLastSeenId;
                                     if (roomMessages && roomMessages.length) { groupChatLastSeenId = Math.max(...roomMessages.map(m => Number(m.id))); }
                                     messagesMarkup = roomMessages.map(function (msg) {
                                         const author = msg.author_name || msg.user_name || 'Member';
                                         const timestamp = msg.created_at ? new Date(String(msg.created_at).replace(' ', 'T')).toLocaleString() : 'Just now';
                                         const initial = String(author).trim().charAt(0).toUpperCase() || 'M';
                                         const bubbleBg = String(msg.user_id || '') === String(CURRENT_USER_ID) ? 'rgba(242,202,80,0.16)' : 'rgba(255,255,255,0.08)';
-                                        const isNew = groupChatLastSeenId > 0 && Number(msg.id) > groupChatLastSeenId;
+                                        const isNew = previousLastSeenId > 0 && Number(msg.id) > previousLastSeenId;
                                         const highlightClass = isNew ? ' unread-highlight' : '';
                                         return '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
                                             + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;">' + initial + '</div>'
@@ -3125,7 +3127,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                 } else {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
                                 }
-                                return '<div id="groupChatMessagesContainer" onmouseenter="clearGroupChatHighlights()" onscroll="clearGroupChatHighlights()" ontouchstart="clearGroupChatHighlights()" style="display:flex;flex-direction:column;gap:8px;max-height:240px;overflow:auto;padding-right:2px;min-width:0;">' + messagesMarkup + '</div>'
+                                return '<div id="groupChatMessagesContainer" onmouseenter="clearGroupChatHighlights()" onscroll="clearGroupChatHighlights()" ontouchstart="clearGroupChatHighlights()" style="display:flex;flex-direction:column;gap:8px;height:520px;overflow:auto;padding-right:2px;min-width:0;">' + messagesMarkup + '</div>'
                                     + '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;width:100%;min-width:0;overflow:hidden;">'
                                     + '<textarea id="groupMessageInput" onkeydown="if(event.key===\'Enter\' && !event.shiftKey){event.preventDefault();sendCurrentGroupMessage();}" placeholder="Message" style="display:block;width:100%;min-width:0;box-sizing:border-box;min-height:44px;height:44px;max-height:160px;border-radius:22px;border:1px solid rgba(255,255,255,0.12);background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.028));padding:10px 18px;color:#f5f5f5;resize:vertical;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 24px rgba(0,0,0,0.18);font:600 13px/1.45 Montserrat,sans-serif;"></textarea>'
                                     + '<button class="group-pill-btn" type="button" onclick="sendCurrentGroupMessage()" aria-label="Send message" style="display:inline-flex;align-items:center;justify-content:center;align-self:end;white-space:nowrap;max-width:100%;min-width:52px;min-height:44px;padding:0 14px;border-radius:999px;box-shadow:0 8px 20px rgba(242,202,80,0.22);">&#8594;</button>'
