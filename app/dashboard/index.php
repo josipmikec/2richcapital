@@ -1600,7 +1600,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	                const isScrolledToBottom = list.scrollHeight - list.clientHeight <= list.scrollTop + 10;
 	                list.appendChild(div);
 	                if (isScrolledToBottom) list.scrollTop = list.scrollHeight;
-	                setTimeout(() => div.classList.remove('new-item'), 4000);
+	                setTimeout(() => div.classList.remove('new-item'), 60000);
 	            } else {
 	                list.prepend(div);
 	                list.scrollTop = list.scrollHeight;

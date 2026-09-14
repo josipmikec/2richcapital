@@ -130,7 +130,13 @@ if (
         }
 
         .news-item.new-item {
-            background: rgba(242,202,80,0.05);
+            animation: newsHighlightPulse 60s ease-out forwards;
+        }
+
+        @keyframes newsHighlightPulse {
+            0% { background-color: rgba(242, 202, 80, 0.2); }
+            80% { background-color: rgba(242, 202, 80, 0.05); }
+            100% { background-color: transparent; }
         }
 
         @keyframes slide-in {
@@ -211,7 +217,6 @@ if (
                 const isScrolledToBottom = feed.scrollHeight - feed.clientHeight <= feed.scrollTop + 10;
                 feed.appendChild(div);
                 if (isScrolledToBottom) feed.scrollTop = feed.scrollHeight;
-                setTimeout(() => div.classList.remove('new-item'), 4000);
             } else {
                 feed.prepend(div);
                 feed.scrollTop = feed.scrollHeight;
