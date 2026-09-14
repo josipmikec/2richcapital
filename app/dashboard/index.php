@@ -1455,6 +1455,30 @@ foreach ($_dashboard_initial_order as $card_id) {
         const membershipsUrl = '/api/signals/my-memberships.php';
         const messagesUrl = '/api/signals/messages.php';
         let memberships = [];
+        const CURRENT_USER_ID = <?php echo $user_id; ?>;
+        let tfAudioCtx = null;
+        function playChatPopSound() {
+            try {
+                if (!tfAudioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) return;
+                    tfAudioCtx = new AudioContext();
+                }
+                if (tfAudioCtx.state === 'suspended') tfAudioCtx.resume();
+                const osc = tfAudioCtx.createOscillator();
+                const gain = tfAudioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(tfAudioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, tfAudioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, tfAudioCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.1, tfAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, tfAudioCtx.currentTime + 0.05);
+                osc.start(tfAudioCtx.currentTime);
+                osc.stop(tfAudioCtx.currentTime + 0.05);
+            } catch (e) {}
+        }
+
         let selectedGroupId = 0;
 
         const state = document.getElementById('dashboardGroupChatState');
@@ -1488,9 +1512,11 @@ foreach ($_dashboard_initial_order as $card_id) {
 
             const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + 10;
             const currentCount = messages.childElementCount;
+            let hasNewExternalMessage = false;
             
             messages.innerHTML = items.map(item => {
                 const isNew = lastSeenId > 0 && Number(item.id) > lastSeenId;
+                if (isNew && String(item.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
                 const highlightClass = isNew ? ' unread-highlight' : '';
                 return `<div class="dashboard-group-chat-message${highlightClass}"><div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${escapeHtml(item.author_name || 'Member')}</span><span>${escapeHtml(time(item.created_at))}</span></div><div class="dashboard-group-chat-message-text">${escapeHtml(item.message)}</div></div>`;
             }).join('');
@@ -1501,6 +1527,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 messages.scrollTop = messages.scrollHeight;
             }
             if (footer) footer.hidden = false;
+            if (hasNewExternalMessage) playChatPopSound();
         }
         async function loadMessages() {
             if (!selectedGroupId) return;
