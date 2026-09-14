@@ -21,6 +21,9 @@ $user_id    = $_SESSION['user_id']    ?? 0;
 
 // ── Load saved dashboard layout for this user (server-side, no flash) ──
 $_dashboard_default_order = ['market','signals','news','classroom','strategies','trades','mentors','ai','chat','journal'];
+$_dashboard_default_order = array_values(array_filter($_dashboard_default_order, function($id) use ($user_id) {
+    return rich_card_visible($id, $user_id);
+}));
 $_dashboard_initial_order = $_dashboard_default_order;
 
 try {
@@ -1186,8 +1189,12 @@ foreach ($_dashboard_initial_order as $card_id) {
                                     <span class="dashboard-journal-curve-label">Equity curve</span>
                                 </div>
                             </div>
-                            <div class="dashboard-journal-curve-wrap" aria-hidden="true">
+                            <div class="dashboard-journal-curve-wrap" style="position:relative;" aria-hidden="true">
                                 <svg class="dashboard-journal-curve" id="dashboardJournalCurve" viewBox="0 0 120 40" preserveAspectRatio="none" role="img" aria-label="Equity curve based on all closed trades"></svg>
+                                <div id="dashboardJournalEmpty" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;background:rgba(21,21,21,0.8);border-radius:inherit;z-index:2;">
+                                    <span style="font-size:13px;font-weight:600;color:#989da5;margin-bottom:8px;">No Trades Yet</span>
+                                    <a href="../journal/" class="btn-primary" style="font-size:11px;padding:4px 10px;min-height:24px;text-decoration:none;">Add Trade</a>
+                                </div>
                             </div>
                             <div class="dashboard-journal-stats" aria-live="polite">
                                 <div class="dashboard-journal-stat dashboard-journal-stat-wide"><span class="dashboard-journal-stat-value dashboard-journal-stat-dual-value"><span id="dashboardJournalTotalTrades">—</span><span class="dashboard-journal-stat-slash">/</span><span id="dashboardJournalClosedTrades">—</span></span><span class="dashboard-journal-stat-label">Trades / Closed</span></div>
@@ -1331,10 +1338,14 @@ foreach ($_dashboard_initial_order as $card_id) {
                 equity += pl;
                 values.push(equity);
             });
+            const emptyOverlay = document.getElementById('dashboardJournalEmpty');
             if (!ordered.length || values.length < 2) {
-                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="currentColor" opacity="0.45" font-size="8">No closed trades yet</text>';
+                svg.style.display = 'none';
+                if (emptyOverlay) emptyOverlay.style.display = 'flex';
                 return;
             }
+            svg.style.display = 'block';
+            if (emptyOverlay) emptyOverlay.style.display = 'none';
             const min = Math.min(0, ...values);
             const max = Math.max(0, ...values);
             const width = 120;
@@ -2233,11 +2244,7 @@ foreach ($_dashboard_initial_order as $card_id) {
     (function () {
         const STORAGE_KEY = '2rich_dashboard_card_order';
 
-        const DEFAULT_ORDER = [
-            'market', 'signals', 'news', 'classroom',
-            'strategies', 'trades', 'mentors',
-            'ai', 'chat', 'journal'
-        ];
+        const DEFAULT_ORDER = <?php echo json_encode($_dashboard_default_order); ?>;
 
         const CARD_LABELS = {
             market:     'Market',
