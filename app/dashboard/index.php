@@ -1470,11 +1470,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                 osc.connect(gain);
                 gain.connect(tfAudioCtx.destination);
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(1200, tfAudioCtx.currentTime);
-                gain.gain.setValueAtTime(1.0, tfAudioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, tfAudioCtx.currentTime + 0.015);
+                osc.frequency.setValueAtTime(800, tfAudioCtx.currentTime);
+                gain.gain.setValueAtTime(0.4, tfAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, tfAudioCtx.currentTime + 0.1);
                 osc.start(tfAudioCtx.currentTime);
-                osc.stop(tfAudioCtx.currentTime + 0.015);
+                osc.stop(tfAudioCtx.currentTime + 0.1);
             } catch (e) {}
         }
 
