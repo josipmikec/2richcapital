@@ -1471,7 +1471,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 gain.connect(tfAudioCtx.destination);
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(1200, tfAudioCtx.currentTime);
-                gain.gain.setValueAtTime(0.2, tfAudioCtx.currentTime);
+                gain.gain.setValueAtTime(0.5, tfAudioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, tfAudioCtx.currentTime + 0.015);
                 osc.start(tfAudioCtx.currentTime);
                 osc.stop(tfAudioCtx.currentTime + 0.015);
