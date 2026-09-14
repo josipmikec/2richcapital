@@ -1073,7 +1073,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <span class="settings-card-title">Connection Details</span>
                     </div>
                     <div class="settings-card-body">
-                        <form method="post">
+                        <form method="post" action="#mt5">
                             <?php wp_nonce_field('rich_mt5_manage', 'rich_mt5_nonce'); ?>
                             <input type="hidden" name="mt5_form_action" value="connect">
 
@@ -1116,7 +1116,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     </div>
                     <div class="settings-card-body">
                         <?php if ($mt5_conn): ?>
-                            <form method="post">
+                            <form method="post" action="#mt5">
                                 <?php wp_nonce_field('rich_mt5_manage', 'rich_mt5_nonce'); ?>
                                 <input type="hidden" name="mt5_form_action" value="set_journal">
 
@@ -1191,13 +1191,13 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
 
                         <?php if ($mt5_conn): ?>
                             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
-                                <form method="post" style="margin:0;">
+                                <form method="post" action="#mt5" style="margin:0;">
                                     <?php wp_nonce_field('rich_mt5_manage', 'rich_mt5_nonce'); ?>
                                     <input type="hidden" name="mt5_form_action" value="reset_key">
                                     <button type="submit" class="settings-save-btn">Reset API Key</button>
                                 </form>
 
-                                <form method="post" style="margin:0;">
+                                <form method="post" action="#mt5" style="margin:0;">
                                     <?php wp_nonce_field('rich_mt5_manage', 'rich_mt5_nonce'); ?>
                                     <input type="hidden" name="mt5_form_action" value="disconnect">
                                     <button type="submit" class="settings-save-btn" style="background:rgba(248,113,113,0.1);color:#f87171;background-image:none;">
