@@ -171,6 +171,58 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             margin-bottom: 6px;
         }
         
+        .dashboard-group-chat-date-separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 12px 0 4px 0;
+            color: #666;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        
+        .dashboard-group-chat-date-separator:first-child {
+            margin-top: 0;
+        }
+        
+        .dashboard-group-chat-date-separator::before,
+        .dashboard-group-chat-date-separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .dashboard-group-chat-date-separator span {
+            padding: 0 10px;
+        }
+        
+        .dashboard-group-chat-message-reply {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, opacity 0.2s;
+            opacity: 0;
+        }
+        
+        .dashboard-group-chat-message:hover .dashboard-group-chat-message-reply {
+            opacity: 1;
+        }
+        
+        .dashboard-group-chat-message-reply:hover {
+            color: #F2CA50;
+        }
+        
+        @media (hover: none) {
+            .dashboard-group-chat-message-reply { opacity: 0.6; }
+        }
+        
         .dashboard-group-chat-message-author {
             color: #F2CA50;
             font-weight: 600;
@@ -327,6 +379,33 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
         const time = value => { const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z')); return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); };
 
+        const formatDateSeparator = value => {
+            const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z'));
+            if (Number.isNaN(d.getTime())) return '';
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            
+            const isSameDate = (d1, d2) => d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
+            
+            if (isSameDate(d, today)) return 'Today';
+            if (isSameDate(d, yesterday)) return 'Yesterday';
+            
+            return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+        };
+
+        window.replyToMessage = function(authorName) {
+            if (input) {
+                const replyText = `@${authorName} `;
+                if (!input.value.startsWith(replyText)) {
+                    input.value = replyText + input.value;
+                }
+                input.focus();
+                const len = input.value.length;
+                setTimeout(() => input.setSelectionRange(len, len), 10);
+            }
+        };
+
         function showState(html) { state.innerHTML = html; state.hidden = false; }
         function setCta(label, href, visible) { cta.innerHTML = `${label} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`; cta.onclick = () => { if (window.opener) window.opener.location.href = href; else window.location.href = href; }; cta.hidden = !visible; if (footer) footer.hidden = false; }
         
@@ -348,12 +427,28 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             const currentCount = messages.childElementCount;
             let hasNewExternalMessage = false;
             
-            messages.innerHTML = items.map(item => {
+            let html = '';
+            let lastDateStr = null;
+            
+            items.forEach(item => {
                 const isNew = lastSeenId > 0 && Number(item.id) > lastSeenId;
                 if (isNew && String(item.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
                 const highlightClass = isNew ? ' unread-highlight' : '';
-                return `<div class="dashboard-group-chat-message${highlightClass}"><div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${escapeHtml(item.author_name || 'Member')}</span><span>${escapeHtml(time(item.created_at))}</span></div><div class="dashboard-group-chat-message-text">${escapeHtml(item.message)}</div></div>`;
-            }).join('');
+                
+                const currentDateStr = formatDateSeparator(item.created_at);
+                if (currentDateStr && currentDateStr !== lastDateStr) {
+                    html += `<div class="dashboard-group-chat-date-separator"><span>${escapeHtml(currentDateStr)}</span></div>`;
+                    lastDateStr = currentDateStr;
+                }
+                
+                const safeAuthor = escapeHtml(item.author_name || 'Member');
+                const safeAuthorForJs = safeAuthor.replace(/'/g, "\\'");
+                const replyIcon = `<button class="dashboard-group-chat-message-reply" onclick="replyToMessage('${safeAuthorForJs}')" aria-label="Reply" title="Reply to ${safeAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
+                
+                html += `<div class="dashboard-group-chat-message${highlightClass}"><div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(time(item.created_at))}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${escapeHtml(item.message)}</div></div>`;
+            });
+            
+            messages.innerHTML = html;
             
             lastSeenId = Math.max(...items.map(i => Number(i.id)));
 

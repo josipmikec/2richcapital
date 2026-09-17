@@ -40,12 +40,14 @@ $ensure_table = "CREATE TABLE IF NOT EXISTS {$messages_table} (
     group_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     message TEXT NOT NULL,
+    reply_to_id BIGINT UNSIGNED NULL DEFAULT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NULL DEFAULT NULL,
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
     KEY group_created (group_id, created_at),
-    KEY user_created (user_id, created_at)
+    KEY user_created (user_id, created_at),
+    KEY reply_to (reply_to_id)
 ) {$wpdb->get_charset_collate()};";
 require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 dbDelta($ensure_table);
@@ -73,10 +75,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     $messages = $wpdb->get_results($wpdb->prepare(
-        "SELECT m.id, m.group_id, m.user_id, m.message, m.created_at,
+        "SELECT m.id, m.group_id, m.user_id, m.message, m.created_at, m.reply_to_id,
+                p.message AS reply_to_message_text, p.user_id AS reply_to_user_id,
+                COALESCE(NULLIF(pu.display_name, ''), NULLIF(pu.user_nicename, ''), NULLIF(pu.user_login, ''), CONCAT('User #', p.user_id)) AS reply_to_author_fallback,
                 COALESCE(NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', m.user_id)) AS author_name
          FROM {$messages_table} m
          LEFT JOIN {$wpdb->users} u ON u.ID = m.user_id
+         LEFT JOIN {$messages_table} p ON p.id = m.reply_to_id
+         LEFT JOIN {$wpdb->users} pu ON pu.ID = p.user_id
          WHERE m.group_id = %d AND m.is_deleted = 0
          ORDER BY m.created_at DESC, m.id DESC
          LIMIT 50",
@@ -95,6 +101,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'final_author_name' => is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : ($item['author_name'] ?? ('User #' . (int) $item['user_id']))
         ];
         $item['author_name'] = $item['_debug']['final_author_name'];
+        
+        if ($item['reply_to_id']) {
+            $reply_profile_name = $wpdb->get_var($wpdb->prepare(
+                "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+                (int) $item['reply_to_user_id']
+            ));
+            $item['reply_to_author_name'] = is_string($reply_profile_name) && trim($reply_profile_name) !== '' ? $reply_profile_name : ($item['reply_to_author_fallback'] ?? ('User #' . (int) $item['reply_to_user_id']));
+            unset($item['reply_to_author_fallback']);
+        }
+        
         return $item;
     }, $messages);
     echo json_encode(['success' => true, 'messages' => $messages]);
@@ -110,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $group_id = isset($payload['group_id']) ? (int) $payload['group_id'] : 0;
     $message = isset($payload['message']) ? trim((string) $payload['message']) : '';
+    $reply_to_id = !empty($payload['reply_to_id']) ? (int) $payload['reply_to_id'] : null;
 
     if ($group_id <= 0) {
         http_response_code(400);
@@ -145,9 +162,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'group_id' => $group_id,
             'user_id' => $user_id,
             'message' => $message,
+            'reply_to_id' => $reply_to_id,
             'created_at' => current_time('mysql'),
         ],
-        ['%d', '%d', '%s', '%s']
+        ['%d', '%d', '%s', '%d', '%s']
     );
 
     if (!$inserted) {
