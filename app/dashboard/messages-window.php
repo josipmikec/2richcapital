@@ -8,16 +8,19 @@ if (
     header('Location: https://app.2rich.capital/login');
     exit;
 }
+
+$user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Private Messages — 2RICH CAPITAL</title>
+    <title>Messages — 2RICH CAPITAL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?php echo time(); ?>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -84,195 +87,188 @@ if (
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            position: relative;
+        }
+        
+        /* Dashboard Group Chat Extracted Styles */
+        .dashboard-group-chat-state {
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .dashboard-group-chat-switcher {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+        }
+        
+        .dashboard-group-chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             scrollbar-width: thin;
             scrollbar-color: #1a1a1a transparent;
         }
-
-        .mw-content::-webkit-scrollbar {
+        
+        .dashboard-group-chat-messages::-webkit-scrollbar {
             width: 4px;
         }
-
-        .mw-content::-webkit-scrollbar-thumb {
+        
+        .dashboard-group-chat-messages::-webkit-scrollbar-thumb {
             background: #1a1a1a;
             border-radius: 4px;
         }
-
-        .mw-empty {
-            padding: 40px 20px;
-            color: #555;
+        
+        .dashboard-group-chat-message {
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        
+        .dashboard-group-chat-message.unread-highlight {
+            animation: highlightFade 4s forwards;
+        }
+        
+        @keyframes highlightFade {
+            0% { background: rgba(242, 202, 80, 0.15); border-color: rgba(242, 202, 80, 0.3); }
+            100% { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.02); }
+        }
+        
+        .dashboard-group-chat-message-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        
+        .dashboard-group-chat-message-author {
+            color: #F2CA50;
+            font-weight: 600;
+        }
+        
+        .dashboard-group-chat-message-text {
             font-size: 13px;
+            color: #e0e0e0;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        
+        .dashboard-group-chat-empty {
+            color: #666;
             text-align: center;
+            font-size: 12px;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+        
+        .dashboard-group-chat-footer {
+            padding: 14px 20px;
+            background: rgba(14,14,14,0.95);
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+        
+        .dashboard-group-chat-composer {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .dashboard-group-chat-composer input {
             flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 14px;
+            border-radius: 20px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
         }
         
-        .mw-empty svg {
-            color: #333;
-        }
-
-        .chat-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-list-item {
-            display: flex;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .chat-list-item:hover {
-            background: rgba(255,255,255,0.02);
+        .dashboard-group-chat-composer input:focus {
+            border-color: rgba(242, 202, 80, 0.5);
         }
         
-        .chat-list-item:last-child {
-            border-bottom: none;
-        }
-
-        .chat-avatar {
+        .dashboard-group-chat-send {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #2a2a2a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            color: #f2ca50;
-            margin-right: 14px;
-            flex-shrink: 0;
-        }
-
-        .chat-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .chat-name-time {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 4px;
-        }
-
-        .chat-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #eee;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chat-time {
-            font-size: 10px;
-            color: #666;
-            flex-shrink: 0;
-            margin-left: 8px;
-        }
-
-        .chat-preview {
-            font-size: 12px;
-            color: #888;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .chat-unread .chat-name {
-            color: #fff;
-        }
-        
-        .chat-unread .chat-preview {
-            color: #ccc;
-            font-weight: 500;
-        }
-
-        .unread-badge {
             background: #F2CA50;
-            color: #000;
-            font-size: 9px;
-            font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 8px;
-        }
-
-        /* Coming soon overlay */
-        .coming-soon-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(14,14,14,0.85);
-            backdrop-filter: blur(4px);
+            color: #0E0E0E;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 20;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            flex-shrink: 0;
         }
         
-        .coming-soon-overlay.active {
-            opacity: 1;
-            pointer-events: all;
+        .dashboard-group-chat-send:active {
+            transform: scale(0.95);
         }
         
-        .coming-soon-card {
-            background: #111;
-            border: 1px solid #222;
-            padding: 24px;
-            border-radius: 12px;
-            text-align: center;
-            max-width: 80%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .dashboard-group-chat-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
-        .coming-soon-card h3 {
-            color: #f2ca50;
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-        
-        .coming-soon-card p {
-            font-size: 13px;
-            color: #aaa;
-            line-height: 1.5;
-            margin-bottom: 16px;
-        }
-        
-        .btn-close {
-            background: transparent;
-            border: 1px solid #333;
+        .widget-action {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
             color: #eee;
-            padding: 8px 16px;
+            padding: 10px;
             border-radius: 6px;
             font-family: inherit;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
         
-        .btn-close:hover {
-            background: #222;
-            border-color: #444;
+        .widget-action:hover {
+            background: rgba(255,255,255,0.1);
+            color: #F2CA50;
+        }
+        
+        .widget-content-block {
+            text-align: center;
+            padding: 20px;
+        }
+        .widget-content-text {
+            font-size: 12px;
+            color: #888;
         }
     </style>
 </head>
 <body>
 
     <div class="mw-header">
-        <span class="mw-brand">Messages</span>
+        <span class="mw-brand">2RICH — Messages</span>
         <div class="mw-status">
             <span class="status-dot"></span>
             <span>Online</span>
@@ -280,46 +276,111 @@ if (
     </div>
 
     <div class="mw-content">
-        <!-- Currently returning an empty state as there is no backend -->
-        <div class="mw-empty">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <p>No messages yet.<br>Your private conversations will appear here.</p>
+        <div id="dashboardGroupChatState" class="dashboard-group-chat-state">
+            <div class="widget-content-block"><p class="widget-content-text">Loading your joined trading group...</p></div>
         </div>
-        
-        <!-- Placeholder for when messages exist
-        <ul class="chat-list">
-            <li class="chat-list-item chat-unread" onclick="showComingSoon()">
-                <div class="chat-avatar">M</div>
-                <div class="chat-details">
-                    <div class="chat-name-time">
-                        <div class="chat-name">Mentor Support <span class="unread-badge">1</span></div>
-                        <div class="chat-time">Just now</div>
-                    </div>
-                    <div class="chat-preview">Welcome to 2RICH! Let us know if you need any help.</div>
-                </div>
-            </li>
-        </ul>
-        -->
-    </div>
-    
-    <div class="coming-soon-overlay" id="comingSoonOverlay">
-        <div class="coming-soon-card">
-            <h3>Coming Soon</h3>
-            <p>Direct messaging is currently being built. It will be available in an upcoming update.</p>
-            <button class="btn-close" onclick="hideComingSoon()">Close</button>
+        <div id="dashboardGroupChatMessages" class="dashboard-group-chat-messages" aria-live="polite"></div>
+        <div id="dashboardGroupChatFooter" class="dashboard-group-chat-footer" hidden>
+            <div id="dashboardGroupChatComposer" class="dashboard-group-chat-composer" hidden>
+                <input id="dashboardGroupChatInput" type="text" maxlength="1000" placeholder="Write a message..." aria-label="Write a group chat message">
+                <button id="dashboardGroupChatSend" class="dashboard-group-chat-send" type="button" aria-label="Send message" title="Send message"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+            </div>
+            <button id="dashboardGroupChatCta" class="widget-action" type="button" onclick="window.opener ? window.opener.location.href='/trading-floor#groups' : window.location.href='/trading-floor#groups'" hidden>Choose a Group <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
         </div>
     </div>
 
     <script>
-        function showComingSoon() {
-            document.getElementById('comingSoonOverlay').classList.add('active');
+        const CURRENT_USER_ID = <?php echo $user_id; ?>;
+        const membershipsUrl = '/api/signals/my-memberships.php';
+        const messagesUrl = '/api/signals/messages.php';
+        
+        let memberships = [];
+        let selectedGroupId = null;
+
+        const state = document.getElementById('dashboardGroupChatState');
+        const messages = document.getElementById('dashboardGroupChatMessages');
+        const composer = document.getElementById('dashboardGroupChatComposer');
+        const input = document.getElementById('dashboardGroupChatInput');
+        const send = document.getElementById('dashboardGroupChatSend');
+        const cta = document.getElementById('dashboardGroupChatCta');
+        const footer = document.getElementById('dashboardGroupChatFooter');
+
+        const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
+        const time = value => { const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z')); return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); };
+
+        function showState(html) { state.innerHTML = html; state.hidden = false; }
+        function setCta(label, href, visible) { cta.innerHTML = `${label} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`; cta.onclick = () => { if (window.opener) window.opener.location.href = href; else window.location.href = href; }; cta.hidden = !visible; if (footer) footer.hidden = false; }
+        
+        let lastSeenId = 0;
+        let currentMessagesCache = '';
+
+        function renderMessages(items) {
+            if (!items || !items.length) {
+                messages.innerHTML = '<div class="dashboard-group-chat-empty">No messages yet. Start the conversation.</div>';
+                return;
+            }
+            
+            const lastItem = items[items.length - 1];
+            const newCache = items.length + '_' + lastItem.id;
+            if (newCache === currentMessagesCache) return;
+            currentMessagesCache = newCache;
+
+            const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + 10;
+            const currentCount = messages.childElementCount;
+            let hasNewExternalMessage = false;
+            
+            messages.innerHTML = items.map(item => {
+                const isNew = lastSeenId > 0 && Number(item.id) > lastSeenId;
+                if (isNew && String(item.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
+                const highlightClass = isNew ? ' unread-highlight' : '';
+                return `<div class="dashboard-group-chat-message${highlightClass}"><div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${escapeHtml(item.author_name || 'Member')}</span><span>${escapeHtml(time(item.created_at))}</span></div><div class="dashboard-group-chat-message-text">${escapeHtml(item.message)}</div></div>`;
+            }).join('');
+            
+            lastSeenId = Math.max(...items.map(i => Number(i.id)));
+
+            if (isScrolledToBottom || currentCount === 0 || currentCount === 1) {
+                messages.scrollTop = messages.scrollHeight;
+            }
+            if (footer) footer.hidden = false;
         }
         
-        function hideComingSoon() {
-            document.getElementById('comingSoonOverlay').classList.remove('active');
+        async function loadMessages() {
+            if (!selectedGroupId) return;
+            try { const r = await fetch(`${messagesUrl}?group_id=${encodeURIComponent(selectedGroupId)}`, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load messages'); renderMessages(data.messages || []); } catch (e) { /* silent fail on poll */ }
         }
+        
+        async function selectGroup(id) {
+            selectedGroupId = Number(id);
+            lastSeenId = 0;
+            currentMessagesCache = '';
+            const group = memberships.find(item => Number(item.id) === selectedGroupId);
+            if (!group) return;
+            state.innerHTML = `<select class="dashboard-group-chat-switcher" aria-label="Select joined group">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>`;
+            state.hidden = false;
+            state.querySelector('select').addEventListener('change', e => selectGroup(e.target.value));
+            composer.hidden = false; setCta('Visit Group', `/trading-floor#groups&group=${encodeURIComponent(String(group.id))}`, true);
+            await loadMessages();
+        }
+        
+        async function init() {
+            try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.hidden = true; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
+        }
+        
+        async function sendMessage() { const value = input.value.trim(); if (!value || !selectedGroupId) return; send.disabled = true; try { const r = await fetch(messagesUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:selectedGroupId, message:value})}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to send message'); input.value = ''; await loadMessages(); } catch(e) { showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); } finally { send.disabled = false; } }
+        
+        send.addEventListener('click', sendMessage); input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+        
+        init();
+        
+        // Use Web Worker for background-friendly polling
+        const workerBlob = new Blob([`
+            setInterval(() => postMessage('tick'), 4000);
+        `], { type: 'application/javascript' });
+        const pollWorker = new Worker(URL.createObjectURL(workerBlob));
+        
+        pollWorker.onmessage = () => {
+            loadMessages();
+        };
     </script>
 </body>
 </html>
