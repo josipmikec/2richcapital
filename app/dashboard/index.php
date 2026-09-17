@@ -1151,6 +1151,15 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </div>
                         <div id="dashboardGroupChatMessages" class="dashboard-group-chat-messages" aria-live="polite"></div>
                         <div id="dashboardGroupChatFooter" class="dashboard-group-chat-footer" hidden>
+                            <div id="dashboardGroupChatReplyPreview" class="dashboard-group-chat-reply-preview" style="display:none;">
+                                <div class="dashboard-group-chat-reply-preview-content">
+                                    <span id="dashboardGroupChatReplyPreviewAuthor" class="dashboard-group-chat-reply-preview-author"></span>
+                                    <span id="dashboardGroupChatReplyPreviewText" class="dashboard-group-chat-reply-preview-text"></span>
+                                </div>
+                                <button type="button" class="dashboard-group-chat-reply-cancel" onclick="cancelReply()">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
+                            </div>
                             <div id="dashboardGroupChatComposer" class="dashboard-group-chat-composer" hidden>
                                 <input id="dashboardGroupChatInput" type="text" maxlength="1000" placeholder="Write a message..." aria-label="Write a group chat message">
                                 <button id="dashboardGroupChatSend" class="dashboard-group-chat-send" type="button" aria-label="Send message" title="Send message"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
@@ -1495,6 +1504,36 @@ foreach ($_dashboard_initial_order as $card_id) {
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
         const time = value => { const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z')); return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); };
 
+        const formatDateSeparator = value => {
+            const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z'));
+            if (Number.isNaN(d.getTime())) return '';
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            
+            const isSameDate = (d1, d2) => d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
+            
+            if (isSameDate(d, today)) return 'Today';
+            if (isSameDate(d, yesterday)) return 'Yesterday';
+            
+            return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+        };
+
+        let currentReplyToId = null;
+
+        window.replyToMessage = function(id, authorName, text) {
+            currentReplyToId = id;
+            document.getElementById('dashboardGroupChatReplyPreviewAuthor').textContent = authorName;
+            document.getElementById('dashboardGroupChatReplyPreviewText').textContent = text;
+            document.getElementById('dashboardGroupChatReplyPreview').style.display = 'flex';
+            if (input) input.focus();
+        };
+
+        window.cancelReply = function() {
+            currentReplyToId = null;
+            document.getElementById('dashboardGroupChatReplyPreview').style.display = 'none';
+        };
+
         function showState(html) { state.innerHTML = html; state.hidden = false; }
         function setCta(label, href, visible) { cta.innerHTML = `${label} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`; cta.onclick = () => { window.location.href = href; }; cta.hidden = !visible; if (footer) footer.hidden = false; }
         let lastSeenId = 0;
@@ -1516,12 +1555,36 @@ foreach ($_dashboard_initial_order as $card_id) {
             const currentCount = messages.childElementCount;
             let hasNewExternalMessage = false;
             
-            messages.innerHTML = items.map(item => {
+            let html = '';
+            let lastDateStr = null;
+            
+            items.forEach(item => {
                 const isNew = lastSeenId > 0 && Number(item.id) > lastSeenId;
                 if (isNew && String(item.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
                 const highlightClass = isNew ? ' unread-highlight' : '';
-                return `<div class="dashboard-group-chat-message${highlightClass}"><div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${escapeHtml(item.author_name || 'Member')}</span><span>${escapeHtml(time(item.created_at))}</span></div><div class="dashboard-group-chat-message-text">${escapeHtml(item.message)}</div></div>`;
-            }).join('');
+                
+                const currentDateStr = formatDateSeparator(item.created_at);
+                if (currentDateStr && currentDateStr !== lastDateStr) {
+                    html += `<div class="dashboard-group-chat-date-separator"><span>${escapeHtml(currentDateStr)}</span></div>`;
+                    lastDateStr = currentDateStr;
+                }
+                
+                const safeAuthor = escapeHtml(item.author_name || 'Member');
+                const safeAuthorForJs = safeAuthor.replace(/'/g, "\\'");
+                const safeTextForJs = escapeHtml(item.message).replace(/'/g, "\\'").replace(/\n/g, " ");
+                const replyIcon = `<button class="dashboard-group-chat-message-reply" onclick="replyToMessage(${item.id}, '${safeAuthorForJs}', '${safeTextForJs}')" aria-label="Reply" title="Reply to ${safeAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
+                
+                let replyHtml = '';
+                if (item.reply_to_id) {
+                    const rAuthor = escapeHtml(item.reply_to_author_name || 'Member');
+                    const rText = escapeHtml(item.reply_to_message_text || '...');
+                    replyHtml = `<div class="dashboard-group-chat-replied-to"><div class="dashboard-group-chat-replied-author">${rAuthor}</div><div class="dashboard-group-chat-replied-text">${rText}</div></div>`;
+                }
+                
+                html += `<div class="dashboard-group-chat-message${highlightClass}">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(time(item.created_at))}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${escapeHtml(item.message)}</div></div>`;
+            });
+            
+            messages.innerHTML = html;
             
             lastSeenId = Math.max(...items.map(i => Number(i.id)));
 
@@ -1550,7 +1613,7 @@ foreach ($_dashboard_initial_order as $card_id) {
         async function init() {
             try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.hidden = true; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
         }
-        async function sendMessage() { const value = input.value.trim(); if (!value || !selectedGroupId) return; send.disabled = true; try { const r = await fetch(messagesUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:selectedGroupId, message:value})}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to send message'); input.value = ''; await loadMessages(); } catch(e) { showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); } finally { send.disabled = false; } }
+        async function sendMessage() { const value = input.value.trim(); if (!value || !selectedGroupId) return; send.disabled = true; try { const r = await fetch(messagesUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:selectedGroupId, message:value, reply_to_id:currentReplyToId})}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to send message'); input.value = ''; cancelReply(); await loadMessages(); } catch(e) { showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); } finally { send.disabled = false; } }
         send.addEventListener('click', sendMessage); input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
         init();
         // Use Web Worker for background-friendly polling

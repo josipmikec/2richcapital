@@ -2703,7 +2703,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }
     }
 
-    async function sendGroupMessage(groupId, message) {
+    async function sendGroupMessage(groupId, message, replyToId = null) {
         const text = String(message || '').trim();
         if (!groupId || !text) {
             throw new Error('Message is empty.');
@@ -2715,7 +2715,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': SIGNALS_CSRF
             },
-            body: JSON.stringify({ group_id: groupId, message: text })
+            body: JSON.stringify({ group_id: groupId, message: text, reply_to_id: replyToId })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
@@ -2732,8 +2732,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         floorSignalsState.groupMessagesError = '';
         input.disabled = true;
         try {
-            await sendGroupMessage(groupId, text);
+            await sendGroupMessage(groupId, text, floorSignalsState.currentReplyToId);
             input.value = '';
+            floorSignalsState.currentReplyToId = null;
             await pollGroupMessages(groupId);
             setTimeout(() => {
                 const container = document.getElementById('groupChatMessagesContainer');
@@ -3122,6 +3123,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                 } else if (roomMessages.length) {
                                     let previousLastSeenId = groupChatLastSeenId;
                                     let hasNewExternalMessage = false;
+                                    let lastDateStr = null;
                                     if (roomMessages && roomMessages.length) { groupChatLastSeenId = Math.max(...roomMessages.map(m => Number(m.id))); }
                                     messagesMarkup = roomMessages.map(function (msg) {
                                         const author = msg.author_name || msg.user_name || 'Member';
@@ -3131,11 +3133,31 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                         const isNew = previousLastSeenId > 0 && Number(msg.id) > previousLastSeenId;
                                         if (isNew && String(msg.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
                                         const highlightClass = isNew ? ' unread-highlight' : '';
-                                        return '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
-                                            + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;">' + initial + '</div>'
-                                            + '<div style="flex:1;">'
-                                            + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span></div>'
-                                            + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;">' + (msg.message || '') + '</div>'
+                                        
+                                        let dateSepHtml = '';
+                                        const currentDateStr = formatDateSeparator(msg.created_at);
+                                        if (currentDateStr && currentDateStr !== lastDateStr) {
+                                            dateSepHtml = '<div style="display:flex;align-items:center;text-align:center;margin:12px 0 4px 0;color:#666;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;"><div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);"></div><span style="padding:0 10px;">'+escapeHtmlForTradingFloor(currentDateStr)+'</span><div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);"></div></div>';
+                                            lastDateStr = currentDateStr;
+                                        }
+
+                                        let replyHtml = '';
+                                        if (msg.reply_to_id) {
+                                            const rAuthor = escapeHtmlForTradingFloor(msg.reply_to_author_name || 'Member');
+                                            const rText = escapeHtmlForTradingFloor(msg.reply_to_message_text || '...');
+                                            replyHtml = '<div style="background:rgba(0,0,0,0.25);border-left:2px solid #f2ca50;padding:6px 8px;border-radius:4px 6px 6px 4px;margin-bottom:8px;font-size:10px;"><div style="color:#f2ca50;font-weight:600;margin-bottom:2px;">'+rAuthor+'</div><div style="color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">'+rText+'</div></div>';
+                                        }
+
+                                        const safeAuthorForJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
+                                        const safeTextForJs = escapeHtmlForTradingFloor(msg.message).replace(/'/g, "\\'").replace(/\\n/g, " ");
+                                        const replyIcon = '<button type="button" onclick="window.replyToGroupMessage('+msg.id+', \\''+safeAuthorForJs+'\\', \\''+safeTextForJs+'\\')" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>';
+
+                                        return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
+                                            + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
+                                            + '<div style="flex:1;min-width:0;">'
+                                            + replyHtml
+                                            + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span>' + replyIcon + '</div></div>'
+                                            + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + (msg.message || '') + '</div>'
                                             + '</div>'
                                             + '</div>';
                                     }).join('');
@@ -3143,11 +3165,20 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
                                 }
                                 if (typeof hasNewExternalMessage !== 'undefined' && hasNewExternalMessage) setTimeout(playChatPopSound, 100);
+                                
+                                const replyPreviewBlock = floorSignalsState.currentReplyToId ? 
+                                    '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(242,202,80,0.05);border-left:3px solid #f2ca50;padding:8px 12px;border-radius:6px;margin-bottom:8px;gap:8px;">'
+                                    + '<div style="display:flex;flex-direction:column;gap:4px;overflow:hidden;flex:1;">'
+                                    + '<span style="color:#f2ca50;font-size:11px;font-weight:700;">' + escapeHtmlForTradingFloor(floorSignalsState.currentReplyAuthor) + '</span>'
+                                    + '<span style="color:#ccc;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">' + escapeHtmlForTradingFloor(floorSignalsState.currentReplyText) + '</span>'
+                                    + '</div><button type="button" onclick="cancelGroupReply()" style="background:none;border:none;color:#888;cursor:pointer;padding:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>' : '';
+
                                 return '<div id="groupChatMessagesContainer" style="display:flex;flex-direction:column;gap:8px;height:520px;overflow:auto;padding-right:2px;min-width:0;">' + messagesMarkup + '</div>'
+                                    + '<div style="margin-top:8px;">' + replyPreviewBlock
                                     + '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;width:100%;min-width:0;overflow:hidden;">'
                                     + '<textarea id="groupMessageInput" onkeydown="if(event.key===\'Enter\' && !event.shiftKey){event.preventDefault();sendCurrentGroupMessage();}" placeholder="Message" style="display:block;width:100%;min-width:0;box-sizing:border-box;min-height:44px;height:44px;max-height:160px;border-radius:22px;border:1px solid rgba(255,255,255,0.12);background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.028));padding:10px 18px;color:#f5f5f5;resize:vertical;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 24px rgba(0,0,0,0.18);font:600 13px/1.45 Montserrat,sans-serif;"></textarea>'
                                     + '<button class="group-pill-btn" type="button" onclick="sendCurrentGroupMessage()" aria-label="Send message" style="display:inline-flex;align-items:center;justify-content:center;align-self:end;white-space:nowrap;max-width:100%;min-width:52px;min-height:44px;padding:0 14px;border-radius:999px;box-shadow:0 8px 20px rgba(242,202,80,0.22);">&#8594;</button>'
-                                    + '</div>';
+                                    + '</div></div>';
                             })()}
                         </div>
                     </article>
@@ -3983,10 +4014,38 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
     function signalsUrl(path) {
         return `${SIGNALS_API_BASE}/${String(path).replace(/^\/+/, '')}`;
     }
-    const floorSignalsState = { groups: [], memberships: [], activeGroupId: null, activeTab: 'discovery', activeView: 'list', activeWorkspaceTab: 'room', groupMembers: [], groupMembersError: '', groupMessagesByGroup: {}, groupMessagesLoading: false, groupMessagesError: '', groupSignalsByGroup: {}, groupSignalsLoading: false, groupSignalsError: '', loading: false, booted: false, creating: false, error: '', csrf: SIGNALS_CSRF, myDrafts: [], joinMessage: '', createMessage: '', postingSignal: false, busyKey: '' };
+    const floorSignalsState = { groups: [], memberships: [], activeGroupId: null, activeTab: 'discovery', activeView: 'list', activeWorkspaceTab: 'room', groupMembers: [], groupMembersError: '', groupMessagesByGroup: {}, groupMessagesLoading: false, groupMessagesError: '', groupSignalsByGroup: {}, groupSignalsLoading: false, groupSignalsError: '', loading: false, booted: false, creating: false, error: '', csrf: SIGNALS_CSRF, myDrafts: [], joinMessage: '', createMessage: '', postingSignal: false, busyKey: '', currentReplyToId: null, currentReplyAuthor: '', currentReplyText: '' };
     
     let groupChatLastSeenId = 0;
     let tfAudioCtx = null;
+    
+    const escapeHtmlForTradingFloor = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
+    const formatDateSeparator = value => {
+        const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z'));
+        if (Number.isNaN(d.getTime())) return '';
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+        const isSameDate = (d1, d2) => d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
+        if (isSameDate(d, today)) return 'Today';
+        if (isSameDate(d, yesterday)) return 'Yesterday';
+        return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+    window.cancelGroupReply = function() {
+        floorSignalsState.currentReplyToId = null;
+        renderGroupsPanel();
+    };
+    window.replyToGroupMessage = function(id, authorName, text) {
+        floorSignalsState.currentReplyToId = id;
+        floorSignalsState.currentReplyAuthor = authorName;
+        floorSignalsState.currentReplyText = text;
+        renderGroupsPanel();
+        setTimeout(() => {
+            const input = document.getElementById('groupMessageInput');
+            if (input) input.focus();
+        }, 50);
+    };
+
     function playChatPopSound() {
         try {
             if (!tfAudioCtx) {
