@@ -70,6 +70,8 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            word-break: break-word;
+            white-space: normal;
         }
 
         .mw-status {
@@ -118,6 +120,9 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             font-size: 13px;
             cursor: pointer;
             outline: none;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
         
         .dashboard-group-chat-messages {
@@ -260,6 +265,8 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             justify-content: center;
             align-items: center;
             gap: 8px;
+            white-space: normal !important;
+            flex-wrap: wrap;
         }
         
         .widget-action:hover {
