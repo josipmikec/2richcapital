@@ -1168,7 +1168,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <p class="widget-content-text">Direct messages with your mentors and fellow traders. All conversations are private and encrypted.</p>
                         </div>
                         <div class="widget-meta">Unread: <span>0 messages</span></div>
-                        <button class="widget-action">Open Messages <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+                        <button class="widget-action" onclick="openMessagesWindow()">Open Messages <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -1563,6 +1563,14 @@ foreach ($_dashboard_initial_order as $card_id) {
 	        window.open(
 	            '/dashboard/news-window.php',
 	            'newsWindow',
+	            'width=480,height=800,resizable=yes,scrollbars=yes'
+	        );
+	    }
+	    
+	    function openMessagesWindow() {
+	        window.open(
+	            '/dashboard/messages-window.php',
+	            'messagesWindow',
 	            'width=480,height=800,resizable=yes,scrollbars=yes'
 	        );
 	    }
