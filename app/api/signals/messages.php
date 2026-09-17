@@ -49,8 +49,7 @@ $ensure_table = "CREATE TABLE IF NOT EXISTS {$messages_table} (
     KEY user_created (user_id, created_at),
     KEY reply_to (reply_to_id)
 ) {$wpdb->get_charset_collate()};";
-require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-dbDelta($ensure_table);
+$wpdb->query($ensure_table);
 
 // Fallback in case dbDelta failed to add the column (due to its strict syntax parsing)
 if (!$wpdb->get_var("SHOW COLUMNS FROM {$messages_table} LIKE 'reply_to_id'")) {
@@ -162,21 +161,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    $insert_data = [
+        'group_id' => $group_id,
+        'user_id' => $user_id,
+        'message' => $message,
+        'created_at' => current_time('mysql'),
+    ];
+    $insert_format = ['%d', '%d', '%s', '%s'];
+
+    if ($reply_to_id !== null) {
+        $insert_data['reply_to_id'] = $reply_to_id;
+        $insert_format[] = '%d';
+    }
+
     $inserted = $wpdb->insert(
         $messages_table,
-        [
-            'group_id' => $group_id,
-            'user_id' => $user_id,
-            'message' => $message,
-            'reply_to_id' => $reply_to_id,
-            'created_at' => current_time('mysql'),
-        ],
-        ['%d', '%d', '%s', '%d', '%s']
+        $insert_data,
+        $insert_format
     );
 
     if (!$inserted) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Could not send message']);
+        echo json_encode(['success' => false, 'message' => 'Could not send message: ' . $wpdb->last_error]);
         exit;
     }
 

@@ -405,9 +405,11 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
 
         let currentReplyToId = null;
 
-        window.replyToMessage = function(id, authorName, text) {
-            currentReplyToId = id;
-            document.getElementById('dashboardGroupChatReplyPreviewAuthor').textContent = authorName;
+        window.replyToMessage = function(btn) {
+            currentReplyToId = btn.getAttribute('data-id');
+            const author = btn.getAttribute('data-author');
+            const text = btn.getAttribute('data-text');
+            document.getElementById('dashboardGroupChatReplyPreviewAuthor').textContent = author;
             document.getElementById('dashboardGroupChatReplyPreviewText').textContent = text;
             document.getElementById('dashboardGroupChatReplyPreview').style.display = 'flex';
             if (input) input.focus();
@@ -454,9 +456,9 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                 }
                 
                 const safeAuthor = escapeHtml(item.author_name || 'Member');
-                const safeAuthorForJs = safeAuthor.replace(/'/g, "\\'");
-                const safeTextForJs = escapeHtml(item.message).replace(/'/g, "\\'").replace(/\n/g, " ");
-                const replyIcon = `<button class="dashboard-group-chat-message-reply" onclick="replyToMessage(${item.id}, '${safeAuthorForJs}', '${safeTextForJs}')" aria-label="Reply" title="Reply to ${safeAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
+                const replyAuthor = escapeHtml(item.author_name || 'Member');
+                const replyText = escapeHtml(item.message || '');
+                const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="replyToMessage(this)" data-id="${item.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${safeAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
                 
                 let replyHtml = '';
                 if (item.reply_to_id) {

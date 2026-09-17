@@ -2764,6 +2764,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
 
         let messagesMarkup = '';
         let hasNewExternalMessage = false;
+        let lastDateStr = null;
         if (floorSignalsState.groupMessagesError) {
             messagesMarkup = '<div style="font-size:13px;color:#F2CA50;">' + floorSignalsState.groupMessagesError + '</div>';
         } else if (messages && messages.length) {
@@ -2775,11 +2776,31 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 const isNew = previousLastSeenId > 0 && Number(msg.id) > previousLastSeenId;
                 if (isNew && String(msg.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
                 const highlightClass = isNew ? ' unread-highlight' : '';
-                return '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
-                    + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;">' + initial + '</div>'
-                    + '<div style="flex:1;">'
-                    + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span></div>'
-                    + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;">' + (msg.message || '') + '</div>'
+                
+                let dateSepHtml = '';
+                const currentDateStr = formatDateSeparator(msg.created_at);
+                if (currentDateStr && currentDateStr !== lastDateStr) {
+                    dateSepHtml = '<div style="display:flex;align-items:center;text-align:center;margin:12px 0 4px 0;color:#666;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;"><div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);"></div><span style="padding:0 10px;">'+escapeHtmlForTradingFloor(currentDateStr)+'</span><div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);"></div></div>';
+                    lastDateStr = currentDateStr;
+                }
+
+                let replyHtml = '';
+                if (msg.reply_to_id) {
+                    const rAuthor = escapeHtmlForTradingFloor(msg.reply_to_author_name || 'Member');
+                    const rText = escapeHtmlForTradingFloor(msg.reply_to_message_text || '...');
+                    replyHtml = '<div style="background:rgba(0,0,0,0.25);border-left:2px solid #f2ca50;padding:6px 8px;border-radius:4px 6px 6px 4px;margin-bottom:8px;font-size:10px;"><div style="color:#f2ca50;font-weight:600;margin-bottom:2px;">'+rAuthor+'</div><div style="color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">'+rText+'</div></div>';
+                }
+
+                const replyAuthor = escapeHtmlForTradingFloor(author);
+                const replyText = escapeHtmlForTradingFloor(msg.message || '');
+                const replyIcon = `<button type="button" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
+
+                return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
+                    + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
+                    + '<div style="flex:1;min-width:0;">'
+                    + replyHtml
+                    + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span>' + replyIcon + '</div></div>'
+                    + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + (msg.message || '') + '</div>'
                     + '</div>'
                     + '</div>';
             }).join('');
@@ -3148,9 +3169,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                             replyHtml = '<div style="background:rgba(0,0,0,0.25);border-left:2px solid #f2ca50;padding:6px 8px;border-radius:4px 6px 6px 4px;margin-bottom:8px;font-size:10px;"><div style="color:#f2ca50;font-weight:600;margin-bottom:2px;">'+rAuthor+'</div><div style="color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">'+rText+'</div></div>';
                                         }
 
-                                        const safeAuthorForJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
-                                        const safeTextForJs = escapeHtmlForTradingFloor(msg.message).replace(/'/g, "\\'").replace(/\\n/g, " ");
-                                        const replyIcon = '<button type="button" onclick="window.replyToGroupMessage('+msg.id+', \\''+safeAuthorForJs+'\\', \\''+safeTextForJs+'\\')" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>';
+                                        const replyAuthor = escapeHtmlForTradingFloor(author);
+                                        const replyText = escapeHtmlForTradingFloor(msg.message || '');
+                                        const replyIcon = `<button type="button" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
 
                                         return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
                                             + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
@@ -4035,10 +4056,10 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         floorSignalsState.currentReplyToId = null;
         renderGroupsPanel();
     };
-    window.replyToGroupMessage = function(id, authorName, text) {
-        floorSignalsState.currentReplyToId = id;
-        floorSignalsState.currentReplyAuthor = authorName;
-        floorSignalsState.currentReplyText = text;
+    window.replyToGroupMessage = function(btn) {
+        floorSignalsState.currentReplyToId = btn.getAttribute('data-id');
+        floorSignalsState.currentReplyAuthor = btn.getAttribute('data-author');
+        floorSignalsState.currentReplyText = btn.getAttribute('data-text');
         renderGroupsPanel();
         setTimeout(() => {
             const input = document.getElementById('groupMessageInput');
