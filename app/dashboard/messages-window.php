@@ -22,7 +22,12 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?php echo time(); ?>">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            min-width: 0;
+        }
 
         body {
             font-family: Montserrat, -apple-system, BlinkMacSystemFont, sans-serif;
