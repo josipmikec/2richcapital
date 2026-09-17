@@ -86,7 +86,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow: hidden;
             position: relative;
         }
         
@@ -181,8 +181,8 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             display: flex;
             flex-direction: column;
             gap: 10px;
-            position: sticky;
-            bottom: 0;
+            position: relative;
+            margin-top: auto;
             z-index: 10;
         }
         
