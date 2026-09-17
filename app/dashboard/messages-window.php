@@ -111,7 +111,9 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         }
         
         .dashboard-group-chat-messages {
-            flex: 1;
+            flex: 1 !important;
+            max-height: none !important;
+            height: auto !important;
             overflow-y: auto;
             padding: 14px 20px;
             display: flex;
