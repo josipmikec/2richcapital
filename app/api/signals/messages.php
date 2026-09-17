@@ -44,13 +44,19 @@ $ensure_table = "CREATE TABLE IF NOT EXISTS {$messages_table} (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NULL DEFAULT NULL,
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    PRIMARY KEY (id),
+    PRIMARY KEY  (id),
     KEY group_created (group_id, created_at),
     KEY user_created (user_id, created_at),
     KEY reply_to (reply_to_id)
 ) {$wpdb->get_charset_collate()};";
 require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 dbDelta($ensure_table);
+
+// Fallback in case dbDelta failed to add the column (due to its strict syntax parsing)
+if (!$wpdb->get_var("SHOW COLUMNS FROM {$messages_table} LIKE 'reply_to_id'")) {
+    $wpdb->query("ALTER TABLE {$messages_table} ADD COLUMN reply_to_id BIGINT UNSIGNED NULL DEFAULT NULL");
+    $wpdb->query("ALTER TABLE {$messages_table} ADD KEY reply_to (reply_to_id)");
+}
 
 function rich_group_messages_is_member($wpdb, $memberships_table, $user_id, $group_id) {
     return (bool) $wpdb->get_var($wpdb->prepare(
