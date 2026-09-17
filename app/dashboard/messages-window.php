@@ -26,7 +26,12 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             margin: 0; 
             padding: 0; 
             box-sizing: border-box; 
-            min-width: 0;
+            min-width: 0 !important;
+        }
+
+        html, body {
+            overflow-x: hidden !important;
+            min-width: 150px !important;
         }
 
         body {
