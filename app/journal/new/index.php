@@ -56,7 +56,7 @@ $back_url = $journal_id > 0 ? '/journal?journal_id=' . $journal_id : '/journal';
                     <span>Dashboard</span>
                     <?php if (!rich_feature_enabled('dashboard', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
-                <li class="menu-item active">
+                <li class="menu-item active" <?php echo !rich_feature_enabled('journal', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?>>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
