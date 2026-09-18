@@ -1,5 +1,6 @@
 <?php
 require_once '../../auth/session-config.php';
+require_once '../../auth/feature-flags.php';
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     header('Location: https://app.2rich.capital/login/');

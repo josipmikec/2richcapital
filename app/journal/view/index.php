@@ -1,6 +1,7 @@
 <?php
 // Load session configuration
 require_once '../../auth/session-config.php';
+require_once '../../auth/feature-flags.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
