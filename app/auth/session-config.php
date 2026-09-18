@@ -154,7 +154,7 @@ if (isset($_SESSION['user_id'])) {
 
         <main class='main-content' style='display:flex;align-items:center;justify-content:center;min-height:80vh;'>
             <div style='text-align:center;padding:40px;border:1px solid #333;border-radius:16px;background:#151515;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.5);'>
-                <h1 style='color:#f2ca50;margin-top:0;font-family:Montserrat,sans-serif;font-size:24px;'>Maintenance</h1>
+                <h1 style='color:#f2ca50;margin-top:0;margin-bottom:16px;font-family:Montserrat,sans-serif;font-size:24px;'>Maintenance</h1>
                 <p style='color:#a1a1a1;font-size:15px;line-height:1.5;margin-bottom:0;'>$msg</p>
             </div>
         </main>
