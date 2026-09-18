@@ -394,12 +394,30 @@ $useremail  = $_SESSION['user_email'] ?? '';
              MARKET FEEDS PANE
         ═══════════════════════════════════════════════════════════════ -->
         <div class="md-pane active" id="tab-feeds">
+            <div id="chartLayoutControls" style="display:flex; justify-content:flex-end; gap:16px; align-items:center; padding-bottom:12px;">
+                <label style="display:flex; align-items:center; gap:6px; color:#b2b5be; font-size:12px; font-weight:600; cursor:pointer; user-select:none;">
+                    <input type="checkbox" id="syncSymbolCheck" onchange="toggleSyncSymbol()" style="accent-color:#F2CA50;">
+                    Sync Symbols
+                </label>
+                
+                <select id="chartLayoutSelect" onchange="changeChartLayout(this.value)" style="background:#131722; color:#b2b5be; border:1px solid #1e1e1e; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; outline:none; cursor:pointer;">
+                    <option value="1x1">1x1 Layout</option>
+                    <option value="1x2">1x2 Horizontal</option>
+                    <option value="2x1">2x1 Vertical</option>
+                    <option value="2x2">2x2 Grid</option>
+                </select>
+            </div>
 
             <div class="md-chart-wrap" style="display:flex; flex-direction:row; background:#0f0f0f; padding:0;">
                 
                 <!-- Chart container -->
                 <div style="flex:1; min-width:0; display:block;">
-                    <div id="tv_chart_container" style="width:100%;"></div>
+                    <div id="tv_charts_grid" class="md-multi-chart-grid layout-1x1" style="height:100%;">
+                        <div class="md-chart-cell" id="tv_chart_1"></div>
+                        <div class="md-chart-cell" id="tv_chart_2" style="display:none;"></div>
+                        <div class="md-chart-cell" id="tv_chart_3" style="display:none;"></div>
+                        <div class="md-chart-cell" id="tv_chart_4" style="display:none;"></div>
+                    </div>
                 </div>
 
                 <!-- Watchlist Sidebar (collapsible) -->
@@ -657,7 +675,9 @@ $useremail  = $_SESSION['user_email'] ?? '';
 // ═══════════════════════════════════════════════════════════════════════════
 // CHART STATE
 // ═══════════════════════════════════════════════════════════════════════════
-let tvWidget       = null;
+let tvWidgets = [];
+let isSyncingSymbol = false;
+function getTvWidget() { return tvWidgets.length > 0 ? tvWidgets[0] : null; }
 let currentSymbol  = '';
 let chartSettings  = {};
 let chartSettingsTimer = null;
@@ -912,8 +932,8 @@ async function saveChartState(state) {
             chartDebug('chart state save response', { key: CHART_STATE_STORAGE_KEY, symbolKey, status: response.status, data });
 
             // Force TradingView to flush drawings via the save_load_adapter
-            if (tvWidget && typeof tvWidget.saveChartToServer === 'function') {
-                tvWidget.saveChartToServer(() => {
+            if (getTvWidget() && typeof getTvWidget().saveChartToServer === 'function') {
+                getTvWidget().saveChartToServer(() => {
                     chartDebug('tvWidget.saveChartToServer() complete - adapter triggered');
                 }, () => {}, { defaultChartName: 'default' });
             }
@@ -949,11 +969,11 @@ async function applyChartState(symbolOverride = null) {
     chartDebug('chart state apply start', { symbolOverride });
 
     try {
-        if (tvWidget && typeof tvWidget.load === 'function') {
+        if (getTvWidget() && typeof getTvWidget().load === 'function') {
             // Only attempt to load if it's a native TradingView state object.
             // Our older custom state objects (which only had {symbol, interval, chart_type}) will crash tvWidget.load
             if (nextState.charts || nextState.panes) {
-                tvWidget.load(nextState);
+                getTvWidget().load(nextState);
             } else {
                 chartDebug('chart state apply aborted - legacy custom state detected, skipping load', { nextState });
             }
@@ -1035,12 +1055,12 @@ function normalizeLineToolsState(value, key = '') {
 
 
 async function snapshotChartState() {
-    if (!tvWidget || !hasCompletedInitialChartRestore) return null;
+    if (!getTvWidget() || !hasCompletedInitialChartRestore) return null;
 
     return new Promise((resolve) => {
         try {
-            if (typeof tvWidget.save === 'function') {
-                const res = tvWidget.save(s => { resolve(s); });
+            if (typeof getTvWidget().save === 'function') {
+                const res = getTvWidget().save(s => { resolve(s); });
                 if (res && typeof res === 'object') {
                     resolve(res);
                 }
@@ -1127,26 +1147,26 @@ function applyTwoRichTemplate(templateId, options = {}) {
     const template = TWO_RICH_TEMPLATES[normalized];
     const shouldPersist = options.persist !== false;
 
-    if (!tvWidget) return;
+    if (!getTvWidget()) return;
 
     try {
-        if (typeof tvWidget.changeTheme === 'function') {
-            tvWidget.changeTheme(template.theme);
+        if (typeof getTvWidget().changeTheme === 'function') {
+            tvWidgets.forEach(w => { if (typeof w.changeTheme === 'function') w.changeTheme(template.theme); });
         }
     } catch (error) {
         console.warn('[2RICH] Could not change TradingView theme', error);
     }
 
     try {
-        if (typeof tvWidget.applyOverrides === 'function') {
-            tvWidget.applyOverrides(template.overrides);
+        if (typeof getTvWidget().applyOverrides === 'function') {
+            tvWidgets.forEach(w => { if (typeof w.applyOverrides === 'function') w.applyOverrides(template.overrides); });
         }
     } catch (error) {
         console.warn('[2RICH] Could not apply widget overrides', error);
     }
 
     try {
-        const chart = typeof tvWidget.activeChart === 'function' ? tvWidget.activeChart() : null;
+        const chart = getTvWidget() && typeof getTvWidget().activeChart === 'function' ? getTvWidget().activeChart() : null;
         if (chart && typeof chart.applyOverrides === 'function') {
             chart.applyOverrides(template.overrides);
         }
@@ -1707,8 +1727,8 @@ function bootstrapMarketChart() {
 }
 
 function mountNativeTimeframeGroup() {
-    if (!tvWidget || typeof tvWidget.headerReady !== 'function' || typeof tvWidget.createButton !== 'function') return;
-    tvWidget.headerReady().then(() => {
+    if (!getTvWidget() || typeof getTvWidget().headerReady !== 'function' || typeof tvWidget.createButton !== 'function') return;
+    getTvWidget().headerReady().then(() => {
         if (document.getElementById('rich-native-timeframes')) return;
         const group = document.createElement('div');
         group.id = 'rich-native-timeframes';
@@ -1722,7 +1742,7 @@ function mountNativeTimeframeGroup() {
             btn.addEventListener('click', () => richSetInterval(value));
             group.appendChild(btn);
         });
-        const host = tvWidget.createButton();
+        const host = getTvWidget().createButton();
         host.className = 'rich-native-timeframe-host';
         host.title = 'Timeframes';
         host.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;';
@@ -1738,7 +1758,7 @@ function syncNativeTimeframeGroup() {
     document.querySelectorAll('#rich-native-timeframes [data-rich-interval]').forEach(btn => btn.classList.toggle('is-active', String(btn.dataset.richInterval) === String(currentInterval)));
 }
 
-function richChartApi() { return tvWidget && typeof tvWidget.activeChart === 'function' ? tvWidget.activeChart() : null; }
+function richChartApi() { return getTvWidget() && typeof getTvWidget().activeChart === 'function' ? getTvWidget().activeChart() : null; }
 function richToolbarStatus(message) { const el=document.getElementById('richToolbarStatus'); if(el) el.textContent=message; }
 function richOpenSymbolModal() {
     const chart = richChartApi();
@@ -1767,7 +1787,7 @@ function wireRichToolbar() {
 }
 
 async function initChart() {
-    if (tvWidget) { tvWidget.remove(); tvWidget = null; }
+    tvWidgets.forEach(w => { if(w) w.remove(); }); tvWidgets = [];
     
     const stateMap = await loadChartStateMap();
     const symbolKey = getChartStateSymbol(currentSymbol);
@@ -1779,8 +1799,20 @@ async function initChart() {
     const isFirstTimeUser = !hasPersistedTvUserSettings();
     const initialTemplate = isFirstTimeUser ? TWO_RICH_TEMPLATES[preferredTemplateId] : null;
 
-    tvWidget = new TradingView.widget({
-        container:       'tv_chart_container',
+    const layout = localStorage.getItem('md_chart_layout') || '1x1';
+    const grid = document.getElementById('tv_charts_grid');
+    if (grid) grid.className = 'md-multi-chart-grid layout-' + layout;
+    let cellCount = 1;
+    if (layout === '1x2' || layout === '2x1') cellCount = 2;
+    if (layout === '2x2') cellCount = 4;
+    for (let i = 1; i <= 4; i++) {
+        const cell = document.getElementById('tv_chart_' + i);
+        if (cell) cell.style.display = i <= cellCount ? 'block' : 'none';
+        if (cell && i > cellCount) cell.innerHTML = '';
+    }
+    for (let i = 1; i <= cellCount; i++) {
+        const widget = new TradingView.widget({
+            container:       'tv_chart_' + i,
         locale:          'en',
         library_path:    '../assets/charting_library/',
         datafeed:        sharedDatafeed,
@@ -1789,7 +1821,7 @@ async function initChart() {
         interval:        currentInterval,
         fullscreen:      false,
         autosize:        true,
-        saved_data:      hasValidState ? savedState : undefined,
+        saved_data:      (hasValidState && i === 1) ? savedState : undefined,
         theme:           initialTemplate ? initialTemplate.theme : DEFAULT_CHART_THEME.theme,
         timezone:        'Europe/London',
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
@@ -1854,8 +1886,28 @@ async function initChart() {
             }
         }
     });
+        tvWidgets.push(widget);
 
-    tvWidget.onChartReady(() => {
+        widget.onChartReady(() => {
+            if (i > 1) {
+                const chart = widget.activeChart();
+                if (chart && typeof chart.onSymbolChanged === 'function') {
+                    chart.onSymbolChanged().subscribe(null, (symbolInfo) => {
+                        const nextSymbol = String(symbolInfo?.ticker || symbolInfo?.name || '').trim();
+                        if (!nextSymbol) return;
+                        if (!isSyncingSymbol && document.getElementById('syncSymbolCheck') && document.getElementById('syncSymbolCheck').checked) {
+                            isSyncingSymbol = true;
+                            tvWidgets.forEach(w => {
+                                if (w !== widget) {
+                                    try { w.activeChart().setSymbol(nextSymbol); } catch(e) {}
+                                }
+                            });
+                            setTimeout(() => { isSyncingSymbol = false; }, 500);
+                        }
+                    });
+                }
+                return;
+            }
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
         mountNativeTimeframeGroup();
         richToolbarStatus('Chart ready');
@@ -1871,15 +1923,15 @@ async function initChart() {
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
         }
-        if (typeof tvWidget.subscribe === 'function') {
-            tvWidget.subscribe('onResetChartPreferences', () => {
+        if (typeof widget.subscribe === 'function') {
+            widget.subscribe('onResetChartPreferences', () => {
                 resetTvUserSettings().finally(() => {
                     rememberTwoRichTemplate('dark');
                 });
             });
         }
 
-        const chart = tvWidget.activeChart();
+        const chart = widget.activeChart();
         if (chart) {
             try {
                 if (typeof chart.onSymbolChanged === 'function') {
@@ -1891,6 +1943,15 @@ async function initChart() {
                         });
                         const nextSymbol = String(symbolInfo?.ticker || symbolInfo?.name || '').trim();
                         if (!nextSymbol) return;
+                        if (!isSyncingSymbol && document.getElementById('syncSymbolCheck') && document.getElementById('syncSymbolCheck').checked) {
+                            isSyncingSymbol = true;
+                            tvWidgets.forEach(w => {
+                                if (w !== widget) {
+                                    try { w.activeChart().setSymbol(nextSymbol); } catch(e) {}
+                                }
+                            });
+                            setTimeout(() => { isSyncingSymbol = false; }, 500);
+                        }
                         currentSymbol = nextSymbol;
                         syncSymbolSelectValue(nextSymbol);
                         saveChartSettings({ symbol: nextSymbol });
@@ -1931,9 +1992,9 @@ async function initChart() {
                         saveChartState(snapshotChartState());
                     });
                 }
-                if (typeof tvWidget.subscribe === 'function') {
-                    tvWidget.subscribe('onAutoSaveNeeded', () => {
-                        const state = typeof tvWidget.symbolInterval === 'function' ? tvWidget.symbolInterval() : null;
+                if (typeof widget.subscribe === 'function') {
+                    widget.subscribe('onAutoSaveNeeded', () => {
+                        const state = typeof widget.symbolInterval === 'function' ? widget.symbolInterval() : null;
                         const symbol = String(state?.symbol || currentSymbol || '').trim();
                         const interval = String(state?.interval || currentInterval || '').trim();
                         chartDebug('TradingView onAutoSaveNeeded', {
@@ -1997,6 +2058,7 @@ async function initChart() {
             }
         });
     });
+    } // end for loop
 }
 
 function changeSymbol(symbol) {
@@ -2007,7 +2069,7 @@ function changeSymbol(symbol) {
     if (!normalized) return;
     currentSymbol = normalized;
     syncSymbolSelectValue(normalized);
-    if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setSymbol(normalized));
+    tvWidgets.forEach(w => { if(w) w.onChartReady(() => w.activeChart().setSymbol(normalized)); });
 }
 
 function changeInterval(interval) {
@@ -2019,7 +2081,7 @@ function changeInterval(interval) {
     document.querySelectorAll('.md-interval-btn').forEach(b =>
         b.classList.toggle('active', b.dataset.interval == currentInterval)
     );
-    if (tvWidget) tvWidget.onChartReady(() => tvWidget.activeChart().setResolution(mapped.tv, () => {}, () => {}));
+    tvWidgets.forEach(w => { if(w) w.onChartReady(() => w.activeChart().setResolution(mapped.tv, () => {}, () => {})); });
 }
 
 
@@ -2458,5 +2520,25 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
+
+<script>
+function changeChartLayout(val) {
+    localStorage.setItem('md_chart_layout', val);
+    initChart();
+}
+function toggleSyncSymbol() {
+    localStorage.setItem('md_sync_symbol', document.getElementById('syncSymbolCheck').checked ? '1' : '0');
+}
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('md_chart_layout')) {
+        const el = document.getElementById('chartLayoutSelect');
+        if (el) el.value = localStorage.getItem('md_chart_layout');
+    }
+    if (localStorage.getItem('md_sync_symbol') === '1') {
+        const el = document.getElementById('syncSymbolCheck');
+        if (el) el.checked = true;
+    }
+});
+</script>
 </body>
 </html>
