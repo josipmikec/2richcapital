@@ -723,7 +723,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs">
+                        <button class="wtab active">Market</button>
+                    </div>
+                    <div class="widget-body market-pane-body" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <div class="widget-tabs">
                         <button class="wtab active">Market</button>
                     </div>
@@ -777,6 +781,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 					        </svg>
 					    </button>
 					</div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -790,7 +795,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs">
+                        <button class="wtab wtab-tooltip" id="signalsTabDiscovery">Discovery</button>
+                    </div>
+                    <div class="widget-body" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <div class="widget-tabs">
                         <button class="wtab wtab-tooltip" id="signalsTabDiscovery" onclick="switchSignalsTab('discovery')" data-tooltip="Browse verified analyst groups. Join free communities instantly or subscribe to unlock premium desks.">Discovery</button>
                         <button class="wtab" id="signalsTabFeed" onclick="switchSignalsTab('feed')">My Signals</button>
@@ -823,6 +832,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                             </button>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -836,7 +846,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs news-widget-tabs">
+                        <button class="wtab active">Live News Feed</button>
+                    </div>
+                    <div class="widget-body news-widget-body" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <div class="widget-tabs news-widget-tabs">
                         <button class="wtab active">Live News Feed</button>
                         <span class="news-feed-status" id="newsFeedStatus">
@@ -861,6 +875,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                         </button>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -874,7 +889,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs">
+                        <button class="wtab active">Classroom</button>
+                    </div>
+                    <div class="widget-body" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'class-pane')">Classroom</button>
                         <button class="wtab" onclick="switchTab(this,'classchat-pane')">Classroom Chat</button>
@@ -911,6 +930,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <p class="widget-header">Video Library</p>
                         <div class="widget-blank"></div>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -924,7 +944,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs">
+                        <button class="wtab active">Strategies</button>
+                    </div>
+                    <div class="widget-body" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'strat-pane')">Strategies</button>
                         <button class="wtab" onclick="switchTab(this,'backtest-pane')">Backtesting</button>
@@ -945,6 +969,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <div class="widget-meta">Last run: <span>2 days ago</span></div>
                         <button class="widget-action">Run Backtest <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -958,7 +983,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs">
+                        <button class="wtab active">My Live Trades</button>
+                    </div>
+                    <div class="widget-body" style="min-height:300px;"></div>
+                    <?php else: ?>
 				    <div class="widget-tabs">
 				        <button class="wtab active" onclick="switchTab(this,'live-pane')">My Live Trades</button>
 				        <button class="wtab" onclick="switchTab(this,'closed-pane')">My Recent Trades</button>
@@ -1048,6 +1077,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 				            </svg>
 				        </button>
 				    </div>
+                    <?php endif; ?>
 				</div>
                 <?php endif; ?>
 
@@ -1061,7 +1091,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs">
+                        <button class="wtab active">Mentors</button>
+                    </div>
+                    <div class="widget-body" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'ment-pane')">Mentors</button>
                         <button class="wtab" onclick="switchTab(this,'ment1-pane')">Mentor 1</button>
@@ -1091,6 +1125,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <div class="widget-meta">Availability: <span>Tue&ndash;Thu</span></div>
                         <button class="widget-action">Book a Session <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -1104,7 +1139,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs">
+                        <button class="wtab active">AI Chat</button>
+                    </div>
+                    <div class="widget-body" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <div class="widget-tabs">
                         <button class="wtab active">AI Chat</button>
                     </div>
@@ -1115,6 +1154,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </div>
                         <div class="widget-blank"></div>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -1128,7 +1168,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs" style="position:relative; padding-right:40px;">
+                        <button class="wtab active">Group Chats</button>
+                    </div>
+                    <div class="widget-body" id="chat-pane" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <?php $chat_group_overlay = rich_feature_overlay('card-chat-group', $user_id); ?>
                     <?php $chat_private_overlay = rich_feature_overlay('card-chat-private', $user_id); ?>
                     <div class="widget-tabs" style="position:relative; padding-right:40px;">
@@ -1145,7 +1189,8 @@ foreach ($_dashboard_initial_order as $card_id) {
                                 <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($chat_group_overlay['message']); ?></div>
                             </div>
                         </div>
-                        <?php endif; ?>
+                        <div style="min-height:300px;"></div>
+                        <?php else: ?>
                         <div id="dashboardGroupChatState" class="dashboard-group-chat-state">
                             <div class="widget-content-block"><p class="widget-content-text">Loading your joined trading group...</p></div>
                         </div>
@@ -1166,6 +1211,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                             </div>
                             <button id="dashboardGroupChatCta" class="widget-action" type="button" onclick="window.location.href='/trading-floor#groups'" hidden>Choose a Group <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                         </div>
+                        <?php endif; ?>
                     </div>
                     <div class="widget-body" id="private-pane" style="display:none">
                         <?php if ($chat_private_overlay): ?>
@@ -1174,14 +1220,17 @@ foreach ($_dashboard_initial_order as $card_id) {
                                 <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($chat_private_overlay['message']); ?></div>
                             </div>
                         </div>
-                        <?php endif; ?>
+                        <div style="min-height:300px;"></div>
+                        <?php else: ?>
                         <p class="widget-header">Private Chats</p>
                         <div class="widget-content-block">
                             <p class="widget-content-text">Direct messages with your mentors and fellow traders. All conversations are private and encrypted.</p>
                         </div>
                         <div class="widget-meta">Unread: <span>0 messages</span></div>
                         <button class="widget-action" onclick="openMessagesWindow()">Open Messages <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+                        <?php endif; ?>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -1195,7 +1244,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($overlay['message']); ?></div>
                         </div>
                     </div>
-                    <?php endif; ?>
+                    <div class="widget-tabs">
+                        <button class="wtab active">Journal</button>
+                    </div>
+                    <div class="widget-body" style="min-height:300px;"></div>
+                    <?php else: ?>
                     <?php $journal_planner_overlay = rich_feature_overlay('card-journal-planner', $user_id); ?>
                     <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'journal-pane')">Journal</button>
@@ -1231,10 +1284,13 @@ foreach ($_dashboard_initial_order as $card_id) {
                                 <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($journal_planner_overlay['message']); ?></div>
                             </div>
                         </div>
-                        <?php endif; ?>
+                        <div style="min-height:300px;"></div>
+                        <?php else: ?>
                         <p class="widget-header">Planner</p>
                         <div class="widget-blank"></div>
+                        <?php endif; ?>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 

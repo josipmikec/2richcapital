@@ -14,6 +14,9 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     exit;
 }
 
+require_once '../../auth/feature-flags.php';
+rich_api_feature_guard('signals-groups');
+
 global $wpdb;
 $user_id = (int) $_SESSION['user_id'];
 $messages_table = $wpdb->prefix . 'rich_signal_group_messages';

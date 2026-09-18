@@ -197,6 +197,46 @@ if (!function_exists('rich_card_visible')) {
     }
 }
 
+if (!function_exists('rich_api_feature_guard')) {
+    function rich_api_feature_guard($key, $user_id = 0) {
+        $user_id = (int)($user_id ?: ($_SESSION['user_id'] ?? 0));
+        $row = rich_get_feature_row($key);
+
+        if (!$row) {
+            return;
+        }
+
+        if (rich_is_staff($user_id)) {
+            return;
+        }
+
+        if ((int)($row['is_enabled'] ?? 0) !== 1) {
+            http_response_code(503);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'This feature is temporarily unavailable.']);
+            exit;
+        }
+
+        $allowed_roles = trim((string)($row['allowed_roles'] ?? ''));
+        if ($allowed_roles === '') {
+            return;
+        }
+
+        $allowed = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $allowed_roles))));
+        if (!$allowed) {
+            return;
+        }
+
+        $user_roles = rich_user_role_keys($user_id);
+        if (!$user_roles || count(array_intersect($allowed, $user_roles)) === 0) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'This feature is not available for your account.']);
+            exit;
+        }
+    }
+}
+
 if (!function_exists('rich_feature_guard')) {
     function rich_feature_guard($key, $label = 'This feature', $user_id = 0) {
         $user_id = (int)($user_id ?: ($_SESSION['user_id'] ?? 0));
