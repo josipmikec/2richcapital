@@ -71,12 +71,14 @@
 
 .md-tabs {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 2px;
   margin-bottom: 28px;
   border-bottom: 1px solid #1a1a1a;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .md-tabs::-webkit-scrollbar { display: none; }
@@ -86,6 +88,8 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
   font-family: "Montserrat", sans-serif;
   color: #3a3a3a;
   padding: 10px 16px 12px;
