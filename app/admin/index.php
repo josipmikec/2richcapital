@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $flags = $wpdb->get_results("SELECT * FROM {$resolved_table} ORDER BY label ASC", ARRAY_A);
-$core_flags = ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups'];
+$core_flags = ['global-shield','dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups'];
 $core_feature_flags = [];
 $dashboard_card_flags = [];
 $trading_floor_flags = [];
