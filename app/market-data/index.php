@@ -393,23 +393,22 @@ $useremail  = $_SESSION['user_email'] ?? '';
         ═══════════════════════════════════════════════════════════════ -->
         <div class="md-pane active" id="tab-feeds">
 
-            <div class="md-feed-controls">
-                <button type="button" class="md-watchlist-btn" id="watchlistToggle" onclick="toggleWatchlist()" aria-expanded="false" title="Open watchlist">
-                    <span aria-hidden="true">★</span> Watchlist
-                </button>
-                <button type="button" class="md-watchlist-add" onclick="addCurrentToWatchlist()" title="Add current symbol to watchlist" aria-label="Add current symbol to watchlist">＋</button>
-                <div class="md-watchlist-panel" id="watchlistPanel" hidden>
-                    <div class="md-watchlist-heading">
-                        <span>Favourites</span>
-                        <button type="button" onclick="toggleWatchlist()" aria-label="Close watchlist">×</button>
-                    </div>
-                    <div id="watchlistItems" class="md-watchlist-items"><span class="md-watchlist-empty">No favourites yet</span></div>
+            <div style="display:flex; gap:16px;">
+                <!-- Chart container -->
+                <div class="md-chart-wrap" style="flex:1; min-width:0; border-radius:12px;">
+                    <div id="tv_chart_container"></div>
                 </div>
-            </div>
 
-            <!-- Chart container -->
-            <div class="md-chart-wrap">
-                <div id="tv_chart_container"></div>
+                <!-- Watchlist Sidebar -->
+                <div class="md-watchlist-sidebar" style="width:250px; flex-shrink:0; background:#111; border:1px solid #1e1e1e; border-radius:12px; display:flex; flex-direction:column; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                    <div class="md-watchlist-heading" style="padding:16px; border-bottom:1px solid #1e1e1e; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#ccc; font:700 11px/1 'Montserrat',sans-serif; text-transform:uppercase; letter-spacing:0.08em;"><span aria-hidden="true" style="color:#F2CA50; margin-right:6px;">★</span> Watchlist</span>
+                        <button type="button" class="md-watchlist-add" onclick="addCurrentToWatchlist()" title="Add current symbol to watchlist" aria-label="Add current symbol to watchlist" style="border:none; background:none; color:#F2CA50; font-size:18px; cursor:pointer; padding:0; line-height:1;">＋</button>
+                    </div>
+                    <div id="watchlistItems" class="md-watchlist-items" style="flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:6px;">
+                        <span class="md-watchlist-empty">No favourites yet</span>
+                    </div>
+                </div>
             </div>
 
         </div>
