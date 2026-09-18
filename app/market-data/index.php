@@ -378,19 +378,7 @@ $useremail  = $_SESSION['user_email'] ?? '';
                 <p class="md-page-subtitle">Real-time feeds &amp; institutional intelligence</p>
             </div>
             
-            <div id="chartLayoutControls" style="display:flex; gap:12px; align-items:center;">
-                <label style="display:flex; align-items:center; gap:6px; color:#d1d4dc; font-size:12px; font-weight:600; cursor:pointer; user-select:none;">
-                    <input type="checkbox" id="syncSymbolCheck" onchange="toggleSyncSymbol()" style="accent-color:#F2CA50;">
-                    Sync Symbols
-                </label>
-                
-                <select id="chartLayoutSelect" onchange="changeChartLayout(this.value)" style="background:#131722; color:#d1d4dc; border:1px solid #2a2e39; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; outline:none; cursor:pointer;">
-                    <option value="1x1">1x1 Layout</option>
-                    <option value="1x2">1x2 Horizontal</option>
-                    <option value="2x1">2x1 Vertical</option>
-                    <option value="2x2">2x2 Grid</option>
-                </select>
-            </div>
+
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════════
@@ -408,6 +396,20 @@ $useremail  = $_SESSION['user_email'] ?? '';
              MARKET FEEDS PANE
         ═══════════════════════════════════════════════════════════════ -->
         <div class="md-pane active" id="tab-feeds">
+
+            <div id="chartLayoutControls" style="display:flex; justify-content:flex-end; gap:16px; align-items:center; padding-bottom:12px;">
+                <label style="display:flex; align-items:center; gap:6px; color:#b2b5be; font-size:12px; font-weight:600; cursor:pointer; user-select:none;">
+                    <input type="checkbox" id="syncSymbolCheck" onchange="toggleSyncSymbol()" style="accent-color:#F2CA50;">
+                    Sync Symbols
+                </label>
+                
+                <select id="chartLayoutSelect" onchange="changeChartLayout(this.value)" style="background:#131722; color:#b2b5be; border:1px solid #1e1e1e; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; outline:none; cursor:pointer;">
+                    <option value="1x1">1x1 Layout</option>
+                    <option value="1x2">1x2 Horizontal</option>
+                    <option value="2x1">2x1 Vertical</option>
+                    <option value="2x2">2x2 Grid</option>
+                </select>
+            </div>
 
             <div class="md-chart-wrap" style="display:flex; flex-direction:row; background:#0f0f0f; padding:0;">
                 
@@ -1788,8 +1790,7 @@ function wireRichToolbar() {
 }
 
 async function initChart() {
-    tvWidgets.forEach(w => { if(w) w.remove(); });
-    tvWidgets = [];
+    tvWidgets.forEach(w => { if(w) w.remove(); }); tvWidgets = [];
     
     const stateMap = await loadChartStateMap();
     const symbolKey = getChartStateSymbol(currentSymbol);
@@ -1803,116 +1804,138 @@ async function initChart() {
 
     const layout = localStorage.getItem('md_chart_layout') || '1x1';
     const grid = document.getElementById('tv_charts_grid');
-    grid.className = 'md-multi-chart-grid layout-' + layout;
-    
+    if (grid) grid.className = 'md-multi-chart-grid layout-' + layout;
     let cellCount = 1;
     if (layout === '1x2' || layout === '2x1') cellCount = 2;
     if (layout === '2x2') cellCount = 4;
-
     for (let i = 1; i <= 4; i++) {
         const cell = document.getElementById('tv_chart_' + i);
-        if (i <= cellCount) {
-            cell.style.display = 'block';
-        } else {
-            cell.style.display = 'none';
-            cell.innerHTML = '';
-        }
+        if (cell) cell.style.display = i <= cellCount ? 'block' : 'none';
+        if (cell && i > cellCount) cell.innerHTML = '';
     }
-
     for (let i = 1; i <= cellCount; i++) {
         const widget = new TradingView.widget({
             container:       'tv_chart_' + i,
-            locale:          'en',
-            library_path:    '../assets/charting_library/',
-            datafeed:        sharedDatafeed,
-            custom_indicators_getter: getTwoRichCustomIndicatorsGetter(),
-            symbol:          currentSymbol,
-            interval:        currentInterval,
-            fullscreen:      false,
-            autosize:        true,
-            saved_data:      (hasValidState && i === 1) ? savedState : undefined,
-            theme:           initialTemplate ? initialTemplate.theme : DEFAULT_CHART_THEME.theme,
-            timezone:        'Europe/London',
-            toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
-            overrides:       initialTemplate ? initialTemplate.overrides : undefined,
-            studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-            disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
-            enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
-            settings_adapter: chartSettingsAdapter(),
-            save_load_adapter: {
-                chartsCount: () => Promise.resolve(0),
-                chartsList:  () => Promise.resolve([]),
-                saveChart:   (chartData) => { chartDebug('save_load_adapter.saveChart', chartData); return Promise.resolve(1); },
-                loadChart:   () => Promise.reject('Not implemented'),
-                removeChart: () => Promise.resolve()
+        locale:          'en',
+        library_path:    '../assets/charting_library/',
+        datafeed:        sharedDatafeed,
+        custom_indicators_getter: getTwoRichCustomIndicatorsGetter(),
+        symbol:          currentSymbol,
+        interval:        currentInterval,
+        fullscreen:      false,
+        autosize:        true,
+        saved_data:      (hasValidState && i === 1) ? savedState : undefined,
+        theme:           initialTemplate ? initialTemplate.theme : DEFAULT_CHART_THEME.theme,
+        timezone:        'Europe/London',
+        toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
+        overrides:       initialTemplate ? initialTemplate.overrides : undefined,
+        studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
+        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'],
+        enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
+        settings_adapter: chartSettingsAdapter(),
+        save_load_adapter: {
+            chartsCount: () => Promise.resolve(0),
+            getAllCharts: () => Promise.resolve([]),
+            removeChart: () => Promise.resolve(),
+            saveChart: () => Promise.resolve(1),
+            getChartContent: () => Promise.resolve(''),
+            saveLineToolsAndGroups: (layoutId, chartId, state, requestContext) => {
+                chartDebug('save_load_adapter saveLineToolsAndGroups', { layoutId, chartId, stateType: typeof state, sourcesCount: state?.sources?.size, requestContext });
+                window._latestTvDrawingState = state;
+                
+                // CRITICAL: TradingView line tool state objects can be complex class instances with getters, setters,
+                // or custom toJSON methods. Using a manual recursive clone will strip these and destroy the drawings.
+                // Using a native JSON.stringify replacer preserves them perfectly.
+                const stringified = serializeLineToolsState(state);
+                
+                const symbolKey = getChartStateSymbol(currentSymbol);
+                return fetch('../api/drawings/set.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: csrfHeaders(),
+                    body: JSON.stringify({ symbol: symbolKey, drawings: stringified })
+                }).then(() => {});
+            },
+            loadLineToolsAndGroups: (layoutId, chartId, requestType, requestContext) => {
+                chartDebug('save_load_adapter loadLineToolsAndGroups', { layoutId, chartId, requestType });
+                
+                // CRITICAL: Temporarily return drawings for all request types so they load on the main chart,
+                // regardless of what requestType TradingView asks for (since we store them globally per symbol).
+                // if (requestType !== 'mainSeriesLineTools') {
+                //     return Promise.resolve(null);
+                // }
+
+                const symbolKey = getChartStateSymbol(currentSymbol);
+                return fetch(`../api/drawings/get.php?symbol=${encodeURIComponent(symbolKey)}`, { credentials: 'same-origin' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.drawings) {
+                            const parsed = typeof data.drawings === 'string' ? JSON.parse(data.drawings) : data.drawings;
+                            const normalized = normalizeLineToolsState(parsed);
+                            chartDebug('loadLineToolsAndGroups resolved data', { 
+                                requestType, 
+                                sources: Array.from(normalized.sources?.entries() || []),
+                                sourceCount: normalized.sources?.size
+                            });
+                            return normalized;
+                        }
+                        chartDebug('loadLineToolsAndGroups resolved null (no drawings)', { requestType });
+                        return null;
+                    })
+                    .catch(e => {
+                        console.warn('[2RICH] Failed to load drawings for TV adapter', e);
+                        return null;
+                    });
             }
-        });
-        
+        }
+    });
         tvWidgets.push(widget);
-        
+
         widget.onChartReady(() => {
-            chartDebug(`Chart ${i} ready!`);
-            hasCompletedInitialChartRestore = true;
-            
-            if (i === 1 && typeof widget.subscribe === 'function') {
-                widget.subscribe('onResetChartPreferences', () => {
-                    chartDebug('onResetChartPreferences => clearing custom settings in db');
-                    window.twoRichActiveTemplateId = null;
-                    persistTvUserSettings({});
-                });
-            }
-
-            // Sync Symbols
-            const chart = widget.activeChart();
-            chart.onSymbolChanged().subscribe(null, () => {
-                if (!document.getElementById('syncSymbolCheck').checked || isSyncingSymbol) return;
-                const newSymbol = chart.symbol();
-                isSyncingSymbol = true;
-                currentSymbol = newSymbol; // Update global state
-                
-                // Update header buttons
-                document.getElementById('currentSymbolBtn').innerHTML = escapeHtml(newSymbol) + ' <span aria-hidden="true">▼</span>';
-                document.getElementById('mobileSymbolBtn').innerHTML = escapeHtml(newSymbol) + ' <span aria-hidden="true">▼</span>';
-
-                tvWidgets.forEach(w => {
-                    if (w !== widget) {
-                        try { w.activeChart().setSymbol(newSymbol); } catch(e) {}
-                    }
-                });
-                
-                // Small delay to allow TV to update before releasing lock
-                setTimeout(() => { isSyncingSymbol = false; }, 500);
-            });
-            
-            // Note: Auto-save logic is kept on widget 1 only
-            if (i === 1) {
-                if (typeof widget.subscribe === 'function') {
-                    widget.subscribe('onAutoSaveNeeded', () => {
-                        const state = typeof widget.symbolInterval === 'function' ? widget.symbolInterval() : null;
-                        if (state) chartDebug('Auto-save triggered:', state.symbol, state.interval);
-                        saveChartToServer();
+            if (i > 1) {
+                // For additional charts, only attach symbol sync logic
+                const chart = widget.activeChart();
+                if (chart && typeof chart.onSymbolChanged === 'function') {
+                    chart.onSymbolChanged().subscribe(null, (symbolInfo) => {
+                        const nextSymbol = String(symbolInfo?.ticker || symbolInfo?.name || '').trim();
+                        if (!nextSymbol) return;
+                        if (!isSyncingSymbol && document.getElementById('syncSymbolCheck') && document.getElementById('syncSymbolCheck').checked) {
+                            isSyncingSymbol = true;
+                            tvWidgets.forEach(w => {
+                                if (w !== widget) {
+                                    try { w.activeChart().setSymbol(nextSymbol); } catch(e) {}
+                                }
+                            });
+                            setTimeout(() => { isSyncingSymbol = false; }, 500);
+                        }
                     });
                 }
-                injectCustomIndicatorButton(widget);
-                widget.activeChart().executeActionById('drawingToolbarAction');
+                return; // skip the rest of the persistence logic for i > 1
             }
-        });
-    }
-}
-);
+        chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+        mountNativeTimeframeGroup();
+        richToolbarStatus('Chart ready');
+        injectTwoRichTemplateOptions();
+        
+        // Mark as settled without calling applyChartState since saved_data handled it natively
+        isRestoringDrawings = false;
+        hasCompletedInitialChartRestore = true;
+        markChartRestoreSettling();
+        scheduleChartPersistenceArm('restore-settled', CHART_RESTORE_SETTLE_MS);
+        chartDebug('chart state restore settled natively', { settleMs: CHART_RESTORE_SETTLE_MS });
 
         if (isFirstTimeUser) {
             applyTwoRichTemplate(preferredTemplateId, { persist: true });
         }
-        if (typeof tvWidget.subscribe === 'function') {
-            tvWidget.subscribe('onResetChartPreferences', () => {
+        if (typeof widget.subscribe === 'function') {
+            widget.subscribe('onResetChartPreferences', () => {
                 resetTvUserSettings().finally(() => {
                     rememberTwoRichTemplate('dark');
                 });
             });
         }
 
-        const chart = tvWidget.activeChart();
+        const chart = widget.activeChart();
         if (chart) {
             try {
                 if (typeof chart.onSymbolChanged === 'function') {
@@ -1924,6 +1947,15 @@ async function initChart() {
                         });
                         const nextSymbol = String(symbolInfo?.ticker || symbolInfo?.name || '').trim();
                         if (!nextSymbol) return;
+                        if (!isSyncingSymbol && document.getElementById('syncSymbolCheck') && document.getElementById('syncSymbolCheck').checked) {
+                            isSyncingSymbol = true;
+                            tvWidgets.forEach(w => {
+                                if (w !== widget) {
+                                    try { w.activeChart().setSymbol(nextSymbol); } catch(e) {}
+                                }
+                            });
+                            setTimeout(() => { isSyncingSymbol = false; }, 500);
+                        }
                         currentSymbol = nextSymbol;
                         syncSymbolSelectValue(nextSymbol);
                         saveChartSettings({ symbol: nextSymbol });
@@ -1964,9 +1996,9 @@ async function initChart() {
                         saveChartState(snapshotChartState());
                     });
                 }
-                if (typeof tvWidget.subscribe === 'function') {
-                    tvWidget.subscribe('onAutoSaveNeeded', () => {
-                        const state = typeof tvWidget.symbolInterval === 'function' ? tvWidget.symbolInterval() : null;
+                if (typeof widget.subscribe === 'function') {
+                    widget.subscribe('onAutoSaveNeeded', () => {
+                        const state = typeof widget.symbolInterval === 'function' ? widget.symbolInterval() : null;
                         const symbol = String(state?.symbol || currentSymbol || '').trim();
                         const interval = String(state?.interval || currentInterval || '').trim();
                         chartDebug('TradingView onAutoSaveNeeded', {
@@ -2481,6 +2513,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+    } // end for loop
         // Load TradingView UDF + init chart
         const udfScript = document.createElement('script');
         udfScript.src   = '../assets/datafeeds/udf/dist/bundle.js';
@@ -2491,8 +2524,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
-</body>
-</html>
+
 <script>
 function changeChartLayout(val) {
     localStorage.setItem('md_chart_layout', val);
@@ -2512,3 +2544,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+</body>
+</html>
