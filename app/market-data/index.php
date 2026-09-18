@@ -1827,7 +1827,7 @@ async function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'].concat(i > 1 ? ['left_toolbar'] : []),
+        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'].concat(i > 1 ? ['left_toolbar', 'header_widget'] : []),
         enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
         settings_adapter: chartSettingsAdapter(),
         save_load_adapter: {
