@@ -398,8 +398,8 @@ $useremail  = $_SESSION['user_email'] ?? '';
             <div class="md-chart-wrap" style="display:flex; flex-direction:row; background:#131722; padding:0;">
                 
                 <!-- Chart container -->
-                <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
-                    <div id="tv_chart_container" style="flex:1;"></div>
+                <div style="flex:1; min-width:0; display:block;">
+                    <div id="tv_chart_container" style="width:100%;"></div>
                 </div>
 
                 <!-- Watchlist Sidebar (collapsible) -->
