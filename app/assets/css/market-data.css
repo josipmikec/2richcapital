@@ -863,3 +863,44 @@
   .md-cal-item-left { flex-direction: row; align-items: center; min-width: unset; }
   .md-tz-switcher .md-tz-btn { padding: 4px 7px; font-size: 9px; }
 }
+/* ==========================================
+   MULTI-CHART LAYOUT GRID
+   ========================================== */
+.md-multi-chart-grid {
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+    background: #2a2e39; /* grid gap color */
+}
+
+/* Single Chart */
+.md-multi-chart-grid.layout-1x1 {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+}
+
+/* Two Charts (Side by side) */
+.md-multi-chart-grid.layout-1x2 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+}
+
+/* Two Charts (Stacked vertically) */
+.md-multi-chart-grid.layout-2x1 {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+/* Four Charts */
+.md-multi-chart-grid.layout-2x2 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+.md-chart-cell {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #0f0f0f;
+}
