@@ -54,7 +54,7 @@ $back_url = $journal_id > 0
     <div class="dashboard-container">
         <aside class="sidebar">
             <ul class="sidebar-menu">
-                <li class="menu-item" onclick="window.location.href='/dashboard'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('dashboard', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/dashboard'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>

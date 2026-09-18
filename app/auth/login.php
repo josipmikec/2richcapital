@@ -86,9 +86,19 @@ try {
         setcookie(session_name(), session_id(), time() + (30 * 24 * 60 * 60), '/', 'app.2rich.capital', true, true);
     }
     
+    require_once 'feature-flags.php';
+    $pages = ['dashboard', 'journal', 'trading-floor', 'market-data'];
+    $redirect_path = '/account/';
+    foreach ($pages as $p) {
+        if (rich_feature_enabled($p, true, $user->ID)) {
+            $redirect_path = "/$p/";
+            break;
+        }
+    }
+    
     echo json_encode([
         'success' => true,
-        'redirect' => 'https://app.2rich.capital/dashboard/'
+        'redirect' => 'https://app.2rich.capital' . $redirect_path
     ]);
     exit;
 

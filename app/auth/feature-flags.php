@@ -281,7 +281,7 @@ if (!function_exists('rich_feature_guard')) {
     <div class='dashboard-container'>
         <aside class='sidebar'>
             <ul class="sidebar-menu">
-                <li class="menu-item" onclick="window.location.href='/dashboard'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('dashboard', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/dashboard'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
@@ -291,7 +291,7 @@ if (!function_exists('rich_feature_guard')) {
                     <span>Dashboard</span>
                     <?php if (!rich_feature_enabled('dashboard', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
-                <li class="menu-item" onclick="window.location.href='/journal'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('journal', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/journal'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -302,7 +302,7 @@ if (!function_exists('rich_feature_guard')) {
                     <span>Trading Journal</span>
                     <?php if (!rich_feature_enabled('journal', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
-                <li class="menu-item" onclick="window.location.href='/trading-floor'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('trading-floor', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/trading-floor'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="1" x2="12" y2="23"></line>
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
@@ -310,7 +310,7 @@ if (!function_exists('rich_feature_guard')) {
                     <span>Trading Floor</span>
                     <?php if (!rich_feature_enabled('trading-floor', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
-                <li class="menu-item" onclick="window.location.href='/market-data'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('market-data', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/market-data'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                         <line x1="8" y1="21" x2="16" y2="21"></line>
@@ -393,7 +393,7 @@ if (!function_exists('rich_feature_guard')) {
     <div class='dashboard-container'>
         <aside class='sidebar'>
             <ul class="sidebar-menu">
-                <li class="menu-item" onclick="window.location.href='/dashboard'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('dashboard', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/dashboard'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
@@ -403,7 +403,7 @@ if (!function_exists('rich_feature_guard')) {
                     <span>Dashboard</span>
                     <?php if (!rich_feature_enabled('dashboard', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
-                <li class="menu-item" onclick="window.location.href='/journal'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('journal', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/journal'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -414,7 +414,7 @@ if (!function_exists('rich_feature_guard')) {
                     <span>Trading Journal</span>
                     <?php if (!rich_feature_enabled('journal', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
-                <li class="menu-item" onclick="window.location.href='/trading-floor'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('trading-floor', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/trading-floor'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="1" x2="12" y2="23"></line>
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
@@ -422,7 +422,7 @@ if (!function_exists('rich_feature_guard')) {
                     <span>Trading Floor</span>
                     <?php if (!rich_feature_enabled('trading-floor', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
-                <li class="menu-item" onclick="window.location.href='/market-data'">
+                <li class="menu-item" <?php echo !rich_feature_enabled('market-data', true, $user_id) ? 'style="opacity: 0.5;"' : ''; ?> onclick="window.location.href='/market-data'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                         <line x1="8" y1="21" x2="16" y2="21"></line>
