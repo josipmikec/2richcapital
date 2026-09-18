@@ -79,7 +79,46 @@ if (isset($_SESSION['user_id'])) {
                         } else {
                             http_response_code(503);
                             $msg = htmlspecialchars($shield_row['overlay_message'] ?: 'We are currently performing maintenance. Please check back later.');
-                            echo "<!doctype html><html lang='en'><head><title>Maintenance</title><style>body{background:#0e0e0e;color:#f1f1f1;font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;}div{text-align:center;padding:40px;border:1px solid #333;border-radius:16px;background:#151515;max-width:400px;}h1{color:#f2ca50;margin-top:0;}</style></head><body><div><h1>Maintenance</h1><p>$msg</p></div></body></html>";
+                            echo "<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Maintenance - 2RICH</title>
+    <link href='https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap' rel='stylesheet'>
+    <link rel='stylesheet' href='/assets/css/dashboard.css'>
+</head>
+<body>
+    <div class='layout'>
+        <header class='topbar'>
+            <div class='logo'>
+                <div class='logo-icon'></div>
+                <div class='logo-text'>2RICH</div>
+            </div>
+        </header>
+        <aside class='sidebar'>
+            <ul class='nav-menu'>
+                <li class='menu-item active'>
+                    <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
+                        <rect x='3' y='3' width='7' height='7'></rect>
+                        <rect x='14' y='3' width='7' height='7'></rect>
+                        <rect x='14' y='14' width='7' height='7'></rect>
+                        <rect x='3' y='14' width='7' height='7'></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </li>
+            </ul>
+        </aside>
+        <main class='main-content' style='display:flex;align-items:center;justify-content:center;'>
+            <div style='text-align:center;padding:40px;border:1px solid #333;border-radius:16px;background:#151515;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.5);'>
+                <h1 style='color:#f2ca50;margin-top:0;font-family:Montserrat,sans-serif;'>Maintenance</h1>
+                <p style='color:#a1a1a1;font-size:15px;line-height:1.5;margin-bottom:24px;'>$msg</p>
+                <a href='/logout.php' class='btn-secondary' style='text-decoration:none;display:inline-block;padding:10px 20px;'>Logout</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>";
                             exit;
                         }
                     }
