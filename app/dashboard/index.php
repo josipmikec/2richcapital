@@ -649,6 +649,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <rect x="3" y="14" width="7" height="7"></rect>
                     </svg>
                     <span>Dashboard</span>
+                    <?php if (!rich_feature_enabled('dashboard', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
                 <li class="menu-item" onclick="window.location.href='/journal'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -659,6 +660,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
                     <span>Trading Journal</span>
+                    <?php if (!rich_feature_enabled('journal', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
                 <li class="menu-item" onclick="window.location.href='/trading-floor'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -666,6 +668,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                     </svg>
                     <span>Trading Floor</span>
+                    <?php if (!rich_feature_enabled('trading-floor', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
                 <li class="menu-item" onclick="window.location.href='/market-data'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -674,6 +677,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <line x1="12" y1="17" x2="12" y2="21"></line>
                     </svg>
                     <span>Market Data</span>
+                    <?php if (!rich_feature_enabled('market-data', true, $user_id)): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="2" style="margin-left:auto;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg><?php endif; ?>
                 </li>
                 <li class="menu-item" onclick="window.location.href='/account'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

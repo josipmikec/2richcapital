@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'delete') {
             $key = rich_normalize_feature_key($_POST['flag_key'] ?? '');
-            if ($key !== '' && !in_array($key, ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups','card-market','card-signals','card-news','card-classroom','card-strategies','card-trades','card-mentors','card-ai','card-chat','card-chat-group','card-chat-private','card-journal'], true)) {
+            if ($key !== '' && !in_array($key, ['dashboard','trading-floor','journal','market-data','card-market','card-signals','card-news','card-classroom','card-strategies','card-trades','card-mentors','card-ai','card-chat','card-chat-group','card-chat-private','card-journal'], true)) {
                 $wpdb->delete($resolved_table, ['flag_key' => $key], ['%s']);
                 $flash = 'Feature removed.';
             } else {
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $flags = $wpdb->get_results("SELECT * FROM {$resolved_table} ORDER BY label ASC", ARRAY_A);
-$core_flags = ['dashboard','trading-floor','journal','market-data','mt5-sync','signals-groups'];
+$core_flags = ['dashboard','trading-floor','journal','market-data'];
 $core_feature_flags = [];
 $dashboard_card_flags = [];
 $trading_floor_flags = [];
