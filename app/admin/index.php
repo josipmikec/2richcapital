@@ -1,7 +1,11 @@
 <?php
-require_once '../auth/session-config.php';
+require_once __DIR__ . '/../auth/session-config.php';
+require_once __DIR__ . '/../auth/feature-flags.php';
+
 define('WP_USE_THEMES', false);
 require_once dirname(__DIR__, 2) . '/wp-load.php';
+
+rich_feature_bootstrap();
 require_once '../auth/feature-flags.php';
 
 rich_grant_feature_capability();

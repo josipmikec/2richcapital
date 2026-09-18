@@ -992,13 +992,23 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <div class="widget-body" style="min-height:300px;"></div>
                     <?php else: ?>
-				    <div class="widget-tabs">
+                    <?php $trades_live_overlay = rich_feature_overlay('card-trades-live', $user_id); ?>
+                    <?php $trades_planned_overlay = rich_feature_overlay('card-trades-planned', $user_id); ?>
+				    <div class="widget-tabs" style="position:relative;">
 				        <button class="wtab active" onclick="switchTab(this,'live-pane')">My Live Trades</button>
 				        <button class="wtab" onclick="switchTab(this,'closed-pane')">My Recent Trades</button>
 				        <button class="wtab" onclick="switchTab(this,'planned-pane')">My Planned Trades</button>
 				    </div>
 				
 				    <div class="widget-body" id="live-pane">
+                        <?php if ($trades_live_overlay): ?>
+                        <div class="card-overlay card-overlay-pane" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:20;border-radius:0 0 14px 14px;">
+                            <div style="text-align:center;padding:24px;max-width:280px;">
+                                <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($trades_live_overlay['message']); ?></div>
+                            </div>
+                        </div>
+                        <div style="min-height:300px;"></div>
+                        <?php else: ?>
 				        <!-- MT5 connection status -->
 				        <div class="trade-status-row">
 				            <span class="status-dot" id="dashMt5StatusDot"></span>
@@ -1027,6 +1037,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 				                <polyline points="12 5 19 12 12 19"></polyline>
 				            </svg>
 				        </button>
+                        <?php endif; ?>
 				    </div>
 				
 				    <div class="widget-body" id="closed-pane" style="display:none;">
@@ -1064,6 +1075,14 @@ foreach ($_dashboard_initial_order as $card_id) {
 					</div>
 				
 				    <div class="widget-body" id="planned-pane" style="display:none;">
+                        <?php if ($trades_planned_overlay): ?>
+                        <div class="card-overlay card-overlay-pane" style="position:absolute;inset:0;background:rgba(14,14,14,0.42);backdrop-filter:blur(4px) saturate(135%);-webkit-backdrop-filter:blur(4px) saturate(135%);display:flex;align-items:center;justify-content:center;z-index:20;border-radius:0 0 14px 14px;">
+                            <div style="text-align:center;padding:24px;max-width:280px;">
+                                <div style="font-size:14px;font-weight:700;color:#f2ca50;margin-bottom:8px;"><?php echo esc_html($trades_planned_overlay['message']); ?></div>
+                            </div>
+                        </div>
+                        <div style="min-height:300px;"></div>
+                        <?php else: ?>
 				        <p class="widget-header">Planned Trades</p>
 				
 				        <div class="trade-mini-list" id="dashPlannedList">
@@ -1080,6 +1099,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 				                <polyline points="12 5 19 12 12 19"></polyline>
 				            </svg>
 				        </button>
+                        <?php endif; ?>
 				    </div>
                     <?php endif; ?>
 				</div>
