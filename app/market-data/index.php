@@ -1827,7 +1827,7 @@ async function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'].concat(i > 1 ? ['left_toolbar', 'header_widget', 'right_toolbar'] : []),
+        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'].concat(i > 1 ? ['left_toolbar', 'header_widget', 'right_toolbar'] : []), 'header_widget', 'right_toolbar'] : []),
         enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
         settings_adapter: chartSettingsAdapter(),
         save_load_adapter: {
@@ -1886,7 +1886,29 @@ async function initChart() {
             }
         }
     });
-        tvWidgets.push(widget);
+        
+            tvWidgets.push(widget);
+            
+            // SYNC DRAWING TOOLS FROM CHART 1 TO OTHERS
+            widget.onChartReady(() => {
+                if (i === 1) {
+                    widget.subscribe('onSelectedLineToolChanged', () => {
+                        try {
+                            const activeTool = widget.selectedLineTool();
+                            if (activeTool && activeTool !== 'cursor') {
+                                tvWidgets.forEach((w, index) => {
+                                    if (index > 0 && w) {
+                                        w.chart().executeActionById(activeTool);
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Failed to sync drawing tool', e);
+                        }
+                    });
+                }
+            });
+
 
         widget.onChartReady(() => {
             if (i > 1) {
