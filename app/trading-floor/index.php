@@ -1043,8 +1043,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             margin-right: auto;
             padding-right: 32px;
         }
-        .dashboard-container.group-mode .tf-feed-col,
-        .dashboard-container.group-mode .floor-section {
+        .dashboard-container.group-workspace-mode .tf-feed-col,
+        .dashboard-container.group-workspace-mode .floor-section {
             max-width: 960px;
             margin-left: 0;
             margin-right: auto;
@@ -1230,7 +1230,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             overflow-y: auto; scrollbar-width: none;
         }
         .dashboard-container.profile-mode .tf-right-col { display: none; }
-        .dashboard-container.group-mode .tf-right-col { display: none; }
+        .dashboard-container.group-workspace-mode .tf-right-col { display: none; }
         .tf-right-col::-webkit-scrollbar { display: none; }
         .right-user-card { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #1a1a1a; }
         .dashboard-container.profile-mode .right-user-card { display: none; }
@@ -3053,7 +3053,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         dropdown.innerHTML = window.mentionState.members.map((m, idx) => {
             const name = m.display_name || m.user_login || 'User #' + m.user_id;
             const bg = idx === window.mentionState.selectedIndex ? 'rgba(255,255,255,0.1)' : 'transparent';
-            return `<div onclick="window.selectMention(${idx})" style="padding:6px 12px;border-radius:6px;cursor:pointer;background:${bg};color:#fff;font-size:13px;display:flex;align-items:center;gap:8px;" onmouseover="window.mentionState.selectedIndex=${idx};renderMentionDropdown()">
+            return `<div onmousedown="window.selectMention(${idx}); return false;" style="padding:6px 12px;border-radius:6px;cursor:pointer;background:${bg};color:#fff;font-size:13px;display:flex;align-items:center;gap:8px;" onmouseover="window.mentionState.selectedIndex=${idx};renderMentionDropdown()">
                 <div style="width:20px;height:20px;border-radius:50%;background:rgba(242,202,80,0.2);color:#f2ca50;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${name.charAt(0).toUpperCase()}</div>
                 ${escapeHtmlForTradingFloor(name)}
             </div>`;
@@ -3360,7 +3360,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const activeTab = floorSignalsState.activeTab || 'discovery';
         const activeView = floorSignalsState.activeView || 'list';
         
-        if (app) app.classList.toggle('group-workspace-active', activeView === 'workspace');
+        if (app) app.classList.toggle('group-workspace-mode', activeView === 'workspace');
 
         const memberships = Array.isArray(floorSignalsState.memberships) ? floorSignalsState.memberships : [];
         const groups = Array.isArray(floorSignalsState.groups) ? floorSignalsState.groups : [];
