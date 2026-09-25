@@ -1043,16 +1043,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             margin-right: auto;
             padding-right: 32px;
         }
-        .dashboard-container.group-mode:not(.group-workspace-active) .tf-feed-col,
-        .dashboard-container.group-mode:not(.group-workspace-active) .floor-section {
+        .dashboard-container.group-mode .tf-feed-col,
+        .dashboard-container.group-mode .floor-section {
             max-width: 960px;
-            margin-left: 0;
-            margin-right: auto;
-            padding-right: 32px;
-        }
-        .dashboard-container.group-mode.group-workspace-active .tf-feed-col,
-        .dashboard-container.group-mode.group-workspace-active .floor-section {
-            max-width: 1280px;
             margin-left: 0;
             margin-right: auto;
             padding-right: 32px;
@@ -3699,8 +3692,10 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             </div>`;
 
         if (activeView === 'workspace' && floorSignalsState.activeWorkspaceTab === 'room') {
-            const chatContainer = document.getElementById('groupChatMessagesContainer');
-            if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+            setTimeout(() => {
+                const chatContainer = document.getElementById('groupChatMessagesContainer');
+                if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 50);
         }
 
         bindGroupColorPickers(mount);
