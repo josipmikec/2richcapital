@@ -133,6 +133,15 @@ if (array_key_exists('accent_color', $current)) {
     $update_data['accent_color'] = $accent_color !== '' ? $accent_color : null;
 }
 
+if (!$wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$groups_table} LIKE %s", 'active_call_link'))) {
+    $alter_res = $wpdb->query("ALTER TABLE {$groups_table} ADD COLUMN active_call_link VARCHAR(500) NULL");
+    if ($alter_res === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Failed to create column: ' . $wpdb->last_error]);
+        exit;
+    }
+}
+
 $updated = $wpdb->update($groups_table, $update_data, ['id' => $group_id]);
 if ($updated === false) {
     http_response_code(500);

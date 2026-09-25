@@ -5107,6 +5107,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 body: JSON.stringify({ group_id: groupId, active_call_link: link })
             });
             const data = await res.json();
+            console.log('API RESPONSE FOR SAVE LINK:', data);
             if (data.success) {
                 const idx = (floorSignalsState.groups || []).findIndex(g => String(g.id) === String(groupId));
                 if (idx !== -1) {
