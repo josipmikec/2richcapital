@@ -148,6 +148,9 @@ if (!function_exists('tf_format_social_post')) {
                 'author_avatar' => $avatar_url ?: '',
                 'post_type' => sanitize_key($row->post_type ?? 'trade_card'),
                 'layout_style' => sanitize_key((isset($row->layout_style) && trim((string) $row->layout_style) !== '') ? $row->layout_style : (in_array(sanitize_key($row->post_type ?? ''), ['trade_card','analysis_card','image','text'], true) ? sanitize_key($row->post_type) : 'trade_card')),
+                'group_id' => isset($row->group_id) && $row->group_id !== null ? (int) $row->group_id : null,
+                'group_name' => trim((string) ($row->group_name ?? '')),
+                'group_slug' => trim((string) ($row->group_slug ?? '')),
                 'symbol' => strtoupper(trim((string) ($row->symbol ?? ''))),
                 'direction' => strtoupper(trim((string) ($row->direction ?? ''))),
                 'pnl_value' => isset($row->pnl_value) && $row->pnl_value !== null ? (float) $row->pnl_value : null,
@@ -177,6 +180,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
     }
 
     $post_type = sanitize_key($_POST['post_type'] ?? '');
+    $group_id = isset($_POST['group_id']) && (int)$_POST['group_id'] > 0 ? (int)$_POST['group_id'] : null;
     $allowed_layouts = ['trade_card', 'analysis_card', 'image', 'text'];
     if (in_array($post_type, $allowed_layouts, true) && empty($_POST['layout_style'])) {
         $_POST['layout_style'] = $post_type;
@@ -276,6 +280,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
 
     $post_data = [
         'user_id' => $user_id,
+        'group_id' => $group_id,
         'post_type' => $post_type,
         'symbol' => $symbol ?: null,
         'direction' => $direction ?: null,
@@ -288,7 +293,7 @@ if (isset($_POST['post_type']) && !isset($_POST['action'])) {
         'created_at' => current_time('mysql'),
         'updated_at' => current_time('mysql'),
     ];
-    $post_formats = ['%d','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s'];
+    $post_formats = ['%d','%d','%s','%s','%s','%f','%s','%s','%s','%s','%s','%s','%s'];
     if ($layout_style_column_exists) {
         $post_data['layout_style'] = $layout_style;
         $post_formats[] = '%s';
@@ -413,6 +418,12 @@ if (!$layout_style_column_exists) {
     $layout_style_column_exists = true;
 }
 
+$group_id_column_exists = (bool) $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$post_table} LIKE %s", 'group_id'));
+if (!$group_id_column_exists) {
+    $wpdb->query("ALTER TABLE {$post_table} ADD COLUMN group_id BIGINT UNSIGNED NULL DEFAULT NULL AFTER user_id");
+    $wpdb->query("ALTER TABLE {$post_table} ADD KEY group_idx (group_id)");
+}
+
 if ($layout_style_column_exists) {
     $wpdb->query("UPDATE {$post_table} SET layout_style = CASE WHEN post_type IN ('analysis','analysis_card') THEN 'analysis_card' WHEN post_type IN ('image','text','trade_card') THEN post_type ELSE 'trade_card' END WHERE layout_style IS NULL OR layout_style = ''");
     $wpdb->query("UPDATE {$post_table} SET post_type = layout_style WHERE layout_style IN ('trade_card','analysis_card','image','text') AND (post_type IS NULL OR post_type = '' OR post_type IN ('trade','analysis'))");
@@ -428,9 +439,10 @@ $profile_visibility_label = $is_own_profile ? 'Public profile preview' : 'Public
 
 $profile_section_note = $is_own_profile ? 'This is your public Trading Floor profile.' : "You are viewing this trader's public profile.";
 $profile_post_rows = $wpdb->get_results($wpdb->prepare(
-    "SELECT p.*, u.display_name, u.user_nicename, u.user_login
+    "SELECT p.*, u.display_name, u.user_nicename, u.user_login, g.name AS group_name, g.slug AS group_slug
      FROM {$post_table} p
      LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+     LEFT JOIN {$wpdb->prefix}rich_signal_groups g ON g.id = p.group_id
      WHERE p.user_id = %d
      ORDER BY p.created_at DESC
      LIMIT 24",
@@ -443,9 +455,10 @@ $profile_posts = array_map(static function ($row) {
 $profile_posts = tf_add_engagement_data($profile_posts, $wpdb, $likes_table, $saves_table, $comments_table);
 
 $feed_post_rows = $wpdb->get_results(
-    "SELECT p.*, u.display_name, u.user_nicename, u.user_login
+    "SELECT p.*, u.display_name, u.user_nicename, u.user_login, g.name AS group_name, g.slug AS group_slug
      FROM {$post_table} p
      LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+     LEFT JOIN {$wpdb->prefix}rich_signal_groups g ON g.id = p.group_id
      ORDER BY p.created_at DESC
      LIMIT 30"
 );
@@ -2105,6 +2118,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             </div>
             <div class="create-modal-body">
                 <form id="createPostForm" enctype="multipart/form-data">
+                    <input type="hidden" name="group_id" id="createPostGroupId" value="">
                     <div class="create-form-field create-layout-field">
                         <label class="create-form-label">Post layout</label>
                         <input type="hidden" id="createLayoutStyle" name="layout_style" value="trade_card">
@@ -3229,9 +3243,23 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 </div>
                 ` : ''}
                 ${floorSignalsState.activeWorkspaceTab === 'content' ? `
-                <div class="group-feed-card" style="margin-top:18px;">
-                    <div class="group-card-kicker">Content</div>
-                    <div class="group-feed-body">Analysis feed, files, screenshots, and structured desk content will appear here.</div>
+                <div class="group-workspace-grid" style="grid-template-columns:1fr; margin-top:18px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div class="section-kicker" style="margin:0;">Group Content</div>
+                        ${current.can_manage || current.is_owner ? `<button class="group-pill-btn" onclick="openCreateModal('post', '${escapeHtml(current.id || current.group_id || '')}')">Create Post</button>` : ''}
+                    </div>
+                    <div id="groupContentFeedContainer" style="display:grid; gap:16px;">
+                        ${(() => {
+                            const groupPosts = (typeof tfFeedInitialPosts !== 'undefined' ? tfFeedInitialPosts : []).filter(p => String(p.group_id) === String(current.id || current.group_id));
+                            if (!groupPosts.length) {
+                                return '<div class="group-feed-card"><div class="group-feed-body">No group content posted yet. Use the Create Post button to share analysis.</div></div>';
+                            }
+                            return groupPosts.map(post => {
+                                const feedIndex = tfFeedInitialPosts.findIndex(p => p.id === post.id);
+                                return renderSocialPostCard({ ...post, feed_index: feedIndex }, false);
+                            }).join('');
+                        })()}
+                    </div>
                 </div>
                 ` : ''}
                 ${floorSignalsState.activeWorkspaceTab === 'calls' ? `
@@ -4436,6 +4464,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const authorLinkEnd = Number(post.user_id || 0) > 0 ? '</a>' : '';
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
+        const groupName = post.group_name ? escapeHtml(post.group_name) : '';
+        const groupBadge = groupName ? `<div style="font-size:9px; font-weight:800; color:#f2ca50; background:rgba(242,202,80,0.1); padding:3px 6px; border-radius:4px; margin-bottom:4px; display:inline-block; letter-spacing:0.08em; text-transform:uppercase;">${groupName}</div>` : '';
         let content = '';
         if (layout === 'trade_card') {
             content = `<div class="post-trade-card social-trade-variant">${tradeCardMarkup(post)}</div>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${tagsMarkup}${media}`;
@@ -4447,7 +4477,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             content = `<div class="social-layout-analysis">${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${tagsMarkup}${media}</div>`;
         }
         const feedIndexAttr = Number.isInteger(Number(post.feed_index)) ? ` data-feed-index="${Number(post.feed_index)}"` : '';
-        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"${feedIndexAttr}><div class="group-feed-top"><div class="group-feed-author">${authorLinkStart}<div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div><div class="group-feed-author-copy"><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta group-feed-meta-inline">${time}</div></div>${authorLinkEnd}</div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
+        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"${feedIndexAttr}><div class="group-feed-top"><div class="group-feed-author">${authorLinkStart}<div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div><div class="group-feed-author-copy">${groupBadge}<div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta group-feed-meta-inline">${time}</div></div>${authorLinkEnd}</div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
+
     }
 
     function togglePostMenu(button, event) {
@@ -4749,10 +4780,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         if (rr) rr.disabled = !isTrade;
     }
 
-    function openCreateModal(type='post') {
+    function openCreateModal(type='post', groupId = null) {
         document.getElementById('createModal').classList.add('active');
         setCreateLayout('trade_card');
         setCreateFormStatus('');
+        const gidInput = document.getElementById('createPostGroupId');
+        if (gidInput) gidInput.value = groupId || '';
     }
     function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
     bindCreateLayouts();
@@ -4787,6 +4820,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 }
                 tfFeedInitialPosts.unshift(data.post);
                 renderHomeFeedPosts(tfFeedInitialPosts);
+                if (typeof renderGroupsPanel === 'function') {
+                    renderGroupsPanel();
+                }
                 if (Array.isArray(tfProfileInitialPosts) && Number(data.post.user_id) === Number(tfViewedUserId)) {
                     tfProfileInitialPosts.unshift(data.post);
                     renderProfilePosts(tfProfileInitialPosts);
