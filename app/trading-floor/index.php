@@ -827,7 +827,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         .group-workspace-tabs .group-ghost-btn:hover { color:#b9b9bd; background:none; transform:none; filter:none; }
         .group-workspace-tabs .group-pill-btn.is-active,
         .group-workspace-tabs .group-ghost-btn.is-active { color:#F2CA50; border-bottom-color:#F2CA50; background:none; }
-        .group-workspace-grid { display:grid; grid-template-columns:minmax(0, 1.52fr) minmax(220px, 0.72fr); gap:18px; align-items:start; }
+        .group-workspace-grid { display:grid; grid-template-columns:minmax(0, 35fr) minmax(0, 65fr); gap:18px; align-items:start; }
         .group-workspace-panel { display:flex; flex-direction:column; gap:8px; min-width:0; }
         .group-workspace-panel h3 { font-size:15px; line-height:1.12; font-weight:800; color:#f5f5f5; margin:0; letter-spacing:-0.02em; max-width:14ch; }
         .group-workspace-panel p { font-size:12px; line-height:1.55; color:#c8ced7; margin:0; max-width:28ch; }
