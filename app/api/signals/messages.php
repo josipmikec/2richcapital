@@ -100,11 +100,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     ), ARRAY_A);
 
     $messages = array_reverse($messages ?: []);
-    $messages = array_map(static function ($item) use ($wpdb, $profile_table) {
+    $reactions_table = $wpdb->prefix . 'rich_signal_message_reactions';
+    $messages = array_map(static function ($item) use ($wpdb, $profile_table, $reactions_table) {
         $profile_name = $wpdb->get_var($wpdb->prepare(
             "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
             (int) $item['user_id']
         ));
+        
+        $reactions_raw = $wpdb->get_results($wpdb->prepare(
+            "SELECT reaction, user_id FROM {$reactions_table} WHERE message_id = %d",
+            (int) $item['id']
+        ), ARRAY_A);
+        $reactions = [];
+        foreach ($reactions_raw ?: [] as $r) {
+            $react = $r['reaction'];
+            if (!isset($reactions[$react])) $reactions[$react] = [];
+            $reactions[$react][] = (int)$r['user_id'];
+        }
+        $item['reactions'] = $reactions;
+        
         $item['_debug'] = [
             'wp_author_name' => $item['author_name'] ?? '',
             'profile_display_name' => is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : null,

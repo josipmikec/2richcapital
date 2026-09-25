@@ -2906,12 +2906,28 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:250px;border-radius:8px;margin-top:8px;display:block;"></a>';
                 });
 
+                const reactIcon = `<button type="button" onclick="window.toggleMessageReaction(${msg.id}, '👍')" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" title="React 👍"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg></button>`;
+
+                let reactionsHtml = '';
+                if (msg.reactions && Object.keys(msg.reactions).length > 0) {
+                    reactionsHtml = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
+                    for (const react in msg.reactions) {
+                        const users = msg.reactions[react];
+                        const isMe = typeof CURRENT_USER_ID !== 'undefined' && users.includes(Number(CURRENT_USER_ID));
+                        const bg = isMe ? 'rgba(242,202,80,0.15)' : 'rgba(255,255,255,0.05)';
+                        const border = isMe ? '1px solid rgba(242,202,80,0.3)' : '1px solid transparent';
+                        reactionsHtml += `<button type="button" onclick="window.toggleMessageReaction(${msg.id}, '${react.replace(/'/g, "\\'")}')" style="background:${bg};border:${border};border-radius:12px;padding:2px 6px;font-size:11px;color:#cfd4dd;display:flex;align-items:center;gap:4px;cursor:pointer;line-height:1;">${escapeHtmlForTradingFloor(react)} <span style="opacity:0.7;">${users.length}</span></button>`;
+                    }
+                    reactionsHtml += '</div>';
+                }
+
                 return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
                     + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
                     + '<div style="flex:1;min-width:0;">'
                     + replyHtml
-                    + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span>' + replyIcon + '</div></div>'
+                    + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span>' + reactIcon + replyIcon + '</div></div>'
                     + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>'
+                    + reactionsHtml
                     + '</div>'
                     + '</div>';
             }).join('');
@@ -2993,6 +3009,147 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             }, 1000);
         });
     }
+    window.mentionState = { active: false, query: '', members: [], selectedIndex: 0 };
+    
+    window.handleMentionAutocomplete = function(input) {
+        const val = input.value;
+        const cursor = input.selectionStart;
+        const textBeforeCursor = val.slice(0, cursor);
+        const match = textBeforeCursor.match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
+        const dropdown = document.getElementById('mentionAutocomplete');
+        
+        if (match) {
+            const query = match[1].toLowerCase();
+            window.mentionState.active = true;
+            window.mentionState.query = query;
+            
+            let members = floorSignalsState.groupMembers || [];
+            if (query) {
+                members = members.filter(m => {
+                    const name = m.display_name || m.user_login || '';
+                    return name.toLowerCase().includes(query);
+                });
+            }
+            members = members.slice(0, 10);
+            window.mentionState.members = members;
+            window.mentionState.selectedIndex = 0;
+            
+            if (members.length > 0 && dropdown) {
+                renderMentionDropdown();
+                dropdown.style.display = 'flex';
+            } else if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+        } else {
+            window.mentionState.active = false;
+            if (dropdown) dropdown.style.display = 'none';
+        }
+    };
+    
+    function renderMentionDropdown() {
+        const dropdown = document.getElementById('mentionAutocomplete');
+        if (!dropdown) return;
+        dropdown.innerHTML = window.mentionState.members.map((m, idx) => {
+            const name = m.display_name || m.user_login || 'User #' + m.user_id;
+            const bg = idx === window.mentionState.selectedIndex ? 'rgba(255,255,255,0.1)' : 'transparent';
+            return `<div onclick="window.selectMention(${idx})" style="padding:6px 12px;border-radius:6px;cursor:pointer;background:${bg};color:#fff;font-size:13px;display:flex;align-items:center;gap:8px;" onmouseover="window.mentionState.selectedIndex=${idx};renderMentionDropdown()">
+                <div style="width:20px;height:20px;border-radius:50%;background:rgba(242,202,80,0.2);color:#f2ca50;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${name.charAt(0).toUpperCase()}</div>
+                ${escapeHtmlForTradingFloor(name)}
+            </div>`;
+        }).join('');
+    }
+    
+    window.selectMention = function(idx) {
+        if (!window.mentionState.active) return;
+        const member = window.mentionState.members[idx];
+        if (!member) return;
+        const input = document.getElementById('groupMessageInput');
+        if (!input) return;
+        
+        const val = input.value;
+        const cursor = input.selectionStart;
+        const textBeforeCursor = val.slice(0, cursor);
+        const match = textBeforeCursor.match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
+        
+        if (match) {
+            const name = member.display_name || member.user_login;
+            const mentionText = '@' + name.replace(/\s+/g, '') + ' ';
+            const replaceStart = cursor - match[1].length - 1;
+            input.value = val.slice(0, replaceStart) + mentionText + val.slice(cursor);
+            input.focus();
+            const newCursor = replaceStart + mentionText.length;
+            input.setSelectionRange(newCursor, newCursor);
+        }
+        
+        window.mentionState.active = false;
+        const dropdown = document.getElementById('mentionAutocomplete');
+        if (dropdown) dropdown.style.display = 'none';
+    };
+    
+    window.handleMentionKeydown = function(e) {
+        if (!window.mentionState.active) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendCurrentGroupMessage();
+            }
+            return;
+        }
+        
+        const dropdown = document.getElementById('mentionAutocomplete');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            window.mentionState.selectedIndex = (window.mentionState.selectedIndex + 1) % window.mentionState.members.length;
+            renderMentionDropdown();
+            if (dropdown && dropdown.children[window.mentionState.selectedIndex]) {
+                dropdown.children[window.mentionState.selectedIndex].scrollIntoView({block: 'nearest'});
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            window.mentionState.selectedIndex = (window.mentionState.selectedIndex - 1 + window.mentionState.members.length) % window.mentionState.members.length;
+            renderMentionDropdown();
+            if (dropdown && dropdown.children[window.mentionState.selectedIndex]) {
+                dropdown.children[window.mentionState.selectedIndex].scrollIntoView({block: 'nearest'});
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            window.selectMention(window.mentionState.selectedIndex);
+        } else if (e.key === 'Escape') {
+            window.mentionState.active = false;
+            if (dropdown) dropdown.style.display = 'none';
+        }
+    };
+
+    window.toggleMessageReaction = async function(messageId, reaction) {
+        if (!floorSignalsState.activeGroupId) return;
+        const groupId = floorSignalsState.activeGroupId;
+        
+        const msgs = floorSignalsState.groupMessagesByGroup[String(groupId)] || [];
+        const msg = msgs.find(m => Number(m.id) === Number(messageId));
+        if (msg) {
+            if (!msg.reactions) msg.reactions = {};
+            if (!msg.reactions[reaction]) msg.reactions[reaction] = [];
+            const userIndex = msg.reactions[reaction].indexOf(Number(CURRENT_USER_ID));
+            if (userIndex > -1) {
+                msg.reactions[reaction].splice(userIndex, 1);
+                if (msg.reactions[reaction].length === 0) delete msg.reactions[reaction];
+            } else {
+                msg.reactions[reaction].push(Number(CURRENT_USER_ID));
+            }
+            updateGroupMessagesDOM(msgs);
+            if (floorSignalsState.activeView === 'workspace' && floorSignalsState.activeWorkspaceTab === 'room') {
+                renderGroupsPanel();
+            }
+        }
+        
+        try {
+            await fetch(signalsUrl('react-message.php'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
+                body: JSON.stringify({ message_id: messageId, reaction: reaction }),
+                credentials: 'include'
+            });
+        } catch (err) {}
+    };
 
     async function openFloorSignalGroup(groupId) {
         groupChatLastSeenId = 0;
@@ -3354,7 +3511,22 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                             return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
                                         });
                                         
-                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div></div>`;
+                                        const reactIcon = `<button type="button" onclick="window.toggleMessageReaction(${msg.id}, '👍')" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" title="React 👍"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg></button>`;
+
+                                        let reactionsHtml = '';
+                                        if (msg.reactions && Object.keys(msg.reactions).length > 0) {
+                                            reactionsHtml = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
+                                            for (const react in msg.reactions) {
+                                                const users = msg.reactions[react];
+                                                const isMe = typeof CURRENT_USER_ID !== 'undefined' && users.includes(Number(CURRENT_USER_ID));
+                                                const bg = isMe ? 'rgba(242,202,80,0.15)' : 'rgba(255,255,255,0.05)';
+                                                const border = isMe ? '1px solid rgba(242,202,80,0.3)' : '1px solid transparent';
+                                                reactionsHtml += `<button type="button" onclick="window.toggleMessageReaction(${msg.id}, '${react.replace(/'/g, "\\'")}')" style="background:${bg};border:${border};border-radius:12px;padding:2px 6px;font-size:11px;color:#cfd4dd;display:flex;align-items:center;gap:4px;cursor:pointer;line-height:1;">${escapeHtmlForTradingFloor(react)} <span style="opacity:0.7;">${users.length}</span></button>`;
+                                            }
+                                            reactionsHtml += '</div>';
+                                        }
+                                        
+                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${reactIcon}${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
                                     }).join('');
                                 } else {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -3371,11 +3543,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                 return '<div id="groupChatMessagesContainer" style="display:flex;flex-direction:column;gap:8px;height:520px;overflow:auto;padding-right:2px;min-width:0;">' + messagesMarkup + '</div>'
                                     + '<div style="margin-top:8px;">' + replyPreviewBlock
                                     + '<div id="groupMessageAttachmentPreview" style="display:none;margin-bottom:8px;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;"><img id="groupMessageAttachmentImg" src="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"><div style="flex:1;overflow:hidden;"><div id="groupMessageAttachmentName" style="font-size:12px;color:#f5f5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div><div id="groupMessageAttachmentSize" style="font-size:11px;color:#a9afb8;"></div></div><button type="button" onclick="clearGroupMessageAttachment()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>'
-                                    + '<div class="dashboard-group-chat-composer" style="margin-top:0;">'
+                                    + '<div class="dashboard-group-chat-composer" style="margin-top:0;display:flex;width:100%;position:relative;">'
+                                    + '<div id="mentionAutocomplete" style="display:none;position:absolute;bottom:calc(100% + 8px);left:48px;background:#1a1d24;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px;max-height:200px;overflow-y:auto;z-index:100;min-width:200px;flex-direction:column;gap:4px;box-shadow:0 10px 30px rgba(0,0,0,0.5);"></div>'
                                     + '<button type="button" onclick="document.getElementById(\'groupMessageAttachment\').click()" aria-label="Attach image" style="display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#a9afb8;cursor:pointer;transition:all 0.2s;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>'
                                     + '<input type="file" id="groupMessageAttachment" accept="image/*" style="display:none" onchange="window.handleGroupMessageAttachment(event)">'
-                                    + '<input type="text" id="groupMessageInput" onkeydown="if(event.key===\'Enter\' && !event.shiftKey){event.preventDefault();sendCurrentGroupMessage();}" placeholder="Write a message..." style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:10px 14px;border-radius:20px;color:#fff;font:13px Montserrat,sans-serif;outline:none;">'
-                                    + '<button class="dashboard-group-chat-send" type="button" onclick="sendCurrentGroupMessage()" aria-label="Send message" title="Send message"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>'
+                                    + '<input type="text" id="groupMessageInput" oninput="window.handleMentionAutocomplete(this)" onkeydown="window.handleMentionKeydown(event)" placeholder="Write a message..." style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:10px 14px;border-radius:20px;color:#fff;font:13px Montserrat,sans-serif;outline:none;">'
+                                    + '<button class="dashboard-group-chat-send" type="button" onclick="sendCurrentGroupMessage()" aria-label="Send message" title="Send message" style="flex-shrink:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>'
                                     + '</div></div>';
                             })()}
                         </div>

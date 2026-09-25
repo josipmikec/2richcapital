@@ -77,6 +77,7 @@ while (true) {
     ), ARRAY_A);
 
     if (!empty($new_messages)) {
+        $reactions_table = $wpdb->prefix . 'rich_signal_message_reactions';
         foreach ($new_messages as $item) {
             $profile_name = $wpdb->get_var($wpdb->prepare("SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1", (int) $item['user_id']));
             $item['author_name'] = is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : ($item['author_name'] ?? ('User #' . (int) $item['user_id']));
@@ -86,6 +87,18 @@ while (true) {
                 $item['reply_to_author_name'] = is_string($reply_profile_name) && trim($reply_profile_name) !== '' ? $reply_profile_name : ($item['reply_to_author_fallback'] ?? ('User #' . (int) $item['reply_to_user_id']));
                 unset($item['reply_to_author_fallback']);
             }
+            
+            $reactions_raw = $wpdb->get_results($wpdb->prepare(
+                "SELECT reaction, user_id FROM {$reactions_table} WHERE message_id = %d",
+                (int) $item['id']
+            ), ARRAY_A);
+            $reactions = [];
+            foreach ($reactions_raw ?: [] as $r) {
+                $react = $r['reaction'];
+                if (!isset($reactions[$react])) $reactions[$react] = [];
+                $reactions[$react][] = (int)$r['user_id'];
+            }
+            $item['reactions'] = $reactions;
             
             echo "event: message\ndata: " . wp_json_encode($item) . "\n\n";
             $last_message_id = max($last_message_id, (int)$item['id']);
