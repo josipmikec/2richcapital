@@ -3333,9 +3333,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                         ${current.can_manage || current.is_owner ? `<button class="group-pill-btn" onclick="toggleActiveCallForm()">Manage Link</button>` : ''}
                     </div>
                     ${current.can_manage || current.is_owner ? `
-                    <form id="groupActiveCallForm" onsubmit="saveActiveCallLink(event, '${escapeHtml(current.id || current.group_id || '')}')" style="display:none; margin-bottom:16px; padding:16px; background:#111827; border:1px solid rgba(255,255,255,0.12); border-radius:12px;">
+                    <form id="groupActiveCallForm" onsubmit="saveActiveCallLink(event, '${escapeHtml(current.id || current.group_id || '')}')" style="display:none; margin-bottom:20px; padding:0;">
                         <label style="display:grid;gap:6px;font-size:12px;color:#bfc5cf;">Live call link (Zoom, Meet, Discord)
-                            <input id="groupActiveCallInput" value="${current.active_call_link || ''}" placeholder="https://..." style="min-height:42px;background:#1a2333;border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#f5f5f5;padding:0 12px;">
+                            <input id="groupActiveCallInput" value="${current.active_call_link || ''}" placeholder="https://..." style="min-height:42px;background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#f5f5f5;padding:0 12px;">
                         </label>
                         <div style="display:flex;justify-content:flex-end;margin-top:12px;">
                             <button type="submit" class="group-pill-btn">Save Link</button>
@@ -5101,7 +5101,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         try {
             const res = await fetch('../../api/signals/update-group.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken || '' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
                 body: JSON.stringify({ group_id: groupId, active_call_link: link })
             });
             const data = await res.json();
