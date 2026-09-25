@@ -5085,14 +5085,14 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         });
     }
 
-    function toggleActiveCallForm() {
+    window.toggleActiveCallForm = function() {
         const form = document.getElementById('groupActiveCallForm');
         if (form) {
             form.style.display = form.style.display === 'none' ? 'block' : 'none';
         }
-    }
+    };
 
-    async function saveActiveCallLink(event, groupId) {
+    window.saveActiveCallLink = async function(event, groupId) {
         event.preventDefault();
         const input = document.getElementById('groupActiveCallInput');
         if (!input) return;
@@ -5101,7 +5101,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         if (btn) btn.innerText = 'Saving...';
         
         try {
-            const res = await fetch('../../api/signals/update-group.php', {
+            const res = await fetch(signalsUrl('update-group.php'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
                 body: JSON.stringify({ group_id: groupId, active_call_link: link })
