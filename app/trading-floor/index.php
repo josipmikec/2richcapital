@@ -3833,8 +3833,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     <div class="group-card-side">
                         <div class="group-card-badge">${verifiedBadge(group)}</div>
                         <div class="group-card-actions">
-                            <button class="group-pill-btn" type="button" onclick='openFloorSignalGroup(${JSON.stringify(String(group.id))})'>Open</button>
-                            <button class="group-ghost-btn" type="button" ${joined || isGroupsBusy(`join:${String(group.id)}`) ? 'disabled' : ''} onclick='joinFloorSignalGroup(${JSON.stringify(String(group.id))})'>${joined ? 'Joined' : (isGroupsBusy(`join:${String(group.id)}`) ? 'Joining…' : 'Join')}</button>
+                            ${joined ? `<button class="group-pill-btn" type="button" onclick='openFloorSignalGroup(${JSON.stringify(String(group.id))})'>Open</button>` : ''}
+                            <button class="group-ghost-btn" type="button" ${joined || isGroupsBusy(`join:${String(group.id)}`) ? 'disabled' : ''} onclick='joinFloorSignalGroup(${JSON.stringify(String(group.id))})'>${joined ? 'Joined' : (isGroupsBusy(`join:${String(group.id)}`) ? 'Working…' : (group.pricing_type === 'paid' && parseFloat(group.price) > 0 ? `Subscribe ($${group.price}/mo)` : 'Join'))}</button>
                         </div>
                     </div>
                 </article>
