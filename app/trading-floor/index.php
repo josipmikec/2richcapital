@@ -827,7 +827,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         .group-workspace-tabs .group-ghost-btn:hover { color:#b9b9bd; background:none; transform:none; filter:none; }
         .group-workspace-tabs .group-pill-btn.is-active,
         .group-workspace-tabs .group-ghost-btn.is-active { color:#F2CA50; border-bottom-color:#F2CA50; background:none; }
-        .group-workspace-grid { display:grid; grid-template-columns:minmax(0, 35fr) minmax(0, 65fr); gap:18px; align-items:start; }
+        .group-workspace-grid { display:grid; grid-template-columns:minmax(0, 35fr) minmax(0, 65fr); gap:24px; align-items:start; }
         .group-workspace-panel { display:flex; flex-direction:column; gap:8px; min-width:0; }
         .group-workspace-panel h3 { font-size:15px; line-height:1.12; font-weight:800; color:#f5f5f5; margin:0; letter-spacing:-0.02em; max-width:14ch; }
         .group-workspace-panel p { font-size:12px; line-height:1.55; color:#c8ced7; margin:0; max-width:28ch; }
@@ -1043,6 +1043,13 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             margin-right: auto;
             padding-right: 32px;
         }
+        .dashboard-container.group-mode .tf-feed-col,
+        .dashboard-container.group-mode .floor-section {
+            max-width: 100%;
+            margin-left: 0;
+            margin-right: auto;
+            padding-right: 32px;
+        }
         .dashboard-container.profile-mode #floor-profile-panel {
             margin-left: 0;
             margin-right: auto;
@@ -1223,6 +1230,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             overflow-y: auto; scrollbar-width: none;
         }
         .dashboard-container.profile-mode .tf-right-col { display: none; }
+        .dashboard-container.group-mode .tf-right-col { display: none; }
         .tf-right-col::-webkit-scrollbar { display: none; }
         .right-user-card { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #1a1a1a; }
         .dashboard-container.profile-mode .right-user-card { display: none; }
@@ -2553,7 +2561,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const groupsLink = document.querySelector('[data-floor-nav="groups"]');
         const profileLink = document.querySelector('[data-floor-nav="profile"]');
         [homeLink, groupsLink, profileLink].forEach(el => { if (el) el.classList.remove('active'); });
-        if (app) app.classList.toggle('profile-mode', section === 'profile' || section === 'groups');
+        if (app) app.classList.toggle('profile-mode', section === 'profile');
+        if (app) app.classList.toggle('group-mode', section === 'groups');
         if (section === 'profile' && profile) { profile.hidden = false; profile.style.display = 'block'; if (profileLink) profileLink.classList.add('active'); }
         else if (section === 'groups' && groups) { bootFloorSignals(); groups.hidden = false; groups.style.display = 'block'; if (groupsLink) groupsLink.classList.add('active'); }
         else if (feed) { feed.hidden = false; feed.style.display = 'block'; if (homeLink) homeLink.classList.add('active'); }
@@ -3319,7 +3328,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                         let dateSepHtml = '';
                                         const currentDateStr = formatDateSeparator(msg.created_at);
                                         if (currentDateStr && currentDateStr !== lastDateStr) {
-                                            dateSepHtml = '<div style="display:flex;align-items:center;text-align:center;margin:12px 0 4px 0;color:#666;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;"><div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);"></div><span style="padding:0 10px;">'+escapeHtmlForTradingFloor(currentDateStr)+'</span><div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);"></div></div>';
+                                            dateSepHtml = '<div class="dashboard-group-chat-date-separator"><span>'+escapeHtmlForTradingFloor(currentDateStr)+'</span></div>';
                                             lastDateStr = currentDateStr;
                                         }
 
@@ -3327,27 +3336,20 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                         if (msg.reply_to_id) {
                                             const rAuthor = escapeHtmlForTradingFloor(msg.reply_to_author_name || 'Member');
                                             const rText = escapeHtmlForTradingFloor(msg.reply_to_message_text || '...');
-                                            replyHtml = '<div style="background:rgba(0,0,0,0.25);border-left:2px solid #f2ca50;padding:6px 8px;border-radius:4px 6px 6px 4px;margin-bottom:8px;font-size:10px;"><div style="color:#f2ca50;font-weight:600;margin-bottom:2px;">'+rAuthor+'</div><div style="color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">'+rText+'</div></div>';
+                                            replyHtml = `<div class="dashboard-group-chat-replied-to"><div class="dashboard-group-chat-replied-author">${rAuthor}</div><div class="dashboard-group-chat-replied-text">${rText}</div></div>`;
                                         }
 
                                         const replyAuthor = escapeHtmlForTradingFloor(author);
                                         const replyText = escapeHtmlForTradingFloor(msg.message || '');
-                                        const replyIcon = `<button type="button" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
+                                        const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
 
                                         let rawMsg = msg.message || '';
                                         let msgText = escapeHtmlForTradingFloor(rawMsg);
                                         msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
-                                            return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:250px;border-radius:8px;margin-top:8px;display:block;"></a>';
+                                            return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
                                         });
                                         
-                                        return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
-                                            + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
-                                            + '<div style="flex:1;min-width:0;">'
-                                            + replyHtml
-                                            + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span>' + replyIcon + '</div></div>'
-                                            + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>'
-                                            + '</div>'
-                                            + '</div>';
+                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div></div>`;
                                     }).join('');
                                 } else {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -3364,11 +3366,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                 return '<div id="groupChatMessagesContainer" style="display:flex;flex-direction:column;gap:8px;height:520px;overflow:auto;padding-right:2px;min-width:0;">' + messagesMarkup + '</div>'
                                     + '<div style="margin-top:8px;">' + replyPreviewBlock
                                     + '<div id="groupMessageAttachmentPreview" style="display:none;margin-bottom:8px;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;"><img id="groupMessageAttachmentImg" src="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"><div style="flex:1;overflow:hidden;"><div id="groupMessageAttachmentName" style="font-size:12px;color:#f5f5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div><div id="groupMessageAttachmentSize" style="font-size:11px;color:#a9afb8;"></div></div><button type="button" onclick="clearGroupMessageAttachment()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>'
-                                    + '<div style="display:flex;gap:10px;align-items:end;width:100%;min-width:0;overflow:hidden;">'
-                                    + '<button type="button" onclick="document.getElementById(\'groupMessageAttachment\').click()" aria-label="Attach image" style="display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#a9afb8;cursor:pointer;transition:all 0.2s;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>'
+                                    + '<div class="dashboard-group-chat-composer" style="margin-top:0;">'
+                                    + '<button type="button" onclick="document.getElementById(\'groupMessageAttachment\').click()" aria-label="Attach image" style="display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#a9afb8;cursor:pointer;transition:all 0.2s;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>'
                                     + '<input type="file" id="groupMessageAttachment" accept="image/*" style="display:none" onchange="window.handleGroupMessageAttachment(event)">'
-                                    + '<textarea id="groupMessageInput" onkeydown="if(event.key===\'Enter\' && !event.shiftKey){event.preventDefault();sendCurrentGroupMessage();}" placeholder="Message" style="display:block;flex:1;min-width:0;box-sizing:border-box;min-height:44px;height:44px;max-height:160px;border-radius:22px;border:1px solid rgba(255,255,255,0.12);background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.028));padding:10px 18px;color:#f5f5f5;resize:vertical;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 24px rgba(0,0,0,0.18);font:600 13px/1.45 Montserrat,sans-serif;"></textarea>'
-                                    + '<button class="group-pill-btn" type="button" onclick="sendCurrentGroupMessage()" aria-label="Send message" style="display:inline-flex;align-items:center;justify-content:center;align-self:end;white-space:nowrap;max-width:100%;min-width:52px;min-height:44px;padding:0 14px;border-radius:999px;box-shadow:0 8px 20px rgba(242,202,80,0.22);">&#8594;</button>'
+                                    + '<input type="text" id="groupMessageInput" onkeydown="if(event.key===\'Enter\' && !event.shiftKey){event.preventDefault();sendCurrentGroupMessage();}" placeholder="Write a message..." style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:10px 14px;border-radius:20px;color:#fff;font:13px Montserrat,sans-serif;outline:none;">'
+                                    + '<button class="dashboard-group-chat-send" type="button" onclick="sendCurrentGroupMessage()" aria-label="Send message" title="Send message"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>'
                                     + '</div></div>';
                             })()}
                         </div>
@@ -5356,6 +5358,14 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
 
     // SSE real-time messaging replaces polling here
     </script>
-
+    <script>
+        window.openGlobalImageModal = function(url) {
+            document.getElementById('imageLightboxImg').src = url;
+            document.getElementById('imageLightboxModal').style.display = 'flex';
+        };
+    </script>
+    <div id="imageLightboxModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;flex-direction:column;gap:16px;" onclick="this.style.display='none'">
+        <img id="imageLightboxImg" src="" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+    </div>
 </body>
 </html>

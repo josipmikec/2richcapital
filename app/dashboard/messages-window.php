@@ -255,6 +255,34 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             z-index: 10;
         }
         
+        .dashboard-group-chat-reply-preview {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(20,20,20,0.95);
+            border-top: 1px solid #1a1a1a;
+            border-bottom: 1px solid #1a1a1a;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            z-index: 11;
+        }
+        .dashboard-group-chat-reply-preview-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex: 1;
+            border-left: 2px solid #F2CA50;
+            padding-left: 8px;
+        }
+        .dashboard-group-chat-reply-preview-author { color: #F2CA50; font-size: 11px; font-weight: 700; margin-bottom: 2px; }
+        .dashboard-group-chat-reply-preview-text { color: #aaa; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+        .dashboard-group-chat-reply-cancel { background: none; border: none; color: #888; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; }
+        .dashboard-group-chat-reply-cancel:hover { color: #f87171; }
+        
         .dashboard-group-chat-composer {
             display: flex;
             gap: 8px;
@@ -431,6 +459,11 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             document.getElementById('dashboardGroupChatReplyPreview').style.display = 'none';
         };
 
+        window.openImageLightbox = function(url) {
+            document.getElementById('imageLightboxImg').src = url;
+            document.getElementById('imageLightboxModal').style.display = 'flex';
+        };
+
         function showState(html) { state.innerHTML = html; state.hidden = false; }
         function setCta(label, href, visible) { cta.innerHTML = `${label} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`; cta.onclick = () => { if (window.opener) window.opener.location.href = href; else window.location.href = href; }; cta.hidden = !visible; if (footer) footer.hidden = false; }
         
@@ -480,7 +513,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                 
                 let msgText = escapeHtml(item.message || '');
                 msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
-                    return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;"></a>';
+                    return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openImageLightbox(\''+match+'\')">';
                 });
                 
                 html += `<div class="dashboard-group-chat-message${highlightClass}">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(time(item.created_at))}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div></div>`;
@@ -606,5 +639,8 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             loadMessages();
         };
     </script>
+    <div id="imageLightboxModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;flex-direction:column;gap:16px;" onclick="this.style.display='none'">
+        <img id="imageLightboxImg" src="" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+    </div>
 </body>
 </html>
