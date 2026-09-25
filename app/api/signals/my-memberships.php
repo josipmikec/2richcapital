@@ -24,7 +24,7 @@ $memberships_table = $wpdb->prefix . 'rich_signal_memberships';
 
 $memberships = $wpdb->get_results($wpdb->prepare(
     "SELECT g.id, g.slug, g.name, g.team_name, g.pricing_type, g.price,
-            g.visibility, g.status AS group_status, g.avatar_url, g.member_count,
+            g.visibility, g.status AS group_status, g.avatar_url, g.member_count, g.active_call_link,
             m.role, m.access_type, m.billing_status, m.joined_at, m.approved_at
      FROM {$memberships_table} m
      INNER JOIN {$groups_table} g ON g.id = m.group_id

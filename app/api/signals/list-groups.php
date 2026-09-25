@@ -25,7 +25,7 @@ $groups = $wpdb->get_results(
     "SELECT id, slug, name, team_name, description, pricing_type, price, member_count,
             owner_user_id, visibility, join_mode, status, category, avatar_url, cover_url,
             intro_text, requires_stop_loss, requires_take_profit, posted_signals_count, last_signal_at,
-            verification_status, verified_at, accent_color
+            verification_status, verified_at, accent_color, active_call_link
      FROM {$groups_table}
      WHERE is_active = 1
        AND status = 'live'
@@ -70,7 +70,7 @@ unset($g);
 $my_owned_drafts = $wpdb->get_results($wpdb->prepare(
     "SELECT id, slug, name, team_name, description, pricing_type, price, member_count,
             visibility, join_mode, status, category, avatar_url, cover_url, verification_status,
-            verification_note, verification_requested_at, verified_at, intro_text, rules_text
+            verification_note, verification_requested_at, verified_at, intro_text, rules_text, active_call_link
      FROM {$groups_table}
      WHERE owner_user_id = %d AND status IN ('draft', 'pending_review', 'suspended')
      ORDER BY id DESC",

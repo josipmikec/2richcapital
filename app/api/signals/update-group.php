@@ -86,6 +86,8 @@ if (!in_array(strtoupper($accent_color), array_map('strtoupper', $accent_palette
 $allowed_symbols = isset($body['allowed_symbols']) && is_array($body['allowed_symbols'])
     ? array_values(array_filter(array_map('trim', $body['allowed_symbols'])))
     : (json_decode((string) ($current['allowed_symbols_json'] ?? '[]'), true) ?: []);
+$requires_sl = isset($body['requires_stop_loss']) ? (int) $body['requires_stop_loss'] : (int) ($current['requires_stop_loss'] ?? 0);
+$requires_tp = isset($body['requires_take_profit']) ? (int) $body['requires_take_profit'] : (int) ($current['requires_take_profit'] ?? 0);
 
 if ($name === '') {
     echo json_encode(['success' => false, 'message' => 'Group name is required.']);
