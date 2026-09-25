@@ -2903,6 +2903,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 let rawMsg = msg.message || '';
                 let msgText = escapeHtmlForTradingFloor(rawMsg);
                 msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
+                    return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:250px;border-radius:8px;margin-top:8px;display:block;"></a>';
+                });
+                
                 const authorJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
                 const textJs = escapeHtmlForTradingFloor(msg.message || '').replace(/'/g, "\\'");
                 
