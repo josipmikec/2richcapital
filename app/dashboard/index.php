@@ -19,6 +19,11 @@ $user_name  = $_SESSION['user_name']  ?? 'Member';
 $user_email = $_SESSION['user_email'] ?? '';
 $user_id    = $_SESSION['user_id']    ?? 0;
 
+$has_seen_welcome = (bool) get_user_meta($user_id, 'has_seen_welcome', true);
+if (!$has_seen_welcome) {
+    update_user_meta($user_id, 'has_seen_welcome', 1);
+}
+
 // ── Load saved dashboard layout for this user (server-side, no flash) ──
 $_dashboard_default_order = ['market','signals','news','classroom','strategies','trades','mentors','ai','chat','journal'];
 $_dashboard_default_order = array_values(array_filter($_dashboard_default_order, function($id) use ($user_id) {
@@ -3031,5 +3036,56 @@ foreach ($_dashboard_initial_order as $card_id) {
     <div id="imageLightboxModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;flex-direction:column;gap:16px;" onclick="this.style.display='none'">
         <img id="imageLightboxImg" src="" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
     </div>
+
+    <?php if (!$has_seen_welcome): ?>
+    <div id="welcomeTourModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+        <div style="background:#111;border:1px solid #333;border-radius:24px;width:100%;max-width:500px;padding:40px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);position:relative;">
+            <button onclick="document.getElementById('welcomeTourModal').style.display='none'" style="position:absolute;top:20px;right:20px;background:none;border:none;color:#888;cursor:pointer;font-size:24px;transition:color 0.2s;">
+                &times;
+            </button>
+            
+            <div style="text-align:center;margin-bottom:30px;">
+                <h2 style="margin:0;font-size:28px;font-weight:800;letter-spacing:-0.03em;color:#fff;">Welcome to <span style="color:#F2CA50;">2RICH</span></h2>
+                <p style="color:#888;font-size:14px;margin-top:8px;">Your financial mastery starts here.</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;">
+                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    </div>
+                    <div>
+                        <h4 style="margin:0 0 4px;font-size:15px;color:#fff;">1. Organize Your Workspace</h4>
+                        <p style="margin:0;font-size:13px;color:#888;line-height:1.4;">Click "Edit Layout" at the top right to rearrange and hide dashboard cards to fit your workflow.</p>
+                    </div>
+                </div>
+
+                <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;">
+                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"></path></svg>
+                    </div>
+                    <div>
+                        <h4 style="margin:0 0 4px;font-size:15px;color:#fff;">2. Connect Your Broker</h4>
+                        <p style="margin:0;font-size:13px;color:#888;line-height:1.4;">Head to Settings > MT5 Connection to link your account and track live performance seamlessly.</p>
+                    </div>
+                </div>
+
+                <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;">
+                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div>
+                        <h4 style="margin:0 0 4px;font-size:15px;color:#fff;">3. Join the Trading Floor</h4>
+                        <p style="margin:0;font-size:13px;color:#888;line-height:1.4;">Access premium signal groups, engage with top mentors, and copy-trade directly from the floor.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="document.getElementById('welcomeTourModal').style.display='none'" style="margin-top:30px;width:100%;background:linear-gradient(135deg, #F2CA50 0%, #E6B93D 100%);color:#111;border:none;padding:16px;border-radius:12px;font-size:14px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                Get Started
+            </button>
+        </div>
+    </div>
+    <?php endif; ?>
 </body>
 </html>

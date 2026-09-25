@@ -72,11 +72,40 @@ http_response_code(200); // Always respond 200 to Stripe quickly
 switch ($type) {
 
     case 'checkout.session.completed':
-        $session     = $event['data']['object'];
+        $session       = $event['data']['object'];
         $customerEmail = $session['customer_details']['email'] ?? $session['customer_email'] ?? '';
         $customerName  = $session['customer_details']['name']  ?? '';
-        $planName      = get_plan_name_from_session($session);
-        handle_new_member($customerEmail, $customerName, $planName);
+        $metadata      = $session['metadata'] ?? [];
+
+        if (isset($metadata['action']) && $metadata['action'] === 'join_group') {
+            $user_id = (int) ($session['client_reference_id'] ?? 0);
+            $group_id = (int) ($metadata['group_id'] ?? 0);
+            
+            if ($user_id && $group_id) {
+                global $wpdb;
+                $memberships_table = $wpdb->prefix . 'rich_signal_memberships';
+                
+                // Add membership record
+                $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$memberships_table} WHERE user_id = %d AND group_id = %d LIMIT 1", $user_id, $group_id));
+                if (!$exists) {
+                    $wpdb->insert($memberships_table, [
+                        'user_id' => $user_id,
+                        'group_id' => $group_id,
+                        'role' => 'member',
+                        'status' => 'active',
+                        'joined_at' => current_time('mysql'),
+                        'updated_at' => current_time('mysql')
+                    ]);
+                    
+                    // Update member count
+                    $group_table = $wpdb->prefix . 'rich_signal_groups';
+                    $wpdb->query($wpdb->prepare("UPDATE {$group_table} SET member_count = (SELECT COUNT(*) FROM {$memberships_table} WHERE group_id = %d AND status='active') WHERE id = %d", $group_id, $group_id));
+                }
+            }
+        } else {
+            $planName = get_plan_name_from_session($session);
+            handle_new_member($customerEmail, $customerName, $planName);
+        }
         break;
 
     case 'customer.subscription.created':
@@ -190,8 +219,8 @@ function send_payment_confirmation_email(
     $headline  = $isNew ? 'Access Granted.' : 'Payment Confirmed.';
     $subline   = $isNew ? 'Your account has been created' : 'Your membership has been renewed';
     $bodyText  = $isNew
-        ? 'Your payment was successful and your 2RICH CAPITAL account is ready. Use the credentials below to access the platform immediately.'
-        : 'Your 2RICH CAPITAL membership has been renewed successfully. Your access continues uninterrupted.';
+        ? 'Welcome to the inner circle. Your payment was successful, and your 2RICH CAPITAL account is now fully active. You\'ve just unlocked access to elite trading signals, advanced copy-trading tools, and a community of high-net-worth traders.<br><br><span style="color:#F2CA50;"><b>YOUR NEXT STEPS:</b></span><br><br>&bull; <b>Log In:</b> Access the Trading Floor using your credentials below.<br>&bull; <b>Connect MT5:</b> Link your brokerage for seamless copy-trading.<br>&bull; <b>Join Groups:</b> Discover and join premium signal groups.<br>&bull; <b>Start Earning:</b> Execute high-probability setups immediately.<br><br>The markets wait for no one. Let\'s get to work.'
+        : 'Your 2RICH CAPITAL membership has been renewed successfully. The grind doesn\'t stop. Your access continues uninterrupted. Keep executing and compounding those wins!';
 
     $html = '
 <!DOCTYPE html>

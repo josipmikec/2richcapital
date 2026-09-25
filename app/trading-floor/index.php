@@ -4025,6 +4025,27 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         setGroupsBusy(`join:${groupId}`);
         renderGroupsPanel();
         try {
+            const group = floorSignalsState.groups.find(g => String(g.id) === String(groupId));
+            if (group && group.pricing_type === 'paid' && parseFloat(group.price) > 0) {
+                const res = await fetch(signalsUrl('checkout.php'), {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
+                    body: JSON.stringify({ group_id: groupId })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (data.success && data.url) {
+                    window.location.href = data.url;
+                    return;
+                } else {
+                    floorSignalsState.createMessage = data.message || 'Failed to initialize checkout.';
+                    openFloorSection('groups');
+                    setGroupsBusy('');
+                    renderGroupsPanel();
+                    return;
+                }
+            }
+
             const res = await fetch(signalsUrl('join.php'), {
                 method: 'POST',
                 credentials: 'include',
