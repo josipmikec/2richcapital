@@ -75,6 +75,7 @@ $visibility   = in_array($body['visibility'] ?? $current['visibility'] ?? 'liste
 $join_mode    = in_array($body['join_mode'] ?? $current['join_mode'] ?? 'open', ['open', 'request', 'invite'], true) ? ($body['join_mode'] ?? $current['join_mode']) : 'open';
 $intro_text   = trim((string) ($body['intro_text'] ?? $current['intro_text'] ?? ''));
 $rules_text   = trim((string) ($body['rules_text'] ?? $current['rules_text'] ?? ''));
+$active_call_link = trim((string) ($body['active_call_link'] ?? $current['active_call_link'] ?? ''));
 $avatar_url   = trim((string) ($body['avatar_url'] ?? $current['avatar_url'] ?? ''));
 $cover_url    = trim((string) ($body['cover_url'] ?? $current['cover_url'] ?? ''));
 $accent_color = trim((string) ($body['accent_color'] ?? $current['accent_color'] ?? ''));
@@ -119,6 +120,7 @@ $update_data = [
     'join_mode'            => $join_mode,
     'intro_text'           => $intro_text !== '' ? $intro_text : null,
     'rules_text'           => $rules_text !== '' ? $rules_text : null,
+    'active_call_link'     => $active_call_link !== '' ? $active_call_link : null,
     'avatar_url'           => $avatar_url !== '' ? $avatar_url : null,
     'cover_url'            => $cover_url !== '' ? $cover_url : null,
     'requires_stop_loss'   => $requires_sl,

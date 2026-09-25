@@ -54,7 +54,8 @@ rich_add_column($wpdb, $groups_table, 'avatar_url',           "avatar_url VARCHA
 rich_add_column($wpdb, $groups_table, 'cover_url',             "cover_url VARCHAR(255) NULL AFTER avatar_url", $log);
 rich_add_column($wpdb, $groups_table, 'intro_text',            "intro_text TEXT NULL AFTER cover_url", $log);
 rich_add_column($wpdb, $groups_table, 'rules_text',            "rules_text TEXT NULL AFTER intro_text", $log);
-rich_add_column($wpdb, $groups_table, 'requires_stop_loss',    "requires_stop_loss TINYINT(1) NOT NULL DEFAULT 0 AFTER rules_text", $log);
+rich_add_column($wpdb, $groups_table, 'active_call_link',      "active_call_link VARCHAR(500) NULL AFTER rules_text", $log);
+rich_add_column($wpdb, $groups_table, 'requires_stop_loss',    "requires_stop_loss TINYINT(1) NOT NULL DEFAULT 0 AFTER active_call_link", $log);
 rich_add_column($wpdb, $groups_table, 'requires_take_profit',  "requires_take_profit TINYINT(1) NOT NULL DEFAULT 0 AFTER requires_stop_loss", $log);
 rich_add_column($wpdb, $groups_table, 'allowed_symbols_json',  "allowed_symbols_json TEXT NULL AFTER requires_take_profit", $log);
 rich_add_column($wpdb, $groups_table, 'posted_signals_count',  "posted_signals_count INT NOT NULL DEFAULT 0 AFTER allowed_symbols_json", $log);

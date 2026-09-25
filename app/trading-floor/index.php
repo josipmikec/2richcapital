@@ -424,6 +424,12 @@ if (!$group_id_column_exists) {
     $wpdb->query("ALTER TABLE {$post_table} ADD KEY group_idx (group_id)");
 }
 
+$group_table = $wpdb->prefix . 'rich_signal_groups';
+$active_call_column_exists = (bool) $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$group_table} LIKE %s", 'active_call_link'));
+if (!$active_call_column_exists) {
+    $wpdb->query("ALTER TABLE {$group_table} ADD COLUMN active_call_link VARCHAR(500) NULL AFTER rules_text");
+}
+
 if ($layout_style_column_exists) {
     $wpdb->query("UPDATE {$post_table} SET layout_style = CASE WHEN post_type IN ('analysis','analysis_card') THEN 'analysis_card' WHEN post_type IN ('image','text','trade_card') THEN post_type ELSE 'trade_card' END WHERE layout_style IS NULL OR layout_style = ''");
     $wpdb->query("UPDATE {$post_table} SET post_type = layout_style WHERE layout_style IN ('trade_card','analysis_card','image','text') AND (post_type IS NULL OR post_type = '' OR post_type IN ('trade','analysis'))");
@@ -454,14 +460,17 @@ $profile_posts = array_map(static function ($row) {
 }, $profile_post_rows ?: []);
 $profile_posts = tf_add_engagement_data($profile_posts, $wpdb, $likes_table, $saves_table, $comments_table);
 
-$feed_post_rows = $wpdb->get_results(
+$feed_post_rows = $wpdb->get_results($wpdb->prepare(
     "SELECT p.*, u.display_name, u.user_nicename, u.user_login, g.name AS group_name, g.slug AS group_slug
      FROM {$post_table} p
      LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
      LEFT JOIN {$wpdb->prefix}rich_signal_groups g ON g.id = p.group_id
+     LEFT JOIN {$wpdb->prefix}rich_signal_memberships m ON m.group_id = p.group_id AND m.user_id = %d AND m.status = 'active'
+     WHERE p.group_id IS NULL OR g.visibility != 'private' OR m.id IS NOT NULL
      ORDER BY p.created_at DESC
-     LIMIT 30"
-);
+     LIMIT 30",
+     $user_id
+));
 $home_feed_posts = array_map(static function ($row) {
     return tf_format_social_post($row);
 }, $feed_post_rows ?: []);
@@ -3135,6 +3144,14 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                 : '<div class="group-feed-card"><div class="group-feed-body">No signals have been posted to this room yet.</div></div>';
                     return `
                 <div class="group-workspace-grid">
+                    ${current.active_call_link ? `
+                    <div style="grid-column:1 / -1; margin-bottom: 0px;">
+                        <a href="${escapeHtml(current.active_call_link)}" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; background:rgba(242,202,80,0.1); border:1px solid rgba(242,202,80,0.3); border-radius:12px; color:#f2ca50; text-decoration:none; font-weight:700; font-size:14px;">
+                            <div style="width:8px; height:8px; border-radius:50%; background:#f2ca50; box-shadow:0 0 8px #f2ca50;"></div>
+                            ACTIVE LIVE SESSION — JOIN NOW
+                        </a>
+                    </div>
+                    ` : ''}
                     <article class="group-workspace-panel group-workspace-panel--signals">
                         <div class="group-workspace-signal-head" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;min-height:24px;">
                             <div class="group-workspace-tooltip" style="display:flex;align-items:center;">
@@ -3263,9 +3280,28 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 </div>
                 ` : ''}
                 ${floorSignalsState.activeWorkspaceTab === 'calls' ? `
-                <div class="group-feed-card" style="margin-top:18px;">
-                    <div class="group-card-kicker">Calls</div>
-                    <div class="group-feed-body">Live sessions, scheduled calls, and join controls will appear here.</div>
+                <div class="group-workspace-grid" style="grid-template-columns:1fr; margin-top:18px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div class="section-kicker" style="margin:0;">Live Sessions</div>
+                    </div>
+                    <div class="group-feed-card">
+                        ${current.active_call_link ? `
+                            <div style="padding: 24px; text-align:center; border:1px solid rgba(242,202,80,0.3); border-radius:16px; background:linear-gradient(180deg, rgba(242,202,80,0.05), rgba(242,202,80,0.02));">
+                                <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:16px;">
+                                    <div style="width:10px; height:10px; border-radius:50%; background:#f2ca50; box-shadow: 0 0 10px #f2ca50;"></div>
+                                    <h3 style="margin:0; color:#f5f5f5; font-size:18px;">Active Live Session</h3>
+                                </div>
+                                <p style="margin:0 0 24px 0; color:#a9afb8; font-size:13px;">Join the live call to discuss markets, signals, and setups.</p>
+                                <a href="${escapeHtml(current.active_call_link)}" target="_blank" rel="noopener noreferrer" class="group-pill-btn" style="display:inline-flex; padding:12px 32px; font-size:14px; text-decoration:none;">Join Call Now</a>
+                            </div>
+                        ` : `
+                            <div class="group-feed-body" style="text-align:center; padding:32px 16px;">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" style="margin-bottom:16px;"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                <div style="color:#f5f5f5; font-weight:600; margin-bottom:8px;">No active call</div>
+                                <div style="color:#a9afb8; font-size:13px;">Live sessions, scheduled calls, and join controls will appear here when an admin starts a call.</div>
+                            </div>
+                        `}
+                    </div>
                 </div>
                 ` : ''}
                 <div class="group-feed-card" style="margin-top:18px;">
@@ -3341,6 +3377,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                         </label>
                         <label style="display:grid;gap:6px;font-size:12px;color:#bfc5cf;">Rules text
                             <textarea name="rules_text" rows="4" style="background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#f5f5f5;padding:12px;resize:vertical;">${current.rules_text || ''}</textarea>
+                        </label>
+                        <label style="display:grid;gap:6px;font-size:12px;color:#bfc5cf;">Live call link (Zoom, Meet, Discord)
+                            <input name="active_call_link" value="${current.active_call_link || ''}" placeholder="https://..." style="min-height:42px;background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#f5f5f5;padding:0 12px;">
                         </label>
                         <div style="display:flex;flex-wrap:wrap;gap:14px;color:#d7dbe2;font-size:13px;">
                             <label><input type="checkbox" name="requires_stop_loss" ${current.requires_stop_loss ? 'checked' : ''}> Requires stop loss</label>
@@ -4465,7 +4504,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
         const groupName = post.group_name ? escapeHtml(post.group_name) : '';
-        const groupBadge = groupName ? `<div style="font-size:9px; font-weight:800; color:#f2ca50; background:rgba(242,202,80,0.1); padding:3px 6px; border-radius:4px; margin-bottom:4px; display:inline-block; letter-spacing:0.08em; text-transform:uppercase;">${groupName}</div>` : '';
+        const groupBadge = groupName ? `<span style="font-size:13px; font-weight:500; color:#8f95a3; margin-left:6px; letter-spacing:0.02em; text-transform:none;">at ${groupName}</span>` : '';
         let content = '';
         if (layout === 'trade_card') {
             content = `<div class="post-trade-card social-trade-variant">${tradeCardMarkup(post)}</div>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${tagsMarkup}${media}`;
@@ -4477,7 +4516,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             content = `<div class="social-layout-analysis">${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${tagsMarkup}${media}</div>`;
         }
         const feedIndexAttr = Number.isInteger(Number(post.feed_index)) ? ` data-feed-index="${Number(post.feed_index)}"` : '';
-        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"${feedIndexAttr}><div class="group-feed-top"><div class="group-feed-author">${authorLinkStart}<div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div><div class="group-feed-author-copy">${groupBadge}<div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}</div><div class="group-feed-meta group-feed-meta-inline">${time}</div></div>${authorLinkEnd}</div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
+        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"${feedIndexAttr}><div class="group-feed-top"><div class="group-feed-author">${authorLinkStart}<div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div><div class="group-feed-author-copy"><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'};">${author}${groupBadge}</div><div class="group-feed-meta group-feed-meta-inline">${time}</div></div>${authorLinkEnd}</div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
 
     }
 
