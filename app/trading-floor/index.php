@@ -5112,6 +5112,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 if (idx !== -1) {
                     floorSignalsState.groups[idx].active_call_link = link;
                 }
+                const mIdx = (floorSignalsState.memberships || []).findIndex(m => String(m.group_id || m.id) === String(groupId));
+                if (mIdx !== -1) {
+                    floorSignalsState.memberships[mIdx].active_call_link = link;
+                }
+                openFloorSection('groups');
                 renderGroupsPanel();
             } else {
                 alert(data.message || 'Failed to update link');
