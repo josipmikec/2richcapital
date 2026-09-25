@@ -361,7 +361,17 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
+            <div id="dashboardGroupChatAttachmentPreview" style="display:none;margin-bottom:8px;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;">
+                <img id="dashboardGroupChatAttachmentImg" src="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
+                <div style="flex:1;overflow:hidden;">
+                    <div id="dashboardGroupChatAttachmentName" style="font-size:12px;color:#f5f5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                    <div id="dashboardGroupChatAttachmentSize" style="font-size:11px;color:#a9afb8;"></div>
+                </div>
+                <button type="button" onclick="clearDashboardAttachment()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
             <div id="dashboardGroupChatComposer" class="dashboard-group-chat-composer" hidden>
+                <button type="button" onclick="document.getElementById('dashboardGroupChatAttachment').click()" aria-label="Attach image" style="display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#a9afb8;cursor:pointer;transition:all 0.2s;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>
+                <input type="file" id="dashboardGroupChatAttachment" accept="image/*" style="display:none" onchange="handleDashboardAttachment(event)">
                 <input id="dashboardGroupChatInput" type="text" maxlength="1000" placeholder="Write a message..." aria-label="Write a group chat message">
                 <button id="dashboardGroupChatSend" class="dashboard-group-chat-send" type="button" aria-label="Send message" title="Send message"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
             </div>
@@ -370,6 +380,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
     </div>
 
     <script>
+        window.CSRF_TOKEN = '<?php echo $_SESSION["csrf_token"] ?? ""; ?>';
         const CURRENT_USER_ID = <?php echo $user_id; ?>;
         const membershipsUrl = '/api/signals/my-memberships.php';
         const messagesUrl = '/api/signals/messages.php';
@@ -467,7 +478,12 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                     replyHtml = `<div class="dashboard-group-chat-replied-to"><div class="dashboard-group-chat-replied-author">${rAuthor}</div><div class="dashboard-group-chat-replied-text">${rText}</div></div>`;
                 }
                 
-                html += `<div class="dashboard-group-chat-message${highlightClass}">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(time(item.created_at))}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${escapeHtml(item.message)}</div></div>`;
+                let msgText = escapeHtml(item.message || '');
+                msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
+                    return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;"></a>';
+                });
+                
+                html += `<div class="dashboard-group-chat-message${highlightClass}">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(time(item.created_at))}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div></div>`;
             });
             
             messages.innerHTML = html;
@@ -502,7 +518,79 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.hidden = true; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
         }
         
-        async function sendMessage() { const value = input.value.trim(); if (!value || !selectedGroupId) return; send.disabled = true; try { const r = await fetch(messagesUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:selectedGroupId, message:value, reply_to_id:currentReplyToId})}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to send message'); input.value = ''; cancelReply(); await loadMessages(); } catch(e) { showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); } finally { send.disabled = false; } }
+        window.handleDashboardAttachment = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById('dashboardGroupChatAttachmentPreview');
+            const img = document.getElementById('dashboardGroupChatAttachmentImg');
+            const name = document.getElementById('dashboardGroupChatAttachmentName');
+            const size = document.getElementById('dashboardGroupChatAttachmentSize');
+            if (preview && img && name && size) {
+                img.src = URL.createObjectURL(file);
+                name.textContent = file.name;
+                size.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                preview.style.display = 'flex';
+            }
+        };
+
+        window.clearDashboardAttachment = function() {
+            const fileInput = document.getElementById('dashboardGroupChatAttachment');
+            const preview = document.getElementById('dashboardGroupChatAttachmentPreview');
+            if (fileInput) fileInput.value = '';
+            if (preview) preview.style.display = 'none';
+        };
+        
+        async function sendMessage() { 
+            const value = input.value.trim(); 
+            const attachmentInput = document.getElementById('dashboardGroupChatAttachment');
+            const file = attachmentInput && attachmentInput.files.length ? attachmentInput.files[0] : null;
+            
+            if ((!value && !file) || !selectedGroupId) return; 
+            send.disabled = true; 
+            
+            try { 
+                let uploadedUrl = null;
+                if (file) {
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    fd.append('group_id', selectedGroupId);
+                    
+                    const upRes = await fetch('/api/signals/upload-media.php', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-Token': window.CSRF_TOKEN || '' },
+                        body: fd
+                    });
+                    const upData = await upRes.json().catch(() => ({}));
+                    if (!upRes.ok || !upData.success) {
+                        throw new Error(upData.message || 'Failed to upload media.');
+                    }
+                    uploadedUrl = upData.url;
+                }
+                
+                let finalMessage = value;
+                if (uploadedUrl) {
+                    finalMessage = finalMessage ? (finalMessage + '\n\n' + uploadedUrl) : uploadedUrl;
+                }
+
+                const r = await fetch(messagesUrl, {
+                    method:'POST', 
+                    credentials:'same-origin', 
+                    headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify({group_id:selectedGroupId, message:finalMessage, reply_to_id:currentReplyToId})
+                }); 
+                const data = await r.json(); 
+                if (!r.ok || !data.success) throw new Error(data.message || 'Unable to send message'); 
+                
+                input.value = ''; 
+                cancelReply(); 
+                clearDashboardAttachment();
+                await loadMessages(); 
+            } catch(e) { 
+                showState(`<div class="widget-content-block"><p class="widget-content-text" style="color:#f87171;">${escapeHtml(e.message)}</p></div>`); 
+            } finally { 
+                send.disabled = false; 
+            } 
+        }
         
         send.addEventListener('click', sendMessage); input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
         

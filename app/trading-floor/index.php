@@ -2553,7 +2553,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const groupsLink = document.querySelector('[data-floor-nav="groups"]');
         const profileLink = document.querySelector('[data-floor-nav="profile"]');
         [homeLink, groupsLink, profileLink].forEach(el => { if (el) el.classList.remove('active'); });
-        if (app) app.classList.toggle('profile-mode', section === 'profile');
+        if (app) app.classList.toggle('profile-mode', section === 'profile' || section === 'groups');
         if (section === 'profile' && profile) { profile.hidden = false; profile.style.display = 'block'; if (profileLink) profileLink.classList.add('active'); }
         else if (section === 'groups' && groups) { bootFloorSignals(); groups.hidden = false; groups.style.display = 'block'; if (groupsLink) groupsLink.classList.add('active'); }
         else if (feed) { feed.hidden = false; feed.style.display = 'block'; if (homeLink) homeLink.classList.add('active'); }
