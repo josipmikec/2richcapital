@@ -3343,7 +3343,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
 
     function moneyLabel(group) {
         if (!group) return 'Free';
-        if (group.pricing_type === 'paid') return '$' + Number(group.price || 0).toFixed(2);
+        if (group.pricing_type === 'paid') return '$' + Number(group.price || 0).toFixed(2) + '/mo';
         return 'Free';
     }
 
@@ -4040,7 +4040,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 } else {
                     floorSignalsState.createMessage = data.message || 'Failed to initialize checkout.';
                     openFloorSection('groups');
-                    setGroupsBusy('');
+                    floorSignalsState.busyKey = '';
                     renderGroupsPanel();
                     return;
                 }
@@ -4056,9 +4056,15 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 body: JSON.stringify({ group_id: groupId })
             });
             const data = await res.json().catch(() => ({}));
-            floorSignalsState.createMessage = data.message || (data.success ? 'Joined successfully.' : 'Join failed.');
-            await bootFloorSignals();
+            if (data.success) {
+                floorSignalsState.createMessage = data.message || 'Joined successfully.';
+                await bootFloorSignals();
+            } else {
+                floorSignalsState.createMessage = data.message || 'Join failed.';
+            }
+            floorSignalsState.busyKey = '';
             openFloorSection('groups');
+            renderGroupsPanel();
         } catch (err) {
             floorSignalsState.createMessage = err && err.message ? err.message : 'Join failed.';
             renderGroupsPanel();
