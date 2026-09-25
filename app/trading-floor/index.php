@@ -2903,11 +2903,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 let rawMsg = msg.message || '';
                 let msgText = escapeHtmlForTradingFloor(rawMsg);
                 msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
-                    return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:250px;border-radius:8px;margin-top:8px;display:block;"></a>';
-                });
-
-                const reactIcon = `<button type="button" onclick="window.toggleMessageReaction(${msg.id}, '👍')" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" title="React 👍"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg></button>`;
-
+                const authorJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
+                const textJs = escapeHtmlForTradingFloor(msg.message || '').replace(/'/g, "\\'");
+                
                 let reactionsHtml = '';
                 if (msg.reactions && Object.keys(msg.reactions).length > 0) {
                     reactionsHtml = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
@@ -2921,11 +2919,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     reactionsHtml += '</div>';
                 }
 
-                return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
+                return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;" oncontextmenu="window.openMessageContextMenu(event, ' + msg.id + ', \'' + authorJs + '\', \'' + textJs + '\'); return false;">'
                     + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
                     + '<div style="flex:1;min-width:0;">'
                     + replyHtml
-                    + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span>' + reactIcon + replyIcon + '</div></div>'
+                    + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span></div></div>'
                     + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>'
                     + reactionsHtml
                     + '</div>'
@@ -3117,6 +3115,62 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             window.mentionState.active = false;
             if (dropdown) dropdown.style.display = 'none';
         }
+    };
+
+    window.openMessageContextMenu = function(e, msgId, author, text) {
+        e.preventDefault();
+        
+        let menu = document.getElementById('messageContextMenu');
+        if (!menu) {
+            menu = document.createElement('div');
+            menu.id = 'messageContextMenu';
+            menu.style.position = 'fixed';
+            menu.style.background = '#1a1d24';
+            menu.style.border = '1px solid rgba(255,255,255,0.1)';
+            menu.style.borderRadius = '12px';
+            menu.style.padding = '8px';
+            menu.style.zIndex = '9999';
+            menu.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+            menu.style.display = 'flex';
+            menu.style.flexDirection = 'column';
+            menu.style.gap = '8px';
+            document.body.appendChild(menu);
+            
+            document.addEventListener('click', function(ev) {
+                if (ev.target.closest('#messageContextMenu')) return;
+                menu.style.display = 'none';
+            });
+            document.addEventListener('contextmenu', function(ev) {
+                if (!ev.target.closest('.dashboard-group-chat-message')) {
+                    menu.style.display = 'none';
+                }
+            });
+        }
+        
+        const emojis = ['👍', '❤️', '😂', '🔥', '🚀', '👀'];
+        let emojiHtml = '<div style="display:flex;gap:8px;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.05);">';
+        for (const emoji of emojis) {
+            emojiHtml += `<button type="button" onclick="window.toggleMessageReaction(${msgId}, '${emoji}'); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">${emoji}</button>`;
+        }
+        emojiHtml += '</div>';
+        
+        let actionsHtml = `<button type="button" onclick="window.replyToGroupMessage({dataset:{id:${msgId}, author:'${author.replace(/'/g, "\\'")}', text:'${text.replace(/'/g, "\\'")}'}}); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Reply</button>`;
+        
+        menu.innerHTML = emojiHtml + actionsHtml;
+        menu.style.display = 'flex';
+        
+        menu.style.left = e.clientX + 'px';
+        menu.style.top = e.clientY + 'px';
+        
+        setTimeout(() => {
+            const rect = menu.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+                menu.style.left = (window.innerWidth - rect.width - 10) + 'px';
+            }
+            if (rect.bottom > window.innerHeight) {
+                menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
+            }
+        }, 0);
     };
 
     window.toggleMessageReaction = async function(messageId, reaction) {
@@ -3400,13 +3454,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 <div class="group-feed-card" style="margin-top:18px;">
                     <div class="group-card-kicker">Members</div>
                     <div class="group-feed-body">${(floorSignalsState.groupMembers || []).length ? floorSignalsState.groupMembers.map(member => {
-                        const memberName = member.display_name || member.user_email || ('User #' + (member.user_id || ''));
+                        const memberName = member.display_name || ('User #' + (member.user_id || ''));
                         const memberRole = member.role ? String(member.role).charAt(0).toUpperCase() + String(member.role).slice(1) : 'Member';
                         const memberStatus = member.status || 'active';
                         const memberAccess = member.access_type || (member.role === 'owner' ? 'owner' : 'member');
                         const canEditMember = !!current.is_owner && member.role !== 'owner';
-                        const visibleMemberEmail = current.is_owner ? (member.user_email || '') : '';
-                        return `<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);align-items:center;"><div><div style="font-weight:700;color:#f5f5f5;">${memberName}</div><div style="font-size:12px;color:#a9afb8;">${memberRole} · ${memberAccess} · ${memberStatus}</div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">${visibleMemberEmail ? `<div style="font-size:12px;color:#8e949e;">${visibleMemberEmail}</div>` : ''}${canEditMember ? `<select onchange="updateGroupMemberRole(${JSON.stringify(String(current.id || current.group_id || ''))}, ${JSON.stringify(String(member.user_id || ''))}, this.value)" style="min-height:34px;background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#f5f5f5;padding:0 10px;"><option value="member" ${member.role === 'member' ? 'selected' : ''}>Member</option><option value="analyst" ${member.role === 'analyst' ? 'selected' : ''}>Analyst</option><option value="admin" ${member.role === 'admin' ? 'selected' : ''}>Admin</option></select><button class="group-ghost-btn" type="button" onclick='removeGroupMember(${JSON.stringify(String(current.id || current.group_id || ''))}, ${JSON.stringify(String(member.user_id || ''))}, ${JSON.stringify(String(memberName))})'>Remove</button>` : ''}</div></div>`;
+                        return `<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);align-items:center;"><div><div style="font-weight:700;color:#f5f5f5;">${memberName}</div><div style="font-size:12px;color:#a9afb8;">${memberRole} · ${memberAccess} · ${memberStatus}</div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">${canEditMember ? `<select onchange="updateGroupMemberRole(${JSON.stringify(String(current.id || current.group_id || ''))}, ${JSON.stringify(String(member.user_id || ''))}, this.value)" style="min-height:34px;background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#f5f5f5;padding:0 10px;"><option value="member" ${member.role === 'member' ? 'selected' : ''}>Member</option><option value="analyst" ${member.role === 'analyst' ? 'selected' : ''}>Analyst</option><option value="admin" ${member.role === 'admin' ? 'selected' : ''}>Admin</option></select><button class="group-ghost-btn" type="button" onclick='removeGroupMember(${JSON.stringify(String(current.id || current.group_id || ''))}, ${JSON.stringify(String(member.user_id || ''))}, ${JSON.stringify(String(memberName))})'>Remove</button>` : ''}</div></div>`;
                     }).join('') : 'No members loaded yet.'}</div>
                 </div>
                 ` : ''}
@@ -3511,7 +3564,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                             return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
                                         });
                                         
-                                        const reactIcon = `<button type="button" onclick="window.toggleMessageReaction(${msg.id}, '👍')" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" title="React 👍"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg></button>`;
+                                        const authorJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
+                                        const textJs = escapeHtmlForTradingFloor(msg.message || '').replace(/'/g, "\\'");
 
                                         let reactionsHtml = '';
                                         if (msg.reactions && Object.keys(msg.reactions).length > 0) {
@@ -3526,7 +3580,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                             reactionsHtml += '</div>';
                                         }
                                         
-                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${reactIcon}${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span></div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
                                     }).join('');
                                 } else {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
