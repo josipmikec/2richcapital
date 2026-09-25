@@ -1052,7 +1052,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }
         .dashboard-container.group-mode.group-workspace-active .tf-feed-col,
         .dashboard-container.group-mode.group-workspace-active .floor-section {
-            max-width: 100%;
+            max-width: 1280px;
             margin-left: 0;
             margin-right: auto;
             padding-right: 32px;
