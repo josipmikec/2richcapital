@@ -3120,6 +3120,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             }) : null)
             || (!floorSignalsState.activeGroupId ? drafts[0] : null)
             || null;
+            
+        console.log("DEBUG: openFloorSection computed current:", current);
 
         const workspaceHtml = current ? (() => {
             const allowedSymbols = String(current.allowed_symbols_json || '').trim()
@@ -5097,6 +5099,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const input = document.getElementById('groupActiveCallInput');
         if (!input) return;
         const link = input.value.trim();
+        console.log('DEBUG: link read from input:', link);
         const btn = event.target.querySelector('button[type="submit"]');
         if (btn) btn.innerText = 'Saving...';
         
