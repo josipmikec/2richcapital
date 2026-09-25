@@ -23,6 +23,9 @@ if (!defined('WP_USE_THEMES')) {
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 global $wpdb;
 
+$user_notif_prefs_raw = get_user_meta($user_id, 'notification_prefs', true);
+$user_notif_prefs = $user_notif_prefs_raw ? json_decode($user_notif_prefs_raw, true) : [];
+
 if (!function_exists('tf_delete_media_file')) {
     function tf_delete_media_file($url = '', $path = '') {
         $uploads = wp_upload_dir();
@@ -2983,7 +2986,13 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             lastId = currentMessages[currentMessages.length - 1].id;
         }
 
-        const url = signalsUrl('sse.php') + '?group_id=' + encodeURIComponent(String(groupId)) + '&last_id=' + encodeURIComponent(String(lastId));
+        let lastSignalId = 0;
+        const currentSignals = floorSignalsState.groupSignalsByGroup[String(groupId)] || [];
+        if (currentSignals.length > 0) {
+            lastSignalId = currentSignals[currentSignals.length - 1].id;
+        }
+
+        const url = signalsUrl('sse.php') + '?group_id=' + encodeURIComponent(String(groupId)) + '&last_id=' + encodeURIComponent(String(lastId)) + '&last_signal_id=' + encodeURIComponent(String(lastSignalId));
         groupMessagesSSE = new EventSource(url);
         
         groupMessagesSSE.addEventListener('message', function(e) {
@@ -2994,6 +3003,39 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     msgs.push(msg);
                     floorSignalsState.groupMessagesByGroup[String(groupId)] = msgs;
                     updateGroupMessagesDOM(msgs, true);
+                    
+                    if (String(msg.user_id) !== String(CURRENT_USER_ID)) {
+                        const content = String(msg.content || msg.message || '');
+                        const hasMention = content.toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase());
+                        
+                        if (hasMention) {
+                            triggerNativeNotification('You were mentioned', {
+                                body: (msg.author_name || msg.user_name || 'Someone') + ' mentioned you: ' + content.substring(0, 50),
+                            }, 'group_mention');
+                        } else {
+                            triggerNativeNotification('New message from ' + (msg.author_name || msg.user_name || 'Someone'), {
+                                body: content.substring(0, 50),
+                            }, 'group_new_message');
+                        }
+                    }
+                }
+            } catch (err) {}
+        });
+
+        groupMessagesSSE.addEventListener('signal', function(e) {
+            try {
+                const sig = JSON.parse(e.data);
+                const sigs = floorSignalsState.groupSignalsByGroup[String(groupId)] || [];
+                if (!sigs.some(s => String(s.id) === String(sig.id))) {
+                    sigs.push(sig);
+                    floorSignalsState.groupSignalsByGroup[String(groupId)] = sigs;
+                    renderGroupsPanel();
+                    
+                    if (String(sig.user_id) !== String(CURRENT_USER_ID)) {
+                        triggerNativeNotification('New Signal Posted', {
+                            body: (sig.symbol || 'New Trade') + ' ' + (sig.type || ''),
+                        }, 'group_new_signal');
+                    }
                 }
             } catch (err) {}
         });
@@ -4483,6 +4525,30 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
 
     const SIGNALS_CSRF = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
     const CURRENT_USER_ID = <?php echo json_encode((string)($_SESSION['user_id'] ?? '')); ?>;
+    const CURRENT_USER_NAME = <?php echo json_encode($user_name); ?>;
+    const USER_NOTIF_PREFS = <?php echo json_encode($user_notif_prefs ?: new stdClass()); ?>;
+    
+    function triggerNativeNotification(title, options = {}, prefKey = null) {
+        if (prefKey) {
+            const defaults = {
+                'group_new_message': false,
+                'group_mention': true,
+                'group_new_signal': true,
+                'group_call_starting': true,
+                'following_posted': true
+            };
+            const isEnabled = USER_NOTIF_PREFS.hasOwnProperty(prefKey) ? Boolean(USER_NOTIF_PREFS[prefKey]) : (defaults[prefKey] ?? true);
+            if (!isEnabled) return;
+        }
+        if (!("Notification" in window)) return;
+        if (Notification.permission === "granted") {
+            new Notification(title, options);
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") new Notification(title, options);
+            });
+        }
+    }
     const SIGNALS_API_BASE = window.location.origin + '/api/signals';
     function signalsUrl(path) {
         return `${SIGNALS_API_BASE}/${String(path).replace(/^\/+/, '')}`;

@@ -83,6 +83,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['profile_form_action'
 }
 
 // ─────────────────────────────────────────────
+// Notification persistence logic
+// ─────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['notif_form_action']) && $_POST['notif_form_action'] === 'save_notifs') {
+    if (!isset($_POST['notif_nonce']) || !wp_verify_nonce($_POST['notif_nonce'], 'save_notifs')) {
+        $notif_flash = ['type' => 'error', 'message' => 'Security check failed.'];
+    } else {
+        $prefs = $_POST['prefs'] ?? [];
+        $sanitized_prefs = [];
+        if (is_array($prefs)) {
+            foreach ($prefs as $k => $v) {
+                $sanitized_prefs[sanitize_text_field($k)] = (int)$v;
+            }
+        }
+        update_user_meta($user_id, 'notification_prefs', wp_json_encode($sanitized_prefs));
+        $notif_flash = ['type' => 'success', 'message' => 'Notification preferences saved.'];
+    }
+}
+$user_notif_prefs_raw = get_user_meta($user_id, 'notification_prefs', true);
+$user_notif_prefs = $user_notif_prefs_raw ? json_decode($user_notif_prefs_raw, true) : [];
+
+// ─────────────────────────────────────────────
 // MT5 connection panel logic
 // ─────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['mt5_form_action'])) {
@@ -918,50 +939,94 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                 </div>
             </div>
 
-            <div class="settings-card">
-                <div class="settings-card-header"><span class="settings-card-title">Trading Floor</span></div>
-                <div class="settings-card-body">
-                    <?php
-                    $notifs = [
-                        ['New followers','When someone follows you on the Trading Floor', true],
-                        ['Post likes','When someone likes your trade post', true],
-                        ['Comments','When someone comments on your post', true],
-                        ['Direct messages','When you receive a new DM', true],
-                        ['Story views','When someone views your 24h story', false],
-                        ['Suggested traders','Weekly curated trader suggestions', false],
-                    ];
-                    foreach ($notifs as [$name, $desc, $on]): ?>
-                    <div class="settings-toggle-row">
-                        <div class="settings-toggle-info">
-                            <div class="settings-toggle-name"><?= $name ?></div>
-                            <div class="settings-toggle-desc"><?= $desc ?></div>
-                        </div>
-                        <label class="toggle-switch"><input type="checkbox" <?= $on ? 'checked' : '' ?>><span class="toggle-slider"></span></label>
-                    </div>
-                    <?php endforeach; ?>
+            <?php if (!empty($notif_flash)): ?>
+                <div style="margin-bottom: 24px; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; <?= $notif_flash['type'] === 'error' ? 'background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);' : 'background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.2);' ?>">
+                    <?= htmlspecialchars($notif_flash['message']) ?>
                 </div>
-            </div>
+            <?php endif; ?>
 
-            <div class="settings-card">
-                <div class="settings-card-header"><span class="settings-card-title">Email Digest</span></div>
-                <div class="settings-card-body">
-                    <?php
-                    $emails = [
-                        ['Weekly performance summary','Your win rate and P&L overview every Monday', true],
-                        ['Trade streak alerts','When you hit 3+ wins or losses in a row', true],
-                        ['Platform updates','New features and announcements', false],
-                    ];
-                    foreach ($emails as [$name, $desc, $on]): ?>
-                    <div class="settings-toggle-row">
-                        <div class="settings-toggle-info">
-                            <div class="settings-toggle-name"><?= $name ?></div>
-                            <div class="settings-toggle-desc"><?= $desc ?></div>
+            <form method="POST" action="">
+                <input type="hidden" name="notif_form_action" value="save_notifs">
+                <?php wp_nonce_field('save_notifs', 'notif_nonce'); ?>
+                
+                <div class="settings-card">
+                    <div class="settings-card-header"><span class="settings-card-title">Trading Floor</span></div>
+                    <div class="settings-card-body">
+                        <?php
+                        $notifs = [
+                            ['tf_new_followers', 'New followers','When someone follows you on the Trading Floor', true],
+                            ['tf_post_likes', 'Post likes','When someone likes your trade post', true],
+                            ['tf_comments', 'Comments','When someone comments on your post', true],
+                            ['tf_direct_messages', 'Direct messages','When you receive a new DM', true],
+                            ['tf_story_views', 'Story views','When someone views your 24h story', false],
+                            ['tf_suggested_traders', 'Suggested traders','Weekly curated trader suggestions', false],
+                        ];
+                        foreach ($notifs as [$key, $name, $desc, $default_on]): 
+                            $is_on = isset($user_notif_prefs[$key]) ? (bool)$user_notif_prefs[$key] : $default_on;
+                        ?>
+                        <div class="settings-toggle-row">
+                            <div class="settings-toggle-info">
+                                <div class="settings-toggle-name"><?= $name ?></div>
+                                <div class="settings-toggle-desc"><?= $desc ?></div>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" name="prefs[<?= $key ?>]" value="1" <?= $is_on ? 'checked' : '' ?>><span class="toggle-slider"></span></label>
                         </div>
-                        <label class="toggle-switch"><input type="checkbox" <?= $on ? 'checked' : '' ?>><span class="toggle-slider"></span></label>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
                 </div>
-            </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-header"><span class="settings-card-title">Group Workspaces</span></div>
+                    <div class="settings-card-body">
+                        <?php
+                        $group_notifs = [
+                            ['group_new_message', 'New messages','When someone sends a message in a joined group', false],
+                            ['group_mention', 'Mentions','When someone @mentions you in a group', true],
+                            ['group_new_signal', 'New signals','When a group admin posts a new trade signal', true],
+                            ['group_call_starting', 'Call starting','When an admin starts a live video/audio call', true],
+                            ['following_posted', 'Following posts','When a user you follow posts (max 2/day)', true],
+                        ];
+                        foreach ($group_notifs as [$key, $name, $desc, $default_on]): 
+                            $is_on = isset($user_notif_prefs[$key]) ? (bool)$user_notif_prefs[$key] : $default_on;
+                        ?>
+                        <div class="settings-toggle-row">
+                            <div class="settings-toggle-info">
+                                <div class="settings-toggle-name"><?= $name ?></div>
+                                <div class="settings-toggle-desc"><?= $desc ?></div>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" name="prefs[<?= $key ?>]" value="1" <?= $is_on ? 'checked' : '' ?>><span class="toggle-slider"></span></label>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-header"><span class="settings-card-title">Email Digest</span></div>
+                    <div class="settings-card-body">
+                        <?php
+                        $emails = [
+                            ['email_weekly_summary', 'Weekly performance summary','Your win rate and P&L overview every Monday', true],
+                            ['email_trade_streak', 'Trade streak alerts','When you hit 3+ wins or losses in a row', true],
+                            ['email_platform_updates', 'Platform updates','New features and announcements', false],
+                        ];
+                        foreach ($emails as [$key, $name, $desc, $default_on]): 
+                            $is_on = isset($user_notif_prefs[$key]) ? (bool)$user_notif_prefs[$key] : $default_on;
+                        ?>
+                        <div class="settings-toggle-row">
+                            <div class="settings-toggle-info">
+                                <div class="settings-toggle-name"><?= $name ?></div>
+                                <div class="settings-toggle-desc"><?= $desc ?></div>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" name="prefs[<?= $key ?>]" value="1" <?= $is_on ? 'checked' : '' ?>><span class="toggle-slider"></span></label>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                
+                <div style="margin-top:24px; display:flex; justify-content:flex-end;">
+                    <button type="submit" class="settings-btn" style="background:#F2CA50; color:#0e0e0e; border:none; padding:12px 24px; font-weight:600; border-radius:8px; cursor:pointer;">Save Preferences</button>
+                </div>
+            </form>
         </div>
 
         <div class="account-section" id="section-security">

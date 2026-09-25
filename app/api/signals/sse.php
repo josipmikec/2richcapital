@@ -103,7 +103,27 @@ while (true) {
             echo "event: message\ndata: " . wp_json_encode($item) . "\n\n";
             $last_message_id = max($last_message_id, (int)$item['id']);
         }
-    } else {
+    }
+    
+    // Check for new signals
+    $last_signal_id = isset($_GET['last_signal_id']) ? (int)$_GET['last_signal_id'] : 0;
+    static $current_last_signal_id = null;
+    if ($current_last_signal_id === null) $current_last_signal_id = $last_signal_id;
+    
+    $signals_table = $wpdb->prefix . 'rich_signals';
+    $new_signals = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM {$signals_table} WHERE group_id = %d AND id > %d ORDER BY id ASC",
+        $group_id, $current_last_signal_id
+    ), ARRAY_A);
+    
+    if (!empty($new_signals)) {
+        foreach ($new_signals as $sig) {
+            echo "event: signal\ndata: " . wp_json_encode($sig) . "\n\n";
+            $current_last_signal_id = max($current_last_signal_id, (int)$sig['id']);
+        }
+    }
+    
+    if (empty($new_messages) && empty($new_signals)) {
         // No messages, just heartbeat
         echo ": heartbeat\n\n";
     }
