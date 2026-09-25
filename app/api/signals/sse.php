@@ -21,6 +21,8 @@ header('Cache-Control: no-cache, must-revalidate');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no'); // Essential for NGINX to not buffer SSE
 
+session_write_close(); // Release lock AFTER wp-load to prevent plugins from holding it
+
 if (!isset($_SESSION['user_id'])) {
     echo "event: error\ndata: Unauthorized\n\n";
     exit;

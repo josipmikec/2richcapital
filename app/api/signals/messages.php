@@ -19,6 +19,8 @@ rich_api_feature_guard('signals-groups');
 
 global $wpdb;
 $user_id = (int) $_SESSION['user_id'];
+session_write_close(); // Release lock to allow parallel requests
+
 $messages_table = $wpdb->prefix . 'rich_signal_group_messages';
 $memberships_table = $wpdb->prefix . 'rich_signal_memberships';
 $groups_table = $wpdb->prefix . 'rich_signal_groups';

@@ -1043,8 +1043,15 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             margin-right: auto;
             padding-right: 32px;
         }
-        .dashboard-container.group-mode .tf-feed-col,
-        .dashboard-container.group-mode .floor-section {
+        .dashboard-container.group-mode:not(.group-workspace-active) .tf-feed-col,
+        .dashboard-container.group-mode:not(.group-workspace-active) .floor-section {
+            max-width: 960px;
+            margin-left: 0;
+            margin-right: auto;
+            padding-right: 32px;
+        }
+        .dashboard-container.group-mode.group-workspace-active .tf-feed-col,
+        .dashboard-container.group-mode.group-workspace-active .floor-section {
             max-width: 100%;
             margin-left: 0;
             margin-right: auto;
@@ -3140,9 +3147,14 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
     function renderGroupsPanel() {
         const mount = document.getElementById('tf-groups-app');
         if (!mount) return;
+        
+        const app = document.querySelector('.dashboard-container');
 
         const activeTab = floorSignalsState.activeTab || 'discovery';
         const activeView = floorSignalsState.activeView || 'list';
+        
+        if (app) app.classList.toggle('group-workspace-active', activeView === 'workspace');
+
         const memberships = Array.isArray(floorSignalsState.memberships) ? floorSignalsState.memberships : [];
         const groups = Array.isArray(floorSignalsState.groups) ? floorSignalsState.groups : [];
         const drafts = Array.isArray(floorSignalsState.myDrafts) ? floorSignalsState.myDrafts : [];

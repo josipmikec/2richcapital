@@ -19,6 +19,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
 global $wpdb;
 
 $user_id = intval($_SESSION['user_id']);
+session_write_close(); // Release lock to allow parallel requests
 $table = $wpdb->prefix . 'rich_journals';
 
 $journals = $wpdb->get_results(

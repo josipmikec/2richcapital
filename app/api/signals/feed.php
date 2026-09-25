@@ -22,6 +22,8 @@ if ($group_id <= 0) {
 
 global $wpdb;
 $user_id           = (int) $_SESSION['user_id'];
+session_write_close(); // Release lock to allow parallel requests
+
 $groups_table      = $wpdb->prefix . 'rich_signal_groups';
 $memberships_table = $wpdb->prefix . 'rich_signal_memberships';
 $signals_table     = $wpdb->prefix . 'rich_signals';

@@ -10,12 +10,12 @@ if (
 }
 
 $user_id = (int) ($_SESSION['userid'] ?? $_SESSION['user_id']);
-session_write_close();
-
 ob_start();
 define('WP_USE_THEMES', false);
 require_once '../../../wp-load.php';
 ob_end_clean();
+
+session_write_close(); // Release lock AFTER wp-load to prevent plugins from holding it
 
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache, no-store, must-revalidate');
