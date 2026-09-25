@@ -3038,50 +3038,52 @@ foreach ($_dashboard_initial_order as $card_id) {
     </div>
 
     <?php if (!$has_seen_welcome): ?>
-    <div id="welcomeTourModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-        <div style="background:#111;border:1px solid #333;border-radius:24px;width:100%;max-width:500px;padding:40px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);position:relative;">
-            <button onclick="document.getElementById('welcomeTourModal').style.display='none'" style="position:absolute;top:20px;right:20px;background:none;border:none;color:#888;cursor:pointer;font-size:24px;transition:color 0.2s;">
-                &times;
+    <div id="welcomeTourModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);">
+        <div style="background:rgba(17,17,17,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:24px;width:100%;max-width:560px;padding:40px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);position:relative;backdrop-filter:blur(20px);">
+            <button onclick="document.getElementById('welcomeTourModal').style.display='none'" style="position:absolute;top:24px;right:24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;transition:background 0.2s;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             
-            <div style="text-align:center;margin-bottom:30px;">
+            <div style="text-align:center;margin-bottom:32px;">
                 <h2 style="margin:0;font-size:28px;font-weight:800;letter-spacing:-0.03em;color:#fff;">Welcome to <span style="color:#F2CA50;">2RICH</span></h2>
-                <p style="color:#888;font-size:14px;margin-top:8px;">Your financial mastery starts here.</p>
+                <p style="color:#a9afb8;font-size:14px;margin-top:8px;">Your financial mastery starts here.</p>
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:16px;">
-                <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;">
-                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                    </div>
-                    <div>
-                        <h4 style="margin:0 0 4px;font-size:15px;color:#fff;">1. Organize Your Workspace</h4>
-                        <p style="margin:0;font-size:13px;color:#888;line-height:1.4;">Click "Edit Layout" at the top right to rearrange and hide dashboard cards to fit your workflow.</p>
-                    </div>
-                </div>
-
-                <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;">
-                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"></path></svg>
-                    </div>
-                    <div>
-                        <h4 style="margin:0 0 4px;font-size:15px;color:#fff;">2. Connect Your Broker</h4>
-                        <p style="margin:0;font-size:13px;color:#888;line-height:1.4;">Head to Settings > MT5 Connection to link your account and track live performance seamlessly.</p>
-                    </div>
-                </div>
-
-                <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;">
-                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    </div>
-                    <div>
-                        <h4 style="margin:0 0 4px;font-size:15px;color:#fff;">3. Join the Trading Floor</h4>
-                        <p style="margin:0;font-size:13px;color:#888;line-height:1.4;">Access premium signal groups, engage with top mentors, and copy-trade directly from the floor.</p>
-                    </div>
+            <div class="welcome-carousel" style="position:relative;width:100%;height:220px;border-radius:16px;background:#000;border:1px solid rgba(255,255,255,0.05);overflow:hidden;margin-bottom:32px;display:flex;align-items:center;justify-content:center;">
+                <!-- Placeholder for a screenshot - user can replace this img tag -->
+                <div style="text-align:center;color:#555;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">Dashboard Overview</p>
                 </div>
             </div>
 
-            <button onclick="document.getElementById('welcomeTourModal').style.display='none'" style="margin-top:30px;width:100%;background:linear-gradient(135deg, #F2CA50 0%, #E6B93D 100%);color:#111;border:none;padding:16px;border-radius:12px;font-size:14px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                <div style="text-align:center;">
+                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    </div>
+                    <h4 style="margin:0 0 4px;font-size:13px;color:#fff;">Workspace</h4>
+                    <p style="margin:0;font-size:11px;color:#888;line-height:1.4;">Drag, drop & hide cards to fit your style.</p>
+                </div>
+
+                <div style="text-align:center;">
+                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"></path></svg>
+                    </div>
+                    <h4 style="margin:0 0 4px;font-size:13px;color:#fff;">Connect MT5</h4>
+                    <p style="margin:0;font-size:11px;color:#888;line-height:1.4;">Track live performance seamlessly.</p>
+                </div>
+
+                <div style="text-align:center;">
+                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <h4 style="margin:0 0 4px;font-size:13px;color:#fff;">Trading Floor</h4>
+                    <p style="margin:0;font-size:11px;color:#888;line-height:1.4;">Join premium groups & copy trades.</p>
+                </div>
+            </div>
+
+            <button onclick="document.getElementById('welcomeTourModal').style.display='none'" style="margin-top:40px;width:100%;background:#F2CA50;color:#111;border:none;padding:16px;border-radius:12px;font-size:14px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                 Get Started
             </button>
         </div>
