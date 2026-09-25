@@ -2760,17 +2760,53 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         return data;
     }
 
-    async function sendCurrentGroupMessage() {
+    window.sendCurrentGroupMessage = async function() {
         const groupId = floorSignalsState.activeGroupId;
         const input = document.getElementById('groupMessageInput');
         const text = input ? input.value : '';
-        if (!groupId || !input || !String(text || '').trim()) return;
+        const attachmentInput = document.getElementById('groupMessageAttachment');
+        const file = attachmentInput && attachmentInput.files.length ? attachmentInput.files[0] : null;
+        
+        if (!groupId || (!String(text || '').trim() && !file)) return;
         floorSignalsState.groupMessagesError = '';
         input.disabled = true;
         try {
-            await sendGroupMessage(groupId, text, floorSignalsState.currentReplyToId);
+            let uploadedUrl = null;
+            if (file) {
+                const submitBtn = document.querySelector('button[aria-label="Send message"]');
+                const origBtnHtml = submitBtn ? submitBtn.innerHTML : '&#8594;';
+                if (submitBtn) submitBtn.innerHTML = '<span style="font-size:11px;">Uploading...</span>';
+                
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('group_id', groupId);
+                
+                const upRes = await fetch(signalsUrl('upload-media.php'), {
+                    method: 'POST',
+                    headers: { 'X-CSRF-Token': SIGNALS_CSRF },
+                    body: fd
+                });
+                const upData = await upRes.json().catch(() => ({}));
+                if (submitBtn) submitBtn.innerHTML = origBtnHtml;
+                
+                if (!upRes.ok || !upData.success) {
+                    throw new Error(upData.message || 'Failed to upload media.');
+                }
+                uploadedUrl = upData.url;
+            }
+            
+            // Format the message with the image link if applicable
+            let finalMessage = text;
+            if (uploadedUrl) {
+                // If it's just an image, send the URL. If there's text, append the URL.
+                finalMessage = finalMessage ? (finalMessage + '\n\n' + uploadedUrl) : uploadedUrl;
+            }
+            
+            await sendGroupMessage(groupId, finalMessage, floorSignalsState.currentReplyToId);
             input.value = '';
             floorSignalsState.currentReplyToId = null;
+            window.clearGroupMessageAttachment();
+            
             await pollGroupMessages(groupId);
             setTimeout(() => {
                 const container = document.getElementById('groupChatMessagesContainer');
@@ -2783,7 +2819,31 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             input.disabled = false;
             input.focus();
         }
-    }
+    };
+    
+    window.handleGroupMessageAttachment = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const preview = document.getElementById('groupMessageAttachmentPreview');
+        const img = document.getElementById('groupMessageAttachmentImg');
+        const name = document.getElementById('groupMessageAttachmentName');
+        const size = document.getElementById('groupMessageAttachmentSize');
+        
+        if (preview && img && name && size) {
+            img.src = URL.createObjectURL(file);
+            name.textContent = file.name;
+            size.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+            preview.style.display = 'flex';
+        }
+    };
+    
+    window.clearGroupMessageAttachment = function() {
+        const input = document.getElementById('groupMessageAttachment');
+        const preview = document.getElementById('groupMessageAttachmentPreview');
+        if (input) input.value = '';
+        if (preview) preview.style.display = 'none';
+    };
 
     function updateGroupMessagesDOM(messages) {
         const container = document.getElementById('groupChatMessagesContainer');
@@ -2831,12 +2891,18 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 const replyText = escapeHtmlForTradingFloor(msg.message || '');
                 const replyIcon = `<button type="button" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
 
+                let rawMsg = msg.message || '';
+                let msgText = escapeHtmlForTradingFloor(rawMsg);
+                msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
+                    return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:250px;border-radius:8px;margin-top:8px;display:block;"></a>';
+                });
+
                 return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
                     + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
                     + '<div style="flex:1;min-width:0;">'
                     + replyHtml
                     + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span>' + replyIcon + '</div></div>'
-                    + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + (msg.message || '') + '</div>'
+                    + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>'
                     + '</div>'
                     + '</div>';
             }).join('');
@@ -3268,12 +3334,18 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                         const replyText = escapeHtmlForTradingFloor(msg.message || '');
                                         const replyIcon = `<button type="button" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
 
+                                        let rawMsg = msg.message || '';
+                                        let msgText = escapeHtmlForTradingFloor(rawMsg);
+                                        msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
+                                            return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:250px;border-radius:8px;margin-top:8px;display:block;"></a>';
+                                        });
+                                        
                                         return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;">'
                                             + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
                                             + '<div style="flex:1;min-width:0;">'
                                             + replyHtml
                                             + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span>' + replyIcon + '</div></div>'
-                                            + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + (msg.message || '') + '</div>'
+                                            + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>'
                                             + '</div>'
                                             + '</div>';
                                     }).join('');
@@ -3291,8 +3363,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
 
                                 return '<div id="groupChatMessagesContainer" style="display:flex;flex-direction:column;gap:8px;height:520px;overflow:auto;padding-right:2px;min-width:0;">' + messagesMarkup + '</div>'
                                     + '<div style="margin-top:8px;">' + replyPreviewBlock
-                                    + '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;width:100%;min-width:0;overflow:hidden;">'
-                                    + '<textarea id="groupMessageInput" onkeydown="if(event.key===\'Enter\' && !event.shiftKey){event.preventDefault();sendCurrentGroupMessage();}" placeholder="Message" style="display:block;width:100%;min-width:0;box-sizing:border-box;min-height:44px;height:44px;max-height:160px;border-radius:22px;border:1px solid rgba(255,255,255,0.12);background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.028));padding:10px 18px;color:#f5f5f5;resize:vertical;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 24px rgba(0,0,0,0.18);font:600 13px/1.45 Montserrat,sans-serif;"></textarea>'
+                                    + '<div id="groupMessageAttachmentPreview" style="display:none;margin-bottom:8px;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;"><img id="groupMessageAttachmentImg" src="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"><div style="flex:1;overflow:hidden;"><div id="groupMessageAttachmentName" style="font-size:12px;color:#f5f5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div><div id="groupMessageAttachmentSize" style="font-size:11px;color:#a9afb8;"></div></div><button type="button" onclick="clearGroupMessageAttachment()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>'
+                                    + '<div style="display:flex;gap:10px;align-items:end;width:100%;min-width:0;overflow:hidden;">'
+                                    + '<button type="button" onclick="document.getElementById(\'groupMessageAttachment\').click()" aria-label="Attach image" style="display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#a9afb8;cursor:pointer;transition:all 0.2s;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>'
+                                    + '<input type="file" id="groupMessageAttachment" accept="image/*" style="display:none" onchange="window.handleGroupMessageAttachment(event)">'
+                                    + '<textarea id="groupMessageInput" onkeydown="if(event.key===\'Enter\' && !event.shiftKey){event.preventDefault();sendCurrentGroupMessage();}" placeholder="Message" style="display:block;flex:1;min-width:0;box-sizing:border-box;min-height:44px;height:44px;max-height:160px;border-radius:22px;border:1px solid rgba(255,255,255,0.12);background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.028));padding:10px 18px;color:#f5f5f5;resize:vertical;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 24px rgba(0,0,0,0.18);font:600 13px/1.45 Montserrat,sans-serif;"></textarea>'
                                     + '<button class="group-pill-btn" type="button" onclick="sendCurrentGroupMessage()" aria-label="Send message" style="display:inline-flex;align-items:center;justify-content:center;align-self:end;white-space:nowrap;max-width:100%;min-width:52px;min-height:44px;padding:0 14px;border-radius:999px;box-shadow:0 8px 20px rgba(242,202,80,0.22);">&#8594;</button>'
                                     + '</div></div>';
                             })()}
