@@ -2877,6 +2877,48 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }
     }
 
+    let groupMessagesSSE = null;
+    function connectGroupSSE(groupId) {
+        if (groupMessagesSSE) {
+            groupMessagesSSE.close();
+            groupMessagesSSE = null;
+        }
+        if (!groupId) return;
+        
+        let lastId = 0;
+        const currentMessages = floorSignalsState.groupMessagesByGroup[String(groupId)] || [];
+        if (currentMessages.length > 0) {
+            lastId = currentMessages[currentMessages.length - 1].id;
+        }
+
+        const url = signalsUrl('sse.php') + '?group_id=' + encodeURIComponent(String(groupId)) + '&last_id=' + encodeURIComponent(String(lastId));
+        groupMessagesSSE = new EventSource(url);
+        
+        groupMessagesSSE.addEventListener('message', function(e) {
+            try {
+                const msg = JSON.parse(e.data);
+                const msgs = floorSignalsState.groupMessagesByGroup[String(groupId)] || [];
+                if (!msgs.some(m => String(m.id) === String(msg.id))) {
+                    msgs.push(msg);
+                    floorSignalsState.groupMessagesByGroup[String(groupId)] = msgs;
+                    updateGroupMessagesDOM(msgs, true);
+                }
+            } catch (err) {}
+        });
+
+        groupMessagesSSE.addEventListener('error', function(e) {
+            if (groupMessagesSSE) {
+                groupMessagesSSE.close();
+                groupMessagesSSE = null;
+            }
+            setTimeout(() => {
+                if (floorSignalsState.activeGroupId === groupId) {
+                    connectGroupSSE(groupId);
+                }
+            }, 1000);
+        });
+    }
+
     async function openFloorSignalGroup(groupId) {
         groupChatLastSeenId = 0;
         floorSignalsState.activeGroupId = groupId;
@@ -2884,11 +2926,16 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         floorSignalsState.activeWorkspaceTab = 'room';
         floorSignalsState.groupMembers = await loadGroupMembers(groupId);
         await Promise.all([loadGroupMessages(groupId), loadGroupSignalFeed(groupId)]);
+        connectGroupSSE(groupId);
         renderGroupsPanel();
         openFloorSection('groups');
     }
 
     function closeFloorSignalWorkspace() {
+        if (groupMessagesSSE) {
+            groupMessagesSSE.close();
+            groupMessagesSSE = null;
+        }
         floorSignalsState.activeView = 'list';
         renderGroupsPanel();
     }
@@ -3283,7 +3330,17 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 <div class="group-workspace-grid" style="grid-template-columns:1fr; margin-top:18px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <div class="section-kicker" style="margin:0;">Live Sessions</div>
+                        ${current.can_manage || current.is_owner ? `<button class="group-pill-btn" onclick="toggleActiveCallForm()">Manage Link</button>` : ''}
                     </div>
+                    ${current.can_manage || current.is_owner ? `
+                    <form id="groupActiveCallForm" onsubmit="saveActiveCallLink(event, '${escapeHtml(current.id || current.group_id || '')}')" style="display:none; margin-bottom:16px; padding:16px; background:#111827; border:1px solid rgba(255,255,255,0.12); border-radius:12px;">
+                        <label style="display:grid;gap:6px;font-size:12px;color:#bfc5cf;">Live call link (Zoom, Meet, Discord)
+                            <input id="groupActiveCallInput" value="${current.active_call_link || ''}" placeholder="https://..." style="min-height:42px;background:#1a2333;border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#f5f5f5;padding:0 12px;">
+                        </label>
+                        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+                            <button type="submit" class="group-pill-btn">Save Link</button>
+                        </div>
+                    </form>` : ''}
                     <div class="group-feed-card">
                         ${current.active_call_link ? `
                             <div style="padding: 24px; text-align:center; border:1px solid rgba(242,202,80,0.3); border-radius:16px; background:linear-gradient(180deg, rgba(242,202,80,0.05), rgba(242,202,80,0.02));">
@@ -3377,9 +3434,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                         </label>
                         <label style="display:grid;gap:6px;font-size:12px;color:#bfc5cf;">Rules text
                             <textarea name="rules_text" rows="4" style="background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#f5f5f5;padding:12px;resize:vertical;">${current.rules_text || ''}</textarea>
-                        </label>
-                        <label style="display:grid;gap:6px;font-size:12px;color:#bfc5cf;">Live call link (Zoom, Meet, Discord)
-                            <input name="active_call_link" value="${current.active_call_link || ''}" placeholder="https://..." style="min-height:42px;background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#f5f5f5;padding:0 12px;">
                         </label>
                         <div style="display:flex;flex-wrap:wrap;gap:14px;color:#d7dbe2;font-size:13px;">
                             <label><input type="checkbox" name="requires_stop_loss" ${current.requires_stop_loss ? 'checked' : ''}> Requires stop loss</label>
@@ -4504,7 +4558,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const canManage = Number(post.user_id || 0) === Number(tfCurrentUserId || 0);
         const menu = canManage ? `<div class="social-post-menu-wrap"><button type="button" class="social-post-menu-btn" aria-label="Post options" aria-haspopup="true" aria-expanded="false" onclick="togglePostMenu(this,event)">⋯</button><div class="social-post-menu" hidden><button type="button" onclick="archiveSocialPost(${Number(post.id)})">Archive post</button><button type="button" class="danger" onclick="deleteSocialPost(${Number(post.id)})">Delete permanently</button></div></div>` : '';
         const groupName = post.group_name ? escapeHtml(post.group_name) : '';
-        const groupBadge = groupName ? `<span style="font-size:13px; font-weight:500; color:#8f95a3; margin-left:6px; letter-spacing:0.02em; text-transform:none;">at ${groupName}</span>` : '';
+        const groupBadge = groupName ? `<span style="font-size:13px; font-weight:700; color:#F2CA50; margin-left:6px; letter-spacing:0.02em; text-transform:none; cursor:pointer;" onclick="openFloorSignalGroup(${post.group_id})">at ${groupName}</span>` : '';
         let content = '';
         if (layout === 'trade_card') {
             content = `<div class="post-trade-card social-trade-variant">${tradeCardMarkup(post)}</div>${caption ? `<div class="group-feed-body">${caption.replace(/\n/g, '<br>')}</div>` : ''}${tagsMarkup}${media}`;
@@ -5029,6 +5083,44 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         });
     }
 
+    function toggleActiveCallForm() {
+        const form = document.getElementById('groupActiveCallForm');
+        if (form) {
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    async function saveActiveCallLink(event, groupId) {
+        event.preventDefault();
+        const input = document.getElementById('groupActiveCallInput');
+        if (!input) return;
+        const link = input.value.trim();
+        const btn = event.target.querySelector('button[type="submit"]');
+        if (btn) btn.innerText = 'Saving...';
+        
+        try {
+            const res = await fetch('../../api/signals/update-group.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken || '' },
+                body: JSON.stringify({ group_id: groupId, active_call_link: link })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const idx = (floorSignalsState.groups || []).findIndex(g => String(g.id) === String(groupId));
+                if (idx !== -1) {
+                    floorSignalsState.groups[idx].active_call_link = link;
+                }
+                renderGroupsPanel();
+            } else {
+                alert(data.message || 'Failed to update link');
+            }
+        } catch (e) {
+            alert('Error updating link');
+        } finally {
+            if (btn) btn.innerText = 'Save Link';
+        }
+    }
+
     const groupSignalForm = document.getElementById('groupSignalForm');
     if (groupSignalForm) {
         groupSignalForm.addEventListener('submit', async function (event) {
@@ -5176,16 +5268,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }
     });
 
-    // Setup message polling
-    const workerBlob = new Blob([`
-        setInterval(() => postMessage('tick'), 4000);
-    `], { type: 'application/javascript' });
-    const pollWorker = new Worker(URL.createObjectURL(workerBlob));
-    pollWorker.onmessage = () => {
-        if (typeof floorSignalsState !== 'undefined' && floorSignalsState.activeView === 'workspace' && floorSignalsState.activeWorkspaceTab === 'room' && floorSignalsState.activeGroupId) {
-            if (typeof pollGroupMessages === 'function') pollGroupMessages(floorSignalsState.activeGroupId);
-        }
-    };
+    // SSE real-time messaging replaces polling here
     </script>
 
 </body>
