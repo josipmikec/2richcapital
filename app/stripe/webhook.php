@@ -25,7 +25,8 @@ define('WP_USE_THEMES', false);
 require_once __DIR__ . '/../../wp-load.php';
 
 // ── Verify Stripe signature ───────────────────────────────────────────────────
-$payload   = file_get_contents('php://input');
+if (basename($_SERVER['SCRIPT_FILENAME']) === basename(__FILE__)) {
+    $payload   = file_get_contents('php://input');
 $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
 if (empty($sigHeader)) {
@@ -163,6 +164,7 @@ function handle_new_member(string $email, string $fullName, string $planName): v
 
     send_payment_confirmation_email($email, $fullName, $username, $planName, true, $tempPassword);
     error_log("[2RICH webhook] New member created: {$email} ({$username}) -> {$planName}");
+}
 }
 
 // ── Helper: send credentials/confirmation email ───────────────────────────────
