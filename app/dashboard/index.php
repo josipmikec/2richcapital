@@ -744,20 +744,14 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <div class="widget-body market-pane-body">
 					    <div class="tech-engine">
-					        <div class="tech-engine-header" style="position:relative; z-index:5; display: flex; align-items: center; justify-content: flex-start; gap: 4px;">
-                                <button type="button" id="techEnginePrevBtn" style="padding: 4px; border: none; background: transparent; cursor: pointer; color: #a3a6af; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a3a6af'">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+					        <div class="tech-engine-chart" style="position:relative;">
+                                <button type="button" id="techEnginePrevBtn" style="position:absolute; left:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 4px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.3); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
                                 </button>
-                                <div style="position:relative; display:inline-block; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-					                <div class="tech-engine-title" id="techEngineActiveSymbol" style="display:flex; align-items:center;">XAUUSD</div>
-                                    <select id="techEngineSymbolSelect" style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; -webkit-appearance:none; appearance:none;"></select>
-                                </div>
-                                <button type="button" id="techEngineNextBtn" style="padding: 4px; border: none; background: transparent; cursor: pointer; color: #a3a6af; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a3a6af'">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <button type="button" id="techEngineNextBtn" style="position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 4px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.3); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                 </button>
-					        </div>
-					
-					        <div class="tech-engine-chart">
+                                
 					            <div class="tech-engine-stats">
 					                <div>
 					                    <span class="tech-engine-stat-label" id="techStatPrevLabel">Prev Week O/C</span>
@@ -771,8 +765,10 @@ foreach ($_dashboard_initial_order as $card_id) {
 					
 					            <svg id="techEngineChartSvg" viewBox="0 0 100 60" preserveAspectRatio="none"></svg>
 					
-					            <div class="tech-engine-price-tag" id="techPriceTag">
-					                XAUUSD 0000.00
+					            <div class="tech-engine-price-tag" style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+					                <span id="techPriceTag">XAUUSD 0000.00</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    <select id="techEngineSymbolSelect" style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; -webkit-appearance:none; appearance:none;"></select>
 					            </div>
 					        </div>
 					
@@ -1753,6 +1749,7 @@ foreach ($_dashboard_initial_order as $card_id) {
         async function init() {
             try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.style.display = 'none'; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
         }
+        window.refreshDashboardGroupChat = init;
         
         async function sendMessage() { 
             const value = input.value.trim(); 
@@ -2585,6 +2582,11 @@ foreach ($_dashboard_initial_order as $card_id) {
             state.activeTab = null;
             await boot(true);
             switchSignalsTab('feed', true);
+            
+            // Refresh the group chat widget on the dashboard
+            if (typeof window.refreshDashboardGroupChat === 'function') {
+                window.refreshDashboardGroupChat();
+            }
         }
 
         async function boot(fetchFeedAfter = false) {
