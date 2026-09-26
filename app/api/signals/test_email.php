@@ -1,16 +1,23 @@
 <?php
+require_once dirname(__DIR__, 2) . '/auth/session-config.php';
 require_once dirname(__DIR__, 3) . '/wp-load.php';
 require_once dirname(__DIR__, 2) . '/stripe/webhook.php';
 
-if (!current_user_can('manage_options')) {
-    echo "You must be logged in as an admin to test this.";
+if (!isset($_SESSION['user_id'])) {
+    echo "You must be logged into the custom dashboard to test this.";
     exit;
 }
 
-$current_user = wp_get_current_user();
-$email = $current_user->user_email;
-$displayName = $current_user->display_name;
-$username = $current_user->user_login;
+$user_id = $_SESSION['user_id'];
+$user = get_userdata($user_id);
+if (!$user) {
+    echo "User not found.";
+    exit;
+}
+
+$email = $user->user_email;
+$displayName = $user->display_name;
+$username = $user->user_login;
 
 send_payment_confirmation_email(
     $email,
