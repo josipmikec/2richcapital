@@ -745,8 +745,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <div class="widget-body market-pane-body">
 					    <div class="tech-engine">
 					        <div class="tech-engine-header">
-					            <div class="tech-engine-title">Technical Engine</div>
-					            <div class="tech-engine-realtime">Real-Time</div>
+					            <div class="tech-engine-title" id="techEngineActiveSymbol">XAUUSD</div>
 					        </div>
 					
 					        <div class="tech-engine-chart">
