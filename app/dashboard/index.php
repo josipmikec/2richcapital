@@ -745,11 +745,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <div class="widget-body market-pane-body">
 					    <div class="tech-engine">
 					        <div class="tech-engine-chart" style="position:relative;">
-                                <button type="button" id="techEnginePrevBtn" style="position:absolute; left:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 6px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.35); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
-                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                <button type="button" id="techEnginePrevBtn" style="position:absolute; left:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 6px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.65); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.65)'">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
                                 </button>
-                                <button type="button" id="techEngineNextBtn" style="position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 6px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.35); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
-                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <button type="button" id="techEngineNextBtn" style="position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 6px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.65); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.65)'">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                 </button>
                                 
 					            <div class="tech-engine-stats">
@@ -765,9 +765,10 @@ foreach ($_dashboard_initial_order as $card_id) {
 					
 					            <svg id="techEngineChartSvg" viewBox="0 0 100 60" preserveAspectRatio="none"></svg>
 					
-					            <div class="tech-engine-price-tag" style="display:flex; align-items:center; gap:4px; cursor:pointer; position:relative;">
+					            <div class="tech-engine-price-tag" style="display:flex; align-items:center; gap:4px; cursor:pointer; position:absolute; right:14px; bottom:18px; z-index:2;">
 					                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"></polyline></svg>
-					                <span id="techPriceTag">XAUUSD 0000.00</span>
+					                <span id="techEngineSymbolName">XAUUSD</span>
+					                <span id="techPriceTag">0000.00</span>
                                     <select id="techEngineSymbolSelect" style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; -webkit-appearance:none; appearance:none;"></select>
 					            </div>
 					        </div>
@@ -1926,6 +1927,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	<script>
 	(function() {
 	    var elTag        = document.getElementById("techPriceTag");
+	    var elSymName     = document.getElementById("techEngineSymbolName");
 	    var svg          = document.getElementById("techEngineChartSvg");
 	    var elPrevLabel  = document.getElementById("techStatPrevLabel");
 	    var elPrevOC     = document.getElementById("techStatPrevOC");
@@ -1971,6 +1973,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	                    return;
 	                }
 	                symbolLabel = e.target.value;
+	                if(document.getElementById('techEngineSymbolName')) document.getElementById('techEngineSymbolName').textContent = symbolLabel;
 	                loadSymbolData();
 	            });
 	            
@@ -2014,7 +2017,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            if (dData.ok && dData.candles && dData.candles.length > 0) {
 	                var latest = dData.candles[dData.candles.length - 1];
 	                latestPrice = parseFloat(latest.close);
-	                elTag.textContent = symbolLabel + " " + latestPrice.toFixed(2);
+	                if(elSymName) elSymName.textContent = symbolLabel; elTag.textContent = latestPrice.toFixed(2);
 	                updateChangeStat();
 	                updateMARow();
 	            }
@@ -2031,7 +2034,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	                var dCandles = dData.candles;
 	                var latest = dCandles[dCandles.length - 1];
 	                latestPrice = parseFloat(latest.close);
-	                elTag.textContent = symbolLabel + " " + latestPrice.toFixed(2);
+	                if(elSymName) elSymName.textContent = symbolLabel; elTag.textContent = latestPrice.toFixed(2);
 	                
 	                if (dCandles.length >= 200) {
 	                    var sum = 0;
@@ -2340,7 +2343,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            hoverDot.setAttribute("cx", p.x);
 	            hoverDot.setAttribute("cy", p.y);
 	
-	            elTag.textContent = symbolLabel + " " + p.close.toFixed(2);
+	            if(elSymName) elSymName.textContent = symbolLabel; elTag.textContent = p.close.toFixed(2);
 	            elPrevLabel.textContent = formatLabelForPoint(p, weeklyPoints.length - 1);
 	
 	            if (!isNaN(p.open) && !isNaN(p.close)) {
@@ -2357,7 +2360,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            hoverDot.style.display = "none";
 	
 	            if (latestPrice !== null) {
-	                elTag.textContent = symbolLabel + " " + latestPrice.toFixed(2);
+	                if(elSymName) elSymName.textContent = symbolLabel; elTag.textContent = latestPrice.toFixed(2);
 	            }
 	
 	            elPrevLabel.textContent = defaultPrevLabel;
