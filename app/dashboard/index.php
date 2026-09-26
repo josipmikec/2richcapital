@@ -744,8 +744,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <div class="widget-body market-pane-body">
 					    <div class="tech-engine">
-					        <div class="tech-engine-header">
-					            <div class="tech-engine-title" id="techEngineActiveSymbol">XAUUSD</div>
+					        <div class="tech-engine-header" style="position:relative; z-index:5;">
+                                <div style="position:relative; display:inline-block;">
+					                <div class="tech-engine-title" id="techEngineActiveSymbol" style="display:flex; align-items:center; gap:6px;">XAUUSD <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                                    <select id="techEngineSymbolSelect" style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; -webkit-appearance:none; appearance:none;"></select>
+                                </div>
 					        </div>
 					
 					        <div class="tech-engine-chart">
@@ -1938,174 +1941,188 @@ foreach ($_dashboard_initial_order as $card_id) {
 	    var defaultPrevOCText  = "– / –";
 	    var defaultPctText     = "0.00%";
 	
-	    var WP_AJAX_BASE = <?php echo json_encode(rtrim(site_url(), "/") . "/wp-admin/admin-ajax.php"); ?>;
-	
-	    function updateLivePrice() {
-	        var url = WP_AJAX_BASE + "?action=tworich_research_quote";
-	
-	        fetch(url)
-	            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url); return res.json(); })
-	            .then(function(data) {
-	                if (!data) return;
-	                if (data.error) return;
-	                if (data.code) return;
-	                if (data.status === "error") return;
-	
-	                var value = data.price;
-	                if (!value) value = data.close;
-	                if (!value) return;
-	
-	                var p = parseFloat(value);
-	                if (isNaN(p)) return;
-	
-	                latestPrice = p;
-	                elTag.textContent = symbolLabel + " " + p.toFixed(2);
-	
+	    var symbolSelect = document.getElementById("techEngineSymbolSelect");
+	    var liveInterval = null;
+
+	    async function initWidget() {
+	        try {
+	            var res = await fetch('../api/preferences/get.php?key=market_data_watchlist', { credentials: 'same-origin' });
+	            var json = await res.json();
+	            var wl = [];
+	            if (json.success && json.value) {
+	                wl = JSON.parse(json.value);
+	            }
+	            if (!Array.isArray(wl) || wl.length === 0) {
+	                wl = ["XAUUSD"];
+	            }
+	            
+	            var optsHtml = wl.map(function(sym) {
+	                return '<option value="'+sym+'">'+sym+'</option>';
+	            }).join('');
+	            optsHtml += '<option value="__ADD__">+ Add more symbols</option>';
+	            symbolSelect.innerHTML = optsHtml;
+	            
+	            symbolSelect.addEventListener('change', function(e) {
+	                if (e.target.value === '__ADD__') {
+	                    window.location.href = '../market-data/';
+	                    return;
+	                }
+	                symbolLabel = e.target.value;
+	                document.getElementById('techEngineActiveSymbol').innerHTML = symbolLabel + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+	                loadSymbolData();
+	            });
+	            
+	            symbolLabel = wl[0];
+	            document.getElementById('techEngineActiveSymbol').innerHTML = symbolLabel + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+	            symbolSelect.value = symbolLabel;
+	            
+	            loadSymbolData();
+	            liveInterval = setInterval(updateLivePriceOnly, 5000);
+	        } catch(e) {
+	            console.log("Failed to init tech engine", e);
+	        }
+	    }
+
+	    async function updateLivePriceOnly() {
+	        if (!symbolLabel) return;
+	        try {
+	            var dRes = await fetch('../api/market/candles.php?symbol=' + encodeURIComponent(symbolLabel) + '&timeframe=D1&limit=1', { credentials: 'same-origin', cache: 'no-store' });
+	            var dData = await dRes.json();
+	            if (dData.ok && dData.candles && dData.candles.length > 0) {
+	                var latest = dData.candles[dData.candles.length - 1];
+	                latestPrice = parseFloat(latest.close);
+	                elTag.textContent = symbolLabel + " " + latestPrice.toFixed(2);
 	                updateChangeStat();
 	                updateMARow();
-	            })
-	            .catch(function(err) {
-	                console.log("Quote error:", err);
-	            });
+	            }
+	        } catch(e) {}
 	    }
-	
-	    function initWeeklyChart() {
-	        var url = WP_AJAX_BASE + "?action=tworich_research_timeseries";
 
-	
-	        fetch(url)
-	            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url); return res.json(); })
-	            .then(function(data) {
-	                if (!data) return;
-	                if (data.error) return;
-	                if (!data.values) return;
-	                if (!Array.isArray(data.values)) return;
-	
-	                var values = data.values.slice(0, 9).reverse();
-	
+	    async function loadSymbolData() {
+	        try {
+	            // Fetch daily for SMA, RSI and latest price
+	            var dRes = await fetch('../api/market/candles.php?symbol=' + encodeURIComponent(symbolLabel) + '&timeframe=D1&limit=250', { credentials: 'same-origin' });
+	            var dData = await dRes.json();
+	            
+	            if (dData.ok && dData.candles && dData.candles.length > 0) {
+	                var dCandles = dData.candles;
+	                var latest = dCandles[dCandles.length - 1];
+	                latestPrice = parseFloat(latest.close);
+	                elTag.textContent = symbolLabel + " " + latestPrice.toFixed(2);
+	                
+	                if (dCandles.length >= 200) {
+	                    var sum = 0;
+	                    for (var i = dCandles.length - 200; i < dCandles.length; i++) sum += parseFloat(dCandles[i].close);
+	                    sma200 = sum / 200;
+	                } else {
+	                    sma200 = null;
+	                }
+	                updateMARow();
+
+	                if (dCandles.length > 14) {
+	                    var gains = 0, losses = 0;
+	                    for (var i = dCandles.length - 14; i < dCandles.length; i++) {
+	                        var diff = parseFloat(dCandles[i].close) - parseFloat(dCandles[i-1].close);
+	                        if (diff > 0) gains += diff;
+	                        else losses -= diff;
+	                    }
+	                    var avgGain = gains / 14;
+	                    var avgLoss = losses / 14;
+	                    if (avgLoss === 0) rsiDaily = 100;
+	                    else rsiDaily = 100 - (100 / (1 + (avgGain / avgLoss)));
+	                } else {
+	                    rsiDaily = null;
+	                }
+	                updateRSIRow();
+	            }
+
+	            // Fetch weekly for chart
+	            var wRes = await fetch('../api/market/candles.php?symbol=' + encodeURIComponent(symbolLabel) + '&timeframe=W1&limit=9', { credentials: 'same-origin' });
+	            var wData = await wRes.json();
+	            
+	            if (wData.ok && wData.candles && wData.candles.length > 0) {
+	                var values = wData.candles; // chronological (oldest to newest)
 	                weeklyPoints = [];
 	                var closesOnly = [];
-	
+
 	                values.forEach(function(v) {
 	                    var close = parseFloat(v.close);
 	                    closesOnly.push(isNaN(close) ? null : close);
 	                });
-	
+
 	                var validCloses = closesOnly.filter(function(n) { return n !== null; });
 	                if (!validCloses.length) return;
-	
+
 	                var min = Math.min.apply(null, validCloses);
 	                var max = Math.max.apply(null, validCloses);
-	
+
 	                if (min === max) {
 	                    min = min - 1;
 	                    max = max + 1;
 	                }
-	
+
 	                values.forEach(function(v, idx) {
 	                    var close = parseFloat(v.close);
 	                    var open  = parseFloat(v.open);
 	                    if (isNaN(close)) return;
-	
+
 	                    var ratio = (close - min) / (max - min);
 	                    var x = values.length === 1 ? 50 : (idx / (values.length - 1)) * 100;
 	                    var y = 60 - ratio * 50;
-	
+
 	                    var pctChange = null;
 	                    if (!isNaN(open) && open !== 0) {
 	                        pctChange = ((close - open) / open) * 100;
 	                    }
-	
+
 	                    weeklyPoints.push({
 	                        index: idx,
 	                        x: x,
 	                        y: y,
 	                        open: open,
 	                        close: close,
-	                        datetime: v.datetime,
+	                        datetime: v.time,
 	                        pctChange: pctChange
 	                    });
 	                });
-	
+
 	                if (!weeklyPoints.length) return;
-	
+
 	                if (values.length >= 2) {
 	                    var prev = values[values.length - 2];
 	                    var curr = values[values.length - 1];
-	
+
 	                    var prevOpen = parseFloat(prev.open);
 	                    var prevClose = parseFloat(prev.close);
-	
+
 	                    if (!isNaN(prevOpen) && !isNaN(prevClose)) {
 	                        defaultPrevOCText = "O " + prevOpen.toFixed(1) + " / C " + prevClose.toFixed(1);
 	                        elPrevOC.textContent = defaultPrevOCText;
 	                    }
-	
+
 	                    defaultPrevLabel = "Prev Week O/C";
 	                    elPrevLabel.textContent = defaultPrevLabel;
-	
+
 	                    var currOpen = parseFloat(curr.open);
 	                    if (!isNaN(currOpen)) {
 	                        latestWeeklyOpen = currOpen;
 	                    }
-	
+
 	                    var prevPoint = weeklyPoints[weeklyPoints.length - 2];
 	                    if (prevPoint && prevPoint.pctChange !== null) {
 	                        defaultPctText = formatPct(prevPoint.pctChange);
 	                        elChangeStat.textContent = defaultPctText;
 	                    }
 	                }
-	
+
 	                updateChangeStat();
 	                drawChart();
 	                attachHover();
 	                classifyMarketStructure();
-	            })
-	            .catch(function(err) {
-	                console.log("Weekly chart error:", err);
-	            });
-	    }
-	
-	    function loadSma200() {
-	        var url = WP_AJAX_BASE + "?action=tworich_research_sma200";
-	
-	        fetch(url)
-	            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url); return res.json(); })
-	            .then(function(data) {
-	                if (!data) return;
-	                if (data.error) return;
-	                if (typeof data.sma === "undefined") return;
-	
-	                var smaValue = parseFloat(data.sma);
-	                if (isNaN(smaValue)) return;
-	
-	                sma200 = smaValue;
-	                updateMARow();
-	            })
-	            .catch(function(err) {
-	                console.log("SMA200 error:", err);
-	            });
-	    }
-	
-	    function loadRsiDaily() {
-	        var url = WP_AJAX_BASE + "?action=tworich_research_rsi";
-	
-	        fetch(url)
-	            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url); return res.json(); })
-	            .then(function(data) {
-	                if (!data) return;
-	                if (data.error) return;
-	                if (typeof data.rsi === "undefined") return;
-	
-	                var rsiValue = parseFloat(data.rsi);
-	                if (isNaN(rsiValue)) return;
-	
-	                rsiDaily = rsiValue;
-	                updateRSIRow();
-	            })
-	            .catch(function(err) {
-	                console.log("RSI error:", err);
-	            });
+	            }
+	        } catch(e) {
+	            console.log("loadSymbolData error:", e);
+	        }
 	    }
 	
 	    function updateMARow() {
@@ -2326,11 +2343,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	        });
 	    }
 	
-	    updateLivePrice();
-	    initWeeklyChart();
-	    loadSma200();
-	    loadRsiDaily();
-	    setInterval(updateLivePrice, 5000);
+	    initWidget();
 	})();
 	</script>
 
