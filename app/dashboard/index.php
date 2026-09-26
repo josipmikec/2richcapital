@@ -1205,10 +1205,10 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <?php else: ?>
                     <?php $chat_group_overlay = rich_feature_overlay('card-chat-group', $user_id); ?>
                     <?php $chat_private_overlay = rich_feature_overlay('card-chat-private', $user_id); ?>
-                    <div class="widget-tabs" style="position:relative; padding-right:40px;">
+                    <div class="widget-tabs">
                         <button class="wtab active" onclick="switchTab(this,'chat-pane')">Group Chats</button>
                         <button class="wtab" onclick="switchTab(this,'private-pane')">Private Chats</button>
-                        <button onclick="openMessagesWindow()" title="Open in new window" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#888; cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center; z-index:10; border-radius:4px; transition: all 0.2s;" onmouseover="this.style.color='#f2ca50'; this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.color='#888'; this.style.background='none'">
+                        <button class="news-popout-btn" onclick="openMessagesWindow()" title="Open in new window" style="margin-left: auto; margin-bottom: 8px;">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <polyline points="15 3 21 3 21 9"></polyline>
                                 <polyline points="9 21 3 21 3 15"></polyline>
