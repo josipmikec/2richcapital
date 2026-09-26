@@ -213,7 +213,7 @@ function send_payment_confirmation_email(
     $headline  = $isNew ? 'Access Granted.' : 'Payment Confirmed.';
     $subline   = $isNew ? 'Your account has been created' : 'Your membership has been renewed';
     $bodyText  = $isNew
-        ? 'Welcome to the inner circle. Your payment was successful, and your 2RICH CAPITAL account is now fully active. You\'ve just unlocked access to elite trading signals, advanced copy-trading tools, and a community of high-net-worth traders.<br><br><span style="color:#F2CA50;"><b>YOUR NEXT STEPS:</b></span><br><br>&bull; <b>Log In:</b> Access the Trading Floor using your credentials below.<br>&bull; <b>Connect MT5:</b> Link your brokerage for seamless copy-trading.<br>&bull; <b>Join Groups:</b> Discover and join premium signal groups.<br>&bull; <b>Start Earning:</b> Execute high-probability setups immediately.<br><br>The markets wait for no one. Let\'s get to work.'
+        ? 'Welcome to the inner circle. Your payment was successful, and your 2RICH CAPITAL account is now fully active. You\'ve just unlocked access to elite trading signals, advanced copy-trading tools, and a community of high-net-worth traders.<br><br><span style="color:#F2CA50;"><b>YOUR NEXT STEPS:</b></span><br><br>&bull; <b>Log In:</b> Access the Trading Floor using your credentials below.<br>&bull; <b>Connect MT5:</b> Link your brokerage for seamless copy-trading.<br>&bull; <b>Join Groups:</b> Discover and join premium signal groups.<br><br>The markets wait for no one. Let\'s get to work.'
         : 'Your 2RICH CAPITAL membership has been renewed successfully. The grind doesn\'t stop. Your access continues uninterrupted. Keep executing and compounding those wins!';
 
     $html = '
