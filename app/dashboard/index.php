@@ -3050,11 +3050,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             </div>
 
             <div class="welcome-carousel" style="position:relative;width:100%;height:220px;border-radius:16px;background:#000;border:1px solid rgba(255,255,255,0.05);overflow:hidden;margin-bottom:32px;display:flex;align-items:center;justify-content:center;">
-                <!-- Placeholder for a screenshot - user can replace this img tag -->
-                <div style="text-align:center;color:#555;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                    <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">Dashboard Overview</p>
-                </div>
+                <img src="/app/assets/img/dashboard-overview.jpg" alt="Dashboard Overview" style="width:100%;height:100%;object-fit:cover;opacity:0.9;">
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">

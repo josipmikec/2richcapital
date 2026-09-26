@@ -1319,7 +1319,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         .create-layout-preview--image strong, .create-layout-preview--text strong { color:#F2CA50; font-size:20px; line-height:1; }
         @media (max-width:600px) { .create-layout-grid { grid-template-columns:1fr; } }
 
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 500; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
         .feed-post-modal { background:#151515; border:1px solid #1e1e1e; border-radius:20px; width:min(1080px, 94vw); height:min(78vh, 660px); max-height:78vh; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5); display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(320px, 420px); position:relative; }
         .feed-post-nav { position:fixed; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); background:rgba(8,8,8,0.82); color:#f5f5f5; display:flex; align-items:center; justify-content:center; z-index:13010; backdrop-filter:blur(10px); box-shadow:0 18px 40px rgba(0,0,0,0.35); }

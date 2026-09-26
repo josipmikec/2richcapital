@@ -111,8 +111,12 @@ function send_welcome_email(string $email, string $displayName, string $username
 
       <!-- Body -->
       <tr><td style="padding:36px 48px;">
+        <p style="font-size:16px;color:#f5f5f5;font-weight:600;margin:0 0 16px;">Welcome to the inner circle.</p>
+        <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 24px;">
+          You now have access to the 2RICH CAPITAL platform &mdash; real-time macro research, high-conviction trade setups, and elite market intelligence built for serious traders.
+        </p>
         <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 32px;">
-          You now have access to the 2RICH CAPITAL platform &mdash; macro research, trade analytics, and market intelligence built for serious traders.
+          Don't miss the next big move. Head over to the <strong>Trading Floor</strong> to see live signals, track market analytics, and join our premium trading groups led by top analysts.
         </p>
 
         <!-- Credentials box -->
@@ -154,6 +158,9 @@ function send_welcome_email(string $email, string $displayName, string $username
 </html>';
 
     $plain = "Welcome to 2RICH CAPITAL, {$displayName}.\n\n"
+           . "Welcome to the inner circle.\n"
+           . "You now have access to the 2RICH CAPITAL platform — real-time macro research, high-conviction trade setups, and elite market intelligence built for serious traders.\n\n"
+           . "Don't miss the next big move. Head over to the Trading Floor to see live signals, track market analytics, and join our premium trading groups led by top analysts.\n\n"
            . "Your account is ready.\n\n"
            . "Username: {$username}\n"
            . "Email:    {$email}\n\n"
