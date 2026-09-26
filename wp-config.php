@@ -1,4 +1,13 @@
 <?php
+if (file_exists(__DIR__ . '/.env')) {
+    $env_vars = parse_ini_file(__DIR__ . '/.env');
+    foreach ($env_vars as $key => $value) {
+        if (!defined($key)) {
+            define($key, $value);
+        }
+    }
+}
+
 define( 'WP_CACHE', true );
 
 /**
@@ -75,14 +84,6 @@ $table_prefix = 'wp_';
 
 
 /* Add any custom values between this line and the "stop editing" line. */
-if (file_exists(__DIR__ . '/.env')) {
-    $env_vars = parse_ini_file(__DIR__ . '/.env');
-    foreach ($env_vars as $key => $value) {
-        if (!defined($key)) {
-            define($key, $value);
-        }
-    }
-}
 
 /**
  * For developers: WordPress debugging mode.
