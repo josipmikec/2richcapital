@@ -1,4 +1,4 @@
-a<?php
+<?php
 require_once '../../auth/session-config.php';
 require_once '../../auth/feature-flags.php';
 
