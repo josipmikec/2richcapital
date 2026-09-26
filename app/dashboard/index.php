@@ -3050,7 +3050,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             </div>
 
             <div class="welcome-carousel" style="position:relative;width:100%;height:220px;border-radius:16px;background:#000;border:1px solid rgba(255,255,255,0.05);overflow:hidden;margin-bottom:32px;display:flex;align-items:center;justify-content:center;">
-                <img src="/app/assets/img/dashboard-overview.jpg" alt="Dashboard Overview" style="width:100%;height:100%;object-fit:cover;opacity:0.9;">
+                <img src="../assets/img/dashboard-overview.jpg" alt="Dashboard Overview" style="width:100%;height:100%;object-fit:cover;opacity:0.9;">
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
