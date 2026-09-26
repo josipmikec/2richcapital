@@ -1,9 +1,9 @@
 <?php
 ob_start();
-require_once 'session-config.php';
+require_once __DIR__ . '/session-config.php';
 
 define('WP_USE_THEMES', false);
-require_once('../../wp-load.php');
+require_once dirname(__DIR__, 2) . '/wp-load.php';
 
 ob_end_clean();
 header('Content-Type: application/json');
@@ -116,7 +116,7 @@ function send_welcome_email(string $email, string $displayName, string $username
           You now have access to the 2RICH CAPITAL platform &mdash; real-time macro research, high-conviction trade setups, and elite market intelligence built for serious traders.
         </p>
         <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 32px;">
-          Don't miss the next big move. Head over to the <strong>Trading Floor</strong> to see live signals, track market analytics, and join our premium trading groups led by top analysts.
+          Don\'t miss the next big move. Head over to the <strong>Trading Floor</strong> to see live signals, track market analytics, and join our premium trading groups led by top analysts.
         </p>
 
         <!-- Credentials box -->
