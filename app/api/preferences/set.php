@@ -24,7 +24,16 @@ if (!$input) $input = $_POST;
 
 $key   = $input['key']   ?? null;
 $value = $input['value'] ?? null;
+$b64   = !empty($input['b64']);
 $table = $wpdb->prefix . 'rich_user_preferences';
+
+// Decode base64-encoded values (used to bypass hosting WAF blocking nested JSON)
+if ($b64 && $value !== null) {
+    $decoded = base64_decode($value, true);
+    if ($decoded !== false) {
+        $value = $decoded;
+    }
+}
 
 if (!$key) {
     echo json_encode(['success' => false, 'message' => 'Missing key']);

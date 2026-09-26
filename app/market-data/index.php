@@ -857,7 +857,8 @@ async function saveChartSettings(settings) {
     clearTimeout(chartSettingsTimer);
     chartSettingsTimer = setTimeout(async () => {
         try {
-            await fetch('../api/preferences/set.php', { method: 'POST', credentials: 'same-origin', headers: csrfHeaders(), body: JSON.stringify({ key: 'market_data_chart_settings', value: JSON.stringify(chartSettings) }) });
+            const raw = JSON.stringify(chartSettings);
+            await fetch('../api/preferences/set.php', { method: 'POST', credentials: 'same-origin', headers: csrfHeaders(), body: JSON.stringify({ key: 'market_data_chart_settings', value: btoa(unescape(encodeURIComponent(raw))), b64: true }) });
         } catch (error) { console.warn('[2RICH] Chart settings could not be saved', error); }
     }, 500);
 }
@@ -919,7 +920,8 @@ async function saveChartState(state) {
             // Save core chart settings
             const stateMap = await loadChartStateMap();
             const nextMap = { ...(stateMap || {}), [symbolKey]: { ...chartState, symbol: symbolKey } };
-            const payload = { key: CHART_STATE_STORAGE_KEY, value: JSON.stringify(nextMap) };
+            const rawValue = JSON.stringify(nextMap);
+            const payload = { key: CHART_STATE_STORAGE_KEY, value: btoa(unescape(encodeURIComponent(rawValue))), b64: true };
             chartDebug('chart state save request', { key: CHART_STATE_STORAGE_KEY, symbolKey, snapshot: chartState, payload });
             
             const response = await fetch('../api/preferences/set.php', {
@@ -1249,7 +1251,8 @@ function toggleWatchlist() {
 }
 
 async function persistWatchlist() {
-    await fetch('../api/preferences/set.php', { method:'POST', credentials:'same-origin', headers: csrfHeaders(), body: JSON.stringify({ key:'market_data_watchlist', value:JSON.stringify(window.marketWatchlist || []) }) });
+    const raw = JSON.stringify(window.marketWatchlist || []);
+    await fetch('../api/preferences/set.php', { method:'POST', credentials:'same-origin', headers: csrfHeaders(), body: JSON.stringify({ key:'market_data_watchlist', value: btoa(unescape(encodeURIComponent(raw))), b64: true }) });
 }
 
 function addCurrentToWatchlist() {
@@ -1827,7 +1830,7 @@ async function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','create_volume_indicator_by_default'].concat(i > 1 ? ['left_toolbar', 'header_widget', 'right_toolbar'] : []),
+        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'].concat(i > 1 ? ['left_toolbar', 'header_widget', 'right_toolbar'] : []),
         enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
         settings_adapter: chartSettingsAdapter(),
         save_load_adapter: {
@@ -1850,7 +1853,7 @@ async function initChart() {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: csrfHeaders(),
-                    body: JSON.stringify({ symbol: symbolKey, drawings: stringified })
+                    body: JSON.stringify({ symbol: symbolKey, drawings: btoa(unescape(encodeURIComponent(stringified))), b64: true })
                 }).then(() => {});
             },
             loadLineToolsAndGroups: (layoutId, chartId, requestType, requestContext) => {
@@ -1932,6 +1935,7 @@ async function initChart() {
                 return;
             }
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
+        mountNativeTimeframeGroup();
         richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
         

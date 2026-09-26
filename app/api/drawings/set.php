@@ -24,6 +24,14 @@ if (!$input) $input = $_POST;
 
 $symbol = isset($input['symbol']) ? sanitize_text_field($input['symbol']) : '';
 $drawings = isset($input['drawings']) ? $input['drawings'] : '';
+$b64 = !empty($input['b64']);
+
+if ($b64 && $drawings !== '') {
+    $decoded = base64_decode($drawings, true);
+    if ($decoded !== false) {
+        $drawings = $decoded;
+    }
+}
 
 if (empty($symbol)) {
     echo json_encode(['success' => false, 'message' => 'Missing symbol']);
