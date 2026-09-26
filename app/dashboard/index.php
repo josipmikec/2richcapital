@@ -1959,7 +1959,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            var optsHtml = wl.map(function(sym) {
 	                return '<option value="'+sym+'">'+sym+'</option>';
 	            }).join('');
-	            optsHtml += '<option value="__ADD__">+ Add more symbols</option>';
+	            optsHtml += '<option value="__ADD__">Add symbols to watchlist</option>';
 	            symbolSelect.innerHTML = optsHtml;
 	            
 	            symbolSelect.addEventListener('change', function(e) {

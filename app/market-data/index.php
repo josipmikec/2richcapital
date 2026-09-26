@@ -840,7 +840,7 @@ function resetChartPersistenceState(reason = 'reset') {
 }
 
 function csrfHeaders() {
-    const token = document.querySelector('meta[name=csrf-token]')?.content || '';
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     return token ? { 'X-CSRF-Token': token, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
 
@@ -1727,7 +1727,7 @@ function bootstrapMarketChart() {
 }
 
 function mountNativeTimeframeGroup() {
-    if (!getTvWidget() || typeof getTvWidget().headerReady !== 'function' || typeof tvWidget.createButton !== 'function') return;
+    if (!getTvWidget() || typeof getTvWidget().headerReady !== 'function' || typeof getTvWidget().createButton !== 'function') return;
     getTvWidget().headerReady().then(() => {
         if (document.getElementById('rich-native-timeframes')) return;
         const group = document.createElement('div');
@@ -1787,7 +1787,7 @@ function wireRichToolbar() {
 }
 
 async function initChart() {
-    tvWidgets.forEach(w => { if(w) w.remove(); }); tvWidgets = [];
+    tvWidgets.forEach(w => { if(w) w.remove(); }); tvWidgets = []; window.tvWidget = null;
     
     const stateMap = await loadChartStateMap();
     const symbolKey = getChartStateSymbol(currentSymbol);
@@ -1827,7 +1827,7 @@ async function initChart() {
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
-        disabled_features: ['use_localstorage_for_settings','header_interval_dialog_button','header_resolutions','create_volume_indicator_by_default'].concat(i > 1 ? ['left_toolbar', 'header_widget', 'right_toolbar'] : []),
+        disabled_features: ['use_localstorage_for_settings','create_volume_indicator_by_default'].concat(i > 1 ? ['left_toolbar', 'header_widget', 'right_toolbar'] : []),
         enabled_features:  ['items_favoriting', 'saveload_separate_drawings_storage'],
         settings_adapter: chartSettingsAdapter(),
         save_load_adapter: {
@@ -1888,6 +1888,7 @@ async function initChart() {
     });
         
             tvWidgets.push(widget);
+            if (i === 1) window.tvWidget = widget;
             
             // SYNC DRAWING TOOLS FROM CHART 1 TO OTHERS
             widget.onChartReady(() => {
@@ -1931,7 +1932,6 @@ async function initChart() {
                 return;
             }
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
-        mountNativeTimeframeGroup();
         richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
         
