@@ -3060,7 +3060,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 .tour-arrow:hover { background:rgba(242,202,80,0.4); color:#F2CA50; }
             </style>
             <div style="position:relative; width:100%; margin-bottom:32px;">
-                <div class="tour-slides" id="tourSlides">
+                <div class="tour-slides" id="tourSlides" onscroll="updateTourContent()">
                     <div class="tour-slide"><img src="../assets/img/tour_2.png" alt="Dashboard"></div>
                     <div class="tour-slide"><img src="../assets/img/tour_3.png" alt="Trading Floor"></div>
                     <div class="tour-slide"><img src="../assets/img/tour_4.png" alt="Group Chat"></div>
@@ -3075,31 +3075,65 @@ foreach ($_dashboard_initial_order as $card_id) {
                 </button>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-                <div style="text-align:center;">
-                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                    </div>
-                    <h4 style="margin:0 0 4px;font-size:13px;color:#fff;">Workspace</h4>
-                    <p style="margin:0;font-size:11px;color:#888;line-height:1.4;">Drag, drop & hide cards to fit your style.</p>
+            <div style="text-align:center;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;" id="tourIcon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                 </div>
-
-                <div style="text-align:center;">
-                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"></path></svg>
-                    </div>
-                    <h4 style="margin:0 0 4px;font-size:13px;color:#fff;">Connect MT5</h4>
-                    <p style="margin:0;font-size:11px;color:#888;line-height:1.4;">Track live performance seamlessly.</p>
-                </div>
-
-                <div style="text-align:center;">
-                    <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    </div>
-                    <h4 style="margin:0 0 4px;font-size:13px;color:#fff;">Trading Floor</h4>
-                    <p style="margin:0;font-size:11px;color:#888;line-height:1.4;">Join premium groups & copy trades.</p>
-                </div>
+                <h4 style="margin:0 0 6px;font-size:15px;color:#fff;font-weight:600;" id="tourTitle">Dashboard Overview</h4>
+                <p style="margin:0;font-size:13px;color:#888;line-height:1.4;max-width:300px;" id="tourDesc">Drag, drop & hide widgets to fit your trading style.</p>
             </div>
+            
+            <div style="display:flex;justify-content:center;gap:8px;margin-top:24px;">
+                <div class="tour-dot" style="width:8px;height:8px;border-radius:50%;background:#F2CA50;transition:background 0.3s;"></div>
+                <div class="tour-dot" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.3s;"></div>
+                <div class="tour-dot" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.3s;"></div>
+                <div class="tour-dot" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.3s;"></div>
+                <div class="tour-dot" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.3s;"></div>
+            </div>
+
+            <script>
+                const tourContent = [
+                    {
+                        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>',
+                        title: 'Dashboard Overview',
+                        desc: 'Drag, drop & hide widgets to fit your trading style.'
+                    },
+                    {
+                        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
+                        title: 'Trading Floor',
+                        desc: 'Discover top analysts, see live performance, and follow the action.'
+                    },
+                    {
+                        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+                        title: 'Premium Groups',
+                        desc: 'Private rooms for desk coordination, live analysis, and calls.'
+                    },
+                    {
+                        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path></svg>',
+                        title: 'Market Data Charts',
+                        desc: 'Institutional-grade charting with TradingView integration.'
+                    },
+                    {
+                        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+                        title: 'Fundamental Data',
+                        desc: 'Live economic calendar and real-time institutional sentiment.'
+                    }
+                ];
+
+                function updateTourContent() {
+                    const s = document.getElementById('tourSlides');
+                    const idx = Math.round(s.scrollLeft / s.offsetWidth) || 0;
+                    const info = tourContent[idx];
+                    if (info) {
+                        document.getElementById('tourIcon').innerHTML = info.icon;
+                        document.getElementById('tourTitle').innerText = info.title;
+                        document.getElementById('tourDesc').innerText = info.desc;
+                        document.querySelectorAll('.tour-dot').forEach((d, i) => {
+                            d.style.background = i === idx ? '#F2CA50' : 'rgba(255,255,255,0.2)';
+                        });
+                    }
+                }
+            </script>
 
             <button onclick="document.getElementById('welcomeTourModal').style.display='none'" style="margin-top:40px;width:100%;background:#F2CA50;color:#111;border:none;padding:16px;border-radius:12px;font-size:14px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                 Get Started
