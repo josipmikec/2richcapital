@@ -1,6 +1,6 @@
 <?php
-require_once dirname(__DIR__, 2) . '/wp-load.php';
-require_once __DIR__ . '/../stripe/webhook.php'; // This contains send_payment_confirmation_email
+require_once dirname(__DIR__, 3) . '/wp-load.php';
+require_once dirname(__DIR__, 2) . '/stripe/webhook.php';
 
 if (!current_user_can('manage_options')) {
     echo "You must be logged in as an admin to test this.";
