@@ -3051,8 +3051,28 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <p style="color:#a9afb8;font-size:14px;margin-top:8px;">Your financial mastery starts here.</p>
             </div>
 
-            <div class="welcome-carousel" style="position:relative;width:100%;height:220px;border-radius:16px;background:#000;border:1px solid rgba(255,255,255,0.05);overflow:hidden;margin-bottom:32px;display:flex;align-items:center;justify-content:center;">
-                <img src="../assets/img/dashboard-overview.jpg" alt="Dashboard Overview" style="width:100%;height:100%;object-fit:cover;opacity:0.9;">
+            <style>
+                .tour-slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; border-radius: 16px; background: #000; border: 1px solid rgba(255,255,255,0.05); }
+                .tour-slides::-webkit-scrollbar { display: none; }
+                .tour-slide { flex: 0 0 100%; height: 260px; scroll-snap-align: start; position: relative; }
+                .tour-slide img { width: 100%; height: 100%; object-fit: cover; opacity: 0.95; }
+                .tour-arrow { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2; transition:background 0.2s; backdrop-filter:blur(4px); }
+                .tour-arrow:hover { background:rgba(242,202,80,0.4); color:#F2CA50; }
+            </style>
+            <div style="position:relative; width:100%; margin-bottom:32px;">
+                <div class="tour-slides" id="tourSlides">
+                    <div class="tour-slide"><img src="../assets/img/tour_2.png" alt="Dashboard"></div>
+                    <div class="tour-slide"><img src="../assets/img/tour_3.png" alt="Trading Floor"></div>
+                    <div class="tour-slide"><img src="../assets/img/tour_4.png" alt="Group Chat"></div>
+                    <div class="tour-slide"><img src="../assets/img/tour_5.png" alt="Market Data Charts"></div>
+                    <div class="tour-slide"><img src="../assets/img/tour_6.png" alt="Economic Calendar"></div>
+                </div>
+                <button type="button" class="tour-arrow" style="left:12px;" onclick="var s=document.getElementById('tourSlides'); s.scrollBy({left: -s.offsetWidth, behavior:'smooth'})">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <button type="button" class="tour-arrow" style="right:12px;" onclick="var s=document.getElementById('tourSlides'); s.scrollBy({left: s.offsetWidth, behavior:'smooth'})">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
