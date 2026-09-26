@@ -2520,7 +2520,19 @@ document.addEventListener('DOMContentLoaded', function () {
     startNormalRefresh();
     startCountdownTick();
 
-    Promise.all([loadChartSettings(), loadWatchlist(), loadTvUserSettings()]).finally(() => {
+    async function loadChartLayout() {
+        try {
+            const response = await fetch('../api/preferences/get.php?key=market_data_chart_layout', { credentials: 'same-origin' });
+            const data = await response.json();
+            if (data.success && data.value) {
+                localStorage.setItem('md_chart_layout', data.value);
+                const el = document.getElementById('chartLayoutSelect');
+                if (el) el.value = data.value;
+            }
+        } catch (e) {}
+    }
+
+    Promise.all([loadChartSettings(), loadWatchlist(), loadTvUserSettings(), loadChartLayout()]).finally(() => {
         if (chartSettings && typeof chartSettings === 'object') {
             if (chartSettings.symbol) currentSymbol = String(chartSettings.symbol).trim();
             if (chartSettings.interval) {
@@ -2546,12 +2558,20 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 function changeChartLayout(val) {
     localStorage.setItem('md_chart_layout', val);
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+        fetch('../api/preferences/set.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfMeta.content },
+            body: JSON.stringify({ key: 'market_data_chart_layout', value: val })
+        }).catch(() => {});
+    }
     initChart();
 }
 function toggleSyncSymbol() {
     localStorage.setItem('md_sync_symbol', document.getElementById('syncSymbolCheck').checked ? '1' : '0');
 }
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (localStorage.getItem('md_chart_layout')) {
         const el = document.getElementById('chartLayoutSelect');
         if (el) el.value = localStorage.getItem('md_chart_layout');

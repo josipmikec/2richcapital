@@ -1734,11 +1734,11 @@ foreach ($_dashboard_initial_order as $card_id) {
             state.innerHTML = `<select class="dashboard-group-chat-switcher" aria-label="Select joined group">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>`;
             state.hidden = false;
             state.querySelector('select').addEventListener('change', e => selectGroup(e.target.value));
-            composer.hidden = false; setCta('Visit Group', `/trading-floor#groups&group=${encodeURIComponent(String(group.id))}`, true);
+            composer.style.display = ''; setCta('Visit Group', `/trading-floor#groups&group=${encodeURIComponent(String(group.id))}`, true);
             await loadMessages();
         }
         async function init() {
-            try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.hidden = true; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
+            try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.style.display = 'none'; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
         }
         
         async function sendMessage() { 
