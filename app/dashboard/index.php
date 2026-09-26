@@ -1209,7 +1209,12 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <button class="wtab active" onclick="switchTab(this,'chat-pane')">Group Chats</button>
                         <button class="wtab" onclick="switchTab(this,'private-pane')">Private Chats</button>
                         <button onclick="openMessagesWindow()" title="Open in new window" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#888; cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center; z-index:10; border-radius:4px; transition: all 0.2s;" onmouseover="this.style.color='#f2ca50'; this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.color='#888'; this.style.background='none'">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <polyline points="9 21 3 21 3 15"></polyline>
+                                <line x1="21" y1="3" x2="14" y2="10"></line>
+                                <line x1="3" y1="21" x2="10" y2="14"></line>
+                            </svg>
                         </button>
                     </div>
                     <div class="widget-body" id="chat-pane">
