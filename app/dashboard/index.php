@@ -3048,7 +3048,6 @@ foreach ($_dashboard_initial_order as $card_id) {
             
             <div style="text-align:center;margin-bottom:32px;">
                 <h2 style="margin:0;font-size:28px;font-weight:800;letter-spacing:-0.03em;color:#fff;">Welcome to <span style="color:#F2CA50;">2RICH</span></h2>
-                <p style="color:#a9afb8;font-size:14px;margin-top:8px;">Your financial mastery starts here.</p>
             </div>
 
             <style>
@@ -3061,10 +3060,10 @@ foreach ($_dashboard_initial_order as $card_id) {
             </style>
             <div style="position:relative; width:100%; margin-bottom:32px;">
                 <div class="tour-slides" id="tourSlides" onscroll="updateTourContent()">
-                    <div class="tour-slide"><img src="../assets/img/tour_2.png" alt="Dashboard"></div>
+                    <div class="tour-slide"><img src="../assets/img/tour_2.png" alt="Your Custom Dashboard"></div>
                     <div class="tour-slide"><img src="../assets/img/tour_3.png" alt="Trading Floor"></div>
-                    <div class="tour-slide"><img src="../assets/img/tour_4.png" alt="Group Chat"></div>
-                    <div class="tour-slide"><img src="../assets/img/tour_5.png" alt="Market Data Charts"></div>
+                    <div class="tour-slide"><img src="../assets/img/tour_4.png" alt="Make Your Trading Group"></div>
+                    <div class="tour-slide"><img src="../assets/img/tour_5.png" alt="Market Data"></div>
                     <div class="tour-slide"><img src="../assets/img/tour_6.png" alt="Economic Calendar"></div>
                 </div>
                 <button type="button" class="tour-arrow" style="left:12px;" onclick="var s=document.getElementById('tourSlides'); s.scrollBy({left: -s.offsetWidth, behavior:'smooth'})">
@@ -3079,7 +3078,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <div style="background:rgba(242,202,80,0.1);color:#F2CA50;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;" id="tourIcon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                 </div>
-                <h4 style="margin:0 0 6px;font-size:15px;color:#fff;font-weight:600;" id="tourTitle">Dashboard Overview</h4>
+                <h4 style="margin:0 0 6px;font-size:15px;color:#fff;font-weight:600;" id="tourTitle">Your Custom Dashboard</h4>
                 <p style="margin:0;font-size:13px;color:#888;line-height:1.4;max-width:300px;" id="tourDesc">Drag, drop & hide widgets to fit your trading style.</p>
             </div>
             
@@ -3095,7 +3094,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 const tourContent = [
                     {
                         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>',
-                        title: 'Dashboard Overview',
+                        title: 'Your Custom Dashboard',
                         desc: 'Drag, drop & hide widgets to fit your trading style.'
                     },
                     {
@@ -3105,12 +3104,12 @@ foreach ($_dashboard_initial_order as $card_id) {
                     },
                     {
                         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
-                        title: 'Premium Groups',
+                        title: 'Make Your Trading Group',
                         desc: 'Private rooms for desk coordination, live analysis, and calls.'
                     },
                     {
                         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path></svg>',
-                        title: 'Market Data Charts',
+                        title: 'Market Data',
                         desc: 'Institutional-grade charting with TradingView integration.'
                     },
                     {
