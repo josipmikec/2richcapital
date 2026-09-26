@@ -11,15 +11,7 @@
  */
 
 // ── Config ────────────────────────────────────────────────────────────────────
-define('STRIPE_WEBHOOK_SECRET', 'whsec_hx9eSzUJwdt5lm1ex3C2yk3NEKvtpcVV');
-define('STRIPE_SECRET_KEY',     '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');
 
-define('SMTP_HOST',      'mail.2rich.capital');
-define('SMTP_PORT',      465);
-define('SMTP_USER',      'noreply@2rich.capital');
-define('SMTP_PASS',      'PkCRHMdhdcQSyvbqMguk');
-define('SMTP_FROM',      'noreply@2rich.capital');
-define('SMTP_FROM_NAME', '2RICH CAPITAL');
 // ─────────────────────────────────────────────────────────────────────────────
 
 require_once __DIR__ . '/../auth/phpmailer/Exception.php';
@@ -264,13 +256,13 @@ function send_payment_confirmation_email(
         $mail->CharSet  = 'UTF-8';
         $mail->Encoding = 'base64';
         $mail->isSMTP();
-        $mail->Host       = SMTP_HOST;
+        $mail->Host       = RICH_SMTP_HOST;
         $mail->SMTPAuth   = true;
-        $mail->Username   = SMTP_USER;
-        $mail->Password   = SMTP_PASS;
+        $mail->Username   = RICH_SMTP_USER;
+        $mail->Password   = RICH_SMTP_PASS;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port       = SMTP_PORT;
-        $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+        $mail->Port       = RICH_SMTP_PORT;
+        $mail->setFrom(RICH_SMTP_FROM, RICH_SMTP_FROM_NAME);
         $mail->addAddress($email, $displayName);
         $mail->isHTML(true);
         $mail->Subject = $isNew

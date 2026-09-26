@@ -1,2 +1,3 @@
 # Ignore local WordPress configuration
 wp-config.php
+.env

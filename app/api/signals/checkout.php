@@ -40,7 +40,6 @@ if ($existing) {
     wp_send_json(['success' => false, 'message' => 'You are already a member of this group'], 400);
 }
 
-define('STRIPE_SECRET_KEY', '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');
 
 $user_id = (int) $_SESSION['user_id'];
 $user_email = $_SESSION['user_email'];
