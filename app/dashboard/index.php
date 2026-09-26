@@ -20,7 +20,9 @@ $user_email = $_SESSION['user_email'] ?? '';
 $user_id    = $_SESSION['user_id']    ?? 0;
 
 $has_seen_welcome = (bool) get_user_meta($user_id, 'has_seen_welcome', true);
-if (!$has_seen_welcome) {
+$force_tour = isset($_GET['tour']) && $_GET['tour'] == '1';
+
+if (!$has_seen_welcome && !$force_tour) {
     update_user_meta($user_id, 'has_seen_welcome', 1);
 }
 
@@ -3037,7 +3039,7 @@ foreach ($_dashboard_initial_order as $card_id) {
         <img id="imageLightboxImg" src="" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
     </div>
 
-    <?php if (!$has_seen_welcome): ?>
+    <?php if (!$has_seen_welcome || $force_tour): ?>
     <div id="welcomeTourModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);">
         <div style="background:rgba(17,17,17,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:24px;width:100%;max-width:560px;padding:40px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);position:relative;backdrop-filter:blur(20px);">
             <button onclick="document.getElementById('welcomeTourModal').style.display='none'" style="position:absolute;top:24px;right:24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;transition:background 0.2s;">
