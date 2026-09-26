@@ -744,11 +744,17 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <div class="widget-body market-pane-body">
 					    <div class="tech-engine">
-					        <div class="tech-engine-header" style="position:relative; z-index:5;">
+					        <div class="tech-engine-header" style="position:relative; z-index:5; display: flex; align-items: center; gap: 8px;">
+                                <button type="button" id="techEnginePrevBtn" style="padding: 4px; border: none; background: transparent; cursor: pointer; color: #a3a6af; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a3a6af'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                </button>
                                 <div style="position:relative; display:inline-block;">
 					                <div class="tech-engine-title" id="techEngineActiveSymbol" style="display:flex; align-items:center; gap:6px;">XAUUSD <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                                     <select id="techEngineSymbolSelect" style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; -webkit-appearance:none; appearance:none;"></select>
                                 </div>
+                                <button type="button" id="techEngineNextBtn" style="padding: 4px; border: none; background: transparent; cursor: pointer; color: #a3a6af; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a3a6af'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </button>
 					        </div>
 					
 					        <div class="tech-engine-chart">
@@ -1976,6 +1982,28 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            document.getElementById('techEngineActiveSymbol').innerHTML = symbolLabel + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>';
 	            symbolSelect.value = symbolLabel;
 	            
+	            document.getElementById('techEnginePrevBtn').addEventListener('click', function(e) {
+	                e.preventDefault();
+	                var currentIndex = wl.indexOf(symbolLabel);
+	                if (currentIndex !== -1) {
+	                    var prevIndex = (currentIndex - 1 + wl.length) % wl.length;
+	                    var nextSymbol = wl[prevIndex];
+	                    symbolSelect.value = nextSymbol;
+	                    symbolSelect.dispatchEvent(new Event('change'));
+	                }
+	            });
+	            
+	            document.getElementById('techEngineNextBtn').addEventListener('click', function(e) {
+	                e.preventDefault();
+	                var currentIndex = wl.indexOf(symbolLabel);
+	                if (currentIndex !== -1) {
+	                    var nextIndex = (currentIndex + 1) % wl.length;
+	                    var nextSymbol = wl[nextIndex];
+	                    symbolSelect.value = nextSymbol;
+	                    symbolSelect.dispatchEvent(new Event('change'));
+	                }
+	            });
+
 	            loadSymbolData();
 	            liveInterval = setInterval(updateLivePriceOnly, 5000);
 	        } catch(e) {
