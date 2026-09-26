@@ -744,7 +744,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <div class="widget-body market-pane-body">
 					    <div class="tech-engine">
-					        <div class="tech-engine-header" style="position:relative; z-index:5; display: flex; align-items: center; justify-content: flex-start; gap: 4px; padding-left: 12px; margin-top: 12px;">
+					        <div class="tech-engine-header" style="position:relative; z-index:5; display: flex; align-items: center; justify-content: flex-start; gap: 4px;">
                                 <button type="button" id="techEnginePrevBtn" style="padding: 4px; border: none; background: transparent; cursor: pointer; color: #a3a6af; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a3a6af'">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                                 </button>
