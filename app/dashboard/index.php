@@ -745,11 +745,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <div class="widget-body market-pane-body">
 					    <div class="tech-engine">
 					        <div class="tech-engine-chart" style="position:relative;">
-                                <button type="button" id="techEnginePrevBtn" style="position:absolute; left:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 4px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.3); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                <button type="button" id="techEnginePrevBtn" style="position:absolute; left:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 6px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.35); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                                 </button>
-                                <button type="button" id="techEngineNextBtn" style="position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 4px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.3); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <button type="button" id="techEngineNextBtn" style="position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:10; padding:12px 6px; border:none; background:transparent; cursor:pointer; color:rgba(255,255,255,0.35); display:flex; align-items:center; transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                 </button>
                                 
 					            <div class="tech-engine-stats">
@@ -765,9 +765,9 @@ foreach ($_dashboard_initial_order as $card_id) {
 					
 					            <svg id="techEngineChartSvg" viewBox="0 0 100 60" preserveAspectRatio="none"></svg>
 					
-					            <div class="tech-engine-price-tag" style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+					            <div class="tech-engine-price-tag" style="display:flex; align-items:center; gap:4px; cursor:pointer; position:relative;">
+					                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"></polyline></svg>
 					                <span id="techPriceTag">XAUUSD 0000.00</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                     <select id="techEngineSymbolSelect" style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; -webkit-appearance:none; appearance:none;"></select>
 					            </div>
 					        </div>
@@ -1971,12 +1971,10 @@ foreach ($_dashboard_initial_order as $card_id) {
 	                    return;
 	                }
 	                symbolLabel = e.target.value;
-	                document.getElementById('techEngineActiveSymbol').innerHTML = symbolLabel;
 	                loadSymbolData();
 	            });
 	            
 	            symbolLabel = wl[0];
-	            document.getElementById('techEngineActiveSymbol').innerHTML = symbolLabel;
 	            symbolSelect.value = symbolLabel;
 	            
 	            document.getElementById('techEnginePrevBtn').addEventListener('click', function(e) {
