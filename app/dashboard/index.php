@@ -1681,7 +1681,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 const safeAuthor = escapeHtml(item.author_name || 'Member');
                 const replyAuthor = escapeHtml(item.author_name || 'Member');
                 const replyText = escapeHtml(item.message || '');
-                const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="replyToMessage(this)" data-id="${item.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${safeAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
+                const timestamp = item.created_at ? new Date(String(item.created_at).replace(' ', 'T')).toLocaleString() : 'Just now';
                 
                 let replyHtml = '';
                 if (item.reply_to_id) {
@@ -1712,7 +1712,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 const authorJs = escapeHtml(item.author_name || 'Member').replace(/'/g, "\\'");
                 const textJs = escapeHtml(item.message || '').replace(/'/g, "\\'");
                 
-                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(time(item.created_at))}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(timestamp)}</span></div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
             });
             
             messages.innerHTML = html;
