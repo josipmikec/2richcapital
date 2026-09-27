@@ -766,7 +766,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 					            <svg id="techEngineChartSvg" viewBox="0 0 100 60" preserveAspectRatio="none"></svg>
 					
 					            <div class="tech-engine-price-tag" style="display:flex; align-items:center; gap:5px; cursor:pointer; position:absolute; right:14px; bottom:18px; z-index:2;">
-					                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="flex-shrink:0; margin-right:1px;"><polyline points="6 9 12 15 18 9"></polyline></svg><span id="techEngineSymbolName" style="letter-spacing:0.04em;">XAUUSD</span>&nbsp;<span id="techPriceTag">0000.00</span>
+					                <span style="order:0; flex-shrink:0; font-size:12px; line-height:1;">&#9662;</span><span id="techEngineSymbolName" style="order:1; letter-spacing:0.04em;">XAUUSD</span><span id="techPriceTag" style="order:2;">0000.00</span>
                                     <select id="techEngineSymbolSelect" style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; -webkit-appearance:none; appearance:none;"></select>
 					            </div>
 					        </div>
