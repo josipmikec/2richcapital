@@ -478,9 +478,10 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             }
             
             const lastItem = items[items.length - 1];
-            const newCache = items.length + '_' + lastItem.id;
+            const newCache = items.length + '_' + lastItem.id + '_' + JSON.stringify(items.map(i => i.reactions || {}));
             if (newCache === currentMessagesCache) return;
             currentMessagesCache = newCache;
+            window.currentMessages = items;
 
             const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + 10;
             const currentCount = messages.childElementCount;
@@ -604,6 +605,20 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         };
 
         window.toggleMessageReaction = async function(messageId, reaction) {
+            const msg = (window.currentMessages || []).find(m => Number(m.id) === Number(messageId));
+            if (msg) {
+                if (!msg.reactions) msg.reactions = {};
+                if (!msg.reactions[reaction]) msg.reactions[reaction] = [];
+                const userIndex = msg.reactions[reaction].indexOf(Number(CURRENT_USER_ID));
+                if (userIndex > -1) {
+                    msg.reactions[reaction].splice(userIndex, 1);
+                    if (msg.reactions[reaction].length === 0) delete msg.reactions[reaction];
+                } else {
+                    msg.reactions[reaction].push(Number(CURRENT_USER_ID));
+                }
+                currentMessagesCache = '';
+                renderMessages(window.currentMessages);
+            }
             try {
                 await fetch('/api/signals/react-message.php', {
                     method: 'POST',
@@ -611,7 +626,6 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                     body: JSON.stringify({ message_id: messageId, reaction: reaction }),
                     credentials: 'include'
                 });
-                loadMessages(); // Refresh messages immediately to show reaction
             } catch (err) {
                 console.error(err);
             }
