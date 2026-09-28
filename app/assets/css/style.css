@@ -518,11 +518,4 @@ body::before {
     max-width: 36px;
     max-height: 36px;
   }
-  
-  .login-footer {
-    flex-direction: column;
-    gap: 6px;
-    text-align: center;
-    margin-top: 20px;
-  }
 }
