@@ -467,16 +467,25 @@ body::before {
   }
 
   .checkbox-label {
-    font-size: 9px;
-    gap: 8px;
+    gap: 6px;
+    align-items: center;
   }
 
   .checkbox-label input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
+    transform: translateY(-1px);
   }
 
   .checkbox-label input[type="checkbox"]:checked::after {
+    left: 4px;
+    top: 1px;
+    width: 3px;
+    height: 7px;
+    border-width: 0 1.5px 1.5px 0;
+  }
+
+  .checkbox-text {
     font-size: 9px;
   }
 
