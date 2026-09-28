@@ -3,8 +3,9 @@
 // Include this file at the TOP of every PHP file that uses sessions
 
 if (session_status() === PHP_SESSION_NONE) {
+    $lifetime = 72 * 3600; // 72 hours
     session_set_cookie_params([
-        'lifetime' => 0,
+        'lifetime' => $lifetime,
         'path'     => '/',
         'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
         'httponly' => true,
@@ -12,13 +13,15 @@ if (session_status() === PHP_SESSION_NONE) {
     ]);
 
     ini_set('session.use_strict_mode', 1);
-    ini_set('session.gc_maxlifetime', 3600);  // 1 hour
+    ini_set('session.gc_maxlifetime', $lifetime);
 
     // Custom session name to avoid conflicts
     session_name('TWORICH_SESSION');
 
     if (!headers_sent()) {
         session_start();
+        // Extend cookie lifetime on every request to measure *inactivity*
+        setcookie(session_name(), session_id(), time() + $lifetime, '/', '', !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', true);
     }
 }
 

@@ -1837,6 +1837,7 @@ foreach ($_dashboard_initial_order as $card_id) {
         }
         async function selectGroup(id) {
             selectedGroupId = Number(id);
+            localStorage.setItem('2rich_chat_id', selectedGroupId);
             lastSeenId = 0;
             currentMessagesCache = '';
             const group = memberships.find(item => Number(item.id) === selectedGroupId);
@@ -1854,7 +1855,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             } catch(e) {}
         }
         async function init() {
-            try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.style.display = 'none'; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
+            try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.style.display = 'none'; setCta('Choose a Group', '/trading-floor#groups', true); return; } let targetId = memberships[0].id; const savedChat = localStorage.getItem('2rich_chat_id'); if (savedChat && memberships.find(m => Number(m.id) === Number(savedChat))) { targetId = savedChat; } await selectGroup(targetId); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
         }
         window.refreshDashboardGroupChat = init;
         
@@ -2188,11 +2189,16 @@ foreach ($_dashboard_initial_order as $card_id) {
 	                    return;
 	                }
 	                symbolLabel = e.target.value;
+	                localStorage.setItem('2rich_market_symbol', symbolLabel);
 	                if(document.getElementById('techEngineSymbolName')) document.getElementById('techEngineSymbolName').textContent = symbolLabel;
 	                loadSymbolData();
 	            });
 	            
 	            symbolLabel = wl[0];
+	            var savedSymbol = localStorage.getItem('2rich_market_symbol');
+	            if (savedSymbol && wl.includes(savedSymbol)) {
+	                symbolLabel = savedSymbol;
+	            }
 	            symbolSelect.value = symbolLabel;
 	            
 	            document.getElementById('techEnginePrevBtn').addEventListener('click', function(e) {
@@ -2752,7 +2758,12 @@ foreach ($_dashboard_initial_order as $card_id) {
             const data = await res.json();
             state.memberships = Array.isArray(data.memberships) ? data.memberships : [];
             if (!state.activeGroupId && state.memberships.length) {
-                state.activeGroupId = state.memberships[0].id;
+                const savedSignalId = localStorage.getItem('2rich_signal_id');
+                if (savedSignalId && state.memberships.find(m => Number(m.id) === Number(savedSignalId))) {
+                    state.activeGroupId = Number(savedSignalId);
+                } else {
+                    state.activeGroupId = state.memberships[0].id;
+                }
             }
         }
 
@@ -2817,6 +2828,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 
         switcherEl.addEventListener('change', async function () {
             state.activeGroupId = Number(this.value || 0);
+            localStorage.setItem('2rich_signal_id', state.activeGroupId);
             if (state.activeGroupId) {
                 await fetchFeed(state.activeGroupId);
             }
