@@ -415,67 +415,20 @@ body::before {
 
 @media (max-width: 640px) {
   .login-container {
-    padding: 12px;
+    padding: 8px;
   }
   
   .login-card {
-    padding: 28px 20px;
-    border-radius: 12px;
+    padding: 24px 16px;
+    border-radius: 10px;
   }
   
   .system-status {
     position: static;
     justify-content: center;
-    margin-bottom: 20px;
-  }
-  
-  .brand-logo {
-    max-width: 50px;
-    max-height: 50px;
-  }
-  
-  .login-title {
-    font-size: 16px;
-    margin-bottom: 20px;
-  }
-
-  .form-group {
     margin-bottom: 16px;
-  }
-
-  .form-group label {
-    font-size: 9px;
-    margin-bottom: 6px;
-  }
-  
-  .input-wrapper input {
-    padding: 12px 14px 12px 44px;
-    font-size: 14px;
-  }
-  
-  .input-icon {
-    width: 16px;
-    height: 16px;
-    left: 16px;
-  }
-
-  .submit-btn {
-    padding: 14px;
-    font-size: 10px;
-    margin-top: 24px;
-  }
-  
-  .signup-section {
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-    margin-top: 24px;
-  }
-}
-
-@media (max-width: 400px) {
-  .login-card {
-    padding: 24px 16px;
+    padding: 6px 10px;
+    font-size: 8px;
   }
   
   .brand-logo {
@@ -483,10 +436,83 @@ body::before {
     max-height: 44px;
   }
   
+  .login-title {
+    font-size: 15px;
+    margin-top: 12px;
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label {
+    font-size: 8px;
+    margin-bottom: 4px;
+  }
+  
+  .input-wrapper input {
+    padding: 10px 12px 10px 38px;
+    font-size: 14px;
+  }
+  
+  .input-icon {
+    width: 14px;
+    height: 14px;
+    left: 12px;
+  }
+
+  .checkbox-group {
+    margin: 16px 0;
+  }
+
+  .checkbox-label {
+    font-size: 9px;
+    gap: 8px;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+  }
+
+  .checkbox-label input[type="checkbox"]:checked::after {
+    font-size: 9px;
+  }
+
+  .submit-btn {
+    padding: 12px;
+    font-size: 10px;
+    margin-top: 16px;
+  }
+  
+  .signup-section {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 10px;
+  }
+
+  .forgot-link {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .login-card {
+    padding: 20px 12px;
+  }
+  
+  .brand-logo {
+    max-width: 36px;
+    max-height: 36px;
+  }
+  
   .login-footer {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     text-align: center;
-    margin-top: 24px;
+    margin-top: 20px;
   }
 }

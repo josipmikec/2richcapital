@@ -296,12 +296,7 @@
             z-index: 998;
         }
         .panel-backdrop.active { display: block; }
-        /* ── iOS zoom prevention: font-size must be >= 16px on mobile ── */
-        @media (max-width: 768px) {
-            input, select, textarea, .modal-input {
-                font-size: 16px !important;
-            }
-        }
+
         /* ── Prevent horizontal overflow on mobile ── */
         html, body {
             overflow-x: hidden;
