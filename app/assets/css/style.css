@@ -440,7 +440,7 @@ body::before {
   .login-title {
     font-size: 15px;
     margin-top: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 28px;
   }
 
   .form-group {
@@ -468,26 +468,26 @@ body::before {
   }
 
   .checkbox-label {
-    gap: 10px;
+    gap: 8px;
     align-items: center;
   }
 
   .checkbox-label input[type="checkbox"] {
-    width: 10px;
-    height: 10px;
-    transform: translateY(1px);
+    width: 9px;
+    height: 9px;
+    transform: translateY(0.5px);
   }
 
   .checkbox-label input[type="checkbox"]:checked::after {
-    left: 3px;
-    top: 1px;
+    left: 2px;
+    top: 0px;
     width: 2px;
-    height: 5px;
-    border-width: 0 1.5px 1.5px 0;
+    height: 4px;
+    border-width: 0 1px 1px 0;
   }
 
   .checkbox-text {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .submit-btn {
@@ -501,7 +501,7 @@ body::before {
     gap: 6px;
     text-align: center;
     margin-top: 20px;
-    font-size: 10px;
+    font-size: 8px;
   }
 
   .forgot-link {
