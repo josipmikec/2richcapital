@@ -14,6 +14,8 @@ require_once(dirname(__DIR__, 3) . '/wp-load.php');
 $feeds = [
     'investing.com' => 'https://www.investing.com/rss/news.rss',
     'barchart'      => 'https://www.barchart.com/news/authors/rss',
+    'barchart '     => 'https://www.barchart.com/news/rss/commodities',
+    'barchart  '    => 'https://www.barchart.com/news/rss/financials',
     'investinglive' => 'https://investinglive.com/feed/'
 ];
 
@@ -78,7 +80,7 @@ foreach ($feeds as $author => $url) {
             
             $result = $wpdb->insert($table, [
                 'message'    => $message,
-                'author'     => ucfirst($author),
+                'author'     => ucfirst(trim($author)),
                 'discord_id' => $discord_id,
                 'created_at' => current_time('mysql')
             ]);
