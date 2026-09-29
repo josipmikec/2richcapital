@@ -304,6 +304,29 @@
             max-width: 100vw;
         }
     </style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        function handleGoogleLogin(response) {
+            const credential = response.credential;
+            fetch('../auth/google-login.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ credential: credential })
+            }).then(res => res.json()).then(data => {
+                if (data.success && data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    const errorEl = document.getElementById('errorMessage');
+                    errorEl.textContent = data.message || 'Google Login failed';
+                    errorEl.style.display = 'block';
+                }
+            }).catch(err => {
+                const errorEl = document.getElementById('errorMessage');
+                errorEl.textContent = 'A network error occurred. Please try again.';
+                errorEl.style.display = 'block';
+            });
+        }
+    </script>
 </head>
 <body>
     <div class="login-container">
@@ -359,6 +382,27 @@
 
                 <button type="submit" class="submit-btn">LOG IN &rarr;</button>
             </form>
+
+            <div style="text-align: center; margin: 20px 0 16px; color: #555; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">or</div>
+            
+            <div class="google-login-wrapper" style="display: flex; justify-content: center; width: 100%; margin-bottom: 24px;">
+                <div id="g_id_onload"
+                     data-client_id="1007994993845-tic37ijmpp4ph650c423u23ilp50be8e.apps.googleusercontent.com"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left"
+                     data-width="100%">
+                </div>
+            </div>
 
             <div class="signup-section">
                 <p class="signup-text">Don't have an account?</p>
