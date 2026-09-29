@@ -1628,12 +1628,21 @@ foreach ($_dashboard_initial_order as $card_id) {
         let currentReplyToId = null;
 
         window.replyToMessage = function(btn) {
-            currentReplyToId = btn.getAttribute('data-id');
-            const author = btn.getAttribute('data-author');
-            const text = btn.getAttribute('data-text');
+            let id, author, text;
+            if (btn.getAttribute) {
+                id = btn.getAttribute('data-id');
+                author = btn.getAttribute('data-author');
+                text = btn.getAttribute('data-text');
+            } else if (btn.dataset) {
+                id = btn.dataset.id;
+                author = btn.dataset.author;
+                text = btn.dataset.text;
+            }
+            currentReplyToId = id;
             document.getElementById('dashboardGroupChatReplyPreviewAuthor').textContent = author;
             document.getElementById('dashboardGroupChatReplyPreviewText').textContent = text;
             document.getElementById('dashboardGroupChatReplyPreview').style.display = 'flex';
+            const input = document.getElementById('dashboardGroupChatInput');
             if (input) input.focus();
         };
 
