@@ -3576,7 +3576,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                             <div class="section-kicker" style="margin:0;line-height:1;">Messages</div>
                             <div id="groupChatMessagesCount" style="font-size:12px;color:#F2CA50;line-height:1;display:flex;align-items:center;">${(((floorSignalsState.groupMessagesByGroup || {})[String(current.id || current.group_id || '')] || []).length)} in room</div>
                         </div>
-                        <div class="group-feed-card" style="display:flex;flex-direction:column;gap:10px;padding:10px 9px 9px 8px;overflow:hidden;">
+                        <div class="group-feed-card" style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;overflow:hidden;min-width:0;">
                             ${(() => {
                                 const groupKey = String(current.id || current.group_id || '');
                                 const roomMessages = ((floorSignalsState.groupMessagesByGroup || {})[groupKey] || []);
@@ -3668,7 +3668,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                     + '<span style="color:#ccc;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">' + escapeHtmlForTradingFloor(floorSignalsState.currentReplyText) + '</span>'
                                     + '</div><button type="button" onclick="cancelGroupReply()" style="background:none;border:none;color:#888;cursor:pointer;padding:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>' : '';
 
-                                return '<div id="groupChatMessagesContainer" style="display:flex;flex-direction:column;gap:8px;height:520px;overflow:auto;padding-right:2px;min-width:0;">' + messagesMarkup + '</div>'
+                                return '<div id="groupChatMessagesContainer" style="display:flex;flex-direction:column;gap:8px;height:520px;overflow:auto;padding-right:2px;min-width:0;width:100%;box-sizing:border-box;">' + messagesMarkup + '</div>'
                                     + '<div style="margin-top:8px;width:100%;box-sizing:border-box;">' + replyPreviewBlock
                                     + '<div id="groupMessageAttachmentPreview" style="display:none;margin-bottom:8px;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;"><img id="groupMessageAttachmentImg" src="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"><div style="flex:1;overflow:hidden;"><div id="groupMessageAttachmentName" style="font-size:12px;color:#f5f5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div><div id="groupMessageAttachmentSize" style="font-size:11px;color:#a9afb8;"></div></div><button type="button" onclick="clearGroupMessageAttachment()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>'
                                     + '<div class="dashboard-group-chat-composer" style="margin-top:0;display:flex;width:100%;position:relative;gap:8px;align-items:center;box-sizing:border-box;">'
