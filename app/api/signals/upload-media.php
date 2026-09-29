@@ -55,10 +55,25 @@ if ($file['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
-$allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+$allowed_types = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'application/pdf',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/csv', 'text/plain', 'text/markdown',
+    'application/zip', 'application/x-zip-compressed',
+    'video/mp4', 'video/quicktime'
+];
 $mime_type = mime_content_type($file['tmp_name']);
+// Fallback for some markdown files that register as octet-stream locally
+if ($mime_type === 'application/octet-stream') {
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (in_array($ext, ['md', 'csv', 'txt'])) {
+        $mime_type = 'text/plain'; 
+    }
+}
 if (!in_array($mime_type, $allowed_types)) {
-    echo json_encode(['success' => false, 'message' => 'Only JPG, PNG, GIF, and WEBP images are allowed.']);
+    echo json_encode(['success' => false, 'message' => 'File type not allowed. (' . $mime_type . ')']);
     exit;
 }
 

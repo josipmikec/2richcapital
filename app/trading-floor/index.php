@@ -2845,7 +2845,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const size = document.getElementById('groupMessageAttachmentSize');
         
         if (preview && img && name && size) {
-            img.src = URL.createObjectURL(file);
+            if (file.type.startsWith('image/')) {
+                img.src = URL.createObjectURL(file);
+                img.style.display = 'block';
+            } else {
+                img.style.display = 'none';
+            }
             name.textContent = file.name;
             size.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
             preview.style.display = 'flex';
@@ -2890,7 +2895,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 let dateSepHtml = '';
                 const currentDateStr = formatDateSeparator(msg.created_at);
                 if (currentDateStr && currentDateStr !== lastDateStr) {
-                    dateSepHtml = '<div style="display:flex;align-items:center;text-align:center;margin:12px 0 4px 0;color:#666;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;"><div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);"></div><span style="padding:0 10px;">'+escapeHtmlForTradingFloor(currentDateStr)+'</span><div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);"></div></div>';
+                    dateSepHtml = '<div class="dashboard-group-chat-date-separator"><span>'+escapeHtmlForTradingFloor(currentDateStr)+'</span></div>';
                     lastDateStr = currentDateStr;
                 }
 
@@ -2898,23 +2903,30 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 if (msg.reply_to_id) {
                     const rAuthor = escapeHtmlForTradingFloor(msg.reply_to_author_name || 'Member');
                     const rText = escapeHtmlForTradingFloor(msg.reply_to_message_text || '...');
-                    replyHtml = '<div style="background:rgba(0,0,0,0.25);border-left:2px solid #f2ca50;padding:6px 8px;border-radius:4px 6px 6px 4px;margin-bottom:8px;font-size:10px;"><div style="color:#f2ca50;font-weight:600;margin-bottom:2px;">'+rAuthor+'</div><div style="color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">'+rText+'</div></div>';
+                    replyHtml = `<div class="dashboard-group-chat-replied-to"><div class="dashboard-group-chat-replied-author">${rAuthor}</div><div class="dashboard-group-chat-replied-text">${rText}</div></div>`;
                 }
 
                 const replyAuthor = escapeHtmlForTradingFloor(author);
                 const replyText = escapeHtmlForTradingFloor(msg.message || '');
-                const replyIcon = `<button type="button" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
+                const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
 
                 let rawMsg = msg.message || '';
                 let msgText = escapeHtmlForTradingFloor(rawMsg);
                 msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
-                    return '<a href="'+match+'" target="_blank"><img src="'+match+'" style="max-width:100%;max-height:250px;border-radius:8px;margin-top:8px;display:block;"></a>';
+                    const lower = match.toLowerCase();
+                    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
+                        return '<video src="'+match+'" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
+                    } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
+                        return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> View Attachment</a>';
+                    } else {
+                        return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
+                    }
                 });
                 msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span style="color:#f2ca50;font-weight:600;">$2</span>');
                 
                 const authorJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
                 const textJs = escapeHtmlForTradingFloor(msg.message || '').replace(/'/g, "\\'");
-                
+
                 let reactionsHtml = '';
                 if (msg.reactions && Object.keys(msg.reactions).length > 0) {
                     reactionsHtml = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
@@ -2927,16 +2939,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     }
                     reactionsHtml += '</div>';
                 }
-
-                return dateSepHtml + '<div class="' + highlightClass + '" style="display:flex;gap:10px;align-items:flex-start;" oncontextmenu="window.openMessageContextMenu(event, ' + msg.id + ', \'' + authorJs + '\', \'' + textJs + '\'); return false;">'
-                    + '<div style="width:30px;height:30px;border-radius:999px;background:' + bubbleBg + ';display:flex;align-items:center;justify-content:center;color:#f5f5f5;font-size:12px;font-weight:800;flex-shrink:0;">' + initial + '</div>'
-                    + '<div style="flex:1;min-width:0;">'
-                    + replyHtml
-                    + '<div style="display:flex;justify-content:space-between;gap:8px;"><strong style="font-size:13px;">' + author + '</strong><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#8f95a3;">' + timestamp + '</span></div></div>'
-                    + '<div style="font-size:13px;color:#cfd4dd;line-height:1.45;white-space:pre-wrap;word-break:break-word;">' + msgText + '</div>'
-                    + reactionsHtml
-                    + '</div>'
-                    + '</div>';
+                
+                return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span></div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
             }).join('');
         } else {
             messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -3609,7 +3613,14 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                         let rawMsg = msg.message || '';
                                         let msgText = escapeHtmlForTradingFloor(rawMsg);
                                         msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
-                                            return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
+                                            const lower = match.toLowerCase();
+                                            if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
+                                                return '<video src="'+match+'" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
+                                            } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
+                                                return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> View Attachment</a>';
+                                            } else {
+                                                return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
+                                            }
                                         });
                                         msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span style="color:#f2ca50;font-weight:600;">$2</span>');
                                         
@@ -3649,7 +3660,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                     + '<div class="dashboard-group-chat-composer" style="margin-top:0;display:flex;width:100%;position:relative;gap:8px;align-items:center;box-sizing:border-box;">'
                                     + '<div id="mentionAutocomplete" style="display:none;position:absolute;bottom:calc(100% + 8px);left:48px;background:#1a1d24;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px;max-height:200px;overflow-y:auto;z-index:100;min-width:200px;flex-direction:column;gap:4px;box-shadow:0 10px 30px rgba(0,0,0,0.5);"></div>'
                                     + '<button type="button" onclick="document.getElementById(\'groupMessageAttachment\').click()" aria-label="Attach image" style="display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#a9afb8;cursor:pointer;transition:all 0.2s;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>'
-                                    + '<input type="file" id="groupMessageAttachment" accept="image/*" style="display:none" onchange="window.handleGroupMessageAttachment(event)">'
+                                    + '<input type="file" id="groupMessageAttachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.zip,.mp4,.mov" style="display:none" onchange="window.handleGroupMessageAttachment(event)">'
                                     + '<input type="text" id="groupMessageInput" oninput="window.handleMentionAutocomplete(this)" onkeydown="window.handleMentionKeydown(event)" placeholder="Write a message..." style="flex:1 1 auto;width:100%;min-width:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:10px 14px;border-radius:20px;color:#fff;font:13px Montserrat,sans-serif;outline:none;">'
                                     + '<button class="dashboard-group-chat-send" type="button" onclick="sendCurrentGroupMessage()" aria-label="Send message" title="Send message" style="flex-shrink:0;margin-left:auto;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>'
                                     + '</div></div>';

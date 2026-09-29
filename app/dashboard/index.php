@@ -1255,7 +1255,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <div id="dashboardGroupChatComposer" class="dashboard-group-chat-composer" style="position:relative;" hidden>
                                 <div id="mentionAutocomplete" style="display:none;position:absolute;bottom:calc(100% + 8px);left:48px;background:#1a1d24;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px;max-height:200px;overflow-y:auto;z-index:100;min-width:200px;flex-direction:column;gap:4px;box-shadow:0 10px 30px rgba(0,0,0,0.5);"></div>
                                 <button type="button" onclick="document.getElementById('dashboardGroupChatAttachment').click()" aria-label="Attach image" style="display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#a9afb8;cursor:pointer;transition:all 0.2s;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>
-                                <input type="file" id="dashboardGroupChatAttachment" accept="image/*" style="display:none" onchange="handleDashboardAttachment(event)">
+                                <input type="file" id="dashboardGroupChatAttachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.zip,.mp4,.mov" style="display:none" onchange="window.handleDashboardAttachment(event)">
                                 <input id="dashboardGroupChatInput" type="text" maxlength="1000" placeholder="Write a message..." aria-label="Write a group chat message" oninput="window.handleMentionAutocomplete(this)" onkeydown="window.handleMentionKeydown(event)">
                                 <button id="dashboardGroupChatSend" class="dashboard-group-chat-send" type="button" aria-label="Send message" title="Send message"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
                             </div>
@@ -1701,7 +1701,14 @@ foreach ($_dashboard_initial_order as $card_id) {
                 
                 let msgText = escapeHtml(item.message || '');
                 msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
-                    return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
+                    const lower = match.toLowerCase();
+                    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
+                        return '<video src="'+match+'" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
+                    } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
+                        return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> View Attachment</a>';
+                    } else {
+                        return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
+                    }
                 });
                 msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span style="color:#f2ca50;font-weight:600;">$2</span>');
                 
@@ -1826,7 +1833,12 @@ foreach ($_dashboard_initial_order as $card_id) {
             const name = document.getElementById('dashboardGroupChatAttachmentName');
             const size = document.getElementById('dashboardGroupChatAttachmentSize');
             if (preview && img && name && size) {
-                img.src = URL.createObjectURL(file);
+                if (file.type.startsWith('image/')) {
+                    img.src = URL.createObjectURL(file);
+                    img.style.display = 'block';
+                } else {
+                    img.style.display = 'none';
+                }
                 name.textContent = file.name;
                 size.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
                 preview.style.display = 'flex';
