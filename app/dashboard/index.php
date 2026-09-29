@@ -2107,11 +2107,33 @@ foreach ($_dashboard_initial_order as $card_id) {
 	
 	            es.onopen = () => setStatus(true);
 	
+	            let messageQueue = [];
+	            let isProcessingQueue = false;
+	
+	            function processQueue() {
+	                if (messageQueue.length === 0) {
+	                    isProcessingQueue = false;
+	                    return;
+	                }
+	                isProcessingQueue = true;
+	                const msg = messageQueue.shift();
+	                appendItem(msg, true);
+	                
+	                // 2 second stagger between live items
+	                setTimeout(processQueue, 2000); 
+	            }
+	
 	            es.onmessage = (e) => {
 	                try {
 	                    const item = JSON.parse(e.data);
 	                    if (item.id) lastId = Math.max(lastId, item.id);
-	                    appendItem(item, !item.initial);
+	                    
+	                    if (item.initial) {
+	                        appendItem(item, false);
+	                    } else {
+	                        messageQueue.push(item);
+	                        if (!isProcessingQueue) processQueue();
+	                    }
 	                } catch (err) {}
 	            };
 	
