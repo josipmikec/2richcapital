@@ -1372,7 +1372,11 @@ body {
 #chat-pane .dashboard-group-chat-footer { flex: 0 0 auto; margin-top: 0; padding-top: 2px; gap: 5px; }
 #chat-pane .dashboard-group-chat-meta { margin: 0; line-height: 1.2; }
 #chat-pane .dashboard-group-chat-composer { gap: 6px; }
-#chat-pane .dashboard-group-chat-composer input { height: 40px; }
+#chat-pane .dashboard-group-chat-composer input[type="text"] { height: 34px; padding: 0 10px; font-size: 12px; }
+#chat-pane .dashboard-group-chat-send { flex: 0 0 34px; width: 34px; min-width: 34px; height: 34px; border-radius: 6px; }
+#chat-pane .dashboard-group-chat-send svg { width: 14px; height: 14px; }
+#chat-pane .dashboard-group-chat-attach { flex: 0 0 34px; width: 34px; min-width: 34px; height: 34px; border-radius: 6px; }
+#chat-pane .dashboard-group-chat-attach svg { width: 16px; height: 16px; }
 
 /* Fill the chat card while preserving a balanced footer rhythm. */
 #chat-pane .dashboard-group-chat-messages {
