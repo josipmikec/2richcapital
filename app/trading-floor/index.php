@@ -3573,7 +3573,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     </article>
                     <article class="group-workspace-panel">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px;">
-                            <div class="section-kicker" style="margin:0;line-height:1;">Messages · LIVE TEST</div>
+                            <div class="section-kicker" style="margin:0;line-height:1;">Messages</div>
                             <div id="groupChatMessagesCount" style="font-size:12px;color:#F2CA50;line-height:1;display:flex;align-items:center;">${(((floorSignalsState.groupMessagesByGroup || {})[String(current.id || current.group_id || '')] || []).length)} in room</div>
                         </div>
                         <div class="group-feed-card" style="display:flex;flex-direction:column;gap:10px;padding:10px 9px 9px 8px;overflow:hidden;">
