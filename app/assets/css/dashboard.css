@@ -1322,7 +1322,7 @@ body {
 .dashboard-group-chat-message-author { color: #f2ca50; font-weight: 700; }
 .dashboard-group-chat-message-text { color: #c7c7c7; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
 .dashboard-group-chat-composer { display: flex; align-items: center; gap: 8px; margin-top: auto; }
-.dashboard-group-chat-composer input { min-width: 0; flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 10px 14px; color: #fff; font: 500 13px Montserrat, sans-serif; outline: none; }
+.dashboard-group-chat-composer input { min-width: 0; flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; color: #fff; font: 500 13px Montserrat, sans-serif; outline: none; }
 .dashboard-group-chat-composer .widget-action { flex-shrink: 0; }
 .dashboard-group-chat-empty { color: #888; font-size: 11px; line-height: 1.55; }
 
@@ -1355,11 +1355,11 @@ body {
 /* Compact group chat footer */
 .dashboard-group-chat-messages { margin-bottom: -2px; }
 .dashboard-group-chat-footer { padding-top: 4px; gap: 8px; }
-.dashboard-group-chat-send { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; min-width: 40px; height: 40px; padding: 0; color: #1a1a1a; background: #f2ca50; border: 0; border-radius: 50%; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
+.dashboard-group-chat-send { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; min-width: 40px; height: 40px; padding: 0; color: #1a1a1a; background: #f2ca50; border: 0; border-radius: 8px; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
 .dashboard-group-chat-send:hover { opacity: 0.9; }
 .dashboard-group-chat-send:active { transform: scale(0.95); }
 .dashboard-group-chat-send:disabled { opacity: 0.45; cursor: wait; }
-.dashboard-group-chat-attach { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; min-width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #a9afb8; cursor: pointer; transition: all 0.2s; }
+.dashboard-group-chat-attach { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; min-width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #a9afb8; cursor: pointer; transition: all 0.2s; }
 .dashboard-group-chat-attach:hover { color: #fff; background: rgba(255,255,255,0.08); }
 
 /* Chat card vertical rhythm */
