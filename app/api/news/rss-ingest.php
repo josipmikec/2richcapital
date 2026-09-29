@@ -13,6 +13,7 @@ require_once(dirname(__DIR__, 3) . '/wp-load.php');
 
 $feeds = [
     'investing.com' => 'https://www.investing.com/rss/news.rss',
+    'barchart'      => 'https://www.barchart.com/news/authors/rss',
     'investinglive' => 'https://investinglive.com/feed/'
 ];
 
