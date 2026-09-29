@@ -105,8 +105,6 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         /* Dashboard Group Chat Extracted Styles */
         .dashboard-group-chat-state {
             padding: 14px 20px;
-            background: rgba(255,255,255,0.02);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         
         .dashboard-group-chat-switcher {
@@ -245,8 +243,6 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         
         .dashboard-group-chat-footer {
             padding: 14px 20px;
-            background: rgba(14,14,14,0.95);
-            border-top: 1px solid #1a1a1a;
             display: flex;
             flex-direction: column;
             gap: 10px;
