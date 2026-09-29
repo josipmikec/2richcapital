@@ -446,12 +446,21 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         let currentReplyToId = null;
 
         window.replyToMessage = function(btn) {
-            currentReplyToId = btn.getAttribute('data-id');
-            const author = btn.getAttribute('data-author');
-            const text = btn.getAttribute('data-text');
+            let id, author, text;
+            if (btn.getAttribute) {
+                id = btn.getAttribute('data-id');
+                author = btn.getAttribute('data-author');
+                text = btn.getAttribute('data-text');
+            } else if (btn.dataset) {
+                id = btn.dataset.id;
+                author = btn.dataset.author;
+                text = btn.dataset.text;
+            }
+            currentReplyToId = id;
             document.getElementById('dashboardGroupChatReplyPreviewAuthor').textContent = author;
             document.getElementById('dashboardGroupChatReplyPreviewText').textContent = text;
             document.getElementById('dashboardGroupChatReplyPreview').style.display = 'flex';
+            const input = document.getElementById('dashboardGroupChatInput');
             if (input) input.focus();
         };
 
@@ -519,7 +528,12 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                     if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
                         return '<video src="'+match+'" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
                     } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
-                        return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> View Attachment</a>';
+                        const filenameParts = match.split('/');
+                        const filenameFull = filenameParts[filenameParts.length - 1].split('?')[0];
+                        let filenameParsed = filenameFull;
+                        try { filenameParsed = decodeURIComponent(filenameFull); } catch(e) {}
+                        const label = filenameParsed.length > 25 ? filenameParsed.substring(0, 25) + '...' : filenameParsed;
+                        return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;font-size:12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> '+escapeHtml(label)+'</a>';
                     } else {
                         return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openImageLightbox(\''+match+'\')">';
                     }
@@ -542,7 +556,9 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                 const authorJs = escapeHtml(item.author_name || 'Member').replace(/'/g, "\\'");
                 const textJs = escapeHtml(item.message || '').replace(/'/g, "\\'");
                 
-                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(timestamp)}</span></div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="window.replyToMessage(this)" data-id="${item.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
+                
+                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
             });
             
             messages.innerHTML = html;

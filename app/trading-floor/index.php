@@ -2917,7 +2917,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
                         return '<video src="'+match+'" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
                     } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
-                        return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> View Attachment</a>';
+                        const filenameParts = match.split('/');
+                        const filenameFull = filenameParts[filenameParts.length - 1].split('?')[0];
+                        let filenameParsed = filenameFull;
+                        try { filenameParsed = decodeURIComponent(filenameFull); } catch(e) {}
+                        const label = filenameParsed.length > 25 ? filenameParsed.substring(0, 25) + '...' : filenameParsed;
+                        return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;font-size:12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> '+escapeHtmlForTradingFloor(label)+'</a>';
                     } else {
                         return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
                     }
@@ -2940,7 +2945,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     reactionsHtml += '</div>';
                 }
                 
-                return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span></div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
             }).join('');
         } else {
             messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -3617,7 +3622,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                             if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
                                                 return '<video src="'+match+'" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
                                             } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
-                                                return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> View Attachment</a>';
+                                                const filenameParts = match.split('/');
+                                                const filenameFull = filenameParts[filenameParts.length - 1].split('?')[0];
+                                                let filenameParsed = filenameFull;
+                                                try { filenameParsed = decodeURIComponent(filenameFull); } catch(e) {}
+                                                const label = filenameParsed.length > 25 ? filenameParsed.substring(0, 25) + '...' : filenameParsed;
+                                                return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;font-size:12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> '+escapeHtmlForTradingFloor(label)+'</a>';
                                             } else {
                                                 return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
                                             }
@@ -3640,7 +3650,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                             reactionsHtml += '</div>';
                                         }
                                         
-                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span></div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
                                     }).join('');
                                 } else {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -4617,9 +4627,19 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         renderGroupsPanel();
     };
     window.replyToGroupMessage = function(btn) {
-        floorSignalsState.currentReplyToId = btn.getAttribute('data-id');
-        floorSignalsState.currentReplyAuthor = btn.getAttribute('data-author');
-        floorSignalsState.currentReplyText = btn.getAttribute('data-text');
+        let id, author, text;
+        if (btn.getAttribute) {
+            id = btn.getAttribute('data-id');
+            author = btn.getAttribute('data-author');
+            text = btn.getAttribute('data-text');
+        } else if (btn.dataset) {
+            id = btn.dataset.id;
+            author = btn.dataset.author;
+            text = btn.dataset.text;
+        }
+        floorSignalsState.currentReplyToId = id;
+        floorSignalsState.currentReplyAuthor = author;
+        floorSignalsState.currentReplyText = text;
         renderGroupsPanel();
         setTimeout(() => {
             const input = document.getElementById('groupMessageInput');
