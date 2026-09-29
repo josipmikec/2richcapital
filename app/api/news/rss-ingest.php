@@ -64,7 +64,8 @@ foreach ($feeds as $author => $url) {
         $guid = (string)$item->guid;
         if (!$guid) $guid = $link;
         
-        $discord_id = 'rss_' . md5($guid);
+        // Use crc32 to generate a numeric ID that fits in BIGINT or VARCHAR(20)
+        $discord_id = (string) abs(crc32($guid));
         
         $existing = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$table} WHERE discord_id = %s",
@@ -74,14 +75,19 @@ foreach ($feeds as $author => $url) {
         if (!$existing) {
             $message = "<strong>" . esc_html($title) . "</strong>\n<a href='" . esc_url($link) . "' target='_blank'>Read more</a>";
             
-            $wpdb->insert($table, [
+            $result = $wpdb->insert($table, [
                 'message'    => $message,
                 'author'     => ucfirst($author),
                 'discord_id' => $discord_id,
                 'created_at' => current_time('mysql')
             ]);
-            $inserted++;
-            echo "Inserted: $title\n";
+            
+            if ($result) {
+                $inserted++;
+                echo "Inserted: $title\n";
+            } else {
+                echo "DB Error inserting $title: " . $wpdb->last_error . "\n";
+            }
         }
     }
 }
