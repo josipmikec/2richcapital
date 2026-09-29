@@ -1318,7 +1318,8 @@ body {
 .dashboard-group-chat-switcher { width: 100%; margin-bottom: 10px; background: #141414; border: 1px solid #2b2b2b; color: #e8e8e8; border-radius: 8px; padding: 9px 10px; font: 600 11px Montserrat, sans-serif; }
 .dashboard-group-chat-messages { display: flex; flex-direction: column; gap: 8px; max-height: 190px; overflow-y: auto; margin-bottom: 10px; -ms-overflow-style: none; scrollbar-width: none; }
 .dashboard-group-chat-messages::-webkit-scrollbar { display: none; }
-.dashboard-group-chat-message { box-sizing: border-box; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.02); border-radius: 8px; padding: 12px; max-width: 100%; min-width: 0; overflow: hidden; }
+.dashboard-group-chat-message { box-sizing: border-box; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.02); border-radius: 8px; padding: 12px; max-width: 100%; min-width: 0; }
+.dashboard-group-chat-message-text { word-break: break-word; }
 .dashboard-group-chat-message-meta { display: flex; justify-content: space-between; gap: 8px; color: #777; font-size: 9px; margin-bottom: 4px; }
 .dashboard-group-chat-message-author { color: #f2ca50; font-weight: 700; }
 .dashboard-group-chat-message-text { color: #c7c7c7; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
