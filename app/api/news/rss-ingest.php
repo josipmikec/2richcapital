@@ -12,7 +12,7 @@ define('WP_USE_THEMES', false);
 require_once(dirname(__DIR__, 3) . '/wp-load.php');
 
 $feeds = [
-    'investing.com' => 'https://www.investing.com/rss/news_1.rss',
+    'investing.com' => 'https://www.investing.com/rss/news.rss',
     'investinglive' => 'https://investinglive.com/feed/'
 ];
 
@@ -73,7 +73,7 @@ foreach ($feeds as $author => $url) {
         ));
         
         if (!$existing) {
-            $message = "<strong>" . esc_html($title) . "</strong>\n<a href='" . esc_url($link) . "' target='_blank'>Read more</a>";
+            $message = esc_html($title) . " <a href='" . esc_url($link) . "' target='_blank' style='color:#a9afb8;display:inline-flex;align-items:center;margin-left:4px;' title='Read more'><svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'></path><polyline points='15 3 21 3 21 9'></polyline><line x1='10' y1='14' x2='21' y2='3'></line></svg></a>";
             
             $result = $wpdb->insert($table, [
                 'message'    => $message,
