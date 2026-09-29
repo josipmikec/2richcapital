@@ -1575,6 +1575,7 @@ foreach ($_dashboard_initial_order as $card_id) {
         const messagesUrl = '/api/signals/messages.php';
         let memberships = [];
         const CURRENT_USER_ID = <?php echo $user_id; ?>;
+        const CURRENT_USER_NAME = <?php echo json_encode($user_name); ?>;
         let tfAudioCtx = null;
         function playChatPopSound() {
             try {
@@ -1680,7 +1681,9 @@ foreach ($_dashboard_initial_order as $card_id) {
             items.forEach(item => {
                 const isNew = lastSeenId > 0 && Number(item.id) > lastSeenId;
                 if (isNew && String(item.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
-                const highlightClass = isNew ? ' unread-highlight' : '';
+                const hasMention = typeof CURRENT_USER_NAME !== 'undefined' && CURRENT_USER_NAME ? (item.message || '').toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase()) : false;
+                let highlightClass = isNew ? ' unread-highlight' : '';
+                if (hasMention) highlightClass += ' mention-highlight';
                 
                 const currentDateStr = formatDateSeparator(item.created_at);
                 if (currentDateStr && currentDateStr !== lastDateStr) {
@@ -1716,7 +1719,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
                     }
                 });
-                msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span style="color:#f2ca50;font-weight:600;">$2</span>');
+                msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span class="dashboard-group-chat-mention">$2</span>');
                 
                 let reactionsHtml = '';
                 if (item.reactions && Object.keys(item.reactions).length > 0) {

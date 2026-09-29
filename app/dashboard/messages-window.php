@@ -279,51 +279,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         .dashboard-group-chat-reply-cancel { background: none; border: none; color: #888; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; }
         .dashboard-group-chat-reply-cancel:hover { color: #f87171; }
         
-        .dashboard-group-chat-composer {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .dashboard-group-chat-composer input {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 10px 14px;
-            border-radius: 20px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 13px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        
-        .dashboard-group-chat-composer input:focus {
-            border-color: rgba(242, 202, 80, 0.5);
-        }
-        
-        .dashboard-group-chat-send {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #F2CA50;
-            color: #0E0E0E;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
-            flex-shrink: 0;
-        }
-        
-        .dashboard-group-chat-send:active {
-            transform: scale(0.95);
-        }
-        
-        .dashboard-group-chat-send:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+
         
         .widget-action {
             width: 100%;
@@ -407,6 +363,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
     <script>
         window.CSRF_TOKEN = '<?php echo $_SESSION["csrf_token"] ?? ""; ?>';
         const CURRENT_USER_ID = <?php echo $user_id; ?>;
+        const CURRENT_USER_NAME = <?php echo json_encode($_SESSION['user_name'] ?? 'Member'); ?>;
         const membershipsUrl = '/api/signals/my-memberships.php';
         const messagesUrl = '/api/signals/messages.php';
         
@@ -498,7 +455,9 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             items.forEach(item => {
                 const isNew = lastSeenId > 0 && Number(item.id) > lastSeenId;
                 if (isNew && String(item.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
-                const highlightClass = isNew ? ' unread-highlight' : '';
+                const hasMention = typeof CURRENT_USER_NAME !== 'undefined' && CURRENT_USER_NAME ? (item.message || '').toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase()) : false;
+                let highlightClass = isNew ? ' unread-highlight' : '';
+                if (hasMention) highlightClass += ' mention-highlight';
                 
                 const currentDateStr = formatDateSeparator(item.created_at);
                 if (currentDateStr && currentDateStr !== lastDateStr) {
@@ -534,7 +493,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                         return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openImageLightbox(\''+match+'\')">';
                     }
                 });
-                msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span style="color:#f2ca50;font-weight:600;">$2</span>');
+                msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span class="dashboard-group-chat-mention">$2</span>');
                 
                 let reactionsHtml = '';
                 if (item.reactions && Object.keys(item.reactions).length > 0) {

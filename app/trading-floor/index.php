@@ -488,7 +488,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css?v=<?php echo filemtime(__DIR__ . '/../assets/css/dashboard.css'); ?>">
     <style>
         /* Topbar action buttons */
         .tf-topbar-btn {
@@ -2890,7 +2890,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 const bubbleBg = String(msg.user_id || '') === String(CURRENT_USER_ID) ? 'rgba(242,202,80,0.16)' : 'rgba(255,255,255,0.08)';
                 const isNew = previousLastSeenId > 0 && Number(msg.id) > previousLastSeenId;
                 if (isNew && String(msg.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
-                const highlightClass = isNew ? ' unread-highlight' : '';
+                const hasMention = typeof CURRENT_USER_NAME !== 'undefined' && CURRENT_USER_NAME ? rawMsg.toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase()) : false;
+                let highlightClass = isNew ? ' unread-highlight' : '';
+                if (hasMention) highlightClass += ' mention-highlight';
                 
                 let dateSepHtml = '';
                 const currentDateStr = formatDateSeparator(msg.created_at);
@@ -2927,7 +2929,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                         return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
                     }
                 });
-                msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span style="color:#f2ca50;font-weight:600;">$2</span>');
+                msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span class="dashboard-group-chat-mention">$2</span>');
                 
                 const authorJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
                 const textJs = escapeHtmlForTradingFloor(msg.message || '').replace(/'/g, "\\'");
@@ -3595,7 +3597,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                         const bubbleBg = String(msg.user_id || '') === String(CURRENT_USER_ID) ? 'rgba(242,202,80,0.16)' : 'rgba(255,255,255,0.08)';
                                         const isNew = previousLastSeenId > 0 && Number(msg.id) > previousLastSeenId;
                                         if (isNew && String(msg.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
-                                        const highlightClass = isNew ? ' unread-highlight' : '';
+                                        const hasMention = typeof CURRENT_USER_NAME !== 'undefined' && CURRENT_USER_NAME ? rawMsg.toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase()) : false;
+                                        let highlightClass = isNew ? ' unread-highlight' : '';
+                                        if (hasMention) highlightClass += ' mention-highlight';
                                         
                                         let dateSepHtml = '';
                                         const currentDateStr = formatDateSeparator(msg.created_at);
@@ -3632,7 +3636,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                                 return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
                                             }
                                         });
-                                        msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span style="color:#f2ca50;font-weight:600;">$2</span>');
+                                        msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span class="dashboard-group-chat-mention">$2</span>');
                                         
                                         const authorJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
                                         const textJs = escapeHtmlForTradingFloor(msg.message || '').replace(/'/g, "\\'");
