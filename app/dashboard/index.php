@@ -2127,7 +2127,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            }
 	
 	            const items = list.querySelectorAll('.news-item');
-	            if (items.length > 100) {
+	            if (items.length > 200) {
 	                items[0].remove();
 	            }
 	        }
