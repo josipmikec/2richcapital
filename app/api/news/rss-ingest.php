@@ -36,7 +36,10 @@ function fetch_rss($url) {
     return $data;
 }
 
+set_time_limit(0); // Allow script to run up to 3 minutes for spacing
+
 $inserted = 0;
+$pending_inserts = [];
 
 foreach ($feeds as $author => $url) {
     echo "Fetching $url...\n";
@@ -87,20 +90,43 @@ foreach ($feeds as $author => $url) {
         if (!$existing) {
             $message = esc_html($title) . " <a href='" . esc_url($link) . "' target='_blank' style='color:#a9afb8;display:inline-flex;align-items:center;margin-left:4px;' title='Read more'><svg width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'></path><polyline points='15 3 21 3 21 9'></polyline><line x1='10' y1='14' x2='21' y2='3'></line></svg></a>";
             
-            $result = $wpdb->insert($table, [
+            $pending_inserts[] = [
+                'title'      => $title,
                 'message'    => $message,
                 'author'     => ucfirst(trim($author)),
-                'discord_id' => $discord_id,
-                'created_at' => current_time('mysql')
-            ]);
-            
-            if ($result) {
-                $inserted++;
-                echo "Inserted: $title\n";
-                sleep(2); // Space out inserts so they appear sequentially on the frontend
-            } else {
-                echo "DB Error inserting $title: " . $wpdb->last_error . "\n";
-            }
+                'discord_id' => $discord_id
+            ];
+        }
+    }
+}
+
+$total_new = count($pending_inserts);
+if ($total_new > 0) {
+    // 3 minutes = 180 seconds. Use 170 to leave a small buffer before next cron runs.
+    $delay_seconds = floor(170 / $total_new);
+    if ($delay_seconds < 2) $delay_seconds = 2; // minimum 2 seconds spacing
+    if ($delay_seconds > 60) $delay_seconds = 60; // don't space them out *too* much if there are very few
+    
+    echo "Found $total_new new articles. Spacing inserts by $delay_seconds seconds...\n";
+    
+    foreach ($pending_inserts as $index => $data) {
+        $result = $wpdb->insert($table, [
+            'message'    => $data['message'],
+            'author'     => $data['author'],
+            'discord_id' => $data['discord_id'],
+            'created_at' => current_time('mysql')
+        ]);
+        
+        if ($result) {
+            $inserted++;
+            echo "Inserted: {$data['title']}\n";
+        } else {
+            echo "DB Error inserting {$data['title']}: " . $wpdb->last_error . "\n";
+        }
+        
+        // Sleep for all but the last item
+        if ($index < $total_new - 1) {
+            sleep($delay_seconds);
         }
     }
 }
