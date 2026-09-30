@@ -3066,6 +3066,41 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             }, 1000);
         });
     }
+
+    // ── Web Worker fallback polling (matches dashboard card's approach) ──
+    let groupPollWorker = null;
+    function startGroupPollWorker(groupId) {
+        stopGroupPollWorker();
+        if (!groupId) return;
+        try {
+            const workerBlob = new Blob([`setInterval(() => postMessage('tick'), 4000);`], { type: 'application/javascript' });
+            groupPollWorker = new Worker(URL.createObjectURL(workerBlob));
+            groupPollWorker.onmessage = () => {
+                if (floorSignalsState.activeGroupId === groupId) {
+                    pollGroupMessages(groupId);
+                }
+            };
+        } catch (e) {
+            // Fallback to setInterval if Workers are unavailable
+            groupPollWorker = setInterval(() => {
+                if (floorSignalsState.activeGroupId === groupId) {
+                    pollGroupMessages(groupId);
+                }
+            }, 4000);
+            groupPollWorker._isInterval = true;
+        }
+    }
+    function stopGroupPollWorker() {
+        if (groupPollWorker) {
+            if (groupPollWorker._isInterval) {
+                clearInterval(groupPollWorker);
+            } else if (groupPollWorker.terminate) {
+                groupPollWorker.terminate();
+            }
+            groupPollWorker = null;
+        }
+    }
+    
     window.mentionState = { active: false, query: '', members: [], selectedIndex: 0 };
     
     window.handleMentionAutocomplete = function(input) {
@@ -3272,6 +3307,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         floorSignalsState.groupMembers = await loadGroupMembers(groupId);
         await Promise.all([loadGroupMessages(groupId), loadGroupSignalFeed(groupId)]);
         connectGroupSSE(groupId);
+        startGroupPollWorker(groupId);
         renderGroupsPanel();
         openFloorSection('groups');
     }
@@ -3281,6 +3317,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             groupMessagesSSE.close();
             groupMessagesSSE = null;
         }
+        stopGroupPollWorker();
         floorSignalsState.activeView = 'list';
         renderGroupsPanel();
     }
