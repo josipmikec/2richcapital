@@ -111,7 +111,7 @@ if ($total_new > 0) {
     
     foreach ($pending_inserts as $index => $data) {
         $offset = $index * $delay_seconds;
-        $staggered_time = gmdate('Y-m-d H:i:s', time() + $offset + (get_option('gmt_offset') * 3600));
+        $staggered_time = date('Y-m-d H:i:s', current_time('timestamp') + $offset);
 
         $result = $wpdb->insert($table, [
             'message'    => $data['message'],
