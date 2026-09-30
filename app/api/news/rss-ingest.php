@@ -67,6 +67,15 @@ foreach ($feeds as $author => $url) {
         $guid = (string)$item->guid;
         if (!$guid) $guid = $link;
         
+        $pubDate = (string)$item->pubDate;
+        if ($pubDate) {
+            $timestamp = strtotime($pubDate);
+            // Skip articles older than 2 hours
+            if ($timestamp && $timestamp < time() - 7200) {
+                continue;
+            }
+        }
+        
         // Use crc32 to generate a numeric ID that fits in BIGINT or VARCHAR(20)
         $discord_id = (string) abs(crc32($guid));
         
@@ -88,6 +97,7 @@ foreach ($feeds as $author => $url) {
             if ($result) {
                 $inserted++;
                 echo "Inserted: $title\n";
+                sleep(2); // Space out inserts so they appear sequentially on the frontend
             } else {
                 echo "DB Error inserting $title: " . $wpdb->last_error . "\n";
             }
