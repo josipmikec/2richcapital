@@ -2965,9 +2965,10 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
     async function pollGroupMessages(groupId) {
         if (!groupId) return;
         try {
-            const url = signalsUrl('messages.php') + '?group_id=' + encodeURIComponent(String(groupId));
+            const url = signalsUrl('messages.php') + '?group_id=' + encodeURIComponent(String(groupId)) + '&_t=' + Date.now();
             const res = await fetch(url, {
                 credentials: 'include',
+                cache: 'no-store',
                 headers: { 'X-CSRF-Token': SIGNALS_CSRF }
             });
             const data = await res.json().catch(() => ({}));
