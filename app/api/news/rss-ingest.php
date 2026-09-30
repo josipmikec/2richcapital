@@ -102,10 +102,10 @@ foreach ($feeds as $author => $url) {
 
 $total_new = count($pending_inserts);
 if ($total_new > 0) {
-    // 3 minutes = 180 seconds. Use 170 to leave a small buffer before next cron runs.
-    $delay_seconds = floor(170 / $total_new);
+    // Cap total sleep time to 45 seconds to prevent web server (FastCGI/LiteSpeed) timeouts.
+    $delay_seconds = floor(45 / $total_new);
     if ($delay_seconds < 2) $delay_seconds = 2; // minimum 2 seconds spacing
-    if ($delay_seconds > 60) $delay_seconds = 60; // don't space them out *too* much if there are very few
+    if ($delay_seconds > 15) $delay_seconds = 15; // don't space them out *too* much
     
     echo "Found $total_new new articles. Spacing inserts by $delay_seconds seconds...\n";
     
@@ -124,7 +124,6 @@ if ($total_new > 0) {
             echo "DB Error inserting {$data['title']}: " . $wpdb->last_error . "\n";
         }
         
-        // Sleep for all but the last item
         if ($index < $total_new - 1) {
             sleep($delay_seconds);
         }
