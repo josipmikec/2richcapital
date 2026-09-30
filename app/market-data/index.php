@@ -11,6 +11,7 @@ rich_feature_guard('market-data', 'Market Data');
 
 $username   = $_SESSION['username']   ?? 'Member';
 $useremail  = $_SESSION['user_email'] ?? '';
+$is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -27,6 +28,15 @@ $useremail  = $_SESSION['user_email'] ?? '';
     <!-- TradingView Charting Library -->
     <script src="../assets/charting_library/charting_library.standalone.js"></script>
     <style>
+<?php if ($is_popout): ?>
+        /* Popout Mode: Hide navigation and headers, expand chart to fill window */
+        .navbar, .sidebar, .md-page-header, .md-tabs, #btnPopoutChart { display: none !important; }
+        .dashboard-container { padding: 0 !important; margin: 0 !important; height: 100vh !important; }
+        .main-content { padding: 0 !important; margin: 0 !important; height: 100vh !important; max-height: 100vh !important; overflow: hidden !important; }
+        #tab-feeds { height: 100vh !important; padding: 12px; display: flex !important; flex-direction: column !important; }
+        .md-chart-wrap { flex: 1 !important; min-height: 0 !important; height: auto !important; }
+        body { background: #0f0f0f !important; overflow: hidden !important; }
+<?php endif; ?>
 
         .md-watchlist-btn, .md-watchlist-add {
             border: 1px solid #1e1e1e; background: rgba(255,255,255,0.03); color: #888; border-radius: 8px;
@@ -406,6 +416,10 @@ $useremail  = $_SESSION['user_email'] ?? '';
                     <option value="2x1">2x1 Vertical</option>
                     <option value="2x2">2x2 Grid</option>
                 </select>
+                
+                <button type="button" id="btnPopoutChart" onclick="window.open('/market-data?popout=true', 'Charts', 'width=1000,height=700')" style="background:transparent; border:none; color:#b2b5be; cursor:pointer; padding:6px; display:flex; align-items:center;" onmouseover="this.style.color='#F2CA50'" onmouseout="this.style.color='#b2b5be'" title="Pop out charts in new window">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </button>
             </div>
 
             <div class="md-chart-wrap" style="display:flex; flex-direction:row; background:#0f0f0f; padding:0;">
