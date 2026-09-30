@@ -62,19 +62,22 @@ while (true) {
         ARRAY_A
     );
     
-    // Sort ASC for chronological pushing
-    $new_rows = array_reverse($new_rows);
+    // If it's the very first load (no reconnect), we send DESC so the frontend's prepend() puts oldest at top.
+    // Otherwise, we are doing real-time or reconnect pushes (appendChild), so we send ASC (oldest first) so newest goes to very bottom.
+    $is_initial_load = (!$is_reconnect && !$first_batch_done);
+    if (!$is_initial_load) {
+        $new_rows = array_reverse($new_rows);
+    }
 
     foreach ($new_rows as $row) {
         $id = (int)$row['id'];
         if (!in_array($id, $sent_ids)) {
-            $is_initial = (!$is_reconnect && !$first_batch_done);
             $data = json_encode([
                 'id' => $id,
                 'message' => $row['message'],
                 'author' => $row['author'],
                 'created_at' => $row['created_at'],
-                'initial' => $is_initial
+                'initial' => $is_initial_load
             ]);
 
             echo "id: {$id}\n";
