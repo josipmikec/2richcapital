@@ -123,7 +123,9 @@ if (
             gap: 4px;
             padding: 12px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-left: 2px solid transparent;
             animation: slide-in 0.3s ease;
+            transition: background 0.3s ease, border-left-color 0.3s ease;
         }
 
         .news-item:last-child {
@@ -135,9 +137,18 @@ if (
         }
 
         @keyframes newsHighlightPulse {
-            0% { background-color: rgba(242, 202, 80, 0.2); }
-            80% { background-color: rgba(242, 202, 80, 0.05); }
-            100% { background-color: transparent; }
+            0% { 
+                background: linear-gradient(90deg, rgba(242, 202, 80, 0.15) 0%, transparent 100%);
+                border-left-color: rgba(242, 202, 80, 1);
+            }
+            80% { 
+                background: linear-gradient(90deg, rgba(242, 202, 80, 0.02) 0%, transparent 100%);
+                border-left-color: rgba(242, 202, 80, 0.5);
+            }
+            100% { 
+                background: transparent;
+                border-left-color: transparent;
+            }
         }
 
         @keyframes slide-in {
