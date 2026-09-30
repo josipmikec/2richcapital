@@ -29,13 +29,64 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
     <script src="../assets/charting_library/charting_library.standalone.js"></script>
     <style>
 <?php if ($is_popout): ?>
-        /* Popout Mode: Hide navigation and headers, expand chart to fill window */
-        .navbar, .sidebar, .md-page-header, .md-tabs, #btnPopoutChart { display: none !important; }
-        .dashboard-container { padding: 0 !important; margin: 0 !important; height: 100vh !important; }
-        .main-content { padding: 0 !important; margin: 0 !important; height: 100vh !important; max-height: 100vh !important; overflow: hidden !important; }
-        #tab-feeds { height: 100vh !important; padding: 12px; display: flex !important; flex-direction: column !important; }
-        .md-chart-wrap { flex: 1 !important; min-height: 0 !important; height: auto !important; }
-        body { background: #0f0f0f !important; overflow: hidden !important; }
+        /* Popout Mode: Expand chart to fill window, option to hide navbar */
+        .sidebar, .md-page-header, .md-tabs, #btnPopoutChart { display: none !important; }
+        
+        body { 
+            background: #0f0f0f !important; 
+            overflow: hidden !important; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        
+        .top-nav { flex-shrink: 0; transition: margin-top 0.3s ease; }
+        .top-nav.hidden { display: none !important; }
+        
+        .dashboard-container { 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 0; 
+        }
+        
+        .main-content { 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            flex: 1 !important; 
+            display: flex !important; 
+            flex-direction: column; 
+            min-height: 0 !important; 
+            max-height: none !important; 
+            overflow: hidden !important; 
+        }
+        
+        #tab-feeds { 
+            flex: 1 !important; 
+            padding: 12px 0 0 0 !important; 
+            display: flex !important; 
+            flex-direction: column !important; 
+            margin: 0 !important;
+            min-height: 0;
+        }
+        
+        #chartLayoutControls { 
+            padding-left: 12px; 
+            padding-right: 12px; 
+        }
+        
+        .md-chart-wrap { 
+            flex: 1 !important; 
+            min-height: 0 !important; 
+            height: auto !important; 
+            border: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+        }
 <?php endif; ?>
 
         .md-watchlist-btn, .md-watchlist-add {
@@ -417,9 +468,15 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
                     <option value="2x2">2x2 Grid</option>
                 </select>
                 
+<?php if ($is_popout): ?>
+                <button type="button" onclick="document.querySelector('.top-nav').classList.toggle('hidden');" style="background:transparent; border:none; color:#b2b5be; cursor:pointer; padding:6px; display:flex; align-items:center;" onmouseover="this.style.color='#F2CA50'" onmouseout="this.style.color='#b2b5be'" title="Toggle Navbar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h16M4 16h16"></path></svg>
+                </button>
+<?php else: ?>
                 <button type="button" id="btnPopoutChart" onclick="window.open('/market-data?popout=true', 'Charts', 'width=1000,height=700')" style="background:transparent; border:none; color:#b2b5be; cursor:pointer; padding:6px; display:flex; align-items:center;" onmouseover="this.style.color='#F2CA50'" onmouseout="this.style.color='#b2b5be'" title="Pop out charts in new window">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                 </button>
+<?php endif; ?>
             </div>
 
             <div class="md-chart-wrap" style="display:flex; flex-direction:row; background:#0f0f0f; padding:0;">
