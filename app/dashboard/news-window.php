@@ -232,7 +232,6 @@ if (
                 const isScrolledToBottom = feed.scrollHeight - feed.clientHeight <= feed.scrollTop + 10;
                 feed.appendChild(div);
                 if (isScrolledToBottom) feed.scrollTop = feed.scrollHeight;
-                setTimeout(() => div.classList.remove('new-item'), 5000);
             } else {
                 feed.prepend(div);
                 feed.scrollTop = feed.scrollHeight;
