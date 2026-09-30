@@ -1016,7 +1016,7 @@ body {
 }
 
 .news-item.new-item {
-  animation: newsHighlightPulse 60s ease-out forwards;
+  animation: newsHighlightPulse 5s ease-out forwards;
 }
 
 @keyframes newsHighlightPulse {
