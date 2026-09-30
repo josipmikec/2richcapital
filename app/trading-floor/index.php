@@ -517,7 +517,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         @keyframes unreadPulse {
             0% { background-color: rgba(242, 202, 80, 0.25); }
             80% { background-color: rgba(242, 202, 80, 0.1); }
-            100% { background-color: transparent; }
+            100% { background-color: rgba(255, 255, 255, 0.03); }
         }
         .unread-highlight {
             animation: unreadPulse 5s ease-out forwards;
