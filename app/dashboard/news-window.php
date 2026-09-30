@@ -215,7 +215,10 @@ if (
             const empty = feed.querySelector('.nw-empty');
             if (empty) empty.remove();
 
+            if (feed.querySelector(`[data-news-id="${item.id}"]`)) return;
+
             const div = document.createElement('div');
+            div.setAttribute('data-news-id', item.id);
             div.className = 'news-item' + (isNew ? ' new-item' : '');
             div.innerHTML = `
                 <div class="news-item-text">${item.message || ''}</div>

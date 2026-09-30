@@ -35,34 +35,9 @@ ob_implicit_flush(true);
 global $wpdb;
 $table = $wpdb->prefix . 'rich_news_feed';
 
-$last_id = isset($_GET['since']) ? (int) $_GET['since'] : 0;
-
-if ($last_id === 0) {
-    $rows = $wpdb->get_results(
-        "SELECT id, message, author, created_at
-         FROM {$table}
-         ORDER BY created_at DESC
-         LIMIT 30",
-        ARRAY_A
-    );
-
-    foreach ($rows as $row) {
-        $data = json_encode([
-            'id' => (int) $row['id'],
-            'message' => $row['message'],
-            'author' => $row['author'],
-            'created_at' => $row['created_at'],
-            'initial' => true
-        ]);
-
-        echo "id: {$row['id']}\n";
-        echo "data: {$data}\n\n";
-
-        $last_id = max($last_id, (int) $row['id']);
-    }
-
-    flush();
-}
+$is_reconnect = isset($_GET['since']) && (int)$_GET['since'] > 0;
+$sent_ids = [];
+$first_batch_done = false;
 
 $max_runtime = 55;
 $start = time();
@@ -79,27 +54,37 @@ while (true) {
         $wpdb->prepare(
             "SELECT id, message, author, created_at
              FROM {$table}
-             WHERE id > %d
-             ORDER BY created_at ASC",
-            $last_id
+             WHERE created_at <= %s
+             ORDER BY created_at DESC
+             LIMIT 30",
+            current_time('mysql')
         ),
         ARRAY_A
     );
+    
+    // Sort ASC for chronological pushing
+    $new_rows = array_reverse($new_rows);
 
     foreach ($new_rows as $row) {
-        $data = json_encode([
-            'id' => (int) $row['id'],
-            'message' => $row['message'],
-            'author' => $row['author'],
-            'created_at' => $row['created_at'],
-            'initial' => false
-        ]);
+        $id = (int)$row['id'];
+        if (!in_array($id, $sent_ids)) {
+            $is_initial = (!$is_reconnect && !$first_batch_done);
+            $data = json_encode([
+                'id' => $id,
+                'message' => $row['message'],
+                'author' => $row['author'],
+                'created_at' => $row['created_at'],
+                'initial' => $is_initial
+            ]);
 
-        echo "id: {$row['id']}\n";
-        echo "data: {$data}\n\n";
+            echo "id: {$id}\n";
+            echo "data: {$data}\n\n";
 
-        $last_id = max($last_id, (int) $row['id']);
+            $sent_ids[] = $id;
+        }
     }
+    
+    $first_batch_done = true;
 
     echo ": heartbeat\n\n";
     flush();

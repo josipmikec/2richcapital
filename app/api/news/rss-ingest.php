@@ -102,30 +102,29 @@ foreach ($feeds as $author => $url) {
 
 $total_new = count($pending_inserts);
 if ($total_new > 0) {
-    // Cap total sleep time to 45 seconds to prevent web server (FastCGI/LiteSpeed) timeouts.
-    $delay_seconds = floor(45 / $total_new);
+    // Spread evenly across a maximum of 170 seconds (within the 3-min cron window)
+    $delay_seconds = floor(170 / $total_new);
     if ($delay_seconds < 2) $delay_seconds = 2; // minimum 2 seconds spacing
-    if ($delay_seconds > 15) $delay_seconds = 15; // don't space them out *too* much
+    if ($delay_seconds > 60) $delay_seconds = 60; // don't space them out *too* much
     
-    echo "Found $total_new new articles. Spacing inserts by $delay_seconds seconds...\n";
+    echo "Found $total_new new articles. Scheduling inserts by $delay_seconds seconds...\n";
     
     foreach ($pending_inserts as $index => $data) {
+        $offset = $index * $delay_seconds;
+        $staggered_time = gmdate('Y-m-d H:i:s', time() + $offset + (get_option('gmt_offset') * 3600));
+
         $result = $wpdb->insert($table, [
             'message'    => $data['message'],
             'author'     => $data['author'],
             'discord_id' => $data['discord_id'],
-            'created_at' => current_time('mysql')
+            'created_at' => $staggered_time
         ]);
         
         if ($result) {
             $inserted++;
-            echo "Inserted: {$data['title']}\n";
+            echo "Inserted (Scheduled for +{$offset}s): {$data['title']}\n";
         } else {
             echo "DB Error inserting {$data['title']}: " . $wpdb->last_error . "\n";
-        }
-        
-        if ($index < $total_new - 1) {
-            sleep($delay_seconds);
         }
     }
 }

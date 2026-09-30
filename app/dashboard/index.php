@@ -2103,7 +2103,10 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            const empty = list.querySelector('.news-feed-empty');
 	            if (empty) empty.remove();
 	
+	            if (list.querySelector(`[data-news-id="${item.id}"]`)) return;
+	
 	            const div = document.createElement('div');
+	            div.setAttribute('data-news-id', item.id);
 	            div.className = 'news-item' + (isNew ? ' new-item' : '');
 	            div.innerHTML = `
 	                <div class="news-item-text">${item.message}</div>
