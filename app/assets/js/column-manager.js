@@ -91,13 +91,13 @@ function renderJournalsList() {
                 <div class="journal-item-header">
                     <div class="journal-item-copy">
                         <div class="journal-item-title-row">
-                            <div class="journal-item-title">${escapeHtml(journal.name || 'Untitled Journal')}</div>
+                            <div class="journal-item-title">${window.escapeHtml(journal.name || 'Untitled Journal')}</div>
                             ${Number(journal.is_default) === 1 ? '<span class="column-badge">Default</span>' : ''}
                         </div>
                         <div class="journal-item-meta">
-                            <span>${escapeHtml(journal.broker || 'No broker')}</span>
+                            <span>${window.escapeHtml(journal.broker || 'No broker')}</span>
                             <span class="journal-meta-separator">·</span>
-                            <span>${escapeHtml(journal.platform || 'No platform')}</span>
+                            <span>${window.escapeHtml(journal.platform || 'No platform')}</span>
                         </div>
                     </div>
                 </div>
@@ -276,8 +276,8 @@ function renderColumnsList() {
                     ${col.locked  ? 'disabled' : ''}
                     onchange="toggleColumnVisibility('${col.key}', this.checked)"
                 >
-                <label class="column-name" for="${checkboxId}">${escapeHtml(col.name)}</label>
-                <span class="column-badge">${escapeHtml(col.type)}</span>
+                <label class="column-name" for="${checkboxId}">${window.escapeHtml(col.name)}</label>
+                <span class="column-badge">${window.escapeHtml(col.type)}</span>
                 ${col.type === 'custom' && colId > 0 ? `
                     <div class="column-actions">
                         <button
@@ -285,7 +285,7 @@ function renderColumnsList() {
                             class="icon-btn delete"
                             onclick="deleteCustomColumn(${colId})"
                             title="Delete column"
-                            aria-label="Delete ${escapeHtml(col.name)} column"
+                            aria-label="Delete ${window.escapeHtml(col.name)} column"
                         >×</button>
                     </div>
                 ` : ''}
@@ -572,13 +572,13 @@ async function savePreferences() {
 // ── Shared utility ───────────────────────────────────────────────────────────
 
 // Single shared definition — used by both column-manager.js and journal.js
-if (typeof escapeHtml === 'undefined') {
-    function escapeHtml(value) {
+if (typeof window.escapeHtml === 'undefined') {
+    window.escapeHtml = function(value) {
         return String(value)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
-    }
+    };
 }
