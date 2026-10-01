@@ -413,6 +413,7 @@
             <button class="settings-tab active" onclick="switchGlobalSettingsTab('dashboard')">Dashboard</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('journal')">Journal</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('preferences')">Preferences</button>
+            <button class="settings-tab" onclick="switchGlobalSettingsTab('profile')">Profile</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('notifications')">Notifications</button>
         </div>
 
@@ -567,6 +568,56 @@
                             </div>
                             <span style="color:#8f95a3; font-size:12px; margin-left:24px;">Automatically fill P&L when entry and exit are set</span>
                         </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROFILE TAB -->
+            <div class="settings-panel" id="gs-pane-profile">
+                <div class="column-manager-section">
+                    <div class="section-header">
+                        <div class="section-icon">👤</div>
+                        <h4 class="section-title">Public Profile</h4>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div class="form-field">
+                            <label>Display Name</label>
+                            <input type="text" id="gsProfileName">
+                        </div>
+                        <div class="form-field">
+                            <label>Trading Handle</label>
+                            <input type="text" id="gsProfileHandle" placeholder="@handle">
+                        </div>
+                        <div class="form-field">
+                            <label>Bio</label>
+                            <input type="text" id="gsProfileBio" placeholder="Tell us about your trading journey...">
+                        </div>
+                        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                            <div class="form-field">
+                                <label>Primary Market</label>
+                                <select id="gsProfileMarket">
+                                    <option value="">Select Market...</option>
+                                    <option value="forex">Forex</option>
+                                    <option value="crypto">Crypto</option>
+                                    <option value="stocks">Stocks</option>
+                                    <option value="futures">Futures</option>
+                                    <option value="options">Options</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Trading Style</label>
+                                <select id="gsProfileStyle">
+                                    <option value="">Select Style...</option>
+                                    <option value="scalper">Scalper</option>
+                                    <option value="day_trader">Day Trader</option>
+                                    <option value="swing_trader">Swing Trader</option>
+                                    <option value="position_trader">Position Trader</option>
+                                    <option value="algo_trader">Algo / Quant</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="gs-btn-primary" style="align-self:flex-start;" onclick="gsSaveProfile()">Save Profile</button>
+                        <span id="gsStatusProfile" style="font-size:12px; margin-top:4px;"></span>
                     </div>
                 </div>
             </div>
