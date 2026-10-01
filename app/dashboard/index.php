@@ -3470,48 +3470,6 @@ foreach ($_dashboard_initial_order as $card_id) {
     <?php endif; ?>
     <?php include_once dirname(__DIR__) . '/components/general-settings-modal.php'; ?>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const flipperInner = document.getElementById('brandFlipperInner');
-            if (!flipperInner) return;
 
-            const LAST_FLIP_KEY = '2rich_last_brand_flip';
-            const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
-            const now = Date.now();
-            const lastFlip = localStorage.getItem(LAST_FLIP_KEY);
-
-            if (!lastFlip || (now - parseInt(lastFlip, 10) > SIX_HOURS_MS)) {
-                
-                const tryFlip = () => {
-                    const settingsOverlay = document.getElementById('globalGeneralSettingsOverlay');
-                    const welcomeTour = document.getElementById('welcomeTourModal');
-                    const isSettingsOpen = settingsOverlay && settingsOverlay.classList.contains('open');
-                    const isWelcomeOpen = welcomeTour && welcomeTour.style.display !== 'none';
-                    
-                    if (isSettingsOpen || isWelcomeOpen) {
-                        setTimeout(tryFlip, 500); // Check again in 500ms
-                        return;
-                    }
-
-                    // Record the flip
-                    localStorage.setItem(LAST_FLIP_KEY, Date.now().toString());
-
-                    // Start animation sequence after a brief delay
-                    setTimeout(() => {
-                        // Flip to "Welcome back"
-                        flipperInner.style.transform = 'rotateX(180deg)';
-                        
-                        // Stay flipped for 5 seconds, then flip back
-                        setTimeout(() => {
-                            flipperInner.style.transform = 'rotateX(0deg)';
-                        }, 5000);
-                    }, 500); // 500ms delay gives the UI time to settle after modal closes
-                };
-
-                // Start attempting to flip
-                tryFlip();
-            }
-        });
-    </script>
 </body>
 </html>
