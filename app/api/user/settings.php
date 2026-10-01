@@ -21,13 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $date_format = get_user_meta($user_id, 'rich_date_format', true) ?: 'Y-m-d';
     $time_format = get_user_meta($user_id, 'rich_time_format', true) ?: 'H:i';
     
+    global $wpdb;
+    $profile_table = $wpdb->prefix . 'rich_user_profiles';
+    $profile = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$profile_table} WHERE user_id = %d LIMIT 1", $user_id), ARRAY_A);
+    
+    $notifs_json = get_user_meta($user_id, 'notification_prefs', true);
+    $notifs = $notifs_json ? json_decode($notifs_json, true) : [];
+    
     echo json_encode([
         'success' => true,
         'settings' => [
             'timezone' => $timezone,
             'date_format' => $date_format,
             'time_format' => $time_format
-        ]
+        ],
+        'profile' => $profile,
+        'notifs' => $notifs
     ]);
     exit;
 }

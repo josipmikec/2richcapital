@@ -265,6 +265,137 @@
     opacity: 0.2;
     cursor: not-allowed;
 }
+
+/* Journal Settings CSS */
+.journal-manager-form {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.journals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.journal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid #252525;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.02);
+}
+.journal-item.active {
+  border-color: rgba(242,202,80,0.35);
+  background: rgba(242,202,80,0.05);
+}
+.journal-item-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #f4f4f4;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.journal-item-meta {
+  color: #888;
+  font-size: 12px;
+}
+.journal-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.column-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 4px 10px;
+  background: rgba(242,202,80,0.12);
+  border: 1px solid rgba(242,202,80,0.22);
+  border-radius: 999px;
+  color: #F2CA50;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 220px;
+}
+.form-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.form-field input,
+.form-field select {
+  min-height: 48px;
+  padding: 12px 14px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #f4f4f4;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: "Montserrat", sans-serif;
+}
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: #F2CA50;
+  box-shadow: 0 0 0 3px rgba(242,202,80,0.12);
+}
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #aaa;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 6px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+.btn-action:hover {
+  border-color: #F2CA50;
+  color: #F2CA50;
+  background: rgba(242,202,80,0.05);
+}
+.column-manager-section {
+    margin-bottom: 32px;
+}
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.section-title {
+    color: #fff;
+    margin: 0;
+    font-size: 18px;
+}
 </style>
 
 <div class="general-settings-overlay" id="globalGeneralSettingsOverlay">
@@ -335,14 +466,129 @@
 
             <!-- JOURNAL TAB -->
             <div class="settings-panel" id="gs-pane-journal">
-                <h3 style="color:#fff;margin-top:0;">Journal Settings</h3>
-                <p style="color:#a9afb8;font-size:14px;">Journal manager and column layouts will be migrated here.</p>
+                <div class="column-manager-section">
+                    <div class="section-header">
+                        <div class="section-icon">📚</div>
+                        <h4 class="section-title">Journal Manager</h4>
+                    </div>
+
+                    <div class="journal-manager-form">
+                        <div class="form-field">
+                            <label for="newJournalName">New Journal Name</label>
+                            <input type="text" id="newJournalName" placeholder="e.g. Futures Journal">
+                        </div>
+                        <button type="button" class="gs-btn-primary" onclick="createJournal()">Create Journal</button>
+                    </div>
+
+                    <div class="journals-list" id="journalsList">
+                        <div class="column-item">
+                            <span class="column-name">Loading journals...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #333; padding-top:40px;">
+                    <div class="section-header">
+                        <div class="section-icon">📋</div>
+                        <h4 class="section-title">Visible Columns</h4>
+                    </div>
+                    <div class="columns-list" id="columnsList" style="margin-bottom:20px;">
+                        <div class="column-item">
+                            <span class="column-name">Loading columns...</span>
+                        </div>
+                    </div>
+                    <button class="gs-btn-primary" type="button" onclick="saveColumnVisibility()">Save Columns</button>
+                </div>
+
+                <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #333; padding-top:40px;">
+                    <div class="section-header">
+                        <div class="section-icon">⚙️</div>
+                        <h4 class="section-title">Trading Defaults</h4>
+                    </div>
+                    <p style="color: #a9afb8; font-size: 13px; margin-bottom: 20px;">These values are pre-filled each time you log a new manual trade.</p>
+                    <div class="form-field" style="max-width: 320px;">
+                        <label for="pref_default_stop_distance">Default Stop Distance (%)</label>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
+                            <input type="number" id="pref_default_stop_distance" step="0.01" min="0.01" max="100" placeholder="1.00" style="flex: 1;">
+                            <button type="button" id="savePreferencesBtn" class="gs-btn-primary" onclick="savePreferences()" style="white-space: nowrap;">Save</button>
+                        </div>
+                        <small style="color: #888; margin-top: 6px; display: block;">Applied automatically to Stop Distance (%) on the new trade form.</small>
+                    </div>
+                    <div id="prefMessage" class="form-message" style="display: none; margin-top: 16px; max-width: 320px; color:#f2ca50; font-size:13px;"></div>
+                </div>
             </div>
 
             <!-- ACCOUNT TAB -->
             <div class="settings-panel" id="gs-pane-account">
-                <h3 style="color:#fff;margin-top:0;">Account Profile</h3>
-                <p style="color:#a9afb8;font-size:14px;">Profile and notification settings will be migrated here.</p>
+                <div class="column-manager-section">
+                    <div class="section-header">
+                        <div class="section-icon">👤</div>
+                        <h4 class="section-title">Public Profile</h4>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div class="form-field">
+                            <label>Display Name</label>
+                            <input type="text" id="gsProfileName">
+                        </div>
+                        <div class="form-field">
+                            <label>Trading Handle</label>
+                            <input type="text" id="gsProfileHandle" placeholder="@handle">
+                        </div>
+                        <div class="form-field">
+                            <label>Bio</label>
+                            <input type="text" id="gsProfileBio" placeholder="Tell us about your trading journey...">
+                        </div>
+                        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                            <div class="form-field">
+                                <label>Primary Market</label>
+                                <select id="gsProfileMarket">
+                                    <option value="">Select Market...</option>
+                                    <option value="forex">Forex</option>
+                                    <option value="crypto">Crypto</option>
+                                    <option value="stocks">Stocks</option>
+                                    <option value="futures">Futures</option>
+                                    <option value="options">Options</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Trading Style</label>
+                                <select id="gsProfileStyle">
+                                    <option value="">Select Style...</option>
+                                    <option value="scalper">Scalper</option>
+                                    <option value="day_trader">Day Trader</option>
+                                    <option value="swing_trader">Swing Trader</option>
+                                    <option value="position_trader">Position Trader</option>
+                                    <option value="algo_trader">Algo / Quant</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="gs-btn-primary" style="align-self:flex-start;" onclick="gsSaveProfile()">Save Profile</button>
+                        <span id="gsStatusProfile" style="font-size:12px; margin-top:4px;"></span>
+                    </div>
+                </div>
+
+                <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #333; padding-top:40px;">
+                    <div class="section-header">
+                        <div class="section-icon">🔔</div>
+                        <h4 class="section-title">Notifications</h4>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <label style="display:flex; align-items:center; gap:8px; color:#f4f4f4; font-size:13px; cursor:pointer;">
+                            <input type="checkbox" id="gsNotifDaily" style="accent-color:#F2CA50;">
+                            Daily P&L Summary
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; color:#f4f4f4; font-size:13px; cursor:pointer;">
+                            <input type="checkbox" id="gsNotifWeekly" style="accent-color:#F2CA50;">
+                            Weekly Performance Report
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; color:#f4f4f4; font-size:13px; cursor:pointer;">
+                            <input type="checkbox" id="gsNotifAlerts" style="accent-color:#F2CA50;">
+                            Trading Alerts & Signals
+                        </label>
+                        <button type="button" class="gs-btn-primary" style="align-self:flex-start; margin-top:12px;" onclick="gsSaveNotifs()">Save Notifications</button>
+                        <span id="gsStatusNotifs" style="font-size:12px; margin-top:4px;"></span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -360,6 +606,14 @@ function openGlobalSettingsModal(tab = 'general') {
     gsLoadOrder().then(order => {
         gsBuildSettingsList(order);
     });
+
+    // Load Journal settings if functions exist
+    if (typeof loadJournalManager === 'function') {
+        loadSettingsManager();
+    }
+    if (typeof loadPreferencesTab === 'function') {
+        loadPreferencesTab();
+    }
 }
 
 function closeGlobalSettingsModal() {
@@ -400,16 +654,98 @@ async function loadGlobalSettingsGeneral() {
     try {
         const res = await fetch('/api/user/settings.php');
         const data = await res.json();
-        if (data.success && data.settings) {
-            populateTimezones(data.settings.timezone);
-            document.getElementById('gsDateFormat').value = data.settings.date_format;
-            document.getElementById('gsTimeFormat').value = data.settings.time_format;
+        if (data.success) {
+            if (data.settings) {
+                populateTimezones(data.settings.timezone);
+                document.getElementById('gsDateFormat').value = data.settings.date_format;
+                document.getElementById('gsTimeFormat').value = data.settings.time_format;
+            }
+            if (data.profile) {
+                document.getElementById('gsProfileName').value = data.profile.display_name || '';
+                document.getElementById('gsProfileHandle').value = data.profile.trading_handle || '';
+                document.getElementById('gsProfileBio').value = data.profile.bio || '';
+                document.getElementById('gsProfileMarket').value = data.profile.primary_market || '';
+                document.getElementById('gsProfileStyle').value = data.profile.trading_style || '';
+            }
+            if (data.notifs) {
+                document.getElementById('gsNotifDaily').checked = !!data.notifs.daily_pnl;
+                document.getElementById('gsNotifWeekly').checked = !!data.notifs.weekly_report;
+                document.getElementById('gsNotifAlerts').checked = !!data.notifs.signals;
+            }
         } else {
             populateTimezones('UTC'); // Fallback
         }
     } catch(e) {
         populateTimezones('UTC');
     }
+}
+
+async function gsSaveProfile() {
+    const status = document.getElementById('gsStatusProfile');
+    status.style.color = '#fff';
+    status.textContent = 'Saving...';
+    try {
+        const csrfResp = await fetch('/api/csrf-token.php');
+        const csrfData = await csrfResp.json();
+        const res = await fetch('/api/account/save-profile.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                csrf_token: csrfData.token,
+                display_name: document.getElementById('gsProfileName').value,
+                trading_handle: document.getElementById('gsProfileHandle').value,
+                bio: document.getElementById('gsProfileBio').value,
+                primary_market: document.getElementById('gsProfileMarket').value,
+                trading_style: document.getElementById('gsProfileStyle').value
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            status.style.color = '#28a745';
+            status.textContent = 'Profile saved!';
+        } else {
+            status.style.color = '#ff5b5b';
+            status.textContent = data.message || 'Error saving profile.';
+        }
+    } catch (e) {
+        status.style.color = '#ff5b5b';
+        status.textContent = 'Network error.';
+    }
+    setTimeout(() => status.textContent = '', 3000);
+}
+
+async function gsSaveNotifs() {
+    const status = document.getElementById('gsStatusNotifs');
+    status.style.color = '#fff';
+    status.textContent = 'Saving...';
+    try {
+        const csrfResp = await fetch('/api/csrf-token.php');
+        const csrfData = await csrfResp.json();
+        const res = await fetch('/api/account/save-notifs.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                csrf_token: csrfData.token,
+                prefs: {
+                    daily_pnl: document.getElementById('gsNotifDaily').checked ? 1 : 0,
+                    weekly_report: document.getElementById('gsNotifWeekly').checked ? 1 : 0,
+                    signals: document.getElementById('gsNotifAlerts').checked ? 1 : 0
+                }
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            status.style.color = '#28a745';
+            status.textContent = 'Notifications saved!';
+        } else {
+            status.style.color = '#ff5b5b';
+            status.textContent = data.message || 'Error saving notifications.';
+        }
+    } catch (e) {
+        status.style.color = '#ff5b5b';
+        status.textContent = 'Network error.';
+    }
+    setTimeout(() => status.textContent = '', 3000);
 }
 
 async function saveGlobalSettingsGeneral(e) {
@@ -636,6 +972,17 @@ function gsGetSettingsOrder() {
                 .map(li => li.dataset.cardId);
 }
 
+function gsApplyOrderToGrid(order) {
+    const grid = document.getElementById('widgetGrid');
+    if (!grid) return;
+    const normalized = gsNormalizeOrder(order);
+    const nodesById = new Map(Array.from(grid.children).map(node => [node.dataset.cardId, node]));
+    normalized.forEach(id => {
+        const node = nodesById.get(id);
+        if (node) grid.appendChild(node);
+    });
+}
+
 async function gsApplyDashboardOrder() {
     const status = document.getElementById('gsStatusDashboard');
     status.style.color = '#fff';
@@ -652,15 +999,84 @@ async function gsApplyDashboardOrder() {
     setTimeout(() => { status.textContent = ''; }, 3000);
     
     // Apply locally if on dashboard
-    if (typeof applyOrderToGrid === 'function') {
-        applyOrderToGrid(newOrder);
-    } else {
-        // If not on dashboard, maybe offer to reload or just say saved
-        status.textContent = 'Layout saved (will apply on Dashboard page).';
-    }
+    gsApplyOrderToGrid(newOrder);
 }
 
 function gsResetDashboardOrder() {
     gsBuildSettingsList([...GS_DEFAULT_ORDER]);
+}
+</script>
+
+<!-- Journal Settings Script -->
+<script src="../assets/js/column-manager.js"></script>
+<script>
+async function loadPreferencesTab() {
+    try {
+        const res  = await fetch('/api/preferences/get.php', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+
+        const stopInput = document.getElementById('pref_default_stop_distance');
+        if (stopInput) {
+            let val = null;
+            if (data.preferences && data.preferences.default_stop_distance !== undefined) {
+                val = parseFloat(data.preferences.default_stop_distance);
+            } else if (data.value !== undefined) {
+                val = parseFloat(data.value);
+            }
+            if (val && val > 0) stopInput.value = val.toFixed(2);
+        }
+    } catch (e) {
+        console.warn('Could not load preferences:', e);
+    }
+}
+
+async function savePreferences() {
+    const stopInput = document.getElementById('pref_default_stop_distance');
+    const msgDiv    = document.getElementById('prefMessage');
+    const btn       = document.getElementById('savePreferencesBtn');
+    const value     = parseFloat(stopInput ? stopInput.value : '');
+
+    if (!value || value <= 0) {
+        msgDiv.textContent = 'Please enter a valid stop distance greater than 0.';
+        msgDiv.style.color = '#ff5b5b';
+        msgDiv.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const csrfResp = await fetch('/api/csrf-token.php', { credentials: 'include' });
+        const csrfData = await csrfResp.json();
+        const res = await fetch('/api/preferences/set.php', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfData.token
+            },
+            body: JSON.stringify({ key: 'default_stop_distance', value: value.toFixed(2) })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            msgDiv.textContent = 'Saved! Applied next time you open the trade form.';
+            msgDiv.style.color = '#28a745';
+        } else {
+            msgDiv.textContent = result.message || 'Failed to save preferences.';
+            msgDiv.style.color = '#ff5b5b';
+        }
+        msgDiv.style.display = 'block';
+        setTimeout(() => { msgDiv.style.display = 'none'; }, 3500);
+    } catch (e) {
+        msgDiv.textContent = 'Connection error. Please try again.';
+        msgDiv.style.color = '#ff5b5b';
+        msgDiv.style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Save';
 }
 </script>
