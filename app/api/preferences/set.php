@@ -35,35 +35,42 @@ if ($b64 && $value !== null) {
     }
 }
 
-if (!$key) {
-    echo json_encode(['success' => false, 'message' => 'Missing key']);
+$allowed_keys = ['default_stop_distance', 'default_direction', 'default_session', 'show_pl_currency', 'compact_rows', 'auto_calc_pl', 'market_data_chart_settings', 'market_data_watchlist', 'market_data_chart_state', 'market_data_chart_layout'];
+
+$prefs = [];
+if (isset($input['prefs']) && is_array($input['prefs'])) {
+    $prefs = $input['prefs'];
+} else if ($key) {
+    $prefs[$key] = $value;
+}
+
+if (empty($prefs)) {
+    echo json_encode(['success' => false, 'message' => 'No preferences provided']);
     exit;
 }
 
-$allowed_keys = ['default_stop_distance', 'market_data_chart_settings', 'market_data_watchlist', 'market_data_chart_state', 'market_data_chart_layout'];
-if (!in_array($key, $allowed_keys)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid preference key']);
-    exit;
-}
+foreach ($prefs as $k => $v) {
+    if (!in_array($k, $allowed_keys)) continue;
+    
+    $existing = $wpdb->get_var($wpdb->prepare(
+        "SELECT id FROM $table WHERE user_id = %d AND pref_key = %s",
+        $user_id, $k
+    ));
 
-$existing = $wpdb->get_var($wpdb->prepare(
-    "SELECT id FROM $table WHERE user_id = %d AND pref_key = %s",
-    $user_id, $key
-));
-
-if ($existing) {
-    $wpdb->update(
-        $table,
-        ['pref_value' => $value, 'updated_at' => current_time('mysql')],
-        ['user_id' => $user_id, 'pref_key' => $key]
-    );
-} else {
-    $wpdb->insert($table, [
-        'user_id'    => $user_id,
-        'pref_key'   => $key,
-        'pref_value' => $value,
-        'updated_at' => current_time('mysql')
-    ]);
+    if ($existing) {
+        $wpdb->update(
+            $table,
+            ['pref_value' => $v, 'updated_at' => current_time('mysql')],
+            ['user_id' => $user_id, 'pref_key' => $k]
+        );
+    } else {
+        $wpdb->insert($table, [
+            'user_id'    => $user_id,
+            'pref_key'   => $k,
+            'pref_value' => $v,
+            'updated_at' => current_time('mysql')
+        ]);
+    }
 }
 
 if ($wpdb->last_error) {

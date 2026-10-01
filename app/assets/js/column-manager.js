@@ -84,7 +84,8 @@ function renderJournalsList() {
 
     container.innerHTML = journals.map(journal => {
         const safeName = String(journal.name || '').replace(/'/g, "\\'");
-        const isActive = (typeof selectedJournalId !== 'undefined' && Number(journal.id) === Number(selectedJournalId));
+        const sid = typeof window.selectedJournalId !== 'undefined' ? window.selectedJournalId : null;
+        const isActive = (sid !== null && Number(journal.id) === Number(sid));
         return `
             <div class="journal-item ${isActive ? 'active' : ''}">
                 <div class="journal-item-header">

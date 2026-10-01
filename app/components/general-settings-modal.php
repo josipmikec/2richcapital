@@ -413,7 +413,8 @@
             <button class="settings-tab active" onclick="switchGlobalSettingsTab('general')">General</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('dashboard')">Dashboard</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('journal')">Journal</button>
-            <button class="settings-tab" onclick="switchGlobalSettingsTab('account')">Account</button>
+            <button class="settings-tab" onclick="switchGlobalSettingsTab('preferences')">Preferences</button>
+            <button class="settings-tab" onclick="switchGlobalSettingsTab('notifications')">Notifications</button>
         </div>
 
         <div class="settings-modal-body">
@@ -500,74 +501,78 @@
                     <button class="gs-btn-primary" type="button" onclick="saveColumnVisibility()">Save Columns</button>
                 </div>
 
-                <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #333; padding-top:40px;">
-                    <div class="section-header">
-                        <div class="section-icon">⚙️</div>
-                        <h4 class="section-title">Trading Defaults</h4>
-                    </div>
-                    <p style="color: #a9afb8; font-size: 13px; margin-bottom: 20px;">These values are pre-filled each time you log a new manual trade.</p>
-                    <div class="form-field" style="max-width: 320px;">
-                        <label for="pref_default_stop_distance">Default Stop Distance (%)</label>
-                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
-                            <input type="number" id="pref_default_stop_distance" step="0.01" min="0.01" max="100" placeholder="1.00" style="flex: 1;">
-                            <button type="button" id="savePreferencesBtn" class="gs-btn-primary" onclick="savePreferences()" style="white-space: nowrap;">Save</button>
+            </div>
+
+            <!-- PREFERENCES TAB -->
+            <div class="settings-panel" id="gs-pane-preferences">
+                <h3 style="color:#fff;margin-top:0;">Preferences</h3>
+                <p style="color:#a9afb8;font-size:14px;margin-bottom:24px;">Customise your trading defaults</p>
+                
+                <div class="column-manager-section">
+                    <h4 class="section-title" style="margin-bottom:20px; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:#8f95a3;">Trade Defaults</h4>
+                    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                        <div class="form-field" style="flex:1; min-width:200px;">
+                            <label for="pref_default_stop_distance">Default Stop Distance (%)</label>
+                            <input type="number" id="pref_default_stop_distance" step="0.01" min="0.01" max="100" placeholder="0.60">
+                            <small style="color: #8f95a3; margin-top: 6px; display: block;">Pre-fills the stop % field when logging a new trade.</small>
                         </div>
-                        <small style="color: #888; margin-top: 6px; display: block;">Applied automatically to Stop Distance (%) on the new trade form.</small>
+                        <div class="form-field" style="flex:1; min-width:200px;">
+                            <label for="pref_default_direction">Default Direction</label>
+                            <select id="pref_default_direction">
+                                <option value="">No default</option>
+                                <option value="long">Long</option>
+                                <option value="short">Short</option>
+                            </select>
+                        </div>
                     </div>
+                    <div class="form-field" style="margin-top:20px;">
+                        <label for="pref_default_session">Default Session</label>
+                        <select id="pref_default_session">
+                            <option value="">No default</option>
+                            <option value="London">London</option>
+                            <option value="New York">New York</option>
+                            <option value="Asian">Asian</option>
+                        </select>
+                    </div>
+                    
+                    <button type="button" class="gs-btn-primary" onclick="savePreferences()" style="margin-top:20px; color:#111; font-weight:700;">Save Preferences</button>
                     <div id="prefMessage" class="form-message" style="display: none; margin-top: 16px; max-width: 320px; color:#f2ca50; font-size:13px;"></div>
+                </div>
+
+                <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #2e2e2e; padding-top:40px;">
+                    <h4 class="section-title" style="margin-bottom:20px; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:#8f95a3;">Display</h4>
+                    
+                    <div style="display:flex; flex-direction:column; gap:20px;">
+                        <label style="display:flex; flex-direction:column; gap:4px; cursor:pointer;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="checkbox" id="pref_show_pl_currency" style="accent-color:#F2CA50;">
+                                <span style="color:#f4f4f4; font-size:14px; font-weight:600;">Show P&L in currency</span>
+                            </div>
+                            <span style="color:#8f95a3; font-size:12px; margin-left:24px;">Display dollar amounts alongside percentages</span>
+                        </label>
+                        
+                        <label style="display:flex; flex-direction:column; gap:4px; cursor:pointer;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="checkbox" id="pref_compact_rows" style="accent-color:#F2CA50;">
+                                <span style="color:#f4f4f4; font-size:14px; font-weight:600;">Compact trade rows</span>
+                            </div>
+                            <span style="color:#8f95a3; font-size:12px; margin-left:24px;">Show more trades per screen in the journal</span>
+                        </label>
+
+                        <label style="display:flex; flex-direction:column; gap:4px; cursor:pointer;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="checkbox" id="pref_auto_calc_pl" style="accent-color:#F2CA50;">
+                                <span style="color:#f4f4f4; font-size:14px; font-weight:600;">Auto-calculate P&L</span>
+                            </div>
+                            <span style="color:#8f95a3; font-size:12px; margin-left:24px;">Automatically fill P&L when entry and exit are set</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- ACCOUNT TAB -->
-            <div class="settings-panel" id="gs-pane-account">
+            <!-- NOTIFICATIONS TAB -->
+            <div class="settings-panel" id="gs-pane-notifications">
                 <div class="column-manager-section">
-                    <div class="section-header">
-                        <div class="section-icon">👤</div>
-                        <h4 class="section-title">Public Profile</h4>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:16px;">
-                        <div class="form-field">
-                            <label>Display Name</label>
-                            <input type="text" id="gsProfileName">
-                        </div>
-                        <div class="form-field">
-                            <label>Trading Handle</label>
-                            <input type="text" id="gsProfileHandle" placeholder="@handle">
-                        </div>
-                        <div class="form-field">
-                            <label>Bio</label>
-                            <input type="text" id="gsProfileBio" placeholder="Tell us about your trading journey...">
-                        </div>
-                        <div style="display:flex; gap:16px; flex-wrap:wrap;">
-                            <div class="form-field">
-                                <label>Primary Market</label>
-                                <select id="gsProfileMarket">
-                                    <option value="">Select Market...</option>
-                                    <option value="forex">Forex</option>
-                                    <option value="crypto">Crypto</option>
-                                    <option value="stocks">Stocks</option>
-                                    <option value="futures">Futures</option>
-                                    <option value="options">Options</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label>Trading Style</label>
-                                <select id="gsProfileStyle">
-                                    <option value="">Select Style...</option>
-                                    <option value="scalper">Scalper</option>
-                                    <option value="day_trader">Day Trader</option>
-                                    <option value="swing_trader">Swing Trader</option>
-                                    <option value="position_trader">Position Trader</option>
-                                    <option value="algo_trader">Algo / Quant</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="button" class="gs-btn-primary" style="align-self:flex-start;" onclick="gsSaveProfile()">Save Profile</button>
-                        <span id="gsStatusProfile" style="font-size:12px; margin-top:4px;"></span>
-                    </div>
-                </div>
-
-                <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #333; padding-top:40px;">
                     <div class="section-header">
                         <div class="section-icon">🔔</div>
                         <h4 class="section-title">Notifications</h4>
@@ -660,13 +665,6 @@ async function loadGlobalSettingsGeneral() {
                 document.getElementById('gsDateFormat').value = data.settings.date_format;
                 document.getElementById('gsTimeFormat').value = data.settings.time_format;
             }
-            if (data.profile) {
-                document.getElementById('gsProfileName').value = data.profile.display_name || '';
-                document.getElementById('gsProfileHandle').value = data.profile.trading_handle || '';
-                document.getElementById('gsProfileBio').value = data.profile.bio || '';
-                document.getElementById('gsProfileMarket').value = data.profile.primary_market || '';
-                document.getElementById('gsProfileStyle').value = data.profile.trading_style || '';
-            }
             if (data.notifs) {
                 document.getElementById('gsNotifDaily').checked = !!data.notifs.daily_pnl;
                 document.getElementById('gsNotifWeekly').checked = !!data.notifs.weekly_report;
@@ -678,40 +676,6 @@ async function loadGlobalSettingsGeneral() {
     } catch(e) {
         populateTimezones('UTC');
     }
-}
-
-async function gsSaveProfile() {
-    const status = document.getElementById('gsStatusProfile');
-    status.style.color = '#fff';
-    status.textContent = 'Saving...';
-    try {
-        const csrfResp = await fetch('/api/csrf-token.php');
-        const csrfData = await csrfResp.json();
-        const res = await fetch('/api/account/save-profile.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                csrf_token: csrfData.token,
-                display_name: document.getElementById('gsProfileName').value,
-                trading_handle: document.getElementById('gsProfileHandle').value,
-                bio: document.getElementById('gsProfileBio').value,
-                primary_market: document.getElementById('gsProfileMarket').value,
-                trading_style: document.getElementById('gsProfileStyle').value
-            })
-        });
-        const data = await res.json();
-        if (data.success) {
-            status.style.color = '#28a745';
-            status.textContent = 'Profile saved!';
-        } else {
-            status.style.color = '#ff5b5b';
-            status.textContent = data.message || 'Error saving profile.';
-        }
-    } catch (e) {
-        status.style.color = '#ff5b5b';
-        status.textContent = 'Network error.';
-    }
-    setTimeout(() => status.textContent = '', 3000);
 }
 
 async function gsSaveNotifs() {
@@ -788,7 +752,19 @@ async function saveGlobalSettingsGeneral(e) {
 // ==========================================
 // DASHBOARD LOGIC
 // ==========================================
-const GS_DEFAULT_ORDER = ['market','signals','news','classroom','strategies','trades','mentors','ai','chat','journal'];
+<?php
+$user_id_for_modal = (int) ($_SESSION['userid'] ?? $_SESSION['user_id'] ?? 0);
+$all_cards = ['market','signals','news','classroom','strategies','trades','mentors','ai','chat','journal'];
+$visible_cards_js = [];
+if (function_exists('rich_card_visible') && $user_id_for_modal > 0) {
+    foreach ($all_cards as $c) {
+        if (rich_card_visible($c, $user_id_for_modal)) $visible_cards_js[] = $c;
+    }
+} else {
+    $visible_cards_js = $all_cards;
+}
+?>
+const GS_DEFAULT_ORDER = <?php echo json_encode($visible_cards_js); ?>;
 const GS_PRESETS = {
     default:  ['market','signals','news','classroom','strategies','trades','mentors','ai','chat','journal'],
     trading:  ['market','signals','trades','strategies','mentors','chat','news','classroom','ai','journal'],
@@ -1016,36 +992,50 @@ async function loadPreferencesTab() {
         const data = await res.json();
         if (!data.success) return;
 
+        const prefs = data.preferences || {};
+        
         const stopInput = document.getElementById('pref_default_stop_distance');
-        if (stopInput) {
-            let val = null;
-            if (data.preferences && data.preferences.default_stop_distance !== undefined) {
-                val = parseFloat(data.preferences.default_stop_distance);
-            } else if (data.value !== undefined) {
-                val = parseFloat(data.value);
-            }
-            if (val && val > 0) stopInput.value = val.toFixed(2);
+        if (stopInput && prefs.default_stop_distance) {
+            stopInput.value = parseFloat(prefs.default_stop_distance).toFixed(2);
         }
+
+        const dirSelect = document.getElementById('pref_default_direction');
+        if (dirSelect && prefs.default_direction) dirSelect.value = prefs.default_direction;
+
+        const sesSelect = document.getElementById('pref_default_session');
+        if (sesSelect && prefs.default_session) sesSelect.value = prefs.default_session;
+
+        const plCheck = document.getElementById('pref_show_pl_currency');
+        if (plCheck) plCheck.checked = (prefs.show_pl_currency === '1');
+
+        const compactCheck = document.getElementById('pref_compact_rows');
+        if (compactCheck) compactCheck.checked = (prefs.compact_rows === '1');
+
+        const autoCalcCheck = document.getElementById('pref_auto_calc_pl');
+        if (autoCalcCheck) autoCalcCheck.checked = (prefs.auto_calc_pl === '1');
+
     } catch (e) {
         console.warn('Could not load preferences:', e);
     }
 }
 
 async function savePreferences() {
-    const stopInput = document.getElementById('pref_default_stop_distance');
-    const msgDiv    = document.getElementById('prefMessage');
-    const btn       = document.getElementById('savePreferencesBtn');
-    const value     = parseFloat(stopInput ? stopInput.value : '');
+    const msgDiv = document.getElementById('prefMessage');
+    const btn    = document.querySelector('#gs-pane-preferences .gs-btn-primary');
+    
+    const prefs = {
+        default_stop_distance: document.getElementById('pref_default_stop_distance')?.value || '',
+        default_direction: document.getElementById('pref_default_direction')?.value || '',
+        default_session: document.getElementById('pref_default_session')?.value || '',
+        show_pl_currency: document.getElementById('pref_show_pl_currency')?.checked ? '1' : '0',
+        compact_rows: document.getElementById('pref_compact_rows')?.checked ? '1' : '0',
+        auto_calc_pl: document.getElementById('pref_auto_calc_pl')?.checked ? '1' : '0'
+    };
 
-    if (!value || value <= 0) {
-        msgDiv.textContent = 'Please enter a valid stop distance greater than 0.';
-        msgDiv.style.color = '#ff5b5b';
-        msgDiv.style.display = 'block';
-        return;
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
     }
-
-    btn.disabled = true;
-    btn.textContent = 'Saving...';
 
     try {
         const csrfResp = await fetch('/api/csrf-token.php', { credentials: 'include' });
@@ -1057,7 +1047,7 @@ async function savePreferences() {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': csrfData.token
             },
-            body: JSON.stringify({ key: 'default_stop_distance', value: value.toFixed(2) })
+            body: JSON.stringify({ prefs: prefs })
         });
         const result = await res.json();
 
@@ -1076,7 +1066,9 @@ async function savePreferences() {
         msgDiv.style.display = 'block';
     }
 
-    btn.disabled = false;
-    btn.textContent = 'Save';
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Save Preferences';
+    }
 }
 </script>
