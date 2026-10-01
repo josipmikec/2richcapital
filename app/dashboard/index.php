@@ -634,14 +634,14 @@ foreach ($_dashboard_initial_order as $card_id) {
     <nav class="top-nav">
         <div class="nav-container">
             <div class="nav-brand" style="display: flex; flex-direction: column; justify-content: center;">
-                <div class="nav-brand-flipper" style="perspective: 1200px; line-height: 1;">
-                    <div class="nav-brand-inner" id="brandFlipperInner" style="display: grid; transform-style: preserve-3d; transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                <div class="nav-brand-flipper" style="perspective: 1600px; line-height: 1;">
+                    <div class="nav-brand-inner" id="brandFlipperInner" style="display: grid; transform-style: preserve-3d; transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);">
                         <div class="nav-brand-face nav-brand-front" style="grid-area: 1 / 1; backface-visibility: hidden;">
                             <h1>2RICH CAPITAL</h1>
                         </div>
                         <div class="nav-brand-face nav-brand-back" style="grid-area: 1 / 1; backface-visibility: hidden; transform: rotateX(180deg);">
                             <h1 style="text-transform: none; background: none; -webkit-text-fill-color: #fff; color: #fff; margin-bottom: 0;">
-                                <span style="background: linear-gradient(135deg, #F2CA50 0%, #FFDB70 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Welcome</span> back, <?php echo htmlspecialchars(explode(' ', $user_name)[0]); ?>
+                                <span style="background: linear-gradient(to right, #D4AF37 0%, #FFF5C3 50%, #F2CA50 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(242,202,80,0.2));">Welcome</span> back, <?php echo htmlspecialchars(explode(' ', $user_name)[0]); ?>
                             </h1>
                         </div>
                     </div>
@@ -3501,10 +3501,10 @@ foreach ($_dashboard_initial_order as $card_id) {
                         // Flip to "Welcome back"
                         flipperInner.style.transform = 'rotateX(180deg)';
                         
-                        // Stay flipped for 4 seconds, then flip back
+                        // Stay flipped for 5 seconds, then flip back
                         setTimeout(() => {
                             flipperInner.style.transform = 'rotateX(0deg)';
-                        }, 4000);
+                        }, 5000);
                     }, 500); // 500ms delay gives the UI time to settle after modal closes
                 };
 
