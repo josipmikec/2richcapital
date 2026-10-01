@@ -357,16 +357,6 @@ function setCheckboxValue(id, checked) {
 }
 
 function formatForDateInput(value) {
-    if (typeof richFormatDateTime === 'function') {
-        const fmt = richFormatDateTime(value, true);
-        if (fmt && fmt !== '-') {
-            // Ensure we return exactly YYYY-MM-DD for <input type="date">
-            const dStr = String(value).trim();
-            if (dStr.includes('T')) return dStr.slice(0, 10);
-            if (dStr.includes(' ')) return dStr.split(' ')[0];
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) return dStr;
-        }
-    }
     if (!value) return '';
     const stringValue = String(value).trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) return stringValue;

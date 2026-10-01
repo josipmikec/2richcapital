@@ -713,6 +713,14 @@ foreach ($_dashboard_initial_order as $card_id) {
         </aside>
 
         <main class="main-content">
+
+            <div class="welcome-section">
+                <div>
+                    <h2 class="welcome-title">Welcome back, <?php echo htmlspecialchars($user_name); ?></h2>
+                    <p class="welcome-subtitle">Your institutional trading platform</p>
+                </div>
+            </div>
+
             <div class="widget-grid" id="widgetGrid">
 
                 <?php if (in_array('market', $visible_cards)): ?>
@@ -3456,55 +3464,5 @@ foreach ($_dashboard_initial_order as $card_id) {
     </div>
     <?php endif; ?>
     <?php include_once dirname(__DIR__) . '/components/general-settings-modal.php'; ?>
-    <?php include_once dirname(__DIR__) . '/components/onboarding-tour-modal.php'; ?>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const brand = document.querySelector('.nav-brand');
-        if (!brand) return;
-        
-        const now = Date.now();
-        const lastGreeting = localStorage.getItem('last_greeting_time');
-        const sixHours = 6 * 60 * 60 * 1000;
-        
-        if (!lastGreeting || (now - parseInt(lastGreeting, 10)) > sixHours) {
-            localStorage.setItem('last_greeting_time', now.toString());
-            
-            const originalHTML = brand.innerHTML;
-            const userName = <?php echo json_encode(htmlspecialchars(explode(' ', $user_name)[0] ?? '')); ?>;
-            
-            setTimeout(() => {
-                brand.style.transition = 'transform 0.4s ease-in, opacity 0.4s ease-in';
-                brand.style.transform = 'rotateX(90deg)';
-                brand.style.opacity = '0';
-                
-                setTimeout(() => {
-                    brand.innerHTML = `<h1 style="text-transform:none;">Welcome back, ${userName}</h1><span class="nav-tagline">HAVE A GREAT SESSION</span>`;
-                    brand.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
-                    brand.style.transform = 'rotateX(0deg)';
-                    brand.style.opacity = '1';
-                    
-                    setTimeout(() => {
-                        brand.style.transition = 'transform 0.4s ease-in, opacity 0.4s ease-in';
-                        brand.style.transform = 'rotateX(-90deg)';
-                        brand.style.opacity = '0';
-                        
-                        setTimeout(() => {
-                             brand.innerHTML = originalHTML;
-                             brand.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
-                             brand.style.transform = 'rotateX(0deg)';
-                             brand.style.opacity = '1';
-                             
-                             setTimeout(() => {
-                                 brand.style.transition = '';
-                                 brand.style.transform = '';
-                             }, 400);
-                        }, 400);
-                    }, 4000);
-                }, 400);
-            }, 1000);
-        }
-    });
-    </script>
 </body>
 </html>
