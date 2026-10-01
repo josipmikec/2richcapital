@@ -410,45 +410,13 @@
         </div>
 
         <div class="settings-tabs" role="tablist">
-            <button class="settings-tab active" onclick="switchGlobalSettingsTab('general')">General</button>
+            <button class="settings-tab active" onclick="switchGlobalSettingsTab('preferences')">Preferences</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('dashboard')">Dashboard</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('journal')">Journal</button>
-            <button class="settings-tab" onclick="switchGlobalSettingsTab('preferences')">Preferences</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('notifications')">Notifications</button>
         </div>
 
         <div class="settings-modal-body">
-            <!-- GENERAL TAB -->
-            <div class="settings-panel active" id="gs-pane-general">
-                <form id="gsFormGeneral" onsubmit="saveGlobalSettingsGeneral(event)">
-                    <div class="gs-form-group">
-                        <label class="gs-form-label">Timezone</label>
-                        <select class="gs-form-control" name="timezone" id="gsTimezone">
-                            <!-- Populated via JS -->
-                        </select>
-                        <div style="font-size:12px;color:#8f95a3;margin-top:8px;">All times across the platform will be displayed in this timezone.</div>
-                    </div>
-                    <div class="gs-form-group">
-                        <label class="gs-form-label">Date Format</label>
-                        <select class="gs-form-control" name="date_format" id="gsDateFormat">
-                            <option value="Y-m-d">YYYY-MM-DD (2026-10-01)</option>
-                            <option value="d/m/Y">DD/MM/YYYY (01/10/2026)</option>
-                            <option value="m/d/Y">MM/DD/YYYY (10/01/2026)</option>
-                            <option value="F j, Y">Month D, YYYY (October 1, 2026)</option>
-                        </select>
-                    </div>
-                    <div class="gs-form-group">
-                        <label class="gs-form-label">Time Format</label>
-                        <select class="gs-form-control" name="time_format" id="gsTimeFormat">
-                            <option value="H:i">24-hour (14:30)</option>
-                            <option value="h:i A">12-hour (02:30 PM)</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="gs-btn-primary" id="gsBtnGeneral">Save Preferences</button>
-                    <span id="gsStatusGeneral" style="margin-left:12px;font-size:13px;"></span>
-                </form>
-            </div>
-
             <!-- DASHBOARD TAB -->
             <div class="settings-panel" id="gs-pane-dashboard">
                 <h3 style="color:#fff;margin-top:0;">Dashboard Layout</h3>
@@ -504,11 +472,44 @@
             </div>
 
             <!-- PREFERENCES TAB -->
-            <div class="settings-panel" id="gs-pane-preferences">
+            <div class="settings-panel active" id="gs-pane-preferences">
                 <h3 style="color:#fff;margin-top:0;">Preferences</h3>
                 <p style="color:#a9afb8;font-size:14px;margin-bottom:24px;">Customise your trading defaults</p>
                 
-                <div class="column-manager-section">
+                <form id="gsFormGeneral" onsubmit="saveGlobalSettingsGeneral(event)">
+                    <div class="column-manager-section">
+                        <h4 class="section-title" style="margin-bottom:20px; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:#8f95a3;">Localization</h4>
+                        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+                            <div class="gs-form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                                <label class="gs-form-label" style="font-size:10px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#8f95a3;">Timezone</label>
+                                <select class="gs-form-control" name="timezone" id="gsTimezone" style="background:#1c1c1c; border:1px solid #333; color:#f4f4f4; border-radius:6px; padding:10px; width:100%;">
+                                    <!-- Populated via JS -->
+                                </select>
+                                <div style="font-size:12px;color:#8f95a3;margin-top:8px;">All times across the platform will be displayed in this timezone.</div>
+                            </div>
+                            <div class="gs-form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                                <label class="gs-form-label" style="font-size:10px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#8f95a3;">Date Format</label>
+                                <select class="gs-form-control" name="date_format" id="gsDateFormat" style="background:#1c1c1c; border:1px solid #333; color:#f4f4f4; border-radius:6px; padding:10px; width:100%;">
+                                    <option value="Y-m-d">YYYY-MM-DD (2026-10-01)</option>
+                                    <option value="d/m/Y">DD/MM/YYYY (01/10/2026)</option>
+                                    <option value="m/d/Y">MM/DD/YYYY (10/01/2026)</option>
+                                    <option value="F j, Y">Month D, YYYY (October 1, 2026)</option>
+                                </select>
+                            </div>
+                            <div class="gs-form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                                <label class="gs-form-label" style="font-size:10px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#8f95a3;">Time Format</label>
+                                <select class="gs-form-control" name="time_format" id="gsTimeFormat" style="background:#1c1c1c; border:1px solid #333; color:#f4f4f4; border-radius:6px; padding:10px; width:100%;">
+                                    <option value="H:i">24-hour (14:30)</option>
+                                    <option value="h:i A">12-hour (02:30 PM)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="gs-btn-primary" id="gsBtnGeneral" style="color:#111; font-weight:700;">Save Localization</button>
+                        <span id="gsStatusGeneral" style="margin-left:12px;font-size:13px;"></span>
+                    </div>
+                </form>
+
+                <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #2e2e2e; padding-top:40px;">
                     <h4 class="section-title" style="margin-bottom:20px; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:#8f95a3;">Trade Defaults</h4>
                     <div style="display:flex; gap:20px; flex-wrap:wrap;">
                         <div class="form-field" style="flex:1; min-width:200px;">
@@ -572,27 +573,141 @@
 
             <!-- NOTIFICATIONS TAB -->
             <div class="settings-panel" id="gs-pane-notifications">
-                <div class="column-manager-section">
-                    <div class="section-header">
-                        <div class="section-icon">🔔</div>
-                        <h4 class="section-title">Notifications</h4>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:12px;">
-                        <label style="display:flex; align-items:center; gap:8px; color:#f4f4f4; font-size:13px; cursor:pointer;">
-                            <input type="checkbox" id="gsNotifDaily" style="accent-color:#F2CA50;">
-                            Daily P&L Summary
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; color:#f4f4f4; font-size:13px; cursor:pointer;">
-                            <input type="checkbox" id="gsNotifWeekly" style="accent-color:#F2CA50;">
-                            Weekly Performance Report
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; color:#f4f4f4; font-size:13px; cursor:pointer;">
-                            <input type="checkbox" id="gsNotifAlerts" style="accent-color:#F2CA50;">
-                            Trading Alerts & Signals
-                        </label>
-                        <button type="button" class="gs-btn-primary" style="align-self:flex-start; margin-top:12px;" onclick="gsSaveNotifs()">Save Notifications</button>
-                        <span id="gsStatusNotifs" style="font-size:12px; margin-top:4px;"></span>
-                    </div>
+                <h3 style="color:#fff;margin-top:0;">Notifications</h3>
+                <p style="color:#a9afb8;font-size:14px;margin-bottom:24px;">Control what alerts you receive</p>
+                
+                <style>
+                    .notif-section { margin-top: 20px; padding: 24px; border: 1px solid #2e2e2e; border-radius: 12px; background: #1a1a1a; }
+                    .notif-section h4 { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: #8f95a3; margin: 0 0 20px 0; }
+                    .notif-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+                    .notif-item:last-child { margin-bottom: 0; }
+                    .notif-item-text { display: flex; flex-direction: column; gap: 4px; }
+                    .notif-item-title { color: #f4f4f4; font-size: 14px; font-weight: 600; }
+                    .notif-item-desc { color: #8f95a3; font-size: 12px; }
+                    .notif-toggle { position: relative; display: inline-block; width: 40px; height: 20px; }
+                    .notif-toggle input { opacity: 0; width: 0; height: 0; }
+                    .notif-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 20px; }
+                    .notif-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: #888; transition: .4s; border-radius: 50%; }
+                    .notif-toggle input:checked + .notif-slider { background-color: #3a3215; }
+                    .notif-toggle input:checked + .notif-slider:before { transform: translateX(20px); background-color: #F2CA50; }
+                </style>
+
+                <!-- TRADING FLOOR -->
+                <div class="notif-section">
+                    <h4>Trading Floor</h4>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">New followers</span>
+                            <span class="notif-item-desc">When someone follows you on the Trading Floor</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifFollowers"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Post likes</span>
+                            <span class="notif-item-desc">When someone likes your trade post</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifLikes"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Comments</span>
+                            <span class="notif-item-desc">When someone comments on your post</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifComments"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Direct messages</span>
+                            <span class="notif-item-desc">When you receive a new DM</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifDMs"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Story views</span>
+                            <span class="notif-item-desc">When someone views your 24h story</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifStory"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Suggested traders</span>
+                            <span class="notif-item-desc">Weekly curated trader suggestions</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifSuggested"><span class="notif-slider"></span></div>
+                    </label>
+                </div>
+
+                <!-- GROUP WORKSPACES -->
+                <div class="notif-section">
+                    <h4>Group Workspaces</h4>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">New messages</span>
+                            <span class="notif-item-desc">When someone sends a message in a joined group</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifGroupMessages"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Mentions</span>
+                            <span class="notif-item-desc">When someone @mentions you in a group</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifGroupMentions"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">New signals</span>
+                            <span class="notif-item-desc">When a group admin posts a new trade signal</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifGroupSignals"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Call starting</span>
+                            <span class="notif-item-desc">When an admin starts a live video/audio call</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifGroupCalls"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Following posts</span>
+                            <span class="notif-item-desc">When a user you follow posts (max 2/day)</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifFollowing"><span class="notif-slider"></span></div>
+                    </label>
+                </div>
+
+                <!-- EMAIL DIGEST -->
+                <div class="notif-section">
+                    <h4>Email Digest</h4>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Weekly performance summary</span>
+                            <span class="notif-item-desc">Your win rate and P&L overview every Monday</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifWeekly"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Trade streak alerts</span>
+                            <span class="notif-item-desc">When you hit 3+ wins or losses in a row</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifStreak"><span class="notif-slider"></span></div>
+                    </label>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Platform updates</span>
+                            <span class="notif-item-desc">New features and announcements</span>
+                        </div>
+                        <div class="notif-toggle"><input type="checkbox" id="gsNotifPlatformUpdates"><span class="notif-slider"></span></div>
+                    </label>
+                </div>
+                
+                <div style="margin-top:20px; text-align:right;">
+                    <span id="gsStatusNotifs" style="font-size:13px; margin-right:16px;"></span>
+                    <button type="button" class="gs-btn-primary" style="color:#111; font-weight:700;" onclick="gsSaveNotifs()">Save Preferences</button>
                 </div>
             </div>
         </div>
@@ -602,7 +717,7 @@
 <script>
 const allTimezones = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : ['UTC'];
 
-function openGlobalSettingsModal(tab = 'general') {
+function openGlobalSettingsModal(tab = 'preferences') {
     document.getElementById('globalGeneralSettingsOverlay').classList.add('open');
     switchGlobalSettingsTab(tab);
     loadGlobalSettingsGeneral();
@@ -666,9 +781,25 @@ async function loadGlobalSettingsGeneral() {
                 document.getElementById('gsTimeFormat').value = data.settings.time_format;
             }
             if (data.notifs) {
-                document.getElementById('gsNotifDaily').checked = !!data.notifs.daily_pnl;
-                document.getElementById('gsNotifWeekly').checked = !!data.notifs.weekly_report;
-                document.getElementById('gsNotifAlerts').checked = !!data.notifs.signals;
+                const n = data.notifs;
+                // Trading Floor
+                const setCheck = (id, val, def) => { const el = document.getElementById(id); if (el) el.checked = val !== undefined ? !!val : def; };
+                setCheck('gsNotifFollowers', n.tf_new_followers, true);
+                setCheck('gsNotifLikes', n.tf_post_likes, true);
+                setCheck('gsNotifComments', n.tf_comments, true);
+                setCheck('gsNotifDMs', n.tf_direct_messages, true);
+                setCheck('gsNotifStory', n.tf_story_views, false);
+                setCheck('gsNotifSuggested', n.tf_suggested_traders, false);
+                // Group Workspaces
+                setCheck('gsNotifGroupMessages', n.group_new_message, false);
+                setCheck('gsNotifGroupMentions', n.group_mention, true);
+                setCheck('gsNotifGroupSignals', n.group_new_signal, true);
+                setCheck('gsNotifGroupCalls', n.group_call_starting, true);
+                setCheck('gsNotifFollowing', n.following_posted, true);
+                // Email Digest
+                setCheck('gsNotifWeekly', n.email_weekly_summary, true);
+                setCheck('gsNotifStreak', n.email_trade_streak, true);
+                setCheck('gsNotifPlatformUpdates', n.email_platform_updates, false);
             }
         } else {
             populateTimezones('UTC'); // Fallback
@@ -683,6 +814,7 @@ async function gsSaveNotifs() {
     status.style.color = '#fff';
     status.textContent = 'Saving...';
     try {
+        const gc = id => { const el = document.getElementById(id); return el ? (el.checked ? 1 : 0) : 0; };
         const csrfResp = await fetch('/api/csrf-token.php');
         const csrfData = await csrfResp.json();
         const res = await fetch('/api/account/save-notifs.php', {
@@ -691,9 +823,23 @@ async function gsSaveNotifs() {
             body: JSON.stringify({
                 csrf_token: csrfData.token,
                 prefs: {
-                    daily_pnl: document.getElementById('gsNotifDaily').checked ? 1 : 0,
-                    weekly_report: document.getElementById('gsNotifWeekly').checked ? 1 : 0,
-                    signals: document.getElementById('gsNotifAlerts').checked ? 1 : 0
+                    // Trading Floor
+                    tf_new_followers: gc('gsNotifFollowers'),
+                    tf_post_likes: gc('gsNotifLikes'),
+                    tf_comments: gc('gsNotifComments'),
+                    tf_direct_messages: gc('gsNotifDMs'),
+                    tf_story_views: gc('gsNotifStory'),
+                    tf_suggested_traders: gc('gsNotifSuggested'),
+                    // Group Workspaces
+                    group_new_message: gc('gsNotifGroupMessages'),
+                    group_mention: gc('gsNotifGroupMentions'),
+                    group_new_signal: gc('gsNotifGroupSignals'),
+                    group_call_starting: gc('gsNotifGroupCalls'),
+                    following_posted: gc('gsNotifFollowing'),
+                    // Email Digest
+                    email_weekly_summary: gc('gsNotifWeekly'),
+                    email_trade_streak: gc('gsNotifStreak'),
+                    email_platform_updates: gc('gsNotifPlatformUpdates')
                 }
             })
         });
@@ -984,7 +1130,7 @@ function gsResetDashboardOrder() {
 </script>
 
 <!-- Journal Settings Script -->
-<script src="../assets/js/column-manager.js"></script>
+<script src="../assets/js/column-manager.js?v=<?= time() ?>"></script>
 <script>
 async function loadPreferencesTab() {
     try {
