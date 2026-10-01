@@ -18,95 +18,103 @@
     display: flex;
     opacity: 1;
 }
-.general-settings-modal {
-    background: #1e2025;
-    border: 1px solid #333;
-    border-radius: 16px;
-    width: 900px;
-    max-width: 95%;
-    height: 600px;
-    max-height: 90vh;
-    display: flex;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    overflow: hidden;
-    transform: scale(0.95);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+.settings-modal-shell {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0E0E0E 100%);
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 960px;
+  max-height: 88vh;
+  overflow: hidden;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.6);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.general-settings-overlay.open .general-settings-modal {
+.general-settings-overlay.open .settings-modal-shell {
     transform: scale(1);
 }
-.general-settings-sidebar {
-    width: 250px;
-    background: rgba(0,0,0,0.2);
-    border-right: 1px solid rgba(255,255,255,0.05);
-    padding: 24px 16px;
+
+.settings-modal-header-top {
+    padding: 32px 32px 0 32px;
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
 }
-.general-settings-title {
-    font-size: 20px;
+.settings-modal-title {
+    color: #F2CA50;
+    font-size: 24px;
     font-weight: 800;
-    color: #fff;
-    margin-bottom: 24px;
-    padding-left: 12px;
+    margin: 0 0 8px 0;
 }
-.general-settings-tab {
-    background: none;
-    border: none;
+.settings-modal-subtitle {
     color: #8f95a3;
     font-size: 14px;
-    font-weight: 600;
-    text-align: left;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    margin: 0;
 }
-.general-settings-tab:hover {
-    background: rgba(255,255,255,0.05);
-    color: #fff;
-}
-.general-settings-tab.active {
-    background: rgba(242, 202, 80, 0.1);
-    color: #f2ca50;
-}
-.general-settings-content {
-    flex: 1;
-    padding: 32px;
-    overflow-y: auto;
-    position: relative;
-}
-.general-settings-close {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    background: rgba(255,255,255,0.05);
+.settings-modal-close {
+    background: transparent;
     border: none;
-    color: #a9afb8;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    color: #8f95a3;
+    font-size: 24px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.2s;
 }
-.general-settings-close:hover {
-    background: rgba(255,255,255,0.1);
+.settings-modal-close:hover {
     color: #fff;
 }
-.general-settings-pane {
-    display: none;
-    animation: fadeIn 0.3s ease;
+
+.settings-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 24px 32px 0;
+  border-bottom: 1px solid #1f1f1f;
 }
-.general-settings-pane.active {
-    display: block;
+
+.settings-tab {
+  background: transparent;
+  border: 1px solid #2d2d2d;
+  color: #999;
+  min-height: 42px;
+  padding: 10px 24px;
+  border-radius: 10px 10px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: -1px;
 }
+
+.settings-tab.active,
+.settings-tab:hover {
+  color: #F2CA50;
+  border-color: rgba(242,202,80,0.35);
+  background: rgba(242,202,80,0.06);
+  border-bottom-color: #1a1a1a;
+}
+
+.settings-modal-body {
+  padding: 32px;
+  max-height: calc(88vh - 180px);
+  overflow-y: auto;
+  position: relative;
+}
+
+.settings-panel {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+.settings-panel.active {
+  display: block;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -115,37 +123,44 @@
 /* Form Styles */
 .gs-form-group {
     margin-bottom: 24px;
+    max-width: 400px;
 }
 .gs-form-label {
     display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #a9afb8;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #999;
     margin-bottom: 8px;
+    text-transform: uppercase;
 }
 .gs-form-control {
     width: 100%;
     background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 12px;
+    border: 1px solid #2d2d2d;
+    padding: 14px;
     border-radius: 8px;
     color: #fff;
     font-size: 14px;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
 }
 .gs-form-control:focus {
     outline: none;
-    border-color: #f2ca50;
+    border-color: rgba(242,202,80,0.5);
+    background: rgba(242,202,80,0.02);
 }
 .gs-btn-primary {
     background: #f2ca50;
-    color: #000;
+    color: #111;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: 8px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     transition: opacity 0.2s;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 .gs-btn-primary:hover {
     opacity: 0.9;
@@ -153,34 +168,26 @@
 </style>
 
 <div class="general-settings-overlay" id="globalGeneralSettingsOverlay">
-    <div class="general-settings-modal" onclick="event.stopPropagation()">
-        <div class="general-settings-sidebar">
-            <div class="general-settings-title">Settings</div>
-            <button class="general-settings-tab active" onclick="switchGlobalSettingsTab('general')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                General
-            </button>
-            <button class="general-settings-tab" onclick="switchGlobalSettingsTab('dashboard')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-                Dashboard
-            </button>
-            <button class="general-settings-tab" onclick="switchGlobalSettingsTab('journal')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                Journal
-            </button>
-            <button class="general-settings-tab" onclick="switchGlobalSettingsTab('account')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                Account
-            </button>
+    <div class="settings-modal-shell" onclick="event.stopPropagation()">
+        
+        <div class="settings-modal-header-top">
+            <div>
+                <h3 class="settings-modal-title">Settings</h3>
+                <p class="settings-modal-subtitle">Manage preferences and customize your platform experience.</p>
+            </div>
+            <button class="settings-modal-close" onclick="closeGlobalSettingsModal()">&times;</button>
         </div>
-        <div class="general-settings-content">
-            <button class="general-settings-close" onclick="closeGlobalSettingsModal()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
 
+        <div class="settings-tabs" role="tablist">
+            <button class="settings-tab active" onclick="switchGlobalSettingsTab('general')">General</button>
+            <button class="settings-tab" onclick="switchGlobalSettingsTab('dashboard')">Dashboard</button>
+            <button class="settings-tab" onclick="switchGlobalSettingsTab('journal')">Journal</button>
+            <button class="settings-tab" onclick="switchGlobalSettingsTab('account')">Account</button>
+        </div>
+
+        <div class="settings-modal-body">
             <!-- GENERAL TAB -->
-            <div class="general-settings-pane active" id="gs-pane-general">
-                <h2 style="margin-top:0;margin-bottom:24px;font-size:24px;color:#fff;">General Preferences</h2>
+            <div class="settings-panel active" id="gs-pane-general">
                 <form id="gsFormGeneral" onsubmit="saveGlobalSettingsGeneral(event)">
                     <div class="gs-form-group">
                         <label class="gs-form-label">Timezone</label>
@@ -211,22 +218,21 @@
             </div>
 
             <!-- DASHBOARD TAB -->
-            <div class="general-settings-pane" id="gs-pane-dashboard">
-                <h2 style="margin-top:0;margin-bottom:24px;font-size:24px;color:#fff;">Dashboard Layout</h2>
-                <p style="color:#a9afb8;font-size:14px;">We are migrating the dashboard card re-ordering logic here soon.</p>
-                <!-- This will be populated from dashboard/index.php later -->
+            <div class="settings-panel" id="gs-pane-dashboard">
+                <h3 style="color:#fff;margin-top:0;">Dashboard Layout</h3>
+                <p style="color:#a9afb8;font-size:14px;">Dashboard card re-ordering logic will be migrated here.</p>
             </div>
 
             <!-- JOURNAL TAB -->
-            <div class="general-settings-pane" id="gs-pane-journal">
-                <h2 style="margin-top:0;margin-bottom:24px;font-size:24px;color:#fff;">Journal Settings</h2>
-                <p style="color:#a9afb8;font-size:14px;">Journal layout and preferences will be migrated here.</p>
+            <div class="settings-panel" id="gs-pane-journal">
+                <h3 style="color:#fff;margin-top:0;">Journal Settings</h3>
+                <p style="color:#a9afb8;font-size:14px;">Journal manager and column layouts will be migrated here.</p>
             </div>
 
             <!-- ACCOUNT TAB -->
-            <div class="general-settings-pane" id="gs-pane-account">
-                <h2 style="margin-top:0;margin-bottom:24px;font-size:24px;color:#fff;">Account Settings</h2>
-                <p style="color:#a9afb8;font-size:14px;">Profile details, notifications, and security settings will be migrated here.</p>
+            <div class="settings-panel" id="gs-pane-account">
+                <h3 style="color:#fff;margin-top:0;">Account Profile</h3>
+                <p style="color:#a9afb8;font-size:14px;">Profile and notification settings will be migrated here.</p>
             </div>
         </div>
     </div>
@@ -252,11 +258,11 @@ document.getElementById('globalGeneralSettingsOverlay').addEventListener('click'
 });
 
 function switchGlobalSettingsTab(tabId) {
-    document.querySelectorAll('.general-settings-tab').forEach(el => {
+    document.querySelectorAll('#globalGeneralSettingsOverlay .settings-tab').forEach(el => {
         el.classList.remove('active');
         if (el.getAttribute('onclick').includes(tabId)) el.classList.add('active');
     });
-    document.querySelectorAll('.general-settings-pane').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('#globalGeneralSettingsOverlay .settings-panel').forEach(el => el.classList.remove('active'));
     const pane = document.getElementById('gs-pane-' + tabId);
     if (pane) pane.classList.add('active');
 }
@@ -314,7 +320,7 @@ async function saveGlobalSettingsGeneral(e) {
         const data = await res.json();
         if (data.success) {
             status.style.color = '#28a745';
-            status.textContent = 'Settings saved successfully!';
+            status.textContent = 'Saved successfully!';
         } else {
             throw new Error(data.message || 'Error saving settings');
         }
