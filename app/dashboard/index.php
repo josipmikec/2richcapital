@@ -715,7 +715,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <h2 class="welcome-title">Welcome back, <?php echo htmlspecialchars($user_name); ?></h2>
                     <p class="welcome-subtitle">Your institutional trading platform</p>
                 </div>
-                <button class="btn-secondary" onclick="openDashboardSettings()">
+                <button class="btn-secondary" onclick="openGlobalSettingsModal('dashboard')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M12 1v6m0 10v6m11-11h-6M7 12H1"></path>
@@ -1352,27 +1352,7 @@ foreach ($_dashboard_initial_order as $card_id) {
         </main>
     </div>
 
-    <!-- ── Dashboard Settings Panel ────────────────────────────── -->
-    <div class="dashboard-settings-overlay" id="dashboardSettingsOverlay" onclick="handleOverlayClick(event)">
-        <div class="dashboard-settings-panel">
-            <div class="dsp-header">
-                <span class="dsp-title">Dashboard Settings</span>
-                <button class="dsp-close" onclick="closeDashboardSettings()" aria-label="Close settings">✕</button>
-            </div>
 
-            <div>
-                <p class="dsp-section-label">Section Order</p>
-                <ul class="dsp-sort-list" id="dspSortList">
-                    <!-- populated by JS -->
-                </ul>
-            </div>
-
-            <div class="dsp-actions">
-                <button class="dsp-btn dsp-btn-ghost" onclick="resetDashboardOrder()">Reset Default</button>
-                <button class="dsp-btn dsp-btn-primary" onclick="applyDashboardOrder()">Apply</button>
-            </div>
-        </div>
-    </div>
 
     <!-- ── Column Manager Modal ──────────────────────────────────── -->
     <div

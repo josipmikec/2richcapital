@@ -165,6 +165,106 @@
 .gs-btn-primary:hover {
     opacity: 0.9;
 }
+
+/* Dashboard Sorting CSS */
+.dsp-sort-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 400px;
+}
+.dsp-drag-handle {
+    cursor: grab;
+    color: #444;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 2px 2px 2px 0;
+    transition: color 0.15s;
+}
+.dsp-drag-handle:active { cursor: grabbing; }
+.dsp-sort-item:hover .dsp-drag-handle { color: #888; }
+.dsp-sort-item.drag-over {
+    border-color: #f0c24f;
+    background: #2a2700;
+    transform: scale(1.01);
+}
+.dsp-sort-item.dragging {
+    opacity: 0.35;
+    border-style: dashed;
+}
+.dsp-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    max-width: 400px;
+}
+.dsp-preset-btn {
+    flex: 1;
+    min-width: 0;
+    background: #1c1c1c;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #888;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 8px 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    text-align: center;
+}
+.dsp-preset-btn:hover {
+    border-color: #f0c24f;
+    color: #f0c24f;
+    background: #1f1d00;
+}
+.dsp-sort-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #242424;
+    border: 1px solid #2e2e2e;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #bbb;
+    transition: border-color 0.15s, background 0.15s, transform 0.12s;
+    user-select: none;
+    text-transform: uppercase;
+}
+.dsp-sort-label {
+    flex: 1;
+}
+.dsp-move-btn {
+    background: none;
+    border: none;
+    color: #444;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+    border-radius: 3px;
+    transition: color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+}
+.dsp-move-btn:hover {
+    color: #f0c24f;
+    background: rgba(240,194,79,0.08);
+}
+.dsp-move-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
 </style>
 
 <div class="general-settings-overlay" id="globalGeneralSettingsOverlay">
@@ -220,7 +320,17 @@
             <!-- DASHBOARD TAB -->
             <div class="settings-panel" id="gs-pane-dashboard">
                 <h3 style="color:#fff;margin-top:0;">Dashboard Layout</h3>
-                <p style="color:#a9afb8;font-size:14px;">Dashboard card re-ordering logic will be migrated here.</p>
+                <p style="color:#a9afb8;font-size:14px;">Drag and drop to reorder your dashboard cards.</p>
+                <div>
+                    <ul class="dsp-sort-list" id="gsDspSortList">
+                        <!-- populated by JS -->
+                    </ul>
+                </div>
+                <div class="dsp-actions" style="margin-top:20px;">
+                    <button class="gs-btn-primary" style="background:transparent;border:1px solid #333;color:#fff;margin-right:12px;" onclick="gsResetDashboardOrder()">Reset Default</button>
+                    <button class="gs-btn-primary" onclick="gsApplyDashboardOrder()">Apply Order</button>
+                    <span id="gsStatusDashboard" style="margin-left:12px;font-size:13px;"></span>
+                </div>
             </div>
 
             <!-- JOURNAL TAB -->
@@ -245,6 +355,11 @@ function openGlobalSettingsModal(tab = 'general') {
     document.getElementById('globalGeneralSettingsOverlay').classList.add('open');
     switchGlobalSettingsTab(tab);
     loadGlobalSettingsGeneral();
+    
+    // Load dashboard order
+    gsLoadOrder().then(order => {
+        gsBuildSettingsList(order);
+    });
 }
 
 function closeGlobalSettingsModal() {
@@ -332,5 +447,220 @@ async function saveGlobalSettingsGeneral(e) {
         btn.disabled = false;
         setTimeout(() => { status.textContent = ''; }, 3000);
     }
+}
+
+// ==========================================
+// DASHBOARD LOGIC
+// ==========================================
+const GS_DEFAULT_ORDER = ['market','signals','news','classroom','strategies','trades','mentors','ai','chat','journal'];
+const GS_PRESETS = {
+    default:  ['market','signals','news','classroom','strategies','trades','mentors','ai','chat','journal'],
+    trading:  ['market','signals','trades','strategies','mentors','chat','news','classroom','ai','journal'],
+    research: ['market','news','signals','classroom','ai','strategies','research','mentors','trades','chat','journal'].filter(id => GS_DEFAULT_ORDER.includes(id)),
+};
+const GS_PRESET_LABELS = {
+    default:  'Default',
+    trading:  '📈 Trading',
+    research: '🔬 Research',
+};
+const GS_CARD_LABELS = {
+    market:     'Market',
+    signals:    'Signals',
+    news:       'News',
+    classroom:  'Classroom',
+    strategies: 'Strategies',
+    trades:     'My Trades',
+    mentors:    'Mentors',
+    ai:         'AI Chat',
+    chat:       'Chat',
+    journal:    'Journal'
+};
+
+function gsNormalizeOrder(order) {
+    const unique = [...new Set((Array.isArray(order) ? order : []).filter(id => GS_DEFAULT_ORDER.includes(id)))];
+    return [...unique, ...GS_DEFAULT_ORDER.filter(id => !unique.includes(id))];
+}
+
+async function gsLoadOrder() {
+    try {
+        const res  = await fetch('/api/dashboard/load-layout.php', { credentials: 'include' });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.order)) {
+            const saved   = data.order.filter(id => GS_DEFAULT_ORDER.includes(id));
+            const missing = GS_DEFAULT_ORDER.filter(id => !saved.includes(id));
+            return [...saved, ...missing];
+        }
+    } catch(e) {}
+    return [...GS_DEFAULT_ORDER];
+}
+
+async function gsSaveOrder(order) {
+    const normalized = gsNormalizeOrder(order);
+    try {
+        // Find CSRF token dynamically if present on page
+        const metaCsrf = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = metaCsrf ? metaCsrf.getAttribute('content') : (window.CSRF_TOKEN || '');
+        const headers = { 'Content-Type': 'application/json' };
+        if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+
+        const res = await fetch('/api/dashboard/save-layout.php', {
+            method: 'POST',
+            credentials: 'include',
+            headers: headers,
+            body: JSON.stringify({ order: normalized })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) throw new Error(data.message || 'Save failed');
+        return true;
+    } catch(e) {
+        console.error('Failed to save dashboard layout', e);
+        return false;
+    }
+}
+
+function gsBuildSettingsList(order) {
+    const list = document.getElementById('gsDspSortList');
+    if (!list) return;
+
+    let presetsEl = document.getElementById('gsDspPresets');
+    if (!presetsEl) {
+        presetsEl = document.createElement('div');
+        presetsEl.id = 'gsDspPresets';
+        presetsEl.className = 'dsp-presets';
+        list.parentElement.insertBefore(presetsEl, list);
+
+        Object.entries(GS_PRESET_LABELS).forEach(([key, label]) => {
+            const btn = document.createElement('button');
+            btn.className = 'dsp-preset-btn';
+            btn.textContent = label;
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                gsBuildSettingsList([...GS_PRESETS[key]]);
+            });
+            presetsEl.appendChild(btn);
+        });
+    }
+
+    list.innerHTML = '';
+    let dragSrc = null;
+
+    order.forEach((id, idx) => {
+        const li = document.createElement('li');
+        li.className = 'dsp-sort-item';
+        li.dataset.cardId = id;
+        li.draggable = true;
+
+        const upDisabled   = idx === 0 ? 'disabled' : '';
+        const downDisabled = idx === order.length - 1 ? 'disabled' : '';
+
+        li.innerHTML = `
+            <span class="dsp-drag-handle" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/>
+                    <circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/>
+                </svg>
+            </span>
+            <span class="dsp-sort-label" style="flex:1">${GS_CARD_LABELS[id] || id}</span>
+            <button class="dsp-move-btn" data-dir="up" aria-label="Move up" ${upDisabled} onclick="event.preventDefault()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="18 15 12 9 6 15"/>
+                </svg>
+            </button>
+            <button class="dsp-move-btn" data-dir="down" aria-label="Move down" ${downDisabled} onclick="event.preventDefault()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </button>
+        `;
+
+        li.querySelectorAll('.dsp-move-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (btn.disabled) return;
+                gsMoveItem(btn.dataset.dir === 'up' ? -1 : 1, li);
+            });
+        });
+
+        li.addEventListener('dragstart', e => {
+            dragSrc = li;
+            li.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', id);
+        });
+        li.addEventListener('dragend', () => {
+            li.classList.remove('dragging');
+            list.querySelectorAll('.dsp-sort-item').forEach(el => el.classList.remove('drag-over'));
+        });
+        li.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (dragSrc && dragSrc !== li) li.classList.add('drag-over');
+        });
+        li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+        li.addEventListener('drop', e => {
+            e.preventDefault();
+            li.classList.remove('drag-over');
+            if (!dragSrc || dragSrc === li) return;
+            const items = Array.from(list.children);
+            const fromIdx = items.indexOf(dragSrc);
+            const toIdx   = items.indexOf(li);
+            if (fromIdx < toIdx) list.insertBefore(dragSrc, li.nextSibling);
+            else                 list.insertBefore(dragSrc, li);
+            const newOrder = Array.from(list.children).map(el => el.dataset.cardId);
+            gsBuildSettingsList(newOrder);
+        });
+
+        list.appendChild(li);
+    });
+}
+
+function gsMoveItem(direction, li) {
+    const list = li.parentElement;
+    const items = Array.from(list.children);
+    const idx = items.indexOf(li);
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= items.length) return;
+
+    if (direction === -1) {
+        list.insertBefore(li, items[targetIdx]);
+    } else {
+        list.insertBefore(items[targetIdx], li);
+    }
+    const newOrder = Array.from(list.children).map(el => el.dataset.cardId);
+    gsBuildSettingsList(newOrder);
+}
+
+function gsGetSettingsOrder() {
+    return Array.from(document.querySelectorAll('#gsDspSortList .dsp-sort-item'))
+                .map(li => li.dataset.cardId);
+}
+
+async function gsApplyDashboardOrder() {
+    const status = document.getElementById('gsStatusDashboard');
+    status.style.color = '#fff';
+    status.textContent = 'Saving...';
+    const newOrder = gsNormalizeOrder(gsGetSettingsOrder());
+    const saved = await gsSaveOrder(newOrder);
+    if (!saved) {
+        status.style.color = '#ff5b5b';
+        status.textContent = 'Error saving layout.';
+        return;
+    }
+    status.style.color = '#28a745';
+    status.textContent = 'Layout saved!';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+    
+    // Apply locally if on dashboard
+    if (typeof applyOrderToGrid === 'function') {
+        applyOrderToGrid(newOrder);
+    } else {
+        // If not on dashboard, maybe offer to reload or just say saved
+        status.textContent = 'Layout saved (will apply on Dashboard page).';
+    }
+}
+
+function gsResetDashboardOrder() {
+    gsBuildSettingsList([...GS_DEFAULT_ORDER]);
 }
 </script>
