@@ -23,7 +23,7 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../assets/css/market-data.css?v=<?php echo time(); ?>">
     <!-- TradingView Charting Library -->
     <script src="../assets/charting_library/charting_library.standalone.js"></script>

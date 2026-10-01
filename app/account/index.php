@@ -272,7 +272,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css?v=<?php echo time(); ?>">
     <style>
         .account-tab-nav {
             display: flex;
