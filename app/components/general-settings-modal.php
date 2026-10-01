@@ -174,7 +174,6 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-width: 400px;
 }
 .dsp-drag-handle {
     cursor: grab;
@@ -201,7 +200,6 @@
     gap: 6px;
     flex-wrap: wrap;
     margin-bottom: 20px;
-    max-width: 400px;
 }
 .dsp-preset-btn {
     flex: 1;
@@ -413,15 +411,17 @@
             <button class="settings-tab active" onclick="switchGlobalSettingsTab('dashboard')">Dashboard</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('journal')">Journal</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('preferences')">Preferences</button>
-            <button class="settings-tab" onclick="switchGlobalSettingsTab('profile')">Profile</button>
+            <button class="settings-tab" onclick="switchGlobalSettingsTab('profile')">Public Profile</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('notifications')">Notifications</button>
         </div>
 
         <div class="settings-modal-body">
             <!-- DASHBOARD TAB -->
             <div class="settings-panel active" id="gs-pane-dashboard">
-                <h3 style="color:#fff;margin-top:0;">Dashboard Layout</h3>
-                <p style="color:#a9afb8;font-size:14px;">Drag and drop to reorder your dashboard cards.</p>
+                <div class="section-header" style="margin-bottom: 8px;">
+                    <h4 class="section-title">Dashboard Layout</h4>
+                </div>
+                <p style="color:#a9afb8;font-size:14px;margin-bottom:24px;">Drag and drop to reorder your dashboard cards.</p>
                 <div>
                     <ul class="dsp-sort-list" id="gsDspSortList">
                         <!-- populated by JS -->
@@ -438,7 +438,6 @@
             <div class="settings-panel" id="gs-pane-journal">
                 <div class="column-manager-section">
                     <div class="section-header">
-                        <div class="section-icon">📚</div>
                         <h4 class="section-title">Journal Manager</h4>
                     </div>
 
@@ -459,7 +458,6 @@
 
                 <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #333; padding-top:40px;">
                     <div class="section-header">
-                        <div class="section-icon">📋</div>
                         <h4 class="section-title">Visible Columns</h4>
                     </div>
                     <div class="columns-list" id="columnsList" style="margin-bottom:20px;">
@@ -474,8 +472,6 @@
 
             <!-- PREFERENCES TAB -->
             <div class="settings-panel" id="gs-pane-preferences">
-                <h3 style="color:#fff;margin-top:0;">Preferences</h3>
-                <p style="color:#a9afb8;font-size:14px;margin-bottom:24px;">Customise your trading defaults</p>
                 
                 <form id="gsFormGeneral" onsubmit="saveGlobalSettingsGeneral(event)">
                     <div class="column-manager-section">
@@ -527,7 +523,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-field" style="margin-top:20px;">
+                    <div class="form-field" style="margin-top:20px; margin-bottom: 30px;">
                         <label for="pref_default_session">Default Session</label>
                         <select id="pref_default_session">
                             <option value="">No default</option>
@@ -536,15 +532,8 @@
                             <option value="Asian">Asian</option>
                         </select>
                     </div>
-                    
-                    <button type="button" class="gs-btn-primary" onclick="savePreferences()" style="margin-top:20px; color:#111; font-weight:700;">Save Preferences</button>
-                    <div id="prefMessage" class="form-message" style="display: none; margin-top: 16px; max-width: 320px; color:#f2ca50; font-size:13px;"></div>
-                </div>
 
-                <div class="column-manager-section" style="margin-top:40px; border-top:1px solid #2e2e2e; padding-top:40px;">
-                    <h4 class="section-title" style="margin-bottom:20px; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:#8f95a3;">Display</h4>
-                    
-                    <div style="display:flex; flex-direction:column; gap:20px;">
+                    <div style="display:flex; flex-direction:column; gap:20px; padding-top:20px; border-top:1px solid #2e2e2e; margin-bottom:30px;">
                         <label style="display:flex; flex-direction:column; gap:4px; cursor:pointer;">
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <input type="checkbox" id="pref_show_pl_currency" style="accent-color:#F2CA50;">
@@ -569,16 +558,15 @@
                             <span style="color:#8f95a3; font-size:12px; margin-left:24px;">Automatically fill P&L when entry and exit are set</span>
                         </label>
                     </div>
+                    
+                    <button type="button" class="gs-btn-primary" onclick="savePreferences()" style="color:#111; font-weight:700;">Save</button>
+                    <div id="prefMessage" class="form-message" style="display: none; margin-top: 16px; max-width: 320px; color:#f2ca50; font-size:13px;"></div>
                 </div>
             </div>
 
             <!-- PROFILE TAB -->
             <div class="settings-panel" id="gs-pane-profile">
                 <div class="column-manager-section">
-                    <div class="section-header">
-                        <div class="section-icon">👤</div>
-                        <h4 class="section-title">Public Profile</h4>
-                    </div>
                     <div style="display:flex; flex-direction:column; gap:16px;">
                         <div class="form-field">
                             <label>Display Name</label>
@@ -616,7 +604,10 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="button" class="gs-btn-primary" style="align-self:flex-start;" onclick="gsSaveProfile()">Save Profile</button>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <button type="button" class="gs-btn-primary" onclick="gsSaveProfile()">Save Profile</button>
+                            <button type="button" class="gs-btn-primary" style="background:transparent; border:1px solid #333; color:#fff;" onclick="window.location.href='/account'">All Profile Settings</button>
+                        </div>
                         <span id="gsStatusProfile" style="font-size:12px; margin-top:4px;"></span>
                     </div>
                 </div>
@@ -624,8 +615,6 @@
 
             <!-- NOTIFICATIONS TAB -->
             <div class="settings-panel" id="gs-pane-notifications">
-                <h3 style="color:#fff;margin-top:0;">Notifications</h3>
-                <p style="color:#a9afb8;font-size:14px;margin-bottom:24px;">Control what alerts you receive</p>
                 
                 <style>
                     .notif-section { margin-top: 20px; padding: 24px; border: 1px solid #2e2e2e; border-radius: 12px; background: #1a1a1a; }
@@ -758,7 +747,7 @@
                 
                 <div style="margin-top:20px; text-align:right;">
                     <span id="gsStatusNotifs" style="font-size:13px; margin-right:16px;"></span>
-                    <button type="button" class="gs-btn-primary" style="color:#111; font-weight:700;" onclick="gsSaveNotifs()">Save Preferences</button>
+                    <button type="button" class="gs-btn-primary" style="color:#111; font-weight:700;" onclick="gsSaveNotifs()">Save</button>
                 </div>
             </div>
         </div>
