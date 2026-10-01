@@ -2886,7 +2886,8 @@ foreach ($_dashboard_initial_order as $card_id) {
                 cta.className = 'widget-header';
                 cta.innerHTML = '<span style="color:#28a745; cursor:pointer;">Enable Desktop Notifications</span>';
                 cta.onclick = () => { Notification.requestPermission(); cta.remove(); };
-                document.querySelector('.dashboard-col-left').prepend(cta);
+                const grid = document.getElementById('widgetGrid');
+                if (grid) grid.parentNode.insertBefore(cta, grid);
             }, 3000);
         }
 
