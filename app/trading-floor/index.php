@@ -2947,7 +2947,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     reactionsHtml += '</div>';
                 }
                 
-                return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${msg.user_id}">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
             }).join('');
         } else {
             messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -2956,6 +2956,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const currentCount = container.childElementCount;
         const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 10;
         container.innerHTML = messagesMarkup;
+        if (typeof window.updateOnlineDots === 'function') window.updateOnlineDots();
         if (isScrolledToBottom || currentCount === 0) {
             container.scrollTop = container.scrollHeight;
         }
@@ -3692,7 +3693,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                             reactionsHtml += '</div>';
                                         }
                                         
-                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${msg.user_id}">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
                                     }).join('');
                                 } else {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -5777,7 +5778,52 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }
     });
 
-    // SSE real-time messaging replaces polling here
+    // --- Online Status Polling ---
+    window.userActivityData = {};
+    async function pollOnlineMembers() {
+        if (!floorSignalsState.activeGroupId) return;
+        try {
+            const res = await fetch(`/api/signals/online-members.php?group_id=${floorSignalsState.activeGroupId}`);
+            const data = await res.json();
+            if (data.success && data.user_activity) {
+                window.userActivityData = data.user_activity;
+                if (typeof updateOnlineDots === 'function') updateOnlineDots();
+            }
+        } catch (e) { }
+    }
+    setInterval(pollOnlineMembers, 30000);
+    
+    window.updateOnlineDots = function() {
+        const now = Math.floor(Date.now() / 1000);
+        document.querySelectorAll('[data-user-id]').forEach(el => {
+            const uid = Number(el.getAttribute('data-user-id'));
+            if (!uid || !window.userActivityData[uid]) return;
+            
+            const lastActive = window.userActivityData[uid];
+            const diff = now - lastActive;
+            let isOnline = diff < 120;
+            let text = isOnline ? 'Online' : `Last seen ${Math.floor(diff/60)}m ago`;
+            if (diff >= 3600) text = `Last seen ${Math.floor(diff/3600)}h ago`;
+            if (diff >= 86400) text = `Last seen ${Math.floor(diff/86400)}d ago`;
+
+            let dot = el.querySelector('.online-status-dot');
+            if (!dot) {
+                dot = document.createElement('span');
+                dot.className = 'online-status-dot';
+                dot.style.cssText = 'display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:6px; vertical-align:middle;';
+                el.appendChild(dot);
+            }
+            
+            if (isOnline) {
+                dot.style.background = '#28a745';
+                dot.style.boxShadow = '0 0 4px rgba(40,167,69,0.6)';
+            } else {
+                dot.style.background = '#6c757d';
+                dot.style.boxShadow = 'none';
+            }
+            dot.title = text;
+        });
+    };
     </script>
     <script>
         window.openGlobalImageModal = function(url) {

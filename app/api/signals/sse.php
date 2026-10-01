@@ -29,6 +29,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = (int) $_SESSION['user_id'];
+update_user_meta($user_id, 'last_active', time());
+
 $group_id = isset($_GET['group_id']) ? (int) $_GET['group_id'] : 0;
 $last_message_id = isset($_GET['last_id']) ? (int) $_GET['last_id'] : 0;
 

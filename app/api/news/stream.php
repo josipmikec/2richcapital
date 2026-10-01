@@ -10,6 +10,8 @@ if (
 }
 
 $user_id = (int) ($_SESSION['userid'] ?? $_SESSION['user_id']);
+update_user_meta($user_id, 'last_active', time());
+
 ob_start();
 define('WP_USE_THEMES', false);
 require_once '../../../wp-load.php';

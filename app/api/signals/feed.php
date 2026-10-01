@@ -22,6 +22,7 @@ if ($group_id <= 0) {
 
 global $wpdb;
 $user_id           = (int) $_SESSION['user_id'];
+update_user_meta($user_id, 'last_active', time());
 session_write_close(); // Release lock to allow parallel requests
 
 $groups_table      = $wpdb->prefix . 'rich_signal_groups';

@@ -2825,7 +2825,27 @@ foreach ($_dashboard_initial_order as $card_id) {
             feedListEl.innerHTML = '<div class="signals-empty">Loading live signals…</div>';
             const res = await fetch('/api/signals/feed.php?group_id=' + encodeURIComponent(groupId), { credentials: 'include' });
             const data = await res.json();
+            
+            // Check for new signals for Push Notifications
+            if (window.lastSignalCount !== undefined && Array.isArray(data.signals) && data.signals.length > window.lastSignalCount) {
+                if (Notification.permission === 'granted' && document.hidden) {
+                    new Notification("2RICH CAPITAL", { body: "New signal posted!", icon: "/app/assets/img/logo-small.png" });
+                }
+            }
+            if (Array.isArray(data.signals)) window.lastSignalCount = data.signals.length;
+
             renderFeed(Array.isArray(data.signals) ? data.signals : []);
+        }
+
+        // Request notification permission on load
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            setTimeout(() => {
+                const cta = document.createElement('div');
+                cta.className = 'widget-header';
+                cta.innerHTML = '<span style="color:#28a745; cursor:pointer;">Enable Desktop Notifications</span>';
+                cta.onclick = () => { Notification.requestPermission(); cta.remove(); };
+                document.querySelector('.dashboard-col-left').prepend(cta);
+            }, 3000);
         }
 
         async function joinGroup(groupId, btn) {

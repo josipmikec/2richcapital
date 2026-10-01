@@ -513,10 +513,11 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                 
                 const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="window.replyToMessage(this)" data-id="${item.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
                 
-                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${item.user_id}">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
             });
             
             messages.innerHTML = html;
+            if (typeof updateOnlineDots === 'function') updateOnlineDots();
             
             lastSeenId = Math.max(...items.map(i => Number(i.id)));
 
@@ -635,6 +636,52 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         
         async function init() {
             try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.hidden = true; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
+        }
+
+        window.userActivityData = {};
+        async function pollOnlineMembers() {
+            if (!selectedGroupId) return;
+            try {
+                const res = await fetch(`/api/signals/online-members.php?group_id=${selectedGroupId}`);
+                const data = await res.json();
+                if (data.success && data.user_activity) {
+                    window.userActivityData = data.user_activity;
+                    updateOnlineDots();
+                }
+            } catch (e) { }
+        }
+        setInterval(pollOnlineMembers, 30000);
+
+        function updateOnlineDots() {
+            const now = Math.floor(Date.now() / 1000);
+            document.querySelectorAll('[data-user-id]').forEach(el => {
+                const uid = Number(el.getAttribute('data-user-id'));
+                if (!uid || !window.userActivityData[uid]) return;
+                
+                const lastActive = window.userActivityData[uid];
+                const diff = now - lastActive;
+                let isOnline = diff < 120;
+                let text = isOnline ? 'Online' : `Last seen ${Math.floor(diff/60)}m ago`;
+                if (diff >= 3600) text = `Last seen ${Math.floor(diff/3600)}h ago`;
+                if (diff >= 86400) text = `Last seen ${Math.floor(diff/86400)}d ago`;
+
+                let dot = el.querySelector('.online-status-dot');
+                if (!dot) {
+                    dot = document.createElement('span');
+                    dot.className = 'online-status-dot';
+                    dot.style.cssText = 'display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:6px; vertical-align:middle;';
+                    el.appendChild(dot);
+                }
+                
+                if (isOnline) {
+                    dot.style.background = '#28a745';
+                    dot.style.boxShadow = '0 0 4px rgba(40,167,69,0.6)';
+                } else {
+                    dot.style.background = '#6c757d';
+                    dot.style.boxShadow = 'none';
+                }
+                dot.title = text;
+            });
         }
         
         window.handleDashboardAttachment = function(event) {
