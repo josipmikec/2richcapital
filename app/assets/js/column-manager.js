@@ -201,7 +201,7 @@ async function switchToJournal(id) {
     const select = document.getElementById('journalProfileSelect');
     if (select) select.value = String(window.selectedJournalId);
 
-    if (typeof updateJournalUrl   === 'function') updateJournalUrl(window.selectedJournalId);
+    if (typeof updateJournalUrl === 'function') updateJournalUrl(window.selectedJournalId);
     if (typeof refreshJournalData === 'function') await refreshJournalData();
 
     await loadJournalManager();
@@ -221,7 +221,7 @@ async function deleteJournal(id) {
         });
         const data = await response.json();
         if (data.success) {
-            if (typeof loadJournals       === 'function') await loadJournals();
+            if (typeof loadJournals === 'function') await loadJournals();
             if (typeof refreshJournalData === 'function') await refreshJournalData();
             await loadJournalManager();
         } else {
@@ -261,9 +261,9 @@ function renderColumnsList() {
     if (!container) return;
 
     container.innerHTML = journalColumns.map((col, index) => {
-        const safeKey    = String(col.key).replace(/[^a-zA-Z0-9_-]/g, '');
+        const safeKey = String(col.key).replace(/[^a-zA-Z0-9_-]/g, '');
         const checkboxId = `column-visible-${index}-${safeKey}`;
-        const colId      = col.id ? Number(col.id) : 0;
+        const colId = col.id ? Number(col.id) : 0;
 
         return `
             <div class="column-item ${col.locked ? 'locked' : ''}">
@@ -272,8 +272,8 @@ function renderColumnsList() {
                     id="${checkboxId}"
                     name="column_visibility[]"
                     class="column-checkbox"
-                    ${col.visible ? 'checked'  : ''}
-                    ${col.locked  ? 'disabled' : ''}
+                    ${col.visible ? 'checked' : ''}
+                    ${col.locked ? 'disabled' : ''}
                     onchange="toggleColumnVisibility('${col.key}', this.checked)"
                 >
                 <label class="column-name" for="${checkboxId}">${window.escapeHtml(col.name)}</label>
@@ -354,11 +354,11 @@ function addSelectOption() {
     if (!container) return;
 
     const optionCount = container.querySelectorAll('input').length + 1;
-    const inputId     = `selectOption${optionCount}`;
+    const inputId = `selectOption${optionCount}`;
 
-    const option      = document.createElement('div');
-    option.className  = 'option-item';
-    option.innerHTML  = `
+    const option = document.createElement('div');
+    option.className = 'option-item';
+    option.innerHTML = `
         <label for="${inputId}" class="sr-only">Option ${optionCount}</label>
         <input type="text" id="${inputId}" name="select_options[]" placeholder="Option ${optionCount}">
     `;
@@ -407,8 +407,8 @@ async function createCustomColumn() {
             credentials: 'include',
             headers: cmCsrfHeaders(),
             body: JSON.stringify({
-                column_name:    name,
-                data_type:      type,
+                column_name: name,
+                data_type: type,
                 select_options: selectOptions
             })
         });
@@ -499,7 +499,7 @@ async function deleteCustomColumn(id) {
 
 async function loadPreferencesTab() {
     try {
-        const res  = await fetch('/api/preferences/get.php', { credentials: 'include' });
+        const res = await fetch('/api/preferences/get.php', { credentials: 'include' });
         const data = await res.json();
         if (!data.success) return;
 
@@ -520,9 +520,9 @@ async function loadPreferencesTab() {
 
 async function savePreferences() {
     const stopInput = document.getElementById('pref_default_stop_distance');
-    const msgDiv    = document.getElementById('prefMessage');
-    const btn       = document.getElementById('savePreferencesBtn');
-    const value     = parseFloat(stopInput ? stopInput.value : '');
+    const msgDiv = document.getElementById('prefMessage');
+    const btn = document.getElementById('savePreferencesBtn');
+    const value = parseFloat(stopInput ? stopInput.value : '');
 
     if (!value || value <= 0) {
         msgDiv.textContent = 'Please enter a valid stop distance greater than 0.';
@@ -534,19 +534,19 @@ async function savePreferences() {
     btn.disabled = true;
     btn.innerHTML = 'Saving...';
 
-        try {
-	        const csrfResp = await fetch('/api/csrf-token.php', { credentials: 'include' });
-	        const csrfData = await csrfResp.json();
-	        const res = await fetch('/api/preferences/set.php', {
-	            method: 'POST',
-	            credentials: 'include',
-	            headers: {
-	                'Content-Type': 'application/json',
-	                'X-CSRF-Token': csrfData.token
-	            },
-	            body: JSON.stringify({ key: 'default_stop_distance', value: value.toFixed(2) })
-	        });
-	        const result = await res.json();
+    try {
+        const csrfResp = await fetch('/api/csrf-token.php', { credentials: 'include' });
+        const csrfData = await csrfResp.json();
+        const res = await fetch('/api/preferences/set.php', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfData.token
+            },
+            body: JSON.stringify({ key: 'default_stop_distance', value: value.toFixed(2) })
+        });
+        const result = await res.json();
 
 
 
@@ -573,7 +573,7 @@ async function savePreferences() {
 
 // Single shared definition — used by both column-manager.js and journal.js
 if (typeof window.escapeHtml === 'undefined') {
-    window.escapeHtml = function(value) {
+    window.escapeHtml = function (value) {
         return String(value)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
