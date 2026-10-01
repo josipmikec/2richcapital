@@ -317,7 +317,6 @@ $user_email = $_SESSION['user_email'] ?? '';
 
 
     <script src="../assets/js/journal.js"></script>
-    <script src="../assets/js/column-manager.js"></script>
     <script src="../assets/js/import.js" defer></script>
 
     <?php require_once __DIR__ . '/../components/general-settings-modal.php'; ?>

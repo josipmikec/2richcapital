@@ -10,12 +10,13 @@ if (
 }
 
 $user_id = (int) ($_SESSION['userid'] ?? $_SESSION['user_id']);
-update_user_meta($user_id, 'last_active', time());
 
 ob_start();
 define('WP_USE_THEMES', false);
 require_once '../../../wp-load.php';
 ob_end_clean();
+
+update_user_meta($user_id, 'last_active', time());
 
 session_write_close(); // Release lock AFTER wp-load to prevent plugins from holding it
 

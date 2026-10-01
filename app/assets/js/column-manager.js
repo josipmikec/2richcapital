@@ -84,8 +84,9 @@ function renderJournalsList() {
 
     container.innerHTML = journals.map(journal => {
         const safeName = String(journal.name || '').replace(/'/g, "\\'");
+        const isActive = (typeof selectedJournalId !== 'undefined' && Number(journal.id) === Number(selectedJournalId));
         return `
-            <div class="journal-item ${Number(journal.id) === Number(selectedJournalId) ? 'active' : ''}">
+            <div class="journal-item ${isActive ? 'active' : ''}">
                 <div class="journal-item-header">
                     <div class="journal-item-copy">
                         <div class="journal-item-title-row">
@@ -193,13 +194,13 @@ async function setDefaultJournal(id) {
 }
 
 async function switchToJournal(id) {
-    selectedJournalId = Number(id);
-    globalThis.selectedJournalId = selectedJournalId;
+    window.selectedJournalId = Number(id);
+    globalThis.selectedJournalId = window.selectedJournalId;
 
     const select = document.getElementById('journalProfileSelect');
-    if (select) select.value = String(selectedJournalId);
+    if (select) select.value = String(window.selectedJournalId);
 
-    if (typeof updateJournalUrl   === 'function') updateJournalUrl(selectedJournalId);
+    if (typeof updateJournalUrl   === 'function') updateJournalUrl(window.selectedJournalId);
     if (typeof refreshJournalData === 'function') await refreshJournalData();
 
     await loadJournalManager();
