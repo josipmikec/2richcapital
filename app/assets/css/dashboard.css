@@ -105,6 +105,15 @@ body {
   background: rgba(242,202,80,0.03);
 }
 
+.logout-btn.icon-only {
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .logout-btn:hover {
   background: linear-gradient(135deg, #F2CA50 0%, #FFDB70 100%);
   color: #0E0E0E;
