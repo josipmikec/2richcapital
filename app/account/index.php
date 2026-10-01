@@ -709,12 +709,12 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
             <span class="nav-tagline">INSTITUTIONAL GRADE TRADING</span>
         </div>
         <div class="nav-right">
-            <span class="user-email"><?php echo htmlspecialchars($user_email); ?></span>
+            <div class="tf-topbar-avatar" onclick="window.location.href='/account'" title="Account"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'M', 0, 1)); ?></div>
             <div style="display:flex; gap:8px;">
                 <button type="button" class="logout-btn" onclick="openGlobalSettingsModal('profile')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;margin-bottom:2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>SETTINGS
                 </button>
-                <a href="../auth/logout.php" class="logout-btn icon-only" title="Logout">
+                <a href="/auth/logout.php" class="logout-btn icon-only" title="Logout">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                 </a>
             </div>
@@ -1106,7 +1106,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                     </div>
 
                     <div style="margin-top:16px;">
-                        <button class="settings-save-btn" style="background:rgba(248,113,113,0.1);color:#f87171;background-image:none;" onclick="window.location.href='../auth/logout.php'">
+                        <button class="settings-save-btn" style="background:rgba(248,113,113,0.1);color:#f87171;background-image:none;" onclick="window.location.href='/auth/logout.php'">
                             Logout of All Devices
                         </button>
                     </div>

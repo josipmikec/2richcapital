@@ -1538,3 +1538,15 @@ body {
   margin-top: auto;
   padding-bottom: 6px;
 }
+/* Topbar Avatar */
+.tf-topbar-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #F2CA50, #FFDB70);
+  color: #0E0E0E; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: 2px solid transparent;
+  transition: border-color 0.2s;
+  flex-shrink: 0;
+}
+.tf-topbar-avatar:hover { border-color: #F2CA50; }
+
