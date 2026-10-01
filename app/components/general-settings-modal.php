@@ -1131,7 +1131,7 @@ function gsResetDashboardOrder() {
 </script>
 
 <!-- Journal Settings Script -->
-<script src="../assets/js/column-manager.js?v=<?= time() ?>"></script>
+<script src="/app/assets/js/column-manager.js?v=<?= time() ?>"></script>
 <script>
 async function loadPreferencesTab() {
     try {
