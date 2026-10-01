@@ -234,15 +234,25 @@ async function deleteJournal(id) {
 }
 
 async function loadColumnManager() {
+    const container = document.getElementById('columnsList');
     try {
         const response = await fetch('/api/columns/list.php', { credentials: 'include' });
+        if (!response.ok) {
+            console.error('Column list HTTP error:', response.status);
+            if (container) container.innerHTML = '<div class="column-item"><span class="column-name" style="color:#ff5b5b">Failed to load columns.</span></div>';
+            return;
+        }
         const data = await response.json();
         if (data.success) {
             journalColumns = data.columns || [];
             renderColumnsList();
+        } else {
+            console.error('Column list error:', data.message);
+            if (container) container.innerHTML = '<div class="column-item"><span class="column-name" style="color:#ff5b5b">Could not load columns.</span></div>';
         }
     } catch (error) {
         console.error('Error loading columns:', error);
+        if (container) container.innerHTML = '<div class="column-item"><span class="column-name" style="color:#ff5b5b">Error loading columns.</span></div>';
     }
 }
 

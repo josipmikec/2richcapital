@@ -410,15 +410,15 @@
         </div>
 
         <div class="settings-tabs" role="tablist">
-            <button class="settings-tab active" onclick="switchGlobalSettingsTab('preferences')">Preferences</button>
-            <button class="settings-tab" onclick="switchGlobalSettingsTab('dashboard')">Dashboard</button>
+            <button class="settings-tab active" onclick="switchGlobalSettingsTab('dashboard')">Dashboard</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('journal')">Journal</button>
+            <button class="settings-tab" onclick="switchGlobalSettingsTab('preferences')">Preferences</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('notifications')">Notifications</button>
         </div>
 
         <div class="settings-modal-body">
             <!-- DASHBOARD TAB -->
-            <div class="settings-panel" id="gs-pane-dashboard">
+            <div class="settings-panel active" id="gs-pane-dashboard">
                 <h3 style="color:#fff;margin-top:0;">Dashboard Layout</h3>
                 <p style="color:#a9afb8;font-size:14px;">Drag and drop to reorder your dashboard cards.</p>
                 <div>
@@ -472,7 +472,7 @@
             </div>
 
             <!-- PREFERENCES TAB -->
-            <div class="settings-panel active" id="gs-pane-preferences">
+            <div class="settings-panel" id="gs-pane-preferences">
                 <h3 style="color:#fff;margin-top:0;">Preferences</h3>
                 <p style="color:#a9afb8;font-size:14px;margin-bottom:24px;">Customise your trading defaults</p>
                 
@@ -717,7 +717,7 @@
 <script>
 const allTimezones = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : ['UTC'];
 
-function openGlobalSettingsModal(tab = 'preferences') {
+function openGlobalSettingsModal(tab = 'dashboard') {
     document.getElementById('globalGeneralSettingsOverlay').classList.add('open');
     switchGlobalSettingsTab(tab);
     loadGlobalSettingsGeneral();
@@ -728,7 +728,8 @@ function openGlobalSettingsModal(tab = 'preferences') {
     });
 
     // Load Journal settings if functions exist
-    if (typeof loadJournalManager === 'function') {
+    if (typeof loadSettingsManager === 'function') {
+        if (typeof getCmCsrfToken === 'function') getCmCsrfToken();
         loadSettingsManager();
     }
     if (typeof loadPreferencesTab === 'function') {
