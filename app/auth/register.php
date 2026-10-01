@@ -111,13 +111,22 @@ function send_welcome_email(string $email, string $displayName, string $username
 
       <!-- Body -->
       <tr><td style="padding:36px 48px;">
-        <p style="font-size:16px;color:#f5f5f5;font-weight:600;margin:0 0 16px;">Welcome to the inner circle.</p>
+        <p style="font-size:16px;color:#f5f5f5;font-weight:600;margin:0 0 16px;">You are now part of the top 1%.</p>
         <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 24px;">
-          You now have access to the 2RICH CAPITAL platform &mdash; real-time macro research, high-conviction trade setups, and elite market intelligence built for serious traders.
+          The markets wait for no one. You\'ve just unlocked access to the ultimate trading hub—designed to give you a massive, measurable edge.
         </p>
-        <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 32px;">
-          Don\'t miss the next big move. Head over to the <strong>Trading Floor</strong> to see live signals, track market analytics, and join our premium trading groups led by top analysts.
+        <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 24px;">
+          While average traders guess, our members execute with precision using real-time macro research, institutional-grade analytics, and high-conviction trade setups.
         </p>
+        
+        <p style="font-size:12px;font-weight:700;letter-spacing:0.1em;color:#F2CA50;text-transform:uppercase;margin:0 0 12px;">🔥 READY TO DOMINATE?</p>
+        <ul style="font-size:14px;color:#888;line-height:1.8;margin:0 0 32px;padding-left:20px;">
+            <li style="margin-bottom:8px;"><strong style="color:#ddd;">Join Premium Groups:</strong> Head to the Trading Floor to mirror top-tier analysts.</li>
+            <li style="margin-bottom:8px;"><strong style="color:#ddd;">Live Market Data:</strong> Connect your broker instantly for real-time charting.</li>
+            <li style="margin-bottom:8px;"><strong style="color:#ddd;">Track Your Edge:</strong> Use the Advanced Journal to spot your most profitable setups.</li>
+        </ul>
+
+        <p style="font-size:15px;color:#fff;font-weight:600;margin:0 0 32px;">The next massive market move is forming right now. Don\'t miss out.</p>
 
         <!-- Credentials box -->
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#0E0E0E;border:1px solid #222;border-radius:10px;margin-bottom:32px;">
@@ -148,7 +157,7 @@ function send_welcome_email(string $email, string $displayName, string $username
 
       <!-- Footer -->
       <tr><td style="padding:24px 48px;border-top:1px solid #1a1a1a;text-align:center;">
-        <p style="font-size:11px;color:#2a2a2a;margin:0;letter-spacing:0.08em;text-transform:uppercase;">&copy; 2026 2RICH CAPITAL &nbsp;&bull;&nbsp; app.2rich.capital</p>
+        <p style="font-size:11px;color:#2a2a2a;margin:0;letter-spacing:0.08em;text-transform:uppercase;">&copy; ' . date('Y') . ' 2RICH CAPITAL &nbsp;&bull;&nbsp; app.2rich.capital</p>
       </td></tr>
 
     </table>
@@ -158,9 +167,14 @@ function send_welcome_email(string $email, string $displayName, string $username
 </html>';
 
     $plain = "Welcome to 2RICH CAPITAL, {$displayName}.\n\n"
-           . "Welcome to the inner circle.\n"
-           . "You now have access to the 2RICH CAPITAL platform — real-time macro research, high-conviction trade setups, and elite market intelligence built for serious traders.\n\n"
-           . "Don't miss the next big move. Head over to the Trading Floor to see live signals, track market analytics, and join our premium trading groups led by top analysts.\n\n"
+           . "You are now part of the top 1%.\n\n"
+           . "The markets wait for no one. You've just unlocked access to the ultimate trading hub—designed to give you a massive, measurable edge.\n"
+           . "While average traders guess, our members execute with precision using real-time macro research, institutional-grade analytics, and high-conviction trade setups.\n\n"
+           . "READY TO DOMINATE?\n"
+           . "- Join Premium Groups: Head to the Trading Floor to mirror top-tier analysts.\n"
+           . "- Live Market Data: Connect your broker instantly for real-time charting.\n"
+           . "- Track Your Edge: Use the Advanced Journal to spot your most profitable setups.\n\n"
+           . "The next massive market move is forming right now. Don't miss out.\n\n"
            . "Your account is ready.\n\n"
            . "Username: {$username}\n"
            . "Email:    {$email}\n\n"

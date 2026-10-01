@@ -1,6 +1,19 @@
 <?php
 // /app/components/general-settings-modal.php
+$user_id_for_modal = (int) ($_SESSION['user_id'] ?? 0);
+$tz_modal = get_user_meta($user_id_for_modal, 'rich_timezone', true) ?: 'UTC';
+$df_modal = get_user_meta($user_id_for_modal, 'rich_date_format', true) ?: 'Y-m-d';
+$tf_modal = get_user_meta($user_id_for_modal, 'rich_time_format', true) ?: 'H:i';
 ?>
+<script>
+window.USER_PREFS = {
+    timezone: <?= json_encode($tz_modal) ?>,
+    date_format: <?= json_encode($df_modal) ?>,
+    time_format: <?= json_encode($tf_modal) ?>
+};
+</script>
+<script src="/assets/js/timezone-utils.js?v=<?= time() ?>"></script>
+<link rel="stylesheet" href="/assets/css/column-manager.css?v=<?= time() ?>">
 <style>
 .general-settings-overlay {
     position: fixed;
@@ -821,6 +834,26 @@ async function loadGlobalSettingsGeneral() {
                 document.getElementById('gsDateFormat').value = data.settings.date_format;
                 document.getElementById('gsTimeFormat').value = data.settings.time_format;
             }
+            if (data.profile) {
+                document.getElementById('gsProfileName').value = data.profile.display_name || '';
+                document.getElementById('gsProfileHandle').value = data.profile.trading_handle || '';
+                document.getElementById('gsProfileBio').value = data.profile.bio || '';
+                
+                const setSelect = (id, val) => {
+                    if (!val) return;
+                    const sel = document.getElementById(id);
+                    if (!sel) return;
+                    const v = val.toLowerCase().replace(' ', '_');
+                    for (let i = 0; i < sel.options.length; i++) {
+                        if (sel.options[i].value.toLowerCase() === v || sel.options[i].text.toLowerCase() === val.toLowerCase()) {
+                            sel.selectedIndex = i;
+                            break;
+                        }
+                    }
+                };
+                setSelect('gsProfileMarket', data.profile.primary_market);
+                setSelect('gsProfileStyle', data.profile.trading_style);
+            }
             if (data.notifs) {
                 const n = data.notifs;
                 // Trading Floor
@@ -849,6 +882,52 @@ async function loadGlobalSettingsGeneral() {
         populateTimezones('UTC');
     }
 }
+
+async function gsSaveProfile() {
+    const btn = document.querySelector('button[onclick="gsSaveProfile()"]');
+    const originalText = btn.textContent;
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    try {
+        const csrfResp = await fetch('/api/csrf-token.php');
+        const csrfData = await csrfResp.json();
+        
+        const payload = {
+            csrf_token: csrfData.token,
+            display_name: document.getElementById('gsProfileName').value,
+            trading_handle: document.getElementById('gsProfileHandle').value,
+            bio: document.getElementById('gsProfileBio').value,
+            primary_market: document.getElementById('gsProfileMarket').value,
+            trading_style: document.getElementById('gsProfileStyle').value
+        };
+
+        const res = await fetch('/api/account/save-profile.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+            btn.textContent = 'Saved!';
+            btn.style.color = '#28a745';
+        } else {
+            btn.textContent = 'Error';
+            btn.style.color = '#ff5b5b';
+        }
+    } catch (e) {
+        btn.textContent = 'Error';
+        btn.style.color = '#ff5b5b';
+    }
+    
+    setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        btn.style.color = '';
+    }, 3000);
+}
+
 
 async function gsSaveNotifs() {
     const status = document.getElementById('gsStatusNotifs');

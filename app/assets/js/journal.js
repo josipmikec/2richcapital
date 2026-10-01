@@ -347,6 +347,9 @@ async function deleteTrade(id) {
 }
 
 function formatDate(dateString) {
+    if (typeof richFormatDateTime === 'function') {
+        return richFormatDateTime(dateString, true); // True means date only
+    }
     if (!dateString) return '-';
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return '-';
