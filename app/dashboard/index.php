@@ -1354,72 +1354,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 
 
 
-    <!-- ── Column Manager Modal ──────────────────────────────────── -->
-    <div
-        id="columnManagerModal"
-        class="modal-overlay"
-        style="display: none;"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="dashboardSettingsModalTitle"
-    >
-        <div class="column-manager-modal settings-modal-shell">
-            <div class="column-manager-header">
-                <div class="modal-header" style="margin-bottom: 0;">
-                    <div>
-                        <h3 class="modal-title" id="dashboardSettingsModalTitle">Settings</h3>
-                        <p class="settings-subtitle">Customize your dashboard layout.</p>
-                    </div>
-                    <button class="modal-close" onclick="closeColumnManager()" aria-label="Close settings">&times;</button>
-                </div>
-            </div>
 
-            <div class="settings-tabs" role="tablist" aria-label="Dashboard settings sections">
-                <button
-                    type="button"
-                    class="settings-tab active"
-                    data-tab="columns"
-                    role="tab"
-                    aria-selected="true"
-                    aria-controls="settings-panel-columns"
-                    id="settings-tab-columns"
-                    onclick="showSettingsTab('columns')"
-                >
-                    Layout
-                </button>
-            </div>
-
-            <div class="column-manager-body settings-modal-body">
-                <section
-                    id="settings-panel-columns"
-                    class="settings-panel"
-                    role="tabpanel"
-                    aria-labelledby="settings-tab-columns"
-                >
-                    <div class="column-manager-section">
-                        <div class="section-header">
-                            <div class="section-icon">📋</div>
-                            <h4 class="section-title">Edit Dashboard Layout</h4>
-                        </div>
-
-                        <p class="section-description">
-                            Reorder and manage your dashboard layout here.
-                        </p>
-
-                        <div class="columns-list" id="columnsList">
-                            <div class="column-item">
-                                <span class="column-name">Loading layout options...</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            <div class="column-manager-footer">
-                <button class="btn-reset" type="button" onclick="closeColumnManager()">Close</button>
-            </div>
-        </div>
-    </div>
 
 	<script>
     window.CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
