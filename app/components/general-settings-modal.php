@@ -632,6 +632,21 @@
                     .notif-toggle input:checked + .notif-slider:before { transform: translateX(20px); background-color: #F2CA50; }
                 </style>
 
+                <!-- SYSTEM -->
+                <div class="notif-section" style="margin-top: 0;">
+                    <h4>System</h4>
+                    <label class="notif-item">
+                        <div class="notif-item-text">
+                            <span class="notif-item-title">Desktop Notifications</span>
+                            <span class="notif-item-desc">Receive browser push notifications for important updates</span>
+                        </div>
+                        <div class="notif-toggle">
+                            <input type="checkbox" id="gsNotifDesktop" onchange="toggleDesktopNotifications(this)">
+                            <span class="notif-slider"></span>
+                        </div>
+                    </label>
+                </div>
+
                 <!-- TRADING FLOOR -->
                 <div class="notif-section">
                     <h4>Trading Floor</h4>
@@ -845,6 +860,12 @@ async function loadGlobalSettingsGeneral() {
         } else {
             populateTimezones('UTC'); // Fallback
         }
+        
+        const desktopToggle = document.getElementById('gsNotifDesktop');
+        if (desktopToggle) {
+            desktopToggle.checked = ('Notification' in window && Notification.permission === 'granted');
+        }
+        
     } catch(e) {
         populateTimezones('UTC');
     }
@@ -1256,6 +1277,30 @@ async function savePreferences() {
     if (btn) {
         btn.disabled = false;
         btn.textContent = 'Save Preferences';
+    }
+}
+
+function toggleDesktopNotifications(el) {
+    if (!('Notification' in window)) {
+        alert('Desktop notifications are not supported in this browser.');
+        el.checked = false;
+        return;
+    }
+    
+    if (el.checked) {
+        if (Notification.permission !== 'granted') {
+            Notification.requestPermission().then(permission => {
+                if (permission !== 'granted') {
+                    el.checked = false;
+                }
+            });
+        }
+    } else {
+        if (Notification.permission === 'granted') {
+            alert('To fully disable desktop notifications, you must click the site information icon next to the URL in your browser and revoke the Notification permission.');
+            // Revert back to checked because we cannot programmatically revoke permissions
+            setTimeout(() => { el.checked = true; }, 100);
+        }
     }
 }
 

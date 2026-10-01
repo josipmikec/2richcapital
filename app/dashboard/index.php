@@ -2688,6 +2688,33 @@ foreach ($_dashboard_initial_order as $card_id) {
             membershipStripEl.hidden = count === 0;
         }
 
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function tfGroupAvatar(group) {
+            const label = group.name || 'Group';
+            const src = group.avatar_url;
+            if (src) {
+                return `<span class="group-card-avatar"><img src="${escapeHtml(src)}" alt="${escapeHtml(label)} avatar"></span>`;
+            }
+            const initial = label.substring(0, 2).toUpperCase();
+            return `<span class="group-card-avatar">${escapeHtml(initial)}</span>`;
+        }
+
+        function tfVerifiedBadge(group) {
+            if (group.is_verified || group.verification_status === 'verified') {
+                return `<span class="group-verified-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>Verified</span>`;
+            }
+            return '';
+        }
+
+        function tfMoneyLabel(group) {
+            if (group.pricing_type === 'free') return 'Free';
+            return '$' + Number(group.price || 0).toFixed(0) + '/mo';
+        }
+
         function renderGroups() {
             if (!state.groups.length) {
                 groupListEl.innerHTML = '<div class="signals-empty">No groups available yet.</div>';
@@ -2696,28 +2723,32 @@ foreach ($_dashboard_initial_order as $card_id) {
 
             groupListEl.innerHTML = state.groups.map(group => {
                 const joined = !!group.is_joined;
-                const actionLabel = joined ? 'Joined' : formatPrice(group);
+                const accent = group.accent_color || '#f2ca50';
                 return `
-                    <div class="signals-group-item ${joined ? 'is-joined' : ''}">
-                        <div class="signals-group-head">
-                            <div>
-                                <div class="signals-group-title">${group.name}</div>
-                                <div class="signals-group-team">${group.team_name || ''}</div>
-                            </div>
-                            <div class="signals-group-badges">
-                                ${priceBadge(group)}
-                                ${joined ? '<span class="signals-badge joined">✓ Active</span>' : ''}
+                    <article class="group-card" style="--group-accent:${escapeHtml(accent)}">
+                        <div class="group-card-main">
+                            <div class="group-card-head">
+                                ${tfGroupAvatar(group)}
+                                <div class="group-card-copy">
+                                    <h3>${escapeHtml(group.name)}</h3>
+                                    <div class="group-card-meta">
+                                        <span>${escapeHtml(group.category || 'Trading')}</span>
+                                        <span>${tfMoneyLabel(group)}</span>
+                                        <span>${group.member_count || 0} members</span>
+                                        <span>${group.posted_signals_count || 0} signals</span>
+                                    </div>
+                                    <p>${escapeHtml(group.description || 'No description yet.')}</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="signals-group-desc">${group.description || ''}</div>
-                        <div class="signals-group-footer">
-                            <div class="signals-group-stat">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                ${group.member_count || 0} members
+                        <div class="group-card-side">
+                            <div class="group-card-badge">${tfVerifiedBadge(group)}</div>
+                            <div class="group-card-actions">
+                                ${joined ? `<button class="group-pill-btn" type="button" onclick="switchSignalsTab('feed')">Open</button>` : ''}
+                                <button class="group-ghost-btn signals-join-btn" type="button" data-group-id="${group.id}" ${joined ? 'disabled' : ''}>${joined ? 'Joined' : (group.pricing_type === 'paid' && parseFloat(group.price) > 0 ? `Subscribe ($${group.price}/mo)` : 'Join')}</button>
                             </div>
-                            <button class="signals-join-btn ${joined ? 'is-joined' : ''}" data-group-id="${group.id}" ${joined ? 'disabled' : ''}>${actionLabel}</button>
                         </div>
-                    </div>
+                    </article>
                 `;
             }).join('');
 
@@ -2815,17 +2846,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             renderFeed(Array.isArray(data.signals) ? data.signals : []);
         }
 
-        // Request notification permission on load
-        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-            setTimeout(() => {
-                const cta = document.createElement('div');
-                cta.className = 'widget-header';
-                cta.innerHTML = '<span style="color:#28a745; cursor:pointer;">Enable Desktop Notifications</span>';
-                cta.onclick = () => { Notification.requestPermission(); cta.remove(); };
-                const grid = document.getElementById('widgetGrid');
-                if (grid) grid.parentNode.insertBefore(cta, grid);
-            }, 3000);
-        }
+
 
         async function joinGroup(groupId, btn) {
             btn.disabled = true;
