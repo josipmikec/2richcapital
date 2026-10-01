@@ -1549,7 +1549,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 <span class="nav-tagline">INSTITUTIONAL GRADE TRADING</span>
             </div>
             <div class="nav-right">
-                <div class="tf-topbar-avatar" onclick="window.location.href='/account'" title="Account">
+                <div class="tf-topbar-avatar" onclick="openGlobalSettingsModal('profile')" title="Account">
                     <?php echo strtoupper(substr($user_name, 0, 1)); ?>
                 </div>
                 <div style="display:flex; gap:8px;">

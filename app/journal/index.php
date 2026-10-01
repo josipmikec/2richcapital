@@ -36,9 +36,9 @@ $user_email = $_SESSION['user_email'] ?? '';
                 <span class="nav-tagline">INSTITUTIONAL GRADE TRADING</span>
             </div>
             <div class="nav-right">
-                <div class="tf-topbar-avatar" onclick="window.location.href='/account'" title="Account"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'M', 0, 1)); ?></div>
+                <div class="tf-topbar-avatar" onclick="openGlobalSettingsModal('journal')" title="Account"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'M', 0, 1)); ?></div>
                 <div style="display:flex; gap:8px;">
-                    <button type="button" class="logout-btn" onclick="openGlobalSettingsModal('profile')">
+                    <button type="button" class="logout-btn" onclick="openGlobalSettingsModal('journal')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;margin-bottom:2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>SETTINGS
                     </button>
                     <a href="/auth/logout.php" class="logout-btn icon-only" title="Logout">
@@ -125,15 +125,6 @@ $user_email = $_SESSION['user_email'] ?? '';
                             <option value="">Loading journals...</option>
                         </select>
                     </div>
-
-                    <button class="btn-secondary" onclick="openGlobalSettingsModal('journal')">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M12 1v6m0 10v6m11-11h-6M7 12H1"></path>
-                            <path d="M19.78 4.22l-4.24 4.24M8.46 15.54l-4.24 4.24M19.78 19.78l-4.24-4.24M8.46 8.46L4.22 4.22"></path>
-                        </svg>
-                        Settings
-                    </button>
 
                     <button class="btn-primary" onclick="openNewTradeModal()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
