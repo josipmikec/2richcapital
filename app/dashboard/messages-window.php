@@ -513,11 +513,10 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                 
                 const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="window.replyToMessage(this)" data-id="${item.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
                 
-                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${item.user_id}">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${item.user_id}" onclick="window.openProfilePreview(this, ${item.user_id})" style="cursor:pointer;">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
             });
             
             messages.innerHTML = html;
-            if (typeof updateOnlineDots === 'function') updateOnlineDots();
             
             lastSeenId = Math.max(...items.map(i => Number(i.id)));
 
@@ -638,53 +637,64 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.hidden = true; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
         }
 
-        window.userActivityData = {};
-        async function pollOnlineMembers() {
-            if (!selectedGroupId) return;
+        window.openProfilePreview = async function(el, userId) {
+            if (!userId) return;
+            const existingModal = document.getElementById('profilePreviewModal');
+            if (existingModal) existingModal.remove();
+
+            const rect = el.getBoundingClientRect();
+            
+            const modal = document.createElement('div');
+            modal.id = 'profilePreviewModal';
+            modal.style.cssText = `position:fixed; left:${rect.left}px; top:${rect.bottom + 8}px; width:280px; background:#1e2025; border:1px solid #333; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:99999; padding:16px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; color:#fff; display:flex; flex-direction:column; gap:12px;`;
+            
+            modal.innerHTML = '<div style="text-align:center;color:#888;font-size:13px;padding:20px 0;">Loading profile...</div>';
+            document.body.appendChild(modal);
+
+            const closeHandler = (e) => {
+                if (!modal.contains(e.target) && e.target !== el) {
+                    modal.remove();
+                    document.removeEventListener('click', closeHandler);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', closeHandler), 10);
+
             try {
-                const res = await fetch(`/api/signals/online-members.php?group_id=${selectedGroupId}`);
+                const res = await fetch(`/api/signals/profile-preview.php?user_id=${userId}`);
                 const data = await res.json();
-                if (data.success && data.user_activity) {
-                    window.userActivityData = data.user_activity;
-                    updateOnlineDots();
-                }
-            } catch (e) { }
-        }
-        setInterval(pollOnlineMembers, 30000);
-
-        function updateOnlineDots() {
-            const now = Math.floor(Date.now() / 1000);
-            document.querySelectorAll('[data-user-id]').forEach(el => {
-                const uid = Number(el.getAttribute('data-user-id'));
-                if (!uid || !window.userActivityData[uid]) return;
+                if (!data.success) throw new Error();
                 
-                const lastActive = window.userActivityData[uid];
-                const diff = now - lastActive;
-                let isOnline = diff < 120;
-                let text = isOnline ? 'Online' : `Last seen ${Math.floor(diff/60)}m ago`;
-                if (diff >= 3600) text = `Last seen ${Math.floor(diff/3600)}h ago`;
-                if (diff >= 86400) text = `Last seen ${Math.floor(diff/86400)}d ago`;
+                const p = data.profile;
+                const now = Math.floor(Date.now() / 1000);
+                const diff = now - p.last_active;
+                let isOnline = p.last_active > 0 && diff < 120;
+                let lastSeenText = isOnline ? '<span style="color:#28a745;font-weight:600;">Online</span>' : `Last seen ${Math.floor(diff/60)}m ago`;
+                if (!isOnline && diff >= 3600) lastSeenText = `Last seen ${Math.floor(diff/3600)}h ago`;
+                if (!isOnline && diff >= 86400) lastSeenText = `Last seen ${Math.floor(diff/86400)}d ago`;
+                if (p.last_active === 0) lastSeenText = 'Offline';
 
-                let dot = el.querySelector('.online-status-dot');
-                if (!dot) {
-                    dot = document.createElement('span');
-                    dot.className = 'online-status-dot';
-                    dot.style.cssText = 'display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:6px; vertical-align:middle;';
-                    el.appendChild(dot);
-                }
-                
-                if (isOnline) {
-                    dot.style.background = '#28a745';
-                    dot.style.boxShadow = '0 0 4px rgba(40,167,69,0.6)';
-                } else {
-                    dot.style.background = '#6c757d';
-                    dot.style.boxShadow = 'none';
-                }
-                dot.title = text;
-            });
-        }
-        
-        window.handleDashboardAttachment = function(event) {
+                modal.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, #F2CA50, #FFDB70);color:#0e0e0e;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;position:relative;">
+                            ${escapeHtml(p.avatar_char)}
+                            <div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:${isOnline ? '#28a745' : '#6c757d'};border:2px solid #1e2025;"></div>
+                        </div>
+                        <div style="flex:1;overflow:hidden;">
+                            <div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.display_name)}</div>
+                            <div style="font-size:12px;color:#8f95a3;margin-top:2px;">${escapeHtml(p.handle)}</div>
+                        </div>
+                    </div>
+                    ${p.bio ? `<div style="font-size:13px;color:#cfd4dd;line-height:1.4;margin:4px 0;">${escapeHtml(p.bio)}</div>` : ''}
+                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-top:4px;">
+                        <span style="color:#8f95a3;">${p.followers} followers</span>
+                        <span style="color:#8f95a3;">${lastSeenText}</span>
+                    </div>
+                    <a href="/trading-floor/?profile=${p.user_id}" style="display:block;text-align:center;background:#2a2c33;color:#fff;text-decoration:none;padding:8px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;transition:background 0.2s;">View Full Profile</a>
+                `;
+            } catch (e) {
+                modal.innerHTML = '<div style="text-align:center;color:#ff5b5b;font-size:13px;padding:20px 0;">Failed to load profile.</div>';
+            }
+        };
             const file = event.target.files[0];
             if (!file) return;
             const preview = document.getElementById('dashboardGroupChatAttachmentPreview');

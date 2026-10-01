@@ -2947,7 +2947,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     reactionsHtml += '</div>';
                 }
                 
-                return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${msg.user_id}">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${msg.user_id}" onclick="window.openProfilePreview(this, ${msg.user_id})" style="cursor:pointer;">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
             }).join('');
         } else {
             messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -2956,7 +2956,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const currentCount = container.childElementCount;
         const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 10;
         container.innerHTML = messagesMarkup;
-        if (typeof window.updateOnlineDots === 'function') window.updateOnlineDots();
         if (isScrolledToBottom || currentCount === 0) {
             container.scrollTop = container.scrollHeight;
         }
@@ -3693,7 +3692,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                             reactionsHtml += '</div>';
                                         }
                                         
-                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${msg.user_id}">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${msg.user_id}" onclick="window.openProfilePreview(this, ${msg.user_id})" style="cursor:pointer;">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
                                     }).join('');
                                 } else {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
@@ -5778,51 +5777,64 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }
     });
 
-    // --- Online Status Polling ---
-    window.userActivityData = {};
-    async function pollOnlineMembers() {
-        if (!floorSignalsState.activeGroupId) return;
-        try {
-            const res = await fetch(`/api/signals/online-members.php?group_id=${floorSignalsState.activeGroupId}`);
-            const data = await res.json();
-            if (data.success && data.user_activity) {
-                window.userActivityData = data.user_activity;
-                if (typeof updateOnlineDots === 'function') updateOnlineDots();
-            }
-        } catch (e) { }
-    }
-    setInterval(pollOnlineMembers, 30000);
-    
-    window.updateOnlineDots = function() {
-        const now = Math.floor(Date.now() / 1000);
-        document.querySelectorAll('[data-user-id]').forEach(el => {
-            const uid = Number(el.getAttribute('data-user-id'));
-            if (!uid || !window.userActivityData[uid]) return;
-            
-            const lastActive = window.userActivityData[uid];
-            const diff = now - lastActive;
-            let isOnline = diff < 120;
-            let text = isOnline ? 'Online' : `Last seen ${Math.floor(diff/60)}m ago`;
-            if (diff >= 3600) text = `Last seen ${Math.floor(diff/3600)}h ago`;
-            if (diff >= 86400) text = `Last seen ${Math.floor(diff/86400)}d ago`;
+    // --- Profile Preview Modal ---
+    window.openProfilePreview = async function(el, userId) {
+        if (!userId) return;
+        const existingModal = document.getElementById('profilePreviewModal');
+        if (existingModal) existingModal.remove();
 
-            let dot = el.querySelector('.online-status-dot');
-            if (!dot) {
-                dot = document.createElement('span');
-                dot.className = 'online-status-dot';
-                dot.style.cssText = 'display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:6px; vertical-align:middle;';
-                el.appendChild(dot);
+        const rect = el.getBoundingClientRect();
+        
+        const modal = document.createElement('div');
+        modal.id = 'profilePreviewModal';
+        modal.style.cssText = `position:fixed; left:${rect.left}px; top:${rect.bottom + 8}px; width:280px; background:#1e2025; border:1px solid #333; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:99999; padding:16px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; color:#fff; display:flex; flex-direction:column; gap:12px;`;
+        
+        modal.innerHTML = '<div style="text-align:center;color:#888;font-size:13px;padding:20px 0;">Loading profile...</div>';
+        document.body.appendChild(modal);
+
+        const closeHandler = (e) => {
+            if (!modal.contains(e.target) && e.target !== el) {
+                modal.remove();
+                document.removeEventListener('click', closeHandler);
             }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 10);
+
+        try {
+            const res = await fetch(`/api/signals/profile-preview.php?user_id=${userId}`);
+            const data = await res.json();
+            if (!data.success) throw new Error();
             
-            if (isOnline) {
-                dot.style.background = '#28a745';
-                dot.style.boxShadow = '0 0 4px rgba(40,167,69,0.6)';
-            } else {
-                dot.style.background = '#6c757d';
-                dot.style.boxShadow = 'none';
-            }
-            dot.title = text;
-        });
+            const p = data.profile;
+            const now = Math.floor(Date.now() / 1000);
+            const diff = now - p.last_active;
+            let isOnline = p.last_active > 0 && diff < 120;
+            let lastSeenText = isOnline ? '<span style="color:#28a745;font-weight:600;">Online</span>' : `Last seen ${Math.floor(diff/60)}m ago`;
+            if (!isOnline && diff >= 3600) lastSeenText = `Last seen ${Math.floor(diff/3600)}h ago`;
+            if (!isOnline && diff >= 86400) lastSeenText = `Last seen ${Math.floor(diff/86400)}d ago`;
+            if (p.last_active === 0) lastSeenText = 'Offline';
+
+            modal.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, #F2CA50, #FFDB70);color:#0e0e0e;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;position:relative;">
+                        ${escapeHtmlForTradingFloor(p.avatar_char)}
+                        <div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:${isOnline ? '#28a745' : '#6c757d'};border:2px solid #1e2025;"></div>
+                    </div>
+                    <div style="flex:1;overflow:hidden;">
+                        <div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlForTradingFloor(p.display_name)}</div>
+                        <div style="font-size:12px;color:#8f95a3;margin-top:2px;">${escapeHtmlForTradingFloor(p.handle)}</div>
+                    </div>
+                </div>
+                ${p.bio ? `<div style="font-size:13px;color:#cfd4dd;line-height:1.4;margin:4px 0;">${escapeHtmlForTradingFloor(p.bio)}</div>` : ''}
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-top:4px;">
+                    <span style="color:#8f95a3;">${p.followers} followers</span>
+                    <span style="color:#8f95a3;">${lastSeenText}</span>
+                </div>
+                <a href="/trading-floor/?profile=${p.user_id}" style="display:block;text-align:center;background:#2a2c33;color:#fff;text-decoration:none;padding:8px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;transition:background 0.2s;">View Full Profile</a>
+            `;
+        } catch (e) {
+            modal.innerHTML = '<div style="text-align:center;color:#ff5b5b;font-size:13px;padding:20px 0;">Failed to load profile.</div>';
+        }
     };
     </script>
     <script>
