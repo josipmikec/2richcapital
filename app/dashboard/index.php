@@ -633,9 +633,17 @@ foreach ($_dashboard_initial_order as $card_id) {
 
     <nav class="top-nav">
         <div class="nav-container">
-            <div class="nav-brand">
-                <h1>2RICH CAPITAL</h1>
-                <span class="nav-tagline">INSTITUTIONAL GRADE TRADING</span>
+            <div class="nav-brand nav-brand-flipper" style="perspective: 1000px;">
+                <div class="nav-brand-inner" id="brandFlipperInner" style="display: grid; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <div class="nav-brand-face nav-brand-front" style="grid-area: 1 / 1; backface-visibility: hidden;">
+                        <h1>2RICH CAPITAL</h1>
+                        <span class="nav-tagline">INSTITUTIONAL GRADE TRADING</span>
+                    </div>
+                    <div class="nav-brand-face nav-brand-back" style="grid-area: 1 / 1; backface-visibility: hidden; transform: rotateX(180deg);">
+                        <h1>Welcome back, <?php echo htmlspecialchars(explode(' ', $user_name)[0]); ?></h1>
+                        <span class="nav-tagline">YOUR INSTITUTIONAL TRADING PLATFORM</span>
+                    </div>
+                </div>
             </div>
             <div class="nav-right">
                 <div class="tf-topbar-avatar" onclick="openGlobalSettingsModal('dashboard')" title="Account"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'M', 0, 1)); ?></div>
@@ -714,12 +722,6 @@ foreach ($_dashboard_initial_order as $card_id) {
 
         <main class="main-content">
 
-            <div class="welcome-section">
-                <div>
-                    <h2 class="welcome-title">Welcome back, <?php echo htmlspecialchars($user_name); ?></h2>
-                    <p class="welcome-subtitle">Your institutional trading platform</p>
-                </div>
-            </div>
 
             <div class="widget-grid" id="widgetGrid">
 
@@ -3464,5 +3466,33 @@ foreach ($_dashboard_initial_order as $card_id) {
     </div>
     <?php endif; ?>
     <?php include_once dirname(__DIR__) . '/components/general-settings-modal.php'; ?>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const flipperInner = document.getElementById('brandFlipperInner');
+            if (!flipperInner) return;
+
+            const LAST_FLIP_KEY = '2rich_last_brand_flip';
+            const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+            const now = Date.now();
+            const lastFlip = localStorage.getItem(LAST_FLIP_KEY);
+
+            if (!lastFlip || (now - parseInt(lastFlip, 10) > SIX_HOURS_MS)) {
+                // Record the flip
+                localStorage.setItem(LAST_FLIP_KEY, now.toString());
+
+                // Start animation sequence after a brief delay
+                setTimeout(() => {
+                    // Flip to "Welcome back"
+                    flipperInner.style.transform = 'rotateX(180deg)';
+                    
+                    // Stay flipped for 4 seconds, then flip back
+                    setTimeout(() => {
+                        flipperInner.style.transform = 'rotateX(0deg)';
+                    }, 4000);
+                }, 500); // 500ms delay gives the UI time to settle
+            }
+        });
+    </script>
 </body>
 </html>
