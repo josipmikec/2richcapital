@@ -633,17 +633,20 @@ foreach ($_dashboard_initial_order as $card_id) {
 
     <nav class="top-nav">
         <div class="nav-container">
-            <div class="nav-brand nav-brand-flipper" style="perspective: 1000px;">
-                <div class="nav-brand-inner" id="brandFlipperInner" style="display: grid; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                    <div class="nav-brand-face nav-brand-front" style="grid-area: 1 / 1; backface-visibility: hidden;">
-                        <h1>2RICH CAPITAL</h1>
-                        <span class="nav-tagline">INSTITUTIONAL GRADE TRADING</span>
-                    </div>
-                    <div class="nav-brand-face nav-brand-back" style="grid-area: 1 / 1; backface-visibility: hidden; transform: rotateX(180deg);">
-                        <h1>Welcome back, <?php echo htmlspecialchars(explode(' ', $user_name)[0]); ?></h1>
-                        <span class="nav-tagline">YOUR INSTITUTIONAL TRADING PLATFORM</span>
+            <div class="nav-brand" style="display: flex; flex-direction: column; justify-content: center;">
+                <div class="nav-brand-flipper" style="perspective: 1200px; line-height: 1;">
+                    <div class="nav-brand-inner" id="brandFlipperInner" style="display: grid; transform-style: preserve-3d; transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                        <div class="nav-brand-face nav-brand-front" style="grid-area: 1 / 1; backface-visibility: hidden;">
+                            <h1>2RICH CAPITAL</h1>
+                        </div>
+                        <div class="nav-brand-face nav-brand-back" style="grid-area: 1 / 1; backface-visibility: hidden; transform: rotateX(180deg);">
+                            <h1 style="text-transform: none; background: none; -webkit-text-fill-color: #fff; color: #fff; margin-bottom: 0;">
+                                <span style="background: linear-gradient(135deg, #F2CA50 0%, #FFDB70 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Welcome</span> back, <?php echo htmlspecialchars(explode(' ', $user_name)[0]); ?>
+                            </h1>
+                        </div>
                     </div>
                 </div>
+                <span class="nav-tagline" style="margin-top: 4px;">INSTITUTIONAL GRADE TRADING</span>
             </div>
             <div class="nav-right">
                 <div class="tf-topbar-avatar" onclick="openGlobalSettingsModal('dashboard')" title="Account"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'M', 0, 1)); ?></div>
@@ -3478,19 +3481,35 @@ foreach ($_dashboard_initial_order as $card_id) {
             const lastFlip = localStorage.getItem(LAST_FLIP_KEY);
 
             if (!lastFlip || (now - parseInt(lastFlip, 10) > SIX_HOURS_MS)) {
-                // Record the flip
-                localStorage.setItem(LAST_FLIP_KEY, now.toString());
-
-                // Start animation sequence after a brief delay
-                setTimeout(() => {
-                    // Flip to "Welcome back"
-                    flipperInner.style.transform = 'rotateX(180deg)';
+                
+                const tryFlip = () => {
+                    const settingsOverlay = document.getElementById('globalGeneralSettingsOverlay');
+                    const welcomeTour = document.getElementById('welcomeTourModal');
+                    const isSettingsOpen = settingsOverlay && settingsOverlay.classList.contains('open');
+                    const isWelcomeOpen = welcomeTour && welcomeTour.style.display !== 'none';
                     
-                    // Stay flipped for 4 seconds, then flip back
+                    if (isSettingsOpen || isWelcomeOpen) {
+                        setTimeout(tryFlip, 500); // Check again in 500ms
+                        return;
+                    }
+
+                    // Record the flip
+                    localStorage.setItem(LAST_FLIP_KEY, Date.now().toString());
+
+                    // Start animation sequence after a brief delay
                     setTimeout(() => {
-                        flipperInner.style.transform = 'rotateX(0deg)';
-                    }, 4000);
-                }, 500); // 500ms delay gives the UI time to settle
+                        // Flip to "Welcome back"
+                        flipperInner.style.transform = 'rotateX(180deg)';
+                        
+                        // Stay flipped for 4 seconds, then flip back
+                        setTimeout(() => {
+                            flipperInner.style.transform = 'rotateX(0deg)';
+                        }, 4000);
+                    }, 500); // 500ms delay gives the UI time to settle after modal closes
+                };
+
+                // Start attempting to flip
+                tryFlip();
             }
         });
     </script>
