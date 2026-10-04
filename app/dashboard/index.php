@@ -758,11 +758,11 @@ foreach ($_dashboard_initial_order as $card_id) {
                                 
 					            <div class="tech-engine-stats">
 					                <div>
-					                    <span class="tech-engine-stat-label" id="techStatPrevLabel">Prev Week O/C</span>
+					                    <span class="tech-engine-stat-label" id="techStatPrevLabel">Prev Week</span>
 					                    <span class="tech-engine-stat-value" id="techStatPrevOC">– / –</span>
 					                </div>
 					                <div>
-					                    <span class="tech-engine-stat-label">This Week %</span>
+					                    <span class="tech-engine-stat-label">Closed %</span>
 					                    <span class="tech-engine-stat-value" id="techStatChange">0.00%</span>
 					                </div>
 					            </div>
@@ -1677,7 +1677,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 const safeAuthor = escapeHtml(item.author_name || 'Member');
                 const replyAuthor = escapeHtml(item.author_name || 'Member');
                 const replyText = escapeHtml(item.message || '');
-                const timestamp = item.created_at ? new Date(String(item.created_at).replace(' ', 'T')).toLocaleString() : 'Just now';
+                const timestamp = item.created_at ? time(item.created_at) : 'Just now';
                 
                 let replyHtml = '';
                 if (item.reply_to_id) {
@@ -2241,7 +2241,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	    var sma200 = null;
 	    var rsiDaily = null;
 	
-	    var defaultPrevLabel   = "Prev Week O/C";
+	    var defaultPrevLabel   = "Prev Week";
 	    var defaultPrevOCText  = "– / –";
 	    var defaultPctText     = "0.00%";
 	
@@ -2430,7 +2430,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	                        elPrevOC.textContent = defaultPrevOCText;
 	                    }
 
-	                    defaultPrevLabel = "Prev Week O/C";
+	                    defaultPrevLabel = "Prev Week";
 	                    elPrevLabel.textContent = defaultPrevLabel;
 
 	                    var currOpen = parseFloat(curr.open);
@@ -2599,13 +2599,13 @@ foreach ($_dashboard_initial_order as $card_id) {
 	    }
 	
 	    function formatLabelForPoint(p, lastIndex) {
-	        if (!p || !p.datetime || p.index === lastIndex) return "Prev Week O/C";
-	        if (window.formatUserDate) return window.formatUserDate(p.datetime, 'date') + ' O/C';
+	        if (!p || !p.datetime || p.index === lastIndex) return "Prev Week";
+	        if (window.formatUserDate) return window.formatUserDate(p.datetime, 'date');
 	        var d = new Date(p.datetime);
-	        if (isNaN(d.getTime())) return "Prev Week O/C";
+	        if (isNaN(d.getTime())) return "Prev Week";
 	
 	        var months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-	        return months[d.getUTCMonth()] + " " + d.getUTCDate() + " O/C";
+	        return months[d.getUTCMonth()] + " " + d.getUTCDate();
 	    }
 	
 	    function attachHover() {
