@@ -4,8 +4,16 @@ $__uid = $_SESSION['user_id'] ?? 0;
 $__user_tz = get_user_meta($__uid, 'rich_timezone', true) ?: 'UTC';
 $__user_df = get_user_meta($__uid, 'rich_date_format', true) ?: 'Y-m-d';
 $__user_tf = get_user_meta($__uid, 'rich_time_format', true) ?: 'H:i';
+
+$__gmt_offset = (float) get_option('gmt_offset', 0);
+$__gmt_sign = $__gmt_offset < 0 ? '-' : '+';
+$__gmt_abs = abs($__gmt_offset);
+$__gmt_h = floor($__gmt_abs);
+$__gmt_m = round(($__gmt_abs - $__gmt_h) * 60);
+$__server_offset = sprintf('%s%02d:%02d', $__gmt_sign, $__gmt_h, $__gmt_m);
 ?>
 <script>
+window.SERVER_OFFSET = "<?php echo esc_js($__server_offset); ?>";
 window.USER_PREFS = {
     timezone: "<?php echo esc_js($__user_tz); ?>",
     date_format: "<?php echo esc_js($__user_df); ?>",
@@ -13,13 +21,17 @@ window.USER_PREFS = {
 };
 window.formatUserDate = function(dateStr, mode = 'time') {
     if (!dateStr) return '';
-    let dStr = dateStr;
+    let dStr = String(dateStr).trim();
     if (dStr.indexOf('T') === -1) {
         dStr = dStr.replace(' ', 'T');
     }
-    if (!dStr.endsWith('Z') && dStr.indexOf('+') === -1) {
-        dStr += 'Z';
+    
+    // If there is no timezone indicator at the end (like Z or +02:00 or -0400), append server offset
+    const hasTz = /(Z|[+-]\d{2}:?\d{2})$/.test(dStr);
+    if (!hasTz) {
+        dStr += window.SERVER_OFFSET || '+00:00';
     }
+    
     const d = new Date(dStr);
     if (isNaN(d.getTime())) return dateStr;
     
@@ -1040,7 +1052,10 @@ async function saveGlobalSettingsGeneral(e) {
         const data = await res.json();
         if (data.success) {
             status.style.color = '#28a745';
-            status.textContent = 'Saved successfully!';
+            status.textContent = 'Saved successfully! Reloading...';
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         } else {
             throw new Error(data.message || 'Error saving settings');
         }
