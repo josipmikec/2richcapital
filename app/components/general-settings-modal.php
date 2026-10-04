@@ -568,18 +568,12 @@
             <div class="settings-panel" id="gs-pane-profile">
                 <div class="column-manager-section">
                     <div style="display:flex; flex-direction:column; gap:16px;">
-                        <div class="form-field">
-                            <label>Display Name</label>
-                            <input type="text" id="gsProfileName">
-                        </div>
+
                         <div class="form-field">
                             <label>Trading Handle</label>
                             <input type="text" id="gsProfileHandle" placeholder="@handle">
                         </div>
-                        <div class="form-field">
-                            <label>Bio</label>
-                            <input type="text" id="gsProfileBio" placeholder="Tell us about your trading journey...">
-                        </div>
+
                         <div style="display:flex; gap:16px; flex-wrap:wrap;">
                             <div class="form-field">
                                 <label>Primary Market</label>
