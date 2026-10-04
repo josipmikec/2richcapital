@@ -2380,6 +2380,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             <div id="socialListBody"><div class="social-list-empty">Loading…</div></div>
         </div>
     </div>
+    <script src="/assets/js/group-chat.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/group-chat.js'); ?>"></script>
     <script>
     document.querySelectorAll('[data-social-list]').forEach((stat) => {
         stat.addEventListener('click', async () => {
@@ -4697,13 +4698,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             if (!isEnabled) return;
         }
         if (!("Notification" in window)) return;
-        if (Notification.permission === "granted") {
-            new Notification(title, options);
-        } else if (Notification.permission !== "denied") {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") new Notification(title, options);
-            });
-        }
+        try {
+            if (Notification.permission === "granted") {
+                new Notification(title, options);
+            }
+            // Permission prompts must come from a user gesture in Safari; they are handled by the settings toggle.
+        } catch (e) {}
     }
     const SIGNALS_API_BASE = window.location.origin + '/api/signals';
     function signalsUrl(path) {
@@ -4712,7 +4712,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
     const floorSignalsState = { groups: [], memberships: [], activeGroupId: null, activeTab: 'discovery', activeView: 'list', activeWorkspaceTab: 'room', groupMembers: [], groupMembersError: '', groupMessagesByGroup: {}, groupMessagesLoading: false, groupMessagesError: '', groupSignalsByGroup: {}, groupSignalsLoading: false, groupSignalsError: '', loading: false, booted: false, creating: false, error: '', csrf: SIGNALS_CSRF, myDrafts: [], joinMessage: '', createMessage: '', postingSignal: false, busyKey: '', currentReplyToId: null, currentReplyAuthor: '', currentReplyText: '' };
     
     let groupChatLastSeenId = 0;
-    let tfAudioCtx = null;
     
     const escapeHtmlForTradingFloor = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
     const formatDateSeparator = value => {
@@ -4752,25 +4751,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }, 50);
     };
 
+    // Shared with dashboard/pop-out chat (assets/js/group-chat.js): unlocks audio on first gesture (Safari)
     function playChatPopSound() {
-        try {
-            if (!tfAudioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                tfAudioCtx = new AudioContext();
-            }
-            if (tfAudioCtx.state === 'suspended') tfAudioCtx.resume();
-            const osc = tfAudioCtx.createOscillator();
-            const gain = tfAudioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(tfAudioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, tfAudioCtx.currentTime);
-            gain.gain.setValueAtTime(0.4, tfAudioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, tfAudioCtx.currentTime + 0.1);
-            osc.start(tfAudioCtx.currentTime);
-            osc.stop(tfAudioCtx.currentTime + 0.1);
-        } catch (e) {}
+        if (window.TwoRichChatAudio) window.TwoRichChatAudio.play();
     }
 
 
