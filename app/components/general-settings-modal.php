@@ -579,22 +579,23 @@
                                 <label>Primary Market</label>
                                 <select id="gsProfileMarket">
                                     <option value="">Select Market...</option>
-                                    <option value="forex">Forex</option>
-                                    <option value="crypto">Crypto</option>
-                                    <option value="stocks">Stocks</option>
-                                    <option value="futures">Futures</option>
-                                    <option value="options">Options</option>
+                                    <option value="Forex">Forex</option>
+                                    <option value="Crypto">Crypto</option>
+                                    <option value="Indices">Indices</option>
+                                    <option value="Commodities">Commodities</option>
+                                    <option value="Futures">Futures</option>
+                                    <option value="Stocks">Stocks</option>
                                 </select>
                             </div>
                             <div class="form-field">
                                 <label>Trading Style</label>
                                 <select id="gsProfileStyle">
                                     <option value="">Select Style...</option>
-                                    <option value="scalper">Scalper</option>
-                                    <option value="day_trader">Day Trader</option>
-                                    <option value="swing_trader">Swing Trader</option>
-                                    <option value="position_trader">Position Trader</option>
-                                    <option value="algo_trader">Algo / Quant</option>
+                                    <option value="Scalper">Scalper</option>
+                                    <option value="Day Trader">Day Trader</option>
+                                    <option value="Swing Trader">Swing Trader</option>
+                                    <option value="Position Trader">Position Trader</option>
+                                    <option value="Algorithmic">Algorithmic</option>
                                 </select>
                             </div>
                         </div>
