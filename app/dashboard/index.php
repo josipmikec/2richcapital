@@ -2600,7 +2600,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	
 	    function formatLabelForPoint(p, lastIndex) {
 	        if (!p || !p.datetime || p.index === lastIndex) return "Prev Week O/C";
-	
+	        if (window.formatUserDate) return window.formatUserDate(p.datetime, 'date') + ' O/C';
 	        var d = new Date(p.datetime);
 	        if (isNaN(d.getTime())) return "Prev Week O/C";
 	
@@ -2828,7 +2828,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     <div class="signals-feed-head">
                         <div>
                             <div class="signals-feed-symbol">${signal.symbol}</div>
-                            <div class="signals-feed-time">${signal.posted_at || ''}</div>
+                            <div class="signals-feed-time">${window.formatUserDate && signal.posted_at ? window.formatUserDate(signal.posted_at, 'datetime') : (signal.posted_at || '')}</div>
                         </div>
                         <div class="signals-feed-badges">
                             <span class="signals-badge ${String(signal.direction || '').toLowerCase()}">${signal.direction}</span>
@@ -3258,6 +3258,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 
     function fmtTime(dt) {
         if (!dt) return '—';
+        if (window.formatUserDate) return window.formatUserDate(dt, 'datetime');
         const d = new Date(String(dt).replace(' ', 'T'));
         if (isNaN(d.getTime())) return escapeHtml(dt);
         return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ' ' +

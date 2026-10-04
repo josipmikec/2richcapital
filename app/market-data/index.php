@@ -1917,7 +1917,7 @@ async function initChart() {
         autosize:        true,
         saved_data:      (hasValidState && i === 1) ? savedState : undefined,
         theme:           initialTemplate ? initialTemplate.theme : DEFAULT_CHART_THEME.theme,
-        timezone:        'Europe/London',
+        timezone:        window.USER_PREFS && window.USER_PREFS.timezone ? window.USER_PREFS.timezone : 'Europe/London',
         toolbar_bg:      initialTemplate ? initialTemplate.toolbarBg : DEFAULT_CHART_THEME.toolbarBg,
         overrides:       initialTemplate ? initialTemplate.overrides : undefined,
         studies_overrides: initialTemplate ? initialTemplate.studiesOverrides : DEFAULT_CHART_THEME.studiesOverrides,
@@ -2391,7 +2391,15 @@ function renderCalendar(events) {
 
     let html = '';
     Object.entries(groups).forEach(([date, dayEvents]) => {
-        html += `<div class="md-cal-day-group"><div class="md-cal-day-header">${date}</div>`;
+        let displayDate = date;
+        if (dayEvents.length > 0 && window.formatUserDate) {
+            const firstDateObj = eventDateNY(dayEvents[0]);
+            if (firstDateObj && !isNaN(firstDateObj.getTime())) {
+                displayDate = window.formatUserDate(firstDateObj.toISOString(), 'date');
+            }
+        }
+        
+        html += `<div class="md-cal-day-group"><div class="md-cal-day-header">${displayDate}</div>`;
         dayEvents.forEach(event => {
             const impCls    = impactClass(event.impact);
             const actual    = (event.actual   && event.actual   !== '-') ? event.actual   : null;
@@ -2400,9 +2408,17 @@ function renderCalendar(events) {
             const actCls    = actual ? actualClass(actual, forecast) : '';
             const hasActual = !!actual;
 
+            let displayTime = event.time;
+            if (window.formatUserDate) {
+                const evDate = eventDateNY(event);
+                if (evDate && !isNaN(evDate.getTime())) {
+                    displayTime = window.formatUserDate(evDate.toISOString(), 'time');
+                }
+            }
+
             html += `<div class="md-calendar-item">
                 <div class="md-cal-item-left">
-                    <div class="md-calendar-time">${event.time}</div>
+                    <div class="md-calendar-time">${displayTime}</div>
                     <span class="md-impact-pill ${impCls}">${event.impact || 'Low'}</span>
                 </div>
                 <div class="md-cal-item-body">
@@ -2468,7 +2484,9 @@ async function loadEconomicCalendar(forceBust = false) {
         }
 
         const now = new Date();
-        if (lastEl) lastEl.textContent = `Updated ${now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+        if (lastEl) {
+            lastEl.textContent = `Updated ${window.formatUserDate ? window.formatUserDate(now.toISOString(), 'time') : now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+        }
         if (badge) badge.classList.remove('cal-error');
         applyFilters();
         manageBurstMode();

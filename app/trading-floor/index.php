@@ -1878,7 +1878,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                 <span class="profile-activity-dir <?= $dir ?>"><?= strtoupper($dir) ?></span>
                                 <span class="profile-activity-outcome <?= $outcome === 'win' ? 'win' : ($outcome === 'loss' ? 'loss' : 'be') ?>"><?= strtoupper($t->outcome ?? 'BE') ?></span>
                                 <span class="profile-activity-pnl <?= $pnl !== null && $pnl >= 0 ? 'pos' : 'neg' ?>"><?= $pnl !== null ? ($pnl >= 0 ? '+' : '') . number_format($pnl, 2) . '%' : '—' ?></span>
-                                <span class="profile-activity-date"><?= date('d M Y', strtotime($t->entry_date)) ?></span>
+                                <span class="profile-activity-date"><?= date(get_user_meta(get_current_user_id(), 'rich_date_format', true) ?: 'd M Y', strtotime($t->entry_date)) ?></span>
                             </div>
                             <?php endforeach; ?>
                             <?php endif; ?>
@@ -4724,6 +4724,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const isSameDate = (d1, d2) => d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
         if (isSameDate(d, today)) return 'Today';
         if (isSameDate(d, yesterday)) return 'Yesterday';
+        if (window.formatUserDate) return window.formatUserDate(value, 'date');
         return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
     };
     window.cancelGroupReply = function() {
