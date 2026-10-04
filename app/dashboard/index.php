@@ -1360,6 +1360,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	<script src="/assets/js/group-chat.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/group-chat.js'); ?>"></script>
 	<script>
     window.CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
+    window.USER_NOTIF_PREFS = <?php $__np = function_exists('get_user_meta') ? get_user_meta((int)$user_id, 'notification_prefs', true) : ''; $__np = $__np ? json_decode($__np, true) : []; echo json_encode($__np ?: new stdClass()); ?>;
     (function () {
         const nameEl = document.getElementById('dashboardJournalName');
         const ctaEl = document.getElementById('dashboardJournalCta');

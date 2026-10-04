@@ -1,5 +1,7 @@
 <?php
 require_once '../auth/session-config.php';
+if (!defined('WP_USE_THEMES')) { define('WP_USE_THEMES', false); }
+require_once dirname(__DIR__, 2) . '/wp-load.php';
 
 if (
     (!isset($_SESSION['userid']) && !isset($_SESSION['user_id'])) ||
@@ -363,6 +365,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
     <script src="/assets/js/group-chat.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/group-chat.js'); ?>"></script>
     <script>
         window.CSRF_TOKEN = '<?php echo $_SESSION["csrf_token"] ?? ""; ?>';
+        window.USER_NOTIF_PREFS = <?php $__np = function_exists('get_user_meta') ? get_user_meta((int)$user_id, 'notification_prefs', true) : ''; $__np = $__np ? json_decode($__np, true) : []; echo json_encode($__np ?: new stdClass()); ?>;
 
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
 
@@ -437,6 +440,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             formatUserDate: (v, mode) => (window.opener && window.opener.formatUserDate) ? window.opener.formatUserDate(v, mode) : null,
             imageOpener: 'openImageLightbox',
             showReplyIcon: true,
+            showSoundChip: true,
             composerUsesHiddenAttr: true,
             rememberSelection: false,
             preselectFromUrl: true,

@@ -71,7 +71,58 @@
         playPop();
     }
 
-    window.TwoRichChatAudio = { unlock: unlockAudio, play: playPop, playForGroup: playNewMessageSound };
+    window.TwoRichChatAudio = { unlock: unlockAudio, play: playPop, playForGroup: playNewMessageSound, notify: notifyNewMessages };
+
+    /* ------------------------------------------------------------------
+     * Native (OS) notifications — audible even when the user is in another app/tab.
+     * Respects the user's saved notification prefs (window.USER_NOTIF_PREFS or opts.notifPrefs).
+     * ------------------------------------------------------------------ */
+    const NOTIF_DEFAULTS = { group_new_message: false, group_mention: true }; // same defaults as Account > Notifications
+    function notifEnabled(prefs, key) {
+        prefs = prefs || window.USER_NOTIF_PREFS || {};
+        return Object.prototype.hasOwnProperty.call(prefs, key) ? Boolean(prefs[key]) : (NOTIF_DEFAULTS[key] ?? true);
+    }
+    function appInBackground() {
+        return document.hidden || !document.hasFocus();
+    }
+    function notifyNewMessages(items, o) {
+        o = o || {};
+        try {
+            if (!items || !items.length || !('Notification' in window) || Notification.permission !== 'granted') return;
+            if (!appInBackground()) return;
+            const me = String(o.currentUserName || '').toLowerCase();
+            const latest = items[items.length - 1];
+            const content = String(latest.message || latest.content || '');
+            const mentioned = me && content.toLowerCase().includes('@' + me);
+            const key = mentioned ? 'group_mention' : 'group_new_message';
+            if (!notifEnabled(o.notifPrefs, key)) return;
+            const who = latest.author_name || latest.user_name || 'Someone';
+            const title = mentioned ? 'You were mentioned' : ('New message from ' + who + (o.groupName ? ' · ' + o.groupName : ''));
+            const body = (mentioned ? who + ' mentioned you: ' : '') + content.substring(0, 80) + (items.length > 1 ? ' (+' + (items.length - 1) + ' more)' : '');
+            // same tag across windows => dashboard + pop-out never show duplicates
+            const n = new Notification(title, { body: body, icon: '/app/assets/img/logo-small.png', tag: 'rich-chat-' + latest.id });
+            n.onclick = function () { window.focus(); n.close(); };
+        } catch (e) {}
+    }
+
+    // Small "click to enable sound" chip for windows the browser keeps muted until first interaction (pop-out)
+    function showSoundChip() {
+        if (document.getElementById('richSoundChip')) return;
+        const chip = document.createElement('button');
+        chip.id = 'richSoundChip';
+        chip.type = 'button';
+        chip.textContent = '🔔 Click to enable message sound';
+        chip.style.cssText = 'position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9998;padding:7px 14px;border-radius:999px;border:1px solid rgba(242,202,80,0.45);background:rgba(14,14,14,0.92);backdrop-filter:blur(8px);color:#f2ca50;font:600 11px Montserrat,sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.5);transition:opacity .3s ease,transform .3s ease;';
+        chip.onclick = function () { unlockAudio(); };
+        document.body.appendChild(chip);
+        const t = setInterval(function () {
+            if (audioCtx && audioCtx.state === 'running') {
+                clearInterval(t);
+                chip.style.opacity = '0';
+                setTimeout(function () { chip.remove(); }, 350);
+            }
+        }, 400);
+    }
 
     /* ------------------------------------------------------------------
      * Message list markup — shared by dashboard card, pop-out and Trading Floor
@@ -107,12 +158,13 @@
             return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
         };
         let hasNew = false;
+        const newExternal = [];
         let html = '';
         let lastDateStr = null;
 
         items.forEach(item => {
             const isNew = o.previousLastSeenId > 0 && Number(item.id) > o.previousLastSeenId;
-            if (isNew && String(item.user_id || '') !== String(o.currentUserId)) hasNew = true;
+            if (isNew && String(item.user_id || '') !== String(o.currentUserId)) { hasNew = true; newExternal.push(item); }
             const hasMention = o.currentUserName ? (item.message || '').toLowerCase().includes('@' + String(o.currentUserName).toLowerCase()) : false;
             let highlightClass = isNew ? ' unread-highlight' : '';
             if (hasMention) highlightClass += ' mention-highlight';
@@ -175,7 +227,7 @@
 
             html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${item.user_id}" onclick="window.openProfilePreview(this, ${item.user_id})" style="cursor:pointer;">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${esc(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
         });
-        return { html: html, hasNewExternal: hasNew };
+        return { html: html, hasNewExternal: hasNew, newExternal: newExternal };
     }
 
     /* ------------------------------------------------------------------
@@ -318,7 +370,11 @@
                 messages.scrollTop = messages.scrollHeight;
             }
             if (footer) footer.hidden = false;
-            if (hasNewExternalMessage) playNewMessageSound(selectedGroupId);
+            if (hasNewExternalMessage) {
+                playNewMessageSound(selectedGroupId);
+                const g = memberships.find(m => Number(m.id) === Number(selectedGroupId));
+                notifyNewMessages(built.newExternal, { currentUserName: CURRENT_USER_NAME, notifPrefs: opts.notifPrefs, groupName: g ? g.name : '' });
+            }
         }
 
         /* ---------------- context menu ---------------- */
@@ -686,6 +742,7 @@
 
         /* ---------------- boot + polling ---------------- */
         initChat();
+        if (opts.showSoundChip) setTimeout(function () { if (!(audioCtx && audioCtx.state === 'running')) showSoundChip(); }, 800);
 
         // Web Worker for background-friendly polling (timers aren't throttled like setInterval in hidden tabs)
         try {
