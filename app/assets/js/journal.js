@@ -348,6 +348,7 @@ async function deleteTrade(id) {
 
 function formatDate(dateString) {
     if (!dateString) return '-';
+    if (window.formatUserDate) return window.formatUserDate(dateString, 'date');
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

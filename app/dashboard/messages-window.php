@@ -379,7 +379,11 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         const footer = document.getElementById('dashboardGroupChatFooter');
 
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
-        const time = value => { const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z')); return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); };
+        const time = value => { 
+            if (window.opener && window.opener.formatUserDate) return window.opener.formatUserDate(value, 'time');
+            const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z')); 
+            return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); 
+        };
 
         const formatDateSeparator = value => {
             const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z'));
@@ -393,6 +397,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             if (isSameDate(d, today)) return 'Today';
             if (isSameDate(d, yesterday)) return 'Yesterday';
             
+            if (window.opener && window.opener.formatUserDate) return window.opener.formatUserDate(value, 'date');
             return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
         };
 
@@ -677,7 +682,29 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
         }
         
         async function init() {
-            try { const r = await fetch(membershipsUrl, {credentials:'same-origin'}); const data = await r.json(); if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); memberships = data.memberships || []; if (!memberships.length) { showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); messages.innerHTML = ''; composer.hidden = true; setCta('Choose a Group', '/trading-floor#groups', true); return; } await selectGroup(memberships[0].id); } catch (e) { if (footer) footer.hidden = true; showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); }
+            try { 
+                const r = await fetch(membershipsUrl, {credentials:'same-origin'}); 
+                const data = await r.json(); 
+                if (!r.ok || !data.success) throw new Error(data.message || 'Unable to load memberships'); 
+                memberships = data.memberships || []; 
+                if (!memberships.length) { 
+                    showState('<div class="widget-content-block"><p class="widget-content-text dashboard-group-chat-empty">You have not joined a trading group yet. Choose a group on the Trading Floor to start chatting.</p></div>'); 
+                    messages.innerHTML = ''; 
+                    composer.hidden = true; 
+                    setCta('Choose a Group', '/trading-floor#groups', true); 
+                    return; 
+                }
+                const urlParams = new URLSearchParams(window.location.search);
+                const preselectId = urlParams.get('group_id');
+                let targetGroup = memberships[0].id;
+                if (preselectId && memberships.some(m => String(m.id) === String(preselectId))) {
+                    targetGroup = preselectId;
+                }
+                await selectGroup(targetGroup); 
+            } catch (e) { 
+                if (footer) footer.hidden = true; 
+                showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`); 
+            }
         }
 
         window.openProfilePreview = async function(el, userId) {

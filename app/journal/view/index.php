@@ -430,6 +430,7 @@ $user_email = $_SESSION['user_email'] ?? '';
 
         function formatDate(dateString) {
             if (!dateString) return '-';
+            if (window.formatUserDate) return window.formatUserDate(dateString, 'date');
             const date = new Date(dateString);
             if (isNaN(date.getTime())) return '-';
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

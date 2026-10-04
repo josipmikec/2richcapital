@@ -195,6 +195,7 @@ if (
 
         function formatTime(str) {
             if (!str) return '--:--';
+            if (window.opener && window.opener.formatUserDate) return window.opener.formatUserDate(str, 'time');
             const d = new Date(str + 'Z');
             if (isNaN(d.getTime())) return '--:--';
             return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

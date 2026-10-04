@@ -1588,7 +1588,11 @@ foreach ($_dashboard_initial_order as $card_id) {
         if (!state || !messages) return;
 
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
-        const time = value => { const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z')); return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); };
+        const time = value => { 
+            if (window.formatUserDate) return window.formatUserDate(value, 'time');
+            const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z')); 
+            return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); 
+        };
 
         const formatDateSeparator = value => {
             const d = new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z'));
@@ -1602,6 +1606,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             if (isSameDate(d, today)) return 'Today';
             if (isSameDate(d, yesterday)) return 'Yesterday';
             
+            if (window.formatUserDate) return window.formatUserDate(value, 'date');
             return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
         };
 
@@ -2092,8 +2097,12 @@ foreach ($_dashboard_initial_order as $card_id) {
 	    }
 	    
 	    function openMessagesWindow() {
+	        let url = '/dashboard/messages-window.php';
+	        if (typeof selectedGroupId !== 'undefined' && selectedGroupId) {
+	            url += '?group_id=' + selectedGroupId;
+	        }
 	        window.open(
-	            '/dashboard/messages-window.php',
+	            url,
 	            'messagesWindow',
 	            'width=480,height=800,resizable=yes,scrollbars=yes'
 	        );
@@ -2104,8 +2113,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	        let lastId = 0;
 	
 	        function formatTime(datetimeStr) {
-	            const d = new Date(datetimeStr + 'Z');
-	            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+	            return window.formatUserDate ? window.formatUserDate(datetimeStr, 'time') : new Date(datetimeStr + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 	        }
 	
 	        function setStatus(connected) {

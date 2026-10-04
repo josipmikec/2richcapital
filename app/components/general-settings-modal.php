@@ -1,6 +1,55 @@
 <?php
 // /app/components/general-settings-modal.php
+$__uid = $_SESSION['user_id'] ?? 0;
+$__user_tz = get_user_meta($__uid, 'rich_timezone', true) ?: 'UTC';
+$__user_df = get_user_meta($__uid, 'rich_date_format', true) ?: 'Y-m-d';
+$__user_tf = get_user_meta($__uid, 'rich_time_format', true) ?: 'H:i';
 ?>
+<script>
+window.USER_PREFS = {
+    timezone: "<?php echo esc_js($__user_tz); ?>",
+    date_format: "<?php echo esc_js($__user_df); ?>",
+    time_format: "<?php echo esc_js($__user_tf); ?>"
+};
+window.formatUserDate = function(dateStr, mode = 'time') {
+    if (!dateStr) return '';
+    let dStr = dateStr;
+    if (dStr.indexOf('T') === -1) {
+        dStr = dStr.replace(' ', 'T');
+    }
+    if (!dStr.endsWith('Z') && dStr.indexOf('+') === -1) {
+        dStr += 'Z';
+    }
+    const d = new Date(dStr);
+    if (isNaN(d.getTime())) return dateStr;
+    
+    let opts = { timeZone: window.USER_PREFS.timezone || 'UTC' };
+    
+    if (mode === 'time' || mode === 'datetime') {
+        if (window.USER_PREFS.time_format === 'h:i A') {
+            opts.hour12 = true;
+            opts.hour = 'numeric';
+            opts.minute = '2-digit';
+        } else {
+            opts.hour12 = false;
+            opts.hour = '2-digit';
+            opts.minute = '2-digit';
+        }
+    }
+    
+    let locale = 'en-US';
+    if (mode === 'date' || mode === 'datetime') {
+        const df = window.USER_PREFS.date_format;
+        if (df === 'Y-m-d') locale = 'en-CA';
+        else if (df === 'd/m/Y') locale = 'en-GB';
+        else if (df === 'F j, Y') {
+            opts.month = 'long'; opts.day = 'numeric'; opts.year = 'numeric';
+        }
+    }
+    
+    return d.toLocaleString(locale, opts);
+};
+</script>
 <style>
 .general-settings-overlay {
     position: fixed;
