@@ -23,7 +23,11 @@ window.formatUserDate = function(dateStr, mode = 'time') {
     if (!dateStr) return '';
     let dStr = String(dateStr).trim();
     if (dStr.indexOf('T') === -1) {
-        dStr = dStr.replace(' ', 'T');
+        if (dStr.indexOf(' ') !== -1) {
+            dStr = dStr.replace(' ', 'T');
+        } else if (dStr.length <= 10) {
+            dStr += 'T00:00:00';
+        }
     }
     
     // If there is no timezone indicator at the end (like Z or +02:00 or -0400), append server offset
@@ -59,6 +63,8 @@ window.formatUserDate = function(dateStr, mode = 'time') {
         }
     }
     
+    if (mode === 'time') return d.toLocaleTimeString(locale, opts);
+    if (mode === 'date') return d.toLocaleDateString(locale, opts);
     return d.toLocaleString(locale, opts);
 };
 </script>

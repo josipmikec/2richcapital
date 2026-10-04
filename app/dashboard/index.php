@@ -3258,7 +3258,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 
     function fmtTime(dt) {
         if (!dt) return '—';
-        if (window.formatUserDate) return window.formatUserDate(dt, 'datetime');
+        if (window.formatUserDate) return window.formatUserDate(dt, String(dt).length <= 10 ? 'date' : 'datetime');
         const d = new Date(String(dt).replace(' ', 'T'));
         if (isNaN(d.getTime())) return escapeHtml(dt);
         return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ' ' +
@@ -3299,7 +3299,13 @@ foreach ($_dashboard_initial_order as $card_id) {
 	        elMt5LinkCta.style.display = (status === 'offline') ? 'inline-flex' : 'none';
 	    }
 	
-	    if (lastSync) label += ' • Last sync: ' + lastSync;
+	    if (lastSync) {
+            let formattedSync = lastSync;
+            if (window.formatUserDate) {
+                formattedSync = window.formatUserDate(lastSync, 'datetime');
+            }
+            label += ' • Last sync: ' + formattedSync;
+        }
 	
 	    if (elStatusLabelLive) elStatusLabelLive.textContent = label;
 	    if (elStatusLabelClosed) elStatusLabelClosed.textContent = label;
