@@ -738,6 +738,8 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                 modal.innerHTML = '<div style="text-align:center;color:#ff5b5b;font-size:13px;padding:20px 0;">Failed to load profile.</div>';
             }
         };
+
+        window.handleDashboardAttachment = function(event) {
             const file = event.target.files[0];
             if (!file) return;
             const preview = document.getElementById('dashboardGroupChatAttachmentPreview');
