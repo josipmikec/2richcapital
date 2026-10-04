@@ -57,6 +57,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         update_user_meta($user_id, 'rich_time_format', sanitize_text_field($input['time_format']));
     }
     
+    if (isset($input['profile']) && is_array($input['profile'])) {
+        global $wpdb;
+        $profile_table = $wpdb->prefix . 'rich_user_profiles';
+        $existing = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$profile_table} WHERE user_id = %d LIMIT 1", $user_id));
+        
+        $data = [];
+        if (isset($input['profile']['trading_handle'])) $data['trading_handle'] = sanitize_text_field($input['profile']['trading_handle']);
+        if (isset($input['profile']['primary_market'])) $data['primary_market'] = sanitize_text_field($input['profile']['primary_market']);
+        if (isset($input['profile']['trading_style'])) $data['trading_style'] = sanitize_text_field($input['profile']['trading_style']);
+        
+        if (!empty($data)) {
+            $data['updated_at'] = current_time('mysql', 1);
+            if ($existing) {
+                $wpdb->update($profile_table, $data, ['user_id' => $user_id]);
+            } else {
+                $data['user_id'] = $user_id;
+                $data['created_at'] = current_time('mysql', 1);
+                $wpdb->insert($profile_table, $data);
+            }
+        }
+    }
+    
     echo json_encode(['success' => true, 'message' => 'Settings saved']);
     exit;
 }

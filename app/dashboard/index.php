@@ -652,7 +652,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                 <div class="tf-topbar-avatar" onclick="openGlobalSettingsModal('dashboard')" title="Account"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'M', 0, 1)); ?></div>
                 <div style="display:flex; gap:8px;">
                     <button type="button" class="logout-btn" onclick="openGlobalSettingsModal('dashboard')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;margin-bottom:2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>SETTINGS
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;margin-bottom:2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span class="settings-text-mobile">SETTINGS</span>
                     </button>
                     <a href="/auth/logout.php" class="logout-btn icon-only" title="Logout">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -1767,8 +1767,9 @@ foreach ($_dashboard_initial_order as $card_id) {
             emojiHtml += '</div>';
             
             let actionsHtml = `<button type="button" onclick="window.replyToMessage({dataset:{id:${msgId}, author:'${author.replace(/'/g, "\\'")}', text:'${text.replace(/'/g, "\\'")}'}}); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Reply</button>`;
+            actionsHtml += `<button type="button" onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'").replace(/\n/g, "\\n")}'); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Copy</button>`;
             
-            menu.innerHTML = emojiHtml + actionsHtml;
+            menu.innerHTML = emojiHtml + '<div style="display:flex;flex-direction:column;gap:2px;">' + actionsHtml + '</div>';
             menu.style.display = 'flex';
             
             menu.style.left = e.clientX + 'px';
@@ -1784,6 +1785,48 @@ foreach ($_dashboard_initial_order as $card_id) {
                 }
             }, 0);
         };
+
+        // Global touch handler for long press on messages
+        (function() {
+            let touchTimer = null;
+            let touchStartX = 0, touchStartY = 0;
+            
+            document.addEventListener('touchstart', (e) => {
+                const msgEl = e.target.closest('.dashboard-group-chat-message');
+                if (msgEl) {
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    
+                    touchTimer = setTimeout(() => {
+                        touchTimer = null;
+                        const onclickStr = msgEl.getAttribute('oncontextmenu');
+                        if (onclickStr) {
+                            const match = onclickStr.match(/openMessageContextMenu\(event,\s*(\d+),\s*'([^']*)',\s*'([^']*)'\)/);
+                            if (match && typeof window.openMessageContextMenu === 'function') {
+                                const synthEvent = { clientX: touchStartX, clientY: touchStartY, preventDefault: ()=>{} };
+                                const author = match[2].replace(/\\'/g, "'");
+                                const text = match[3].replace(/\\'/g, "'").replace(/\\n/g, "\n");
+                                window.openMessageContextMenu(synthEvent, parseInt(match[1], 10), author, text);
+                            }
+                        }
+                    }, 500);
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+            });
+            document.addEventListener('touchmove', (e) => {
+                if (touchTimer) {
+                    const touch = e.touches[0];
+                    if (Math.abs(touch.clientX - touchStartX) > 10 || Math.abs(touch.clientY - touchStartY) > 10) {
+                        clearTimeout(touchTimer);
+                        touchTimer = null;
+                    }
+                }
+            });
+        })();
 
         window.toggleMessageReaction = async function(messageId, reaction) {
             const msg = (window.currentMessages || []).find(m => Number(m.id) === Number(messageId));

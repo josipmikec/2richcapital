@@ -564,8 +564,9 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             emojiHtml += '</div>';
             
             let actionsHtml = `<button type="button" onclick="window.replyToMessage({dataset:{id:${msgId}, author:'${author.replace(/'/g, "\\'")}', text:'${text.replace(/'/g, "\\'")}'}}); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Reply</button>`;
+            actionsHtml += `<button type="button" onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'").replace(/\n/g, "\\n")}'); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Copy</button>`;
             
-            menu.innerHTML = emojiHtml + actionsHtml;
+            menu.innerHTML = emojiHtml + '<div style="display:flex;flex-direction:column;gap:2px;">' + actionsHtml + '</div>';
             menu.style.display = 'flex';
             
             menu.style.left = e.clientX + 'px';
@@ -581,6 +582,48 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
                 }
             }, 0);
         };
+
+        // Global touch handler for long press on messages
+        (function() {
+            let touchTimer = null;
+            let touchStartX = 0, touchStartY = 0;
+            
+            document.addEventListener('touchstart', (e) => {
+                const msgEl = e.target.closest('.dashboard-group-chat-message');
+                if (msgEl) {
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    
+                    touchTimer = setTimeout(() => {
+                        touchTimer = null;
+                        const onclickStr = msgEl.getAttribute('oncontextmenu');
+                        if (onclickStr) {
+                            const match = onclickStr.match(/openMessageContextMenu\(event,\s*(\d+),\s*'([^']*)',\s*'([^']*)'\)/);
+                            if (match && typeof window.openMessageContextMenu === 'function') {
+                                const synthEvent = { clientX: touchStartX, clientY: touchStartY, preventDefault: ()=>{} };
+                                const author = match[2].replace(/\\'/g, "'");
+                                const text = match[3].replace(/\\'/g, "'").replace(/\\n/g, "\n");
+                                window.openMessageContextMenu(synthEvent, parseInt(match[1], 10), author, text);
+                            }
+                        }
+                    }, 500);
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+            });
+            document.addEventListener('touchmove', (e) => {
+                if (touchTimer) {
+                    const touch = e.touches[0];
+                    if (Math.abs(touch.clientX - touchStartX) > 10 || Math.abs(touch.clientY - touchStartY) > 10) {
+                        clearTimeout(touchTimer);
+                        touchTimer = null;
+                    }
+                }
+            });
+        })();
 
         window.toggleMessageReaction = async function(messageId, reaction) {
             const msg = (window.currentMessages || []).find(m => Number(m.id) === Number(messageId));

@@ -851,6 +851,14 @@ async function loadGlobalSettingsGeneral() {
                 setCheck('gsNotifStreak', n.email_trade_streak, true);
                 setCheck('gsNotifPlatformUpdates', n.email_platform_updates, false);
             }
+            if (data.profile) {
+                const handleEl = document.getElementById('gsProfileHandle');
+                const marketEl = document.getElementById('gsProfileMarket');
+                const styleEl = document.getElementById('gsProfileStyle');
+                if (handleEl) handleEl.value = data.profile.trading_handle || '';
+                if (marketEl) marketEl.value = data.profile.primary_market || '';
+                if (styleEl) styleEl.value = data.profile.trading_style || '';
+            }
         } else {
             populateTimezones('UTC'); // Fallback
         }
@@ -914,6 +922,45 @@ async function gsSaveNotifs() {
     setTimeout(() => status.textContent = '', 3000);
 }
 
+async function gsSaveProfile() {
+    const status = document.getElementById('gsStatusProfile');
+    status.style.color = '#fff';
+    status.textContent = 'Saving...';
+    
+    try {
+        const csrfResp = await fetch('/api/csrf-token.php');
+        const csrfData = await csrfResp.json();
+        
+        const payload = {
+            profile: {
+                trading_handle: document.getElementById('gsProfileHandle')?.value || '',
+                primary_market: document.getElementById('gsProfileMarket')?.value || '',
+                trading_style: document.getElementById('gsProfileStyle')?.value || ''
+            }
+        };
+        const res = await fetch('/api/user/settings.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfData.token
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            status.style.color = '#28a745';
+            status.textContent = 'Profile saved!';
+        } else {
+            status.style.color = '#ff5b5b';
+            status.textContent = data.message || 'Error saving profile.';
+        }
+    } catch (e) {
+        status.style.color = '#ff5b5b';
+        status.textContent = 'Network error.';
+    }
+    setTimeout(() => status.textContent = '', 3000);
+}
+
 async function saveGlobalSettingsGeneral(e) {
     e.preventDefault();
     const btn = document.getElementById('gsBtnGeneral');
@@ -924,6 +971,9 @@ async function saveGlobalSettingsGeneral(e) {
     status.textContent = '';
     
     try {
+        const csrfResp = await fetch('/api/csrf-token.php');
+        const csrfData = await csrfResp.json();
+        
         const payload = {
             timezone: document.getElementById('gsTimezone').value,
             date_format: document.getElementById('gsDateFormat').value,
@@ -931,7 +981,10 @@ async function saveGlobalSettingsGeneral(e) {
         };
         const res = await fetch('/api/user/settings.php', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfData.token
+            },
             body: JSON.stringify(payload)
         });
         const data = await res.json();
