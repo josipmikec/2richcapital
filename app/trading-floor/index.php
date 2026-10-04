@@ -2883,6 +2883,22 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         if (preview) preview.style.display = 'none';
     };
 
+    // Message markup is built by the shared chat module (assets/js/group-chat.js) so the
+    // dashboard card, the pop-out window and the Trading Floor always render identically.
+    function buildFloorMessages(msgs, previousLastSeenId) {
+        const normalized = (msgs || []).map(m => m.author_name ? m : Object.assign({}, m, { author_name: m.user_name || 'Member' }));
+        return window.GroupChat.buildMessagesHtml(normalized, {
+            currentUserId: CURRENT_USER_ID,
+            currentUserName: CURRENT_USER_NAME,
+            previousLastSeenId: previousLastSeenId,
+            formatUserDate: (v, mode) => window.formatUserDate ? window.formatUserDate(v, mode) : null,
+            imageOpener: 'openGlobalImageModal',
+            showReplyIcon: true,
+            replyHandler: 'window.replyToGroupMessage(this)',
+            replyIconStyle: ''
+        });
+    }
+
     function updateGroupMessagesDOM(messages) {
         const container = document.getElementById('groupChatMessagesContainer');
         if (!container) return;
@@ -2902,72 +2918,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         if (floorSignalsState.groupMessagesError) {
             messagesMarkup = '<div style="font-size:13px;color:#F2CA50;">' + floorSignalsState.groupMessagesError + '</div>';
         } else if (messages && messages.length) {
-            messagesMarkup = messages.map(function (msg) {
-                const author = msg.author_name || msg.user_name || 'Member';
-                const timestamp = msg.created_at ? new Date(String(msg.created_at).replace(' ', 'T')).toLocaleString() : 'Just now';
-                const initial = String(author).trim().charAt(0).toUpperCase() || 'M';
-                const bubbleBg = String(msg.user_id || '') === String(CURRENT_USER_ID) ? 'rgba(242,202,80,0.16)' : 'rgba(255,255,255,0.08)';
-                const isNew = previousLastSeenId > 0 && Number(msg.id) > previousLastSeenId;
-                if (isNew && String(msg.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
-                const hasMention = typeof CURRENT_USER_NAME !== 'undefined' && CURRENT_USER_NAME ? (msg.message || '').toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase()) : false;
-                let highlightClass = isNew ? ' unread-highlight' : '';
-                if (hasMention) highlightClass += ' mention-highlight';
-                
-                let dateSepHtml = '';
-                const currentDateStr = formatDateSeparator(msg.created_at);
-                if (currentDateStr && currentDateStr !== lastDateStr) {
-                    dateSepHtml = '<div class="dashboard-group-chat-date-separator"><span>'+escapeHtmlForTradingFloor(currentDateStr)+'</span></div>';
-                    lastDateStr = currentDateStr;
-                }
-
-                let replyHtml = '';
-                if (msg.reply_to_id) {
-                    const rAuthor = escapeHtmlForTradingFloor(msg.reply_to_author_name || 'Member');
-                    const rText = escapeHtmlForTradingFloor(msg.reply_to_message_text || '...');
-                    replyHtml = `<div class="dashboard-group-chat-replied-to"><div class="dashboard-group-chat-replied-author">${rAuthor}</div><div class="dashboard-group-chat-replied-text">${rText}</div></div>`;
-                }
-
-                const replyAuthor = escapeHtmlForTradingFloor(author);
-                const replyText = escapeHtmlForTradingFloor(msg.message || '');
-                const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
-
-                let rawMsg = msg.message || '';
-                let msgText = escapeHtmlForTradingFloor(rawMsg);
-                msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
-                    const lower = match.toLowerCase();
-                    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
-                        return '<video src="'+match+'" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
-                    } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
-                        const filenameParts = match.split('/');
-                        const filenameFull = filenameParts[filenameParts.length - 1].split('?')[0];
-                        let filenameParsed = filenameFull;
-                        try { filenameParsed = decodeURIComponent(filenameFull); } catch(e) {}
-                        const label = filenameParsed.length > 25 ? filenameParsed.substring(0, 25) + '...' : filenameParsed;
-                        return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;font-size:12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> '+escapeHtmlForTradingFloor(label)+'</a>';
-                    } else {
-                        return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
-                    }
-                });
-                msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span class="dashboard-group-chat-mention">$2</span>');
-                
-                const authorJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
-                const textJs = escapeHtmlForTradingFloor(msg.message || '').replace(/'/g, "\\'");
-
-                let reactionsHtml = '';
-                if (msg.reactions && Object.keys(msg.reactions).length > 0) {
-                    reactionsHtml = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
-                    for (const react in msg.reactions) {
-                        const users = msg.reactions[react];
-                        const isMe = typeof CURRENT_USER_ID !== 'undefined' && users.includes(Number(CURRENT_USER_ID));
-                        const bg = isMe ? 'rgba(242,202,80,0.15)' : 'rgba(255,255,255,0.05)';
-                        const border = isMe ? '1px solid rgba(242,202,80,0.3)' : '1px solid transparent';
-                        reactionsHtml += `<button type="button" onclick="window.toggleMessageReaction(${msg.id}, '${react.replace(/'/g, "\\'")}')" style="background:${bg};border:${border};border-radius:12px;padding:2px 6px;font-size:11px;color:#cfd4dd;display:flex;align-items:center;gap:4px;cursor:pointer;line-height:1;">${escapeHtmlForTradingFloor(react)} <span style="opacity:0.7;">${users.length}</span></button>`;
-                    }
-                    reactionsHtml += '</div>';
-                }
-                
-                return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${msg.user_id}" onclick="window.openProfilePreview(this, ${msg.user_id})" style="cursor:pointer;">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
-            }).join('');
+            const built = buildFloorMessages(messages, previousLastSeenId);
+            messagesMarkup = built.html;
+            hasNewExternalMessage = built.hasNewExternal;
         } else {
             messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
         }
@@ -3682,85 +3635,22 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                 const groupKey = String(current.id || current.group_id || '');
                                 const roomMessages = ((floorSignalsState.groupMessagesByGroup || {})[groupKey] || []);
                                 let messagesMarkup = '';
+                                let hasNewExternalMessage = false;
                                 if (floorSignalsState.groupMessagesLoading) {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">Loading messages…</div>';
                                 } else if (floorSignalsState.groupMessagesError) {
                                     messagesMarkup = '<div style="font-size:13px;color:#F2CA50;">' + floorSignalsState.groupMessagesError + '</div>';
                                 } else if (roomMessages.length) {
                                     let previousLastSeenId = groupChatLastSeenId;
-                                    let hasNewExternalMessage = false;
                                     let lastDateStr = null;
                                     if (roomMessages && roomMessages.length) { groupChatLastSeenId = Math.max(...roomMessages.map(m => Number(m.id))); }
-                                    messagesMarkup = roomMessages.map(function (msg) {
-                                        const author = msg.author_name || msg.user_name || 'Member';
-                                        const timestamp = msg.created_at ? new Date(String(msg.created_at).replace(' ', 'T')).toLocaleString() : 'Just now';
-                                        const initial = String(author).trim().charAt(0).toUpperCase() || 'M';
-                                        const bubbleBg = String(msg.user_id || '') === String(CURRENT_USER_ID) ? 'rgba(242,202,80,0.16)' : 'rgba(255,255,255,0.08)';
-                                        const isNew = previousLastSeenId > 0 && Number(msg.id) > previousLastSeenId;
-                                        if (isNew && String(msg.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
-                                        const hasMention = typeof CURRENT_USER_NAME !== 'undefined' && CURRENT_USER_NAME ? (msg.message || '').toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase()) : false;
-                                        let highlightClass = isNew ? ' unread-highlight' : '';
-                                        if (hasMention) highlightClass += ' mention-highlight';
-                                        
-                                        let dateSepHtml = '';
-                                        const currentDateStr = formatDateSeparator(msg.created_at);
-                                        if (currentDateStr && currentDateStr !== lastDateStr) {
-                                            dateSepHtml = '<div class="dashboard-group-chat-date-separator"><span>'+escapeHtmlForTradingFloor(currentDateStr)+'</span></div>';
-                                            lastDateStr = currentDateStr;
-                                        }
-
-                                        let replyHtml = '';
-                                        if (msg.reply_to_id) {
-                                            const rAuthor = escapeHtmlForTradingFloor(msg.reply_to_author_name || 'Member');
-                                            const rText = escapeHtmlForTradingFloor(msg.reply_to_message_text || '...');
-                                            replyHtml = `<div class="dashboard-group-chat-replied-to"><div class="dashboard-group-chat-replied-author">${rAuthor}</div><div class="dashboard-group-chat-replied-text">${rText}</div></div>`;
-                                        }
-
-                                        const replyAuthor = escapeHtmlForTradingFloor(author);
-                                        const replyText = escapeHtmlForTradingFloor(msg.message || '');
-                                        const replyIcon = `<button type="button" class="dashboard-group-chat-message-reply" onclick="window.replyToGroupMessage(this)" data-id="${msg.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`;
-
-                                        let rawMsg = msg.message || '';
-                                        let msgText = escapeHtmlForTradingFloor(rawMsg);
-                                        msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function(match) {
-                                            const lower = match.toLowerCase();
-                                            if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
-                                                return '<video src="'+match+'" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
-                                            } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
-                                                const filenameParts = match.split('/');
-                                                const filenameFull = filenameParts[filenameParts.length - 1].split('?')[0];
-                                                let filenameParsed = filenameFull;
-                                                try { filenameParsed = decodeURIComponent(filenameFull); } catch(e) {}
-                                                const label = filenameParsed.length > 25 ? filenameParsed.substring(0, 25) + '...' : filenameParsed;
-                                                return '<a href="'+match+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;font-size:12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> '+escapeHtmlForTradingFloor(label)+'</a>';
-                                            } else {
-                                                return '<img src="'+match+'" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="openGlobalImageModal(\''+match+'\')">';
-                                            }
-                                        });
-                                        msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span class="dashboard-group-chat-mention">$2</span>');
-                                        
-                                        const authorJs = escapeHtmlForTradingFloor(author).replace(/'/g, "\\'");
-                                        const textJs = escapeHtmlForTradingFloor(msg.message || '').replace(/'/g, "\\'");
-
-                                        let reactionsHtml = '';
-                                        if (msg.reactions && Object.keys(msg.reactions).length > 0) {
-                                            reactionsHtml = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
-                                            for (const react in msg.reactions) {
-                                                const users = msg.reactions[react];
-                                                const isMe = typeof CURRENT_USER_ID !== 'undefined' && users.includes(Number(CURRENT_USER_ID));
-                                                const bg = isMe ? 'rgba(242,202,80,0.15)' : 'rgba(255,255,255,0.05)';
-                                                const border = isMe ? '1px solid rgba(242,202,80,0.3)' : '1px solid transparent';
-                                                reactionsHtml += `<button type="button" onclick="window.toggleMessageReaction(${msg.id}, '${react.replace(/'/g, "\\'")}')" style="background:${bg};border:${border};border-radius:12px;padding:2px 6px;font-size:11px;color:#cfd4dd;display:flex;align-items:center;gap:4px;cursor:pointer;line-height:1;">${escapeHtmlForTradingFloor(react)} <span style="opacity:0.7;">${users.length}</span></button>`;
-                                            }
-                                            reactionsHtml += '</div>';
-                                        }
-                                        
-                                        return dateSepHtml + `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${msg.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${msg.user_id}" onclick="window.openProfilePreview(this, ${msg.user_id})" style="cursor:pointer;">${author}</span><div style="display:flex;align-items:center;gap:6px;"><span>${timestamp}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
-                                    }).join('');
+                                    const built = buildFloorMessages(roomMessages, previousLastSeenId);
+                                    messagesMarkup = built.html;
+                                    hasNewExternalMessage = built.hasNewExternal;
                                 } else {
                                     messagesMarkup = '<div style="font-size:13px;color:#8f95a3;">No messages yet. Start the conversation for this group.</div>';
                                 }
-                                if (typeof hasNewExternalMessage !== 'undefined' && hasNewExternalMessage) setTimeout(playChatPopSound, 100);
+                                if (hasNewExternalMessage) setTimeout(playChatPopSound, 100);
                                 
                                 const replyPreviewBlock = floorSignalsState.currentReplyToId ? 
                                     '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(242,202,80,0.05);border-left:3px solid #f2ca50;padding:8px 12px;border-radius:6px;margin-bottom:8px;gap:8px;">'

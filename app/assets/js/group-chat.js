@@ -56,7 +56,127 @@
         document.addEventListener(evt, unlockAudio, true);
     });
 
-    window.TwoRichChatAudio = { unlock: unlockAudio, play: playPop };
+    // Pop-out windows are often never clicked, so their AudioContext stays locked by the browser.
+    // In that case let the opener (dashboard, already unlocked) play the sound — unless the opener
+    // is showing the same group and plays it by itself.
+    function playNewMessageSound(groupId) {
+        if (audioCtx && audioCtx.state === 'running') { playPop(); return; }
+        try {
+            const op = window.opener;
+            if (op && op !== window && op.TwoRichChatAudio && String(op.selectedGroupId || '') !== String(groupId || '')) {
+                op.TwoRichChatAudio.play();
+                return;
+            }
+        } catch (e) {}
+        playPop();
+    }
+
+    window.TwoRichChatAudio = { unlock: unlockAudio, play: playPop, playForGroup: playNewMessageSound };
+
+    /* ------------------------------------------------------------------
+     * Message list markup — shared by dashboard card, pop-out and Trading Floor
+     * ------------------------------------------------------------------ */
+    function buildMessagesHtml(items, o) {
+        o = o || {};
+        const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[ch]));
+        const viaUser = (value, mode) => {
+            if (typeof o.formatUserDate === 'function') {
+                const out = o.formatUserDate(value, mode);
+                if (out !== undefined && out !== null) return out;
+            }
+            return null;
+        };
+        const parse = value => new Date(String(value).replace(' ', 'T') + (String(value).includes('Z') ? '' : 'Z'));
+        const fmtTime = value => {
+            const u = viaUser(value, 'time');
+            if (u !== null) return u;
+            const d = parse(value);
+            return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        };
+        const fmtSep = value => {
+            const d = parse(value);
+            if (Number.isNaN(d.getTime())) return '';
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            const same = (d1, d2) => d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
+            if (same(d, today)) return 'Today';
+            if (same(d, yesterday)) return 'Yesterday';
+            const u = viaUser(value, 'date');
+            if (u !== null) return u;
+            return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+        };
+        let hasNew = false;
+        let html = '';
+        let lastDateStr = null;
+
+        items.forEach(item => {
+            const isNew = o.previousLastSeenId > 0 && Number(item.id) > o.previousLastSeenId;
+            if (isNew && String(item.user_id || '') !== String(o.currentUserId)) hasNew = true;
+            const hasMention = o.currentUserName ? (item.message || '').toLowerCase().includes('@' + String(o.currentUserName).toLowerCase()) : false;
+            let highlightClass = isNew ? ' unread-highlight' : '';
+            if (hasMention) highlightClass += ' mention-highlight';
+
+            const currentDateStr = fmtSep(item.created_at);
+            if (currentDateStr && currentDateStr !== lastDateStr) {
+                html += `<div class="dashboard-group-chat-date-separator"><span>${esc(currentDateStr)}</span></div>`;
+                lastDateStr = currentDateStr;
+            }
+
+            const safeAuthor = esc(item.author_name || 'Member');
+            const replyAuthor = esc(item.author_name || 'Member');
+            const replyText = esc(item.message || '');
+            const timestamp = item.created_at ? fmtTime(item.created_at) : 'Just now';
+
+            let replyHtml = '';
+            if (item.reply_to_id) {
+                const rAuthor = esc(item.reply_to_author_name || 'Member');
+                const rText = esc(item.reply_to_message_text || '...');
+                replyHtml = `<div class="dashboard-group-chat-replied-to"><div class="dashboard-group-chat-replied-author">${rAuthor}</div><div class="dashboard-group-chat-replied-text">${rText}</div></div>`;
+            }
+
+            let msgText = esc(item.message || '');
+            msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function (match) {
+                const lower = match.toLowerCase();
+                if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
+                    return '<video src="' + match + '" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
+                } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
+                    const filenameParts = match.split('/');
+                    const filenameFull = filenameParts[filenameParts.length - 1].split('?')[0];
+                    let filenameParsed = filenameFull;
+                    try { filenameParsed = decodeURIComponent(filenameFull); } catch (e) {}
+                    const label = filenameParsed.length > 25 ? filenameParsed.substring(0, 25) + '...' : filenameParsed;
+                    return '<a href="' + match + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;font-size:12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> ' + esc(label) + '</a>';
+                } else {
+                    return '<img src="' + match + '" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="' + o.imageOpener + '(\'' + match + '\')">';
+                }
+            });
+            msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span class="dashboard-group-chat-mention">$2</span>');
+
+            let reactionsHtml = '';
+            if (item.reactions && Object.keys(item.reactions).length > 0) {
+                reactionsHtml = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
+                for (const react in item.reactions) {
+                    const users = item.reactions[react];
+                    const isMe = users.includes(Number(o.currentUserId));
+                    const bg = isMe ? 'rgba(242,202,80,0.15)' : 'rgba(255,255,255,0.05)';
+                    const border = isMe ? '1px solid rgba(242,202,80,0.3)' : '1px solid transparent';
+                    reactionsHtml += `<button type="button" onclick="window.toggleMessageReaction(${item.id}, '${react.replace(/'/g, "\\'")}')" style="background:${bg};border:${border};border-radius:12px;padding:2px 6px;font-size:11px;color:#cfd4dd;display:flex;align-items:center;gap:4px;cursor:pointer;line-height:1;">${esc(react)} <span style="opacity:0.7;">${users.length}</span></button>`;
+                }
+                reactionsHtml += '</div>';
+            }
+
+            const authorJs = esc(item.author_name || 'Member').replace(/'/g, "\\'");
+            const textJs = esc(item.message || '').replace(/'/g, "\\'");
+
+            const replyIcon = o.showReplyIcon
+                ? `<button type="button" class="dashboard-group-chat-message-reply" onclick="${o.replyHandler}" data-id="${item.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}"${o.replyIconStyle ? ' style="' + o.replyIconStyle + '"' : ''}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`
+                : '';
+
+            html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${item.user_id}" onclick="window.openProfilePreview(this, ${item.user_id})" style="cursor:pointer;">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${esc(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+        });
+        return { html: html, hasNewExternal: hasNew };
+    }
 
     /* ------------------------------------------------------------------
      * Chat engine
@@ -85,6 +205,7 @@
         const remember = opts.rememberSelection !== false;        // dashboard remembers last group in localStorage
         const preselectFromUrl = !!opts.preselectFromUrl;         // pop-out reads ?group_id=
 
+        const PAGE_REPLY_ICON_STYLE = opts.replyIconStyle === undefined ? 'background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;' : opts.replyIconStyle;
         let memberships = [];
         let selectedGroupId = 0;
         let lastSeenId = 0;
@@ -177,74 +298,18 @@
             const currentCount = messages.childElementCount;
             let hasNewExternalMessage = false;
 
-            let html = '';
-            let lastDateStr = null;
-
-            items.forEach(item => {
-                const isNew = lastSeenId > 0 && Number(item.id) > lastSeenId;
-                if (isNew && String(item.user_id || '') !== String(CURRENT_USER_ID)) hasNewExternalMessage = true;
-                const hasMention = CURRENT_USER_NAME ? (item.message || '').toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase()) : false;
-                let highlightClass = isNew ? ' unread-highlight' : '';
-                if (hasMention) highlightClass += ' mention-highlight';
-
-                const currentDateStr = formatDateSeparator(item.created_at);
-                if (currentDateStr && currentDateStr !== lastDateStr) {
-                    html += `<div class="dashboard-group-chat-date-separator"><span>${escapeHtml(currentDateStr)}</span></div>`;
-                    lastDateStr = currentDateStr;
-                }
-
-                const safeAuthor = escapeHtml(item.author_name || 'Member');
-                const replyAuthor = escapeHtml(item.author_name || 'Member');
-                const replyText = escapeHtml(item.message || '');
-                const timestamp = item.created_at ? time(item.created_at) : 'Just now';
-
-                let replyHtml = '';
-                if (item.reply_to_id) {
-                    const rAuthor = escapeHtml(item.reply_to_author_name || 'Member');
-                    const rText = escapeHtml(item.reply_to_message_text || '...');
-                    replyHtml = `<div class="dashboard-group-chat-replied-to"><div class="dashboard-group-chat-replied-author">${rAuthor}</div><div class="dashboard-group-chat-replied-text">${rText}</div></div>`;
-                }
-
-                let msgText = escapeHtml(item.message || '');
-                msgText = msgText.replace(/(https?:\/\/[^\s]+(?:png|jpg|jpeg|gif|webp)|https?:\/\/pub-[a-zA-Z0-9-]+\.r2\.dev\/[^\s]+)/gi, function (match) {
-                    const lower = match.toLowerCase();
-                    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
-                        return '<video src="' + match + '" controls style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;display:block;"></video>';
-                    } else if (lower.match(/\.(pdf|doc|docx|xls|xlsx|csv|txt|md|zip)$/)) {
-                        const filenameParts = match.split('/');
-                        const filenameFull = filenameParts[filenameParts.length - 1].split('?')[0];
-                        let filenameParsed = filenameFull;
-                        try { filenameParsed = decodeURIComponent(filenameFull); } catch (e) {}
-                        const label = filenameParsed.length > 25 ? filenameParsed.substring(0, 25) + '...' : filenameParsed;
-                        return '<a href="' + match + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px;color:#f2ca50;text-decoration:none;margin-top:8px;font-weight:600;font-size:12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> ' + escapeHtml(label) + '</a>';
-                    } else {
-                        return '<img src="' + match + '" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;display:block;cursor:pointer;" onclick="' + imageOpener + '(\'' + match + '\')">';
-                    }
-                });
-                msgText = msgText.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, '$1<span class="dashboard-group-chat-mention">$2</span>');
-
-                let reactionsHtml = '';
-                if (item.reactions && Object.keys(item.reactions).length > 0) {
-                    reactionsHtml = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
-                    for (const react in item.reactions) {
-                        const users = item.reactions[react];
-                        const isMe = typeof CURRENT_USER_ID !== 'undefined' && users.includes(Number(CURRENT_USER_ID));
-                        const bg = isMe ? 'rgba(242,202,80,0.15)' : 'rgba(255,255,255,0.05)';
-                        const border = isMe ? '1px solid rgba(242,202,80,0.3)' : '1px solid transparent';
-                        reactionsHtml += `<button type="button" onclick="window.toggleMessageReaction(${item.id}, '${react.replace(/'/g, "\\'")}')" style="background:${bg};border:${border};border-radius:12px;padding:2px 6px;font-size:11px;color:#cfd4dd;display:flex;align-items:center;gap:4px;cursor:pointer;line-height:1;">${escapeHtml(react)} <span style="opacity:0.7;">${users.length}</span></button>`;
-                    }
-                    reactionsHtml += '</div>';
-                }
-
-                const authorJs = escapeHtml(item.author_name || 'Member').replace(/'/g, "\\'");
-                const textJs = escapeHtml(item.message || '').replace(/'/g, "\\'");
-
-                const replyIcon = showReplyIcon
-                    ? `<button type="button" class="dashboard-group-chat-message-reply" onclick="window.replyToMessage(this)" data-id="${item.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}" style="background:none;border:none;color:#666;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`
-                    : '';
-
-                html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${item.user_id}" onclick="window.openProfilePreview(this, ${item.user_id})" style="cursor:pointer;">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${escapeHtml(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+            const built = buildMessagesHtml(items, {
+                currentUserId: CURRENT_USER_ID,
+                currentUserName: CURRENT_USER_NAME,
+                previousLastSeenId: lastSeenId,
+                formatUserDate: opts.formatUserDate,
+                imageOpener: imageOpener,
+                showReplyIcon: showReplyIcon,
+                replyHandler: 'window.replyToMessage(this)',
+                replyIconStyle: PAGE_REPLY_ICON_STYLE
             });
+            hasNewExternalMessage = built.hasNewExternal;
+            const html = built.html;
 
             messages.innerHTML = html;
             lastSeenId = Math.max(...items.map(i => Number(i.id)));
@@ -253,7 +318,7 @@
                 messages.scrollTop = messages.scrollHeight;
             }
             if (footer) footer.hidden = false;
-            if (hasNewExternalMessage) playPop();
+            if (hasNewExternalMessage) playNewMessageSound(selectedGroupId);
         }
 
         /* ---------------- context menu ---------------- */
@@ -634,5 +699,5 @@
         return { refresh: initChat, reload: loadMessages };
     }
 
-    window.GroupChat = { init: init };
+    window.GroupChat = { init: init, buildMessagesHtml: buildMessagesHtml };
 })();
