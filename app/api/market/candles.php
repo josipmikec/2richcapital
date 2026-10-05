@@ -10,24 +10,42 @@ $timeframe = strtoupper(sanitize_text_field(wp_unslash($_GET['timeframe'] ?? 'D1
 $limit = min(10000, max(1, absint($_GET['limit'] ?? 2000)));
 $from = sanitize_text_field(wp_unslash($_GET['from'] ?? ''));
 $to = sanitize_text_field(wp_unslash($_GET['to'] ?? ''));
-$from_sql = '';
-$to_sql = '';
-if ($from !== '') {
-    $ts = is_numeric($from) ? (int)$from : strtotime($from);
-    if ($ts) $from_sql = gmdate('Y-m-d H:i:s', $ts > 2000000000 ? (int) floor($ts / 1000) : $ts);
-}
-if ($to !== '') {
-    $ts = is_numeric($to) ? (int)$to : strtotime($to);
-    if ($ts) $to_sql = gmdate('Y-m-d H:i:s', $ts > 2000000000 ? (int) floor($ts / 1000) : $ts);
-}
+
 if ($symbol === '' || !in_array($timeframe, $allowed, true)) {
     wp_send_json(['ok'=>false,'message'=>'Valid symbol and timeframe are required.'], 400);
 }
 $symbols = $wpdb->prefix . 'rich_market_symbols';
 $candles = $wpdb->prefix . 'rich_market_candles';
 $sync = $wpdb->prefix . 'rich_market_sync_state';
+
 $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$symbols} WHERE enabled=1 AND (display_symbol=%s OR mt5_symbol=%s) ORDER BY id ASC LIMIT 1", $symbol, $symbol), ARRAY_A);
 if (!$row) wp_send_json(['ok'=>false,'message'=>'Symbol not available.'], 404);
+
+$latest_candle_time = $wpdb->get_var($wpdb->prepare("SELECT candle_time_utc FROM {$candles} WHERE symbol_id=%d ORDER BY candle_time_utc DESC LIMIT 1", (int)$row['id']));
+$broker_offset_seconds = 0;
+if ($latest_candle_time) {
+    $diff = strtotime($latest_candle_time . ' UTC') - time();
+    $broker_offset_seconds = (int)round($diff / 3600) * 3600;
+}
+
+$from_sql = '';
+$to_sql = '';
+if ($from !== '') {
+    $ts = is_numeric($from) ? (int)$from : strtotime($from);
+    if ($ts) {
+        $ts = $ts > 2000000000 ? (int) floor($ts / 1000) : $ts;
+        $ts += $broker_offset_seconds;
+        $from_sql = gmdate('Y-m-d H:i:s', $ts);
+    }
+}
+if ($to !== '') {
+    $ts = is_numeric($to) ? (int)$to : strtotime($to);
+    if ($ts) {
+        $ts = $ts > 2000000000 ? (int) floor($ts / 1000) : $ts;
+        $ts += $broker_offset_seconds;
+        $to_sql = gmdate('Y-m-d H:i:s', $ts);
+    }
+}
 
 $where = "WHERE symbol_id=%d AND timeframe=%s";
 $params = [(int)$row['id'], $timeframe];
@@ -70,9 +88,9 @@ wp_send_json([
     'timeframe'=>$timeframe,
     'source'=>'mt5',
     'timezone'=>'UTC',
-    'candles'=>array_map(static function($c){
+    'candles'=>array_map(static function($c) use ($broker_offset_seconds){
         return [
-            'time'=>gmdate('c',strtotime($c['candle_time_utc'])),
+            'time'=>gmdate('c',strtotime($c['candle_time_utc']) - $broker_offset_seconds),
             'open'=>(float)$c['open_price'],
             'high'=>(float)$c['high_price'],
             'low'=>(float)$c['low_price'],
