@@ -2837,8 +2837,14 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             
             await sendGroupMessage(groupId, finalMessage, floorSignalsState.currentReplyToId);
             input.value = '';
+            const hadReply = !!floorSignalsState.currentReplyToId;
             floorSignalsState.currentReplyToId = null;
             window.clearGroupMessageAttachment();
+            if (hadReply) {
+                // close the reply preview bar (same as the dashboard card)
+                renderGroupsPanel();
+                setTimeout(() => { const i = document.getElementById('groupMessageInput'); if (i) i.focus(); }, 30);
+            }
             
             await pollGroupMessages(groupId);
             setTimeout(() => {
@@ -2993,7 +2999,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     
                     if (String(msg.user_id) !== String(CURRENT_USER_ID)) {
                         const content = String(msg.content || msg.message || '');
-                        const hasMention = content.toLowerCase().includes('@' + String(CURRENT_USER_NAME).toLowerCase());
+                        const hasMention = window.GroupChat.isMentioned(content, CURRENT_USER_NAME);
                         
                         if (hasMention) {
                             triggerNativeNotification('You were mentioned', {

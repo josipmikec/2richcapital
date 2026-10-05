@@ -73,6 +73,15 @@
 
     window.TwoRichChatAudio = { unlock: unlockAudio, play: playPop, playForGroup: playNewMessageSound, notify: notifyNewMessages };
 
+    // Exact @mention match (case-insensitive, display-name spaces stripped like the autocomplete does).
+    // "@kectest" must NOT count as a mention of "kec".
+    function isMentioned(text, name) {
+        const n = String(name || '').replace(/\s+/g, '');
+        if (!n) return false;
+        const re = new RegExp('(^|[^a-zA-Z0-9_])@' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-zA-Z0-9_])', 'i');
+        return re.test(String(text || ''));
+    }
+
     /* ------------------------------------------------------------------
      * Native (OS) notifications — audible even when the user is in another app/tab.
      * Respects the user's saved notification prefs (window.USER_NOTIF_PREFS or opts.notifPrefs).
@@ -90,10 +99,9 @@
         try {
             if (!items || !items.length || !('Notification' in window) || Notification.permission !== 'granted') return;
             if (!appInBackground()) return;
-            const me = String(o.currentUserName || '').toLowerCase();
             const latest = items[items.length - 1];
             const content = String(latest.message || latest.content || '');
-            const mentioned = me && content.toLowerCase().includes('@' + me);
+            const mentioned = isMentioned(content, o.currentUserName);
             const key = mentioned ? 'group_mention' : 'group_new_message';
             if (!notifEnabled(o.notifPrefs, key)) return;
             const who = latest.author_name || latest.user_name || 'Someone';
@@ -163,10 +171,12 @@
         let lastDateStr = null;
 
         items.forEach(item => {
+            const isMine = String(item.user_id || '') === String(o.currentUserId);
             const isNew = o.previousLastSeenId > 0 && Number(item.id) > o.previousLastSeenId;
-            if (isNew && String(item.user_id || '') !== String(o.currentUserId)) { hasNew = true; newExternal.push(item); }
-            const hasMention = o.currentUserName ? (item.message || '').toLowerCase().includes('@' + String(o.currentUserName).toLowerCase()) : false;
-            let highlightClass = isNew ? ' unread-highlight' : '';
+            if (isNew && !isMine) { hasNew = true; newExternal.push(item); }
+            // Highlights are for the recipient only — never for the sender's own messages
+            const hasMention = !isMine && isMentioned(item.message, o.currentUserName);
+            let highlightClass = (isNew && !isMine) ? ' unread-highlight' : '';
             if (hasMention) highlightClass += ' mention-highlight';
 
             const currentDateStr = fmtSep(item.created_at);
@@ -840,5 +850,5 @@
         return { refresh: initChat, reload: loadMessages };
     }
 
-    window.GroupChat = { init: init, buildMessagesHtml: buildMessagesHtml, installUi: installUi };
+    window.GroupChat = { init: init, buildMessagesHtml: buildMessagesHtml, installUi: installUi, isMentioned: isMentioned };
 })();
