@@ -71,6 +71,7 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    z-index: 10;
 }
 .upgrade-modal-close:hover {
     color: #fff;
@@ -115,10 +116,13 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    transition: border-color 0.2s;
+    transition: transform 0.2s, border-color 0.2s;
+    text-decoration: none;
+    cursor: pointer;
 }
 .upgrade-card:hover {
     border-color: #333;
+    transform: translateY(-4px);
 }
 .upgrade-card.featured {
     border-color: #F2CA50;
@@ -222,9 +226,8 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
     background: none;
     border: none;
     padding: 0;
-    cursor: pointer;
 }
-.uc-btn:hover {
+.upgrade-card:hover .uc-btn {
     color: #F2CA50;
 }
 
@@ -256,7 +259,7 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
 
         <div class="upgrade-cards">
             <!-- Observer -->
-            <div class="upgrade-card">
+            <div class="upgrade-card" style="cursor: default;">
                 <?php if ($current_plan === 'observer'): ?>
                     <div class="current-plan-badge">Current Plan</div>
                 <?php endif; ?>
@@ -270,17 +273,17 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
                     <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> 2RICH TRADING JOURNAL</li>
                     <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> REAL-TIME NEWS FEED</li>
                     <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> TRADINGVIEW CHARTING</li>
-                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ECONOMIC CALENDAR ALERTS</li>
+                    <li><svg width="12" height="12" viewBox="0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ECONOMIC CALENDAR ALERTS</li>
                 </ul>
                 <div class="uc-footer">
                     <?php if ($current_plan !== 'observer'): ?>
-                        <a href="https://2rich.capital/access/" class="uc-btn">START FOR FREE &rarr;</a>
+                        <span class="uc-btn" style="cursor: default; opacity: 0.5;">START FOR FREE &rarr;</span>
                     <?php endif; ?>
                 </div>
             </div>
 
             <!-- Desk Access -->
-            <div class="upgrade-card">
+            <a href="https://buy.stripe.com/6oUdR84aJ121ey17HW0Ba00" target="_blank" class="upgrade-card" <?php if($current_plan === 'desk access') echo 'onclick="event.preventDefault();" style="cursor:default;"'; ?>>
                 <?php if ($current_plan === 'desk access'): ?>
                     <div class="current-plan-badge">Current Plan</div>
                 <?php endif; ?>
@@ -298,13 +301,13 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
                 <div class="uc-footer">
                     <div class="uc-price">$49<span>/ MONTH</span></div>
                     <?php if ($current_plan !== 'desk access'): ?>
-                        <a href="https://2rich.capital/access/" class="uc-btn">UPGRADE &rarr;</a>
+                        <span class="uc-btn">UPGRADE &rarr;</span>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
 
             <!-- Elite Desk -->
-            <div class="upgrade-card featured">
+            <a href="https://buy.stripe.com/4gM4gy36FbGFgG9aU80Ba01" target="_blank" class="upgrade-card featured" <?php if($current_plan === 'elite desk') echo 'onclick="event.preventDefault();" style="cursor:default;"'; ?>>
                 <?php if ($current_plan === 'elite desk'): ?>
                     <div class="current-plan-badge">Current Plan</div>
                 <?php endif; ?>
@@ -325,13 +328,13 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
                 <div class="uc-footer">
                     <div class="uc-price">$97<span>/ MONTH</span></div>
                     <?php if ($current_plan !== 'elite desk'): ?>
-                        <a href="https://2rich.capital/access/" class="uc-btn">UPGRADE &rarr;</a>
+                        <span class="uc-btn">UPGRADE &rarr;</span>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
 
             <!-- Capital -->
-            <div class="upgrade-card">
+            <a href="https://2rich.capital/capital" target="_blank" class="upgrade-card" <?php if($current_plan === 'capital') echo 'onclick="event.preventDefault();" style="cursor:default;"'; ?>>
                 <?php if ($current_plan === 'capital'): ?>
                     <div class="current-plan-badge">Current Plan</div>
                 <?php endif; ?>
@@ -348,10 +351,10 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
                 <div class="uc-footer">
                     <div class="uc-price">UPON INQUIRY</div>
                     <?php if ($current_plan !== 'capital'): ?>
-                        <a href="https://2rich.capital/access/" class="uc-btn">CONTACT US &rarr;</a>
+                        <span class="uc-btn">CONTACT US &rarr;</span>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 </div>

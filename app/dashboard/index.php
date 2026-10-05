@@ -636,13 +636,13 @@ $is_paying = !empty($user_plan);
     <div class="dashboard-background"></div>
 
     <?php if (!$is_paying): ?>
-    <div id="promoTopbar" style="background: linear-gradient(90deg, #111 0%, #1a1500 50%, #111 100%); border-bottom: 1px solid #332700; padding: 12px 24px; display: none; justify-content: center; align-items: center; position: relative; z-index: 1000;">
-        <div style="font-size: 12px; font-weight: 600; color: #ccc; letter-spacing: 0.05em; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;">
+    <div id="promoTopbar" style="background: #F2CA50; border-bottom: 1px solid #d4a92c; padding: 12px 24px; display: none; justify-content: center; align-items: center; position: relative; z-index: 1000;">
+        <div style="font-size: 12px; font-weight: 500; color: #111; letter-spacing: 0.02em; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; font-family: 'Montserrat', sans-serif;">
             <span>Upgrade to Elite Desk today and unlock full institutional market intelligence.</span>
-            <button type="button" onclick="openUpgradeModal()" style="color: #0E0E0E; background: #F2CA50; border: none; padding: 6px 14px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#FFDB70'" onmouseout="this.style.background='#F2CA50'">View Plans &rarr;</button>
+            <button type="button" onclick="openUpgradeModal()" style="color: #F2CA50; background: #111; border: none; padding: 6px 14px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: background 0.2s; font-family: 'Montserrat', sans-serif;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='#111'">View Plans &rarr;</button>
         </div>
-        <button onclick="document.getElementById('promoTopbar').style.display='none'; localStorage.setItem('hidePromoTopbar', 'true');" style="position: absolute; right: 24px; background: transparent; border: none; color: #666; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <button onclick="document.getElementById('promoTopbar').style.display='none'; localStorage.setItem('hidePromoTopbar', 'true');" style="position: absolute; right: 24px; background: transparent; border: none; color: #7a5e00; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#7a5e00'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
     </div>
     <script>
