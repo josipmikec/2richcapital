@@ -381,4 +381,14 @@ function closeUpgradeModal(e) {
         }, 300);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.upgrade-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (this.style.cursor === 'default') return; // Ignore non-clickable cards
+            document.querySelectorAll('.upgrade-card').forEach(c => c.classList.remove('featured'));
+            this.classList.add('featured');
+        });
+    });
+});
 </script>

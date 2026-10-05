@@ -636,7 +636,7 @@ $is_paying = !empty($user_plan) && strtolower(trim((string)$user_plan)) !== 'obs
     <div class="dashboard-background"></div>
 
     <?php if (!$is_paying): ?>
-    <div id="promoTopbar" style="background: #F2CA50; border-bottom: 1px solid #d4a92c; padding: 12px 24px; display: none; justify-content: center; align-items: center; position: relative; z-index: 1000;">
+    <div id="promoTopbar" style="background: #F2CA50; border-bottom: 1px solid #d4a92c; padding: 6px 24px; display: none; justify-content: center; align-items: center; position: relative; z-index: 1000;">
         <div style="font-size: 12px; font-weight: 500; color: #111; letter-spacing: 0.02em; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; font-family: 'Montserrat', sans-serif;">
             <span id="promoTextSpan">Upgrade to Elite Desk today and unlock full institutional market intelligence.</span>
             <span id="promoCountdownSpan" style="font-weight: 700; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em; font-variant-numeric: tabular-nums;"></span>
