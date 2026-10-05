@@ -11,10 +11,21 @@ $rows = $wpdb->get_results(
      ORDER BY display_symbol ASC",
     ARRAY_A
 );
+
+$deduped = [];
+if ($rows) {
+    foreach ($rows as $row) {
+        $key = $row['display_symbol'] ?: $row['mt5_symbol'];
+        if (!isset($deduped[$key])) {
+            $deduped[$key] = $row;
+        }
+    }
+}
+
 wp_send_json([
     'ok' => true,
     'table' => $table,
-    'count' => is_array($rows) ? count($rows) : 0,
+    'count' => count($deduped),
     'db_error' => $wpdb->last_error,
-    'symbols' => $rows ?: []
+    'symbols' => array_values($deduped)
 ]);

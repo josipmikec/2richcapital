@@ -1456,6 +1456,9 @@ class TwoRichUDFDatafeed {
 
     normalizeResolution(resolution) {
         const value = String(resolution || '').toUpperCase();
+        if (value === '15') return { tv: '15', api: 'M15' };
+        if (value === '60') return { tv: '60', api: 'H1' };
+        if (value === '240') return { tv: '240', api: 'H4' };
         if (value === 'H8' || value === '480') return { tv: '480', api: 'H8' };
         if (value === 'D' || value === '1D' || value === 'D1') return { tv: 'D', api: 'D1' };
         if (value === 'W' || value === '1W' || value === 'W1') return { tv: 'W', api: 'W1' };
@@ -1465,7 +1468,7 @@ class TwoRichUDFDatafeed {
 
     onReady(cb) {
         setTimeout(() => cb({
-            supported_resolutions: ['480', 'D', 'W', 'M'],
+            supported_resolutions: ['15', '60', '240', '480', 'D', 'W', 'M'],
             exchanges: [{ value: '2RICH', name: BROKER_LABEL, desc: BROKER_LABEL + ' Market Feed' }],
             symbols_types: [{ name: 'Forex', value: 'forex' }],
             supports_search: true,
@@ -1528,10 +1531,11 @@ class TwoRichUDFDatafeed {
                     minmov: 1,
                     pricescale: Math.pow(10, digits),
                     has_intraday: true,
+                    intraday_multipliers: ['15', '60', '240', '480'],
                     has_daily: true,
                     has_weekly_and_monthly: true,
                     visible_plots_set: 'ohlcv',
-                    supported_resolutions: ['480', 'D', 'W', 'M'],
+                    supported_resolutions: ['15', '60', '240', '480', 'D', 'W', 'M'],
                     volume_precision: 0,
                     data_status: 'streaming'
                 });
