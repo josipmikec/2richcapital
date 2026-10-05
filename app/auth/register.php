@@ -114,16 +114,8 @@ function send_welcome_email(string $email, string $displayName, string $username
       <tr><td style="padding:36px 48px;">
         <p style="font-size:16px;color:#f5f5f5;font-weight:600;margin:0 0 16px;">You\'re in.</p>
         <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 24px;">
-          You now have access to the 2RICH CAPITAL platform &mdash; your central hub for real-time macro research and market intelligence.
+          You now have access to the 2RICH CAPITAL platform - your central hub for real-time macro research and market intelligence.
         </p>
-
-        <div style="background:#1a1505;border:1px solid #332700;border-radius:10px;padding:24px;margin-bottom:32px;text-align:center;">
-            <p style="font-size:14px;color:#F2CA50;font-weight:700;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.1em;">Upgrade to the Inner Circle</p>
-            <p style="font-size:13px;color:#bbb;line-height:1.7;margin:0 0 20px;">
-              Serious about the markets? Unlock the full potential of 2RICH Capital with our Elite Desk access. Get high-conviction trade setups, live signals, and join our premium trading groups led by top analysts.
-            </p>
-            <a href="' . $accessUrl . '" style="display:inline-block;padding:12px 24px;background:#F2CA50;color:#000;font-size:11px;font-weight:800;letter-spacing:0.1em;text-decoration:none;border-radius:6px;text-transform:uppercase;">View Premium Features &rarr;</a>
-        </div>
 
         <!-- Credentials box -->
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#0E0E0E;border:1px solid #222;border-radius:10px;margin-bottom:32px;">
@@ -144,10 +136,19 @@ function send_welcome_email(string $email, string $displayName, string $username
           </td></tr>
         </table>
 
-        <!-- CTA button -->
+        <!-- Upgrade box -->
+        <div style="background:#1a1505;border:1px solid #332700;border-radius:10px;padding:24px;margin-bottom:32px;text-align:center;">
+            <p style="font-size:14px;color:#F2CA50;font-weight:700;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.1em;">Upgrade to Desk Access</p>
+            <p style="font-size:13px;color:#bbb;line-height:1.7;margin:0 0 20px;">
+              Serious about the markets? Unlock the full potential of 2RICH Capital with our Elite Desk access. Get high-conviction trade setups, live signals, and join our premium trading groups led by top analysts.
+            </p>
+            <a href="' . $accessUrl . '" style="display:inline-block;padding:12px 24px;background:#F2CA50;color:#000;font-size:11px;font-weight:800;letter-spacing:0.1em;text-decoration:none;border-radius:6px;text-transform:uppercase;">View Premium Features &rarr;</a>
+        </div>
+
+        <!-- CTA link -->
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr><td align="center">
-            <a href="' . $loginUrl . '" style="display:inline-block;padding:16px 48px;background:#1a1a1a;color:#fff;border:1px solid #333;font-size:11px;font-weight:800;letter-spacing:0.14em;text-decoration:none;border-radius:8px;text-transform:uppercase;">ACCESS PLATFORM</a>
+            <a href="' . $loginUrl . '" style="color:#777;font-size:11px;font-weight:600;letter-spacing:0.14em;text-decoration:none;text-transform:uppercase;border-bottom:1px solid #333;padding-bottom:4px;">ACCESS PLATFORM &rarr;</a>
           </td></tr>
         </table>
       </td></tr>
@@ -172,7 +173,7 @@ function send_welcome_email(string $email, string $displayName, string $username
     $plain = "Welcome to 2RICH CAPITAL.\n\n"
            . "Welcome, {$firstName}.\n"
            . "You now have access to the 2RICH CAPITAL platform — your central hub for real-time macro research and market intelligence.\n\n"
-           . "Upgrade to the Inner Circle\n"
+           . "Upgrade to Desk Access\n"
            . "Serious about the markets? Unlock the full potential of 2RICH Capital with our Elite Desk access. Get high-conviction trade setups, live signals, and join our premium trading groups led by top analysts.\n"
            . "View Premium Features: {$accessUrl}\n\n"
            . "Your account is ready.\n\n"

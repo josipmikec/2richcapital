@@ -72,7 +72,7 @@ function send_reminder_email($user, $type) {
         $title = 'Checking in, ' . htmlspecialchars($firstName) . '.';
         $body = '<p style="font-size:15px;color:#f5f5f5;font-weight:600;margin:0 0 16px;">Did you catch the latest market data?</p>
         <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 24px;">
-          It\'s been 24 hours since you joined the inner circle. We\'ve just updated the dashboard with the latest market data and we wanted to make sure you saw it.
+          It\'s been 24 hours since you joined the desk. We\'ve just updated the dashboard with the latest market data and we wanted to make sure you saw it.
         </p>
         <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 24px;">
           If you want to take things to the next level and see what the elite traders are doing, you should consider upgrading to Elite Desk. You\'ll get access to high-conviction trade setups, live signals, and our premium trading groups.
@@ -90,7 +90,7 @@ function send_reminder_email($user, $type) {
         <p style="font-size:14px;color:#888;line-height:1.8;margin:0 0 24px;">
           Don\'t sit on the sidelines. Join Elite Desk today and get the edge you need. No fluff, just actionable intelligence.
         </p>';
-        $btnText = 'JOIN THE INNER CIRCLE &rarr;';
+        $btnText = 'JOIN THE DESK &rarr;';
         $btnUrl = $accessUrl;
     }
 

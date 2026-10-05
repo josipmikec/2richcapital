@@ -213,7 +213,7 @@ function send_payment_confirmation_email(
     $headline  = $isNew ? 'Access Granted.' : 'Payment Confirmed.';
     $subline   = $isNew ? 'Your account has been created' : 'Your membership has been renewed';
     $bodyText  = $isNew
-        ? 'Welcome to the inner circle. Your payment was successful, and your 2RICH CAPITAL account is now fully active. You\'ve just unlocked access to elite trading signals, advanced copy-trading tools, and a community of high-net-worth traders.<br><br><span style="color:#F2CA50;"><b>YOUR NEXT STEPS:</b></span><br><br>&bull; <b>Log In:</b> Access the Trading Floor using your credentials below.<br>&bull; <b>Connect MT5:</b> Link your brokerage for seamless copy-trading.<br>&bull; <b>Join Groups:</b> Discover and join premium signal groups.<br><br>The markets wait for no one. Let\'s get to work.'
+        ? 'Your payment was successful, and your 2RICH CAPITAL account is now fully active. You\'ve just unlocked access to elite trading signals, advanced copy-trading tools, and a community of high-net-worth traders.<br><br><span style="color:#F2CA50;"><b>YOUR NEXT STEPS:</b></span><br><br>&bull; <b>Log In:</b> Access the Trading Floor using your credentials below.<br>&bull; <b>Connect MT5:</b> Link your brokerage for enhanced experience.<br>&bull; <b>Join Groups:</b> Discover and join trading or signal groups.<br><br>The markets wait for no one. Let\'s get to work.'
         : 'Your 2RICH CAPITAL membership has been renewed successfully. The grind doesn\'t stop. Your access continues uninterrupted. Keep executing and compounding those wins!';
 
     $html = '
@@ -235,7 +235,7 @@ function send_payment_confirmation_email(
         ' . $credentialsBlock . '
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr><td align="center">
-            <a href="' . $loginUrl . '" style="display:inline-block;padding:16px 48px;background:linear-gradient(135deg,#F2CA50,#FFDB70);color:#0A0A0A;font-size:11px;font-weight:800;letter-spacing:0.14em;text-decoration:none;border-radius:8px;text-transform:uppercase;">ACCESS THE PLATFORM &rarr;</a>
+            <a href="' . $loginUrl . '" style="color:#777;font-size:11px;font-weight:600;letter-spacing:0.14em;text-decoration:none;text-transform:uppercase;border-bottom:1px solid #333;padding-bottom:4px;">ACCESS THE PLATFORM &rarr;</a>
           </td></tr>
         </table>
       </td></tr>
