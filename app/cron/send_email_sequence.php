@@ -39,7 +39,7 @@ foreach ($users as $user) {
     
     // Check if paying user (2rich_plan exists and is not empty)
     $plan = get_user_meta($user->ID, '2rich_plan', true);
-    if (!empty($plan)) {
+    if (!empty($plan) && strtolower(trim((string)$plan)) !== 'observer') {
         continue;
     }
 

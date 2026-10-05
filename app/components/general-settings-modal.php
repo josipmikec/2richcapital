@@ -697,16 +697,19 @@ window.formatUserDate = function(dateStr, mode = 'time') {
                 <!-- SYSTEM -->
                 <div class="notif-section" style="margin-top: 0;">
                     <h4>System</h4>
-                    <label class="notif-item">
+                    <div class="notif-item">
                         <div class="notif-item-text">
                             <span class="notif-item-title">Desktop Notifications</span>
                             <span class="notif-item-desc">Receive browser push notifications for important updates</span>
                         </div>
-                        <div class="notif-toggle">
-                            <input type="checkbox" id="gsNotifDesktop" onchange="toggleDesktopNotifications(this)">
-                            <span class="notif-slider"></span>
+                        <div class="notif-toggle" style="display:flex; gap:12px; align-items:center;">
+                            <button type="button" class="btn btn-sm" style="background:#222;color:#bbb;border:1px solid #333;font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;" onclick="testDesktopNotification()">Test</button>
+                            <label class="notif-toggle" style="margin:0;">
+                                <input type="checkbox" id="gsNotifDesktop" onchange="toggleDesktopNotifications(this)">
+                                <span class="notif-slider"></span>
+                            </label>
                         </div>
-                    </label>
+                    </div>
                 </div>
 
                 <!-- TRADING FLOOR -->
@@ -1419,6 +1422,18 @@ function toggleDesktopNotifications(el) {
             // Revert back to checked because we cannot programmatically revoke permissions
             setTimeout(() => { el.checked = true; }, 100);
         }
+    }
+}
+
+function testDesktopNotification() {
+    if (!('Notification' in window)) {
+        alert('Desktop notifications are not supported in this browser.');
+        return;
+    }
+    if (Notification.permission === 'granted') {
+        new Notification("2RICH CAPITAL", { body: "Notifications are working perfectly!", icon: "/app/assets/img/logo-small.png" });
+    } else {
+        alert('Permission not granted yet. Please enable the toggle first.');
     }
 }
 
