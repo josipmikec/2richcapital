@@ -638,9 +638,8 @@ $is_paying = !empty($user_plan);
     <?php if (!$is_paying): ?>
     <div id="promoTopbar" style="background: linear-gradient(90deg, #111 0%, #1a1500 50%, #111 100%); border-bottom: 1px solid #332700; padding: 12px 24px; display: none; justify-content: center; align-items: center; position: relative; z-index: 1000;">
         <div style="font-size: 12px; font-weight: 600; color: #ccc; letter-spacing: 0.05em; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;">
-            <span style="display:inline-flex; align-items:center; justify-content:center; background:rgba(242,202,80,0.15); color:#F2CA50; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; border:1px solid rgba(242,202,80,0.3);">Limited Time</span>
             <span>Upgrade to Elite Desk today and unlock full institutional market intelligence.</span>
-            <a href="https://2rich.capital/access/" style="color: #0E0E0E; background: #F2CA50; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; transition: background 0.2s;">View Plans &rarr;</a>
+            <button type="button" onclick="openUpgradeModal()" style="color: #0E0E0E; background: #F2CA50; border: none; padding: 6px 14px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#FFDB70'" onmouseout="this.style.background='#F2CA50'">View Plans &rarr;</button>
         </div>
         <button onclick="document.getElementById('promoTopbar').style.display='none'; localStorage.setItem('hidePromoTopbar', 'true');" style="position: absolute; right: 24px; background: transparent; border: none; color: #666; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -2988,6 +2987,7 @@ $is_paying = !empty($user_plan);
     </div>
     <?php endif; ?>
     <?php include_once dirname(__DIR__) . '/components/general-settings-modal.php'; ?>
+    <?php include_once dirname(__DIR__) . '/components/upgrade-modal.php'; ?>
 
 
 </body>
