@@ -38,6 +38,12 @@ if (!function_exists('rich_feature_roles')) {
                 }
             }
         }
+        // Add virtual roles based on 2rich_plan meta for Stripe integration
+        $roles['premium'] = 'Any Paid Plan';
+        $roles['starter'] = 'Starter Plan';
+        $roles['pro'] = 'Pro Plan';
+        $roles['elite'] = 'Elite Plan';
+        
         return $roles;
     }
 }
@@ -49,7 +55,17 @@ if (!function_exists('rich_user_role_keys')) {
         if ($user_id <= 0) return [];
         $user = get_userdata($user_id);
         if (!$user || empty($user->roles) || !is_array($user->roles)) return [];
-        return array_values(array_map('sanitize_key', $user->roles));
+        
+        $roles = array_values(array_map('sanitize_key', $user->roles));
+        
+        // Inject virtual roles based on 2rich_plan
+        $plan = get_user_meta($user_id, '2rich_plan', true);
+        if (!empty($plan)) {
+            $roles[] = 'premium';
+            $roles[] = strtolower(trim((string)$plan)); // e.g. 'starter', 'pro', 'elite'
+        }
+        
+        return array_unique($roles);
     }
 }
 
