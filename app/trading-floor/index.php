@@ -809,6 +809,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         .group-workspace-hero .group-card-actions .group-pill-btn,
         .group-workspace-hero .group-card-actions .group-ghost-btn { min-height:34px; padding:0 14px; }
         .group-workspace-signal-head { display:flex; align-items:center; justify-content:flex-start; gap:8px; margin-bottom:2px; }
+        .group-chat-popout-btn { background:none; border:none; cursor:pointer; color:#555; padding:4px; display:flex; align-items:center; border-radius:4px; transition:color .15s; flex-shrink:0; }
+        .group-chat-popout-btn:hover { color:#F2CA50; }
         .group-workspace-signal-actions { display:flex; align-items:center; justify-content:center; gap:0; margin-top:-6px; }
         .group-workspace-tooltip { position:relative; display:inline-flex; align-items:center; gap:0; width:max-content; }
         .group-workspace-tooltip-copy { position:absolute; left:0; top:calc(100% + 10px); width:min(320px, 78vw); padding:12px 14px; border-radius:14px; background:rgba(14,14,14,0.96); border:1px solid rgba(242,202,80,0.18); box-shadow:0 18px 44px rgba(0,0,0,0.32); color:#d8dbe1; font-size:13px; line-height:1.5; opacity:0; pointer-events:none; transform:translateY(4px); transition:opacity .18s ease, transform .18s ease; z-index:8; }
@@ -3394,12 +3396,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     </div>
                     ` : ''}
                     <article class="group-workspace-panel group-workspace-panel--signals">
-                        <div class="group-workspace-signal-head" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;min-height:24px;">
+                        <div class="group-workspace-signal-head" style="display:flex;align-items:center;justify-content:flex-start;gap:6px;min-height:24px;">
                             <div class="group-workspace-tooltip" style="display:flex;align-items:center;">
                                 <div class="section-kicker" tabindex="0" style="margin:0;line-height:1;">Signals</div>
                                 <div class="group-workspace-tooltip-copy">See the latest posted group signals directly inside the workspace, instead of only in dashboard cards.</div>
                             </div>
-                            <div class="group-workspace-signal-actions" style="display:flex;align-items:center;gap:10px;transform:translateY(2px);">
+                            <div class="group-workspace-signal-actions" style="display:flex;align-items:center;gap:2px;transform:translateY(2px);">
                                 <button class="group-workspace-signal-action" type="button" onclick="openGroupSignalModal()" aria-label="Post signal">
                                     <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                                     <span>Post</span>
@@ -3413,9 +3415,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                         ${signalCards}
                     </article>
                     <article class="group-workspace-panel">
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px;">
+                        <div style="display:flex;align-items:center;justify-content:flex-start;gap:6px;min-height:24px;">
                             <div class="section-kicker" style="margin:0;line-height:1;">Messages</div>
-                            <div id="groupChatMessagesCount" style="font-size:12px;color:#F2CA50;line-height:1;display:flex;align-items:center;">${(((floorSignalsState.groupMessagesByGroup || {})[String(current.id || current.group_id || '')] || []).length)} in room</div>
+                            <button type="button" class="group-chat-popout-btn" onclick="openGroupMessagesWindow()" title="Open in new window" aria-label="Open messages in new window">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                            </button>
                         </div>
                         <div class="group-feed-card" style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;overflow:hidden;min-width:0;">
                             ${(() => {
@@ -4402,6 +4406,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         if (isSameDate(d, yesterday)) return 'Yesterday';
         if (window.formatUserDate) return window.formatUserDate(value, 'date');
         return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+    window.openGroupMessagesWindow = function () {
+        let url = '/dashboard/messages-window.php';
+        if (floorSignalsState.activeGroupId) url += '?group_id=' + encodeURIComponent(String(floorSignalsState.activeGroupId));
+        window.open(url, 'messagesWindow', 'width=480,height=800,resizable=yes,scrollbars=yes');
     };
     window.cancelGroupReply = function() {
         floorSignalsState.currentReplyToId = null;
