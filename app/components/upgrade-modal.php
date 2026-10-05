@@ -1,33 +1,51 @@
 <?php
 // Upgrade Modal
+$uid = $_SESSION['user_id'] ?? 0;
+$current_plan = get_user_meta($uid, '2rich_plan', true);
+if (empty($current_plan)) {
+    $current_plan = 'Observer';
+}
+// Normalize
+$current_plan = strtolower(trim((string)$current_plan));
+if ($current_plan === 'starter' || $current_plan === 'desk access') {
+    $current_plan = 'desk access';
+} else if ($current_plan === 'pro' || $current_plan === 'elite desk' || $current_plan === 'elite') {
+    $current_plan = 'elite desk';
+} else if ($current_plan === 'capital') {
+    $current_plan = 'capital';
+} else {
+    $current_plan = 'observer';
+}
 ?>
 <style>
 .upgrade-modal-overlay {
     display: none;
     position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2000;
     align-items: center;
     justify-content: center;
     padding: 24px;
-    animation: fadeIn 0.2s ease;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 .upgrade-modal-overlay.open {
     display: flex;
+    opacity: 1;
 }
 .upgrade-modal-panel {
-    background: #0A0A0A;
-    border: 1px solid #222;
-    border-radius: 16px;
+    background: #0E0E0E;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
     width: 100%;
-    max-width: 900px;
+    max-width: 1200px;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+    box-shadow: 0 16px 64px rgba(0,0,0,0.6);
     display: flex;
     flex-direction: column;
 }
@@ -35,16 +53,15 @@
 .upgrade-modal-panel::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 4px; }
 
 .upgrade-modal-header {
-    padding: 32px 32px 24px;
+    padding: 40px 40px 24px;
     text-align: center;
-    border-bottom: 1px solid #1a1a1a;
     position: relative;
 }
 .upgrade-modal-close {
     position: absolute;
     top: 24px;
     right: 24px;
-    background: rgba(255,255,255,0.05);
+    background: transparent;
     border: none;
     color: #888;
     cursor: pointer;
@@ -56,21 +73,21 @@
     transition: all 0.2s;
 }
 .upgrade-modal-close:hover {
-    background: rgba(255,255,255,0.1);
     color: #fff;
     transform: rotate(90deg);
 }
 .upgrade-modal-title {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 800;
-    color: #f5f5f5;
-    margin-bottom: 12px;
-    letter-spacing: -0.02em;
+    color: #F2CA50;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
     font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
 }
 .upgrade-modal-subtitle {
     font-size: 14px;
-    color: #888;
+    color: #aaa;
     line-height: 1.6;
     max-width: 600px;
     margin: 0 auto;
@@ -79,134 +96,151 @@
 
 .upgrade-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 24px;
-    padding: 32px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 0 40px 40px;
+}
+@media (max-width: 1100px) {
+    .upgrade-cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+    .upgrade-cards { grid-template-columns: 1fr; }
 }
 
 .upgrade-card {
     background: #111;
     border: 1px solid #222;
-    border-radius: 12px;
-    padding: 24px;
+    padding: 32px 24px;
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s, border-color 0.2s;
     position: relative;
     overflow: hidden;
+    transition: border-color 0.2s;
 }
 .upgrade-card:hover {
-    transform: translateY(-4px);
     border-color: #333;
 }
 .upgrade-card.featured {
     border-color: #F2CA50;
-    box-shadow: 0 0 32px rgba(242,202,80,0.1);
 }
-.upgrade-card.featured::before {
-    content: 'MOST POPULAR';
-    position: absolute;
-    top: 12px;
-    right: -24px;
-    background: #F2CA50;
-    color: #0E0E0E;
+.upgrade-card.featured:hover {
+    border-color: #FFDB70;
+}
+
+.uc-tier-label {
     font-size: 9px;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.1em;
-    padding: 4px 24px;
-    transform: rotate(45deg);
+    color: #666;
+    margin-bottom: 16px;
+    font-family: 'Montserrat', sans-serif;
+}
+.upgrade-card.featured .uc-tier-label {
+    color: #F2CA50;
+}
+
+.uc-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+    font-family: 'Montserrat', sans-serif;
+}
+.uc-desc {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.6;
+    margin-bottom: 32px;
+    min-height: 54px;
     font-family: 'Montserrat', sans-serif;
 }
 
-.uc-tier {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 8px;
-    font-family: 'Montserrat', sans-serif;
+.uc-features {
+    list-style: none;
+    margin: 0 0 40px;
+    padding: 0;
+    flex: 1;
 }
-.upgrade-card.featured .uc-tier {
+.uc-features li {
+    font-size: 9px;
+    font-weight: 600;
+    color: #ccc;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+    line-height: 1.4;
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.uc-features li svg {
+    color: #666;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.upgrade-card.featured .uc-features li svg {
     color: #F2CA50;
 }
+
+.uc-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: auto;
+}
 .uc-price {
-    font-size: 32px;
-    font-weight: 800;
+    font-size: 16px;
+    font-weight: 700;
     color: #fff;
-    margin-bottom: 4px;
+    margin-bottom: 16px;
     display: flex;
     align-items: baseline;
     gap: 4px;
     font-family: 'Montserrat', sans-serif;
 }
 .uc-price span {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 500;
     color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
-.uc-desc {
-    font-size: 12px;
-    color: #777;
-    line-height: 1.5;
-    margin-bottom: 24px;
-    min-height: 36px;
-    font-family: 'Montserrat', sans-serif;
-}
-.uc-features {
-    list-style: none;
-    margin: 0 0 24px;
-    padding: 0;
-    flex: 1;
-}
-.uc-features li {
-    font-size: 12px;
-    color: #ccc;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
-    line-height: 1.5;
-    font-family: 'Montserrat', sans-serif;
-}
-.uc-features li svg {
-    color: #F2CA50;
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-.uc-features li.disabled {
-    color: #555;
-}
-.uc-features li.disabled svg {
-    color: #444;
-}
+
 .uc-btn {
-    display: block;
-    width: 100%;
-    padding: 14px;
-    text-align: center;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     text-decoration: none;
-    transition: all 0.2s;
     font-family: 'Montserrat', sans-serif;
-}
-.uc-btn.primary {
-    background: #F2CA50;
-    color: #0E0E0E;
-}
-.uc-btn.primary:hover {
-    background: #FFDB70;
-}
-.uc-btn.secondary {
-    background: rgba(255,255,255,0.05);
     color: #fff;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
 }
-.uc-btn.secondary:hover {
-    background: rgba(255,255,255,0.1);
+.uc-btn:hover {
+    color: #F2CA50;
+}
+
+.current-plan-badge {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: rgba(242,202,80,0.15);
+    color: #F2CA50;
+    border: 1px solid rgba(242,202,80,0.3);
+    padding: 4px 10px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 4px;
 }
 </style>
 
@@ -214,56 +248,109 @@
     <div class="upgrade-modal-panel" onclick="event.stopPropagation()">
         <div class="upgrade-modal-header">
             <button class="upgrade-modal-close" onclick="closeUpgradeModal(event)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
-            <h2 class="upgrade-modal-title">Upgrade Your Access</h2>
-            <p class="upgrade-modal-subtitle">Join the inner circle. Get high-conviction trade setups, live market analytics, and connect directly with elite traders.</p>
+            <h2 class="upgrade-modal-title">The Membership Hierarchy</h2>
+            <p class="upgrade-modal-subtitle">Choose your level of access. Upgrade anytime.</p>
         </div>
 
         <div class="upgrade-cards">
-            <!-- Starter -->
+            <!-- Observer -->
             <div class="upgrade-card">
-                <div class="uc-tier">Starter</div>
-                <div class="uc-price">$29<span>/mo</span></div>
-                <div class="uc-desc">Essential market data and tools for independent traders.</div>
+                <?php if ($current_plan === 'observer'): ?>
+                    <div class="current-plan-badge">Current Plan</div>
+                <?php endif; ?>
+                <div class="uc-tier-label">Tier 04</div>
+                <div class="uc-title">Observer</div>
+                <div class="uc-desc">Passive insight into the 2RICH core governance and public capital flows.</div>
                 <ul class="uc-features">
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Real-time Market Data</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Advanced Charting</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Community Forum Access</li>
-                    <li class="disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Live Trade Signals</li>
-                    <li class="disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Premium Groups</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> MACRO MARKET DATA</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> 1 TRADE IDEA PER WEEK</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> LIVE TRADING FLOOR ACCESS</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> 2RICH TRADING JOURNAL</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> REAL-TIME NEWS FEED</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> TRADINGVIEW CHARTING</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ECONOMIC CALENDAR ALERTS</li>
                 </ul>
-                <a href="https://2rich.capital/access/" class="uc-btn secondary">Select Starter</a>
+                <div class="uc-footer">
+                    <?php if ($current_plan !== 'observer'): ?>
+                        <a href="https://2rich.capital/access/" class="uc-btn">START FOR FREE &rarr;</a>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <!-- Pro -->
+            <!-- Desk Access -->
+            <div class="upgrade-card">
+                <?php if ($current_plan === 'desk access'): ?>
+                    <div class="current-plan-badge">Current Plan</div>
+                <?php endif; ?>
+                <div class="uc-tier-label">Tier 03</div>
+                <div class="uc-title">Desk Access</div>
+                <div class="uc-desc">Access to the desk's daily context, reports, and trade setups.</div>
+                <ul class="uc-features">
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> EVERYTHING IN OBSERVER</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> 2RICH WEEKLY PLAYBOOK</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> DAILY SESSION MARKET REPORTS</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ADVANCED TRADING JOURNAL</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> PRIVATE CHANNELS</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> DESK RESOURCES</li>
+                </ul>
+                <div class="uc-footer">
+                    <div class="uc-price">$49<span>/ MONTH</span></div>
+                    <?php if ($current_plan !== 'desk access'): ?>
+                        <a href="https://2rich.capital/access/" class="uc-btn">UPGRADE &rarr;</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Elite Desk -->
             <div class="upgrade-card featured">
-                <div class="uc-tier">Pro</div>
-                <div class="uc-price">$99<span>/mo</span></div>
-                <div class="uc-desc">Full suite of intelligence and signals for serious traders.</div>
+                <?php if ($current_plan === 'elite desk'): ?>
+                    <div class="current-plan-badge">Current Plan</div>
+                <?php endif; ?>
+                <div class="uc-tier-label">Tier 02 / Recommended</div>
+                <div class="uc-title">Elite Desk</div>
+                <div class="uc-desc">Full access to the desk, trade rationale, curriculum, and private channels.</div>
                 <ul class="uc-features">
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Everything in Starter</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Live Trade Signals</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Premium Group Access</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Trade Copier (MT5)</li>
-                    <li class="disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Direct 1-on-1 Mentorship</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> EVERYTHING IN DESK ACCESS</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ADVANCED MARKET DATA</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> 5 TRADE IDEAS PER WEEK</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> TRADE RATIONALE (THE WHY)</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> FULL TRADING JOURNAL</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> 12-WEEK FUNDED CURRICULUM</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> PROP FIRM CHALLENGE COACHING</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> SUNDAY MARKET PREP</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> PRIVATE DISCORD ELITE CHANNELS</li>
                 </ul>
-                <a href="https://2rich.capital/access/" class="uc-btn primary">Select Pro</a>
+                <div class="uc-footer">
+                    <div class="uc-price">$97<span>/ MONTH</span></div>
+                    <?php if ($current_plan !== 'elite desk'): ?>
+                        <a href="https://2rich.capital/access/" class="uc-btn">UPGRADE &rarr;</a>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <!-- Elite -->
+            <!-- Capital -->
             <div class="upgrade-card">
-                <div class="uc-tier">Elite</div>
-                <div class="uc-price">$199<span>/mo</span></div>
-                <div class="uc-desc">Institutional level access, direct mentoring and inner circle.</div>
+                <?php if ($current_plan === 'capital'): ?>
+                    <div class="current-plan-badge">Current Plan</div>
+                <?php endif; ?>
+                <div class="uc-tier-label">Tier 01</div>
+                <div class="uc-title">Capital</div>
+                <div class="uc-desc">Long-term track for deeper capital access, analyst and risk-management development, inside the desk.</div>
                 <ul class="uc-features">
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Everything in Pro</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Direct 1-on-1 Mentorship</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Inner Circle Mastermind</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom Trading Plan</li>
-                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> VIP Support Line</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> EVERYTHING IN ELITE DESK</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> DIRECT CONNECTION WITH THE DESK</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> CAPITAL TRACK ACCESS</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> FULL TRADE IDEAS (NO LIMITS)</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> THIS IS NOT A PUBLIC TIER</li>
                 </ul>
-                <a href="https://2rich.capital/access/" class="uc-btn secondary">Select Elite</a>
+                <div class="uc-footer">
+                    <div class="uc-price">UPON INQUIRY</div>
+                    <?php if ($current_plan !== 'capital'): ?>
+                        <a href="https://2rich.capital/access/" class="uc-btn">CONTACT US &rarr;</a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -271,14 +358,24 @@
 
 <script>
 function openUpgradeModal() {
-    document.getElementById('upgradeModalOverlay').classList.add('open');
+    // slight timeout to allow CSS transition
+    document.getElementById('upgradeModalOverlay').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('upgradeModalOverlay').classList.add('open');
+    }, 10);
 }
 
 function closeUpgradeModal(e) {
     if (e && e.target === document.getElementById('upgradeModalOverlay')) {
         document.getElementById('upgradeModalOverlay').classList.remove('open');
+        setTimeout(() => {
+            document.getElementById('upgradeModalOverlay').style.display = 'none';
+        }, 300);
     } else if (e && e.currentTarget && e.currentTarget.classList.contains('upgrade-modal-close')) {
         document.getElementById('upgradeModalOverlay').classList.remove('open');
+        setTimeout(() => {
+            document.getElementById('upgradeModalOverlay').style.display = 'none';
+        }, 300);
     }
 }
 </script>
