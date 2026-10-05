@@ -108,7 +108,7 @@ function mt5_market_sync_candles($payload, $connection, $wpdb) {
     $symbols = $wpdb->prefix . 'rich_market_symbols';
     $candles = $wpdb->prefix . 'rich_market_candles';
     $sync = $wpdb->prefix . 'rich_market_sync_state';
-    $allowed = ['H8', 'D1', 'W1', 'MN1'];
+    $allowed = ['M15', 'H1', 'H4', 'H8', 'D1', 'W1', 'MN1'];
     $received = 0;
     $saved = 0;
     $now = current_time('mysql', true);
