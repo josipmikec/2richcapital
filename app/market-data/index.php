@@ -2657,6 +2657,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        // ?symbol=XAUUSD (e.g. dashboard "View Full Chart") overrides the saved symbol; unknown symbols fall back automatically
+        const urlSymbol = new URLSearchParams(window.location.search).get('symbol');
+        if (urlSymbol && urlSymbol.trim()) currentSymbol = urlSymbol.trim();
+
         // Load TradingView UDF + init chart
         const udfScript = document.createElement('script');
         udfScript.src   = '../assets/datafeeds/udf/dist/bundle.js';

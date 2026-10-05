@@ -791,8 +791,8 @@ foreach ($_dashboard_initial_order as $card_id) {
 					        </div>
 					    </div>
 					
-					    <button class="widget-action market-pane-action" onclick="window.location.href='/market-data'">
-					        View Markets
+					    <button class="widget-action market-pane-action" onclick="(function(){var el=document.getElementById('techEngineSymbolSelect');var sym=el&&el.value&&el.value!=='__ADD__'?el.value:'';window.location.href='/market-data'+(sym?'?symbol='+encodeURIComponent(sym):'');})()">
+					        View Full Chart
 					        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
 					            <line x1="5" y1="12" x2="19" y2="12"></line>
 					            <polyline points="12 5 19 12 12 19"></polyline>
