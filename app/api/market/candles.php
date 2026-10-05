@@ -29,8 +29,8 @@ $sync = $wpdb->prefix . 'rich_market_sync_state';
 $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$symbols} WHERE enabled=1 AND (display_symbol=%s OR mt5_symbol=%s) ORDER BY id ASC LIMIT 1", $symbol, $symbol), ARRAY_A);
 if (!$row) wp_send_json(['ok'=>false,'message'=>'Symbol not available.'], 404);
 
-$where = "WHERE symbol_id=%d AND timeframe=%s";
-$params = [(int)$row['id'], $timeframe];
+$where = "WHERE symbol_id=%d AND timeframe='M15'";
+$params = [(int)$row['id']];
 if ($from_sql !== '') {
     $where .= " AND candle_time_utc >= %s";
     $params[] = $from_sql;
@@ -40,26 +40,73 @@ if ($to_sql !== '') {
     $params[] = $to_sql;
 }
 
-$closed_params = $params;
-$closed_params[] = max(1, $limit);
-$closed_sql = "SELECT candle_time_utc, open_price, high_price, low_price, close_price, tick_volume, real_volume, is_closed FROM {$candles} {$where} AND is_closed=1 ORDER BY candle_time_utc DESC LIMIT %d";
-$closed_rows = $wpdb->get_results($wpdb->prepare($closed_sql, ...$closed_params), ARRAY_A);
-$closed_rows = array_reverse($closed_rows ?: []);
+// Calculate how many M15 candles we need to fulfill the limit
+$multiplier = 1;
+if ($timeframe === 'H8') $multiplier = 32;
+if ($timeframe === 'D1') $multiplier = 96;
+if ($timeframe === 'W1') $multiplier = 96 * 5; // Forex week is ~5 days
+if ($timeframe === 'MN1') $multiplier = 96 * 22;
 
-$open_sql = "SELECT candle_time_utc, open_price, high_price, low_price, close_price, tick_volume, real_volume, is_closed FROM {$candles} {$where} AND is_closed=0 ORDER BY candle_time_utc DESC LIMIT 1";
-$open_row = $wpdb->get_row($wpdb->prepare($open_sql, ...$params), ARRAY_A);
+$m15_limit = min(100000, $limit * $multiplier);
 
-$rows = $closed_rows;
-if ($open_row) {
-    $last_index = count($rows) - 1;
-    if ($last_index >= 0 && ($rows[$last_index]['candle_time_utc'] ?? '') === ($open_row['candle_time_utc'] ?? '')) {
-        $rows[$last_index] = $open_row;
+$sql = "SELECT candle_time_utc, open_price, high_price, low_price, close_price, tick_volume, real_volume, is_closed FROM {$candles} {$where} ORDER BY candle_time_utc DESC LIMIT %d";
+$params[] = $m15_limit;
+$raw_rows = $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A);
+
+$aggregated = [];
+$current_bucket = null;
+$bucket_time = null;
+
+foreach ($raw_rows ?: [] as $c) {
+    $ts = strtotime($c['candle_time_utc']);
+    
+    if ($timeframe === 'D1') {
+        $b_ts = strtotime(gmdate('Y-m-d 00:00:00', $ts));
+    } elseif ($timeframe === 'H8') {
+        $h = (int)gmdate('H', $ts);
+        $bucket_h = floor($h / 8) * 8;
+        $b_ts = strtotime(gmdate("Y-m-d " . sprintf('%02d', $bucket_h) . ":00:00", $ts));
+    } elseif ($timeframe === 'W1') {
+        $w = (int)gmdate('w', $ts);
+        $diff = $w == 0 ? 6 : $w - 1;
+        $b_ts = strtotime(gmdate('Y-m-d 00:00:00', $ts)) - ($diff * 86400);
+    } elseif ($timeframe === 'MN1') {
+        $b_ts = strtotime(gmdate('Y-m-01 00:00:00', $ts));
     } else {
-        $rows[] = $open_row;
+        $b_ts = $ts; // fallback
+    }
+
+    if ($bucket_time !== $b_ts) {
+        if ($current_bucket) $aggregated[] = $current_bucket;
+        $current_bucket = [
+            'candle_time_utc' => gmdate('Y-m-d H:i:s', $b_ts),
+            'open_price' => $c['open_price'],
+            'high_price' => $c['high_price'],
+            'low_price' => $c['low_price'],
+            'close_price' => $c['close_price'],
+            'tick_volume' => $c['tick_volume'],
+            'real_volume' => $c['real_volume'],
+            'is_closed' => $c['is_closed'],
+        ];
+        $bucket_time = $b_ts;
+    } else {
+        $current_bucket['open_price'] = $c['open_price'];
+        $current_bucket['high_price'] = max($current_bucket['high_price'], $c['high_price']);
+        $current_bucket['low_price'] = min($current_bucket['low_price'], $c['low_price']);
+        $current_bucket['tick_volume'] += $c['tick_volume'];
+        $current_bucket['real_volume'] += $c['real_volume'];
+        // if any candle in the bucket is open, the bucket is open
+        if ($c['is_closed'] == 0) $current_bucket['is_closed'] = 0; 
     }
 }
+if ($current_bucket) $aggregated[] = $current_bucket;
 
-$state = $wpdb->get_row($wpdb->prepare("SELECT last_success_at, last_error_message, consecutive_failures FROM {$sync} WHERE symbol_id=%d AND timeframe=%s LIMIT 1", (int)$row['id'], $timeframe), ARRAY_A);
+// Limit to requested amount
+$aggregated = array_slice($aggregated, 0, $limit);
+// Reverse to ASC for the frontend
+$rows = array_reverse($aggregated);
+
+$state = $wpdb->get_row($wpdb->prepare("SELECT last_success_at, last_error_message, consecutive_failures FROM {$sync} WHERE symbol_id=%d AND timeframe='M15' LIMIT 1", (int)$row['id']), ARRAY_A);
 $last = $state['last_success_at'] ?? null;
 $status = (!$last || strtotime($last) < time()-7200) ? 'stale' : ((int)($state['consecutive_failures'] ?? 0) > 0 ? 'degraded' : 'healthy');
 
