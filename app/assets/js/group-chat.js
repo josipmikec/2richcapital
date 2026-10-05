@@ -231,6 +231,296 @@
     }
 
     /* ------------------------------------------------------------------
+     * Shared chat UI behaviours (context menu, reactions, @mentions, profile popup).
+     * Each page passes a small adapter describing where ITS messages/input/state live:
+     *   { currentUserId, replyFn, getInput(), getMembers(), getMessages(), afterReaction(),
+     *     csrf(), reactUrl?, sendOnEnter?, send? }
+     * ------------------------------------------------------------------ */
+    const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[ch]));
+
+    function installUi(a) {
+        /* ---------------- context menu ---------------- */
+        window.openMessageContextMenu = function (e, msgId, author, text) {
+            e.preventDefault();
+
+            let menu = document.getElementById('messageContextMenu');
+            if (!menu) {
+                menu = document.createElement('div');
+                menu.id = 'messageContextMenu';
+                menu.style.position = 'fixed';
+                menu.style.background = '#1a1d24';
+                menu.style.border = '1px solid rgba(255,255,255,0.1)';
+                menu.style.borderRadius = '12px';
+                menu.style.padding = '8px';
+                menu.style.zIndex = '9999';
+                menu.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+                menu.style.display = 'flex';
+                menu.style.flexDirection = 'column';
+                menu.style.gap = '8px';
+                document.body.appendChild(menu);
+
+                document.addEventListener('click', function (ev) {
+                    if (ev.target.closest('#messageContextMenu')) return;
+                    menu.style.display = 'none';
+                });
+                document.addEventListener('contextmenu', function (ev) {
+                    if (!ev.target.closest('.dashboard-group-chat-message')) {
+                        menu.style.display = 'none';
+                    }
+                });
+            }
+
+            const emojis = ['👍', '❤️', '😂', '🔥', '🚀', '👀'];
+            let emojiHtml = '<div style="display:flex;gap:8px;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.05);">';
+            for (const emoji of emojis) {
+                emojiHtml += `<button type="button" onclick="window.toggleMessageReaction(${msgId}, '${emoji}'); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">${emoji}</button>`;
+            }
+            emojiHtml += '</div>';
+
+            let actionsHtml = `<button type="button" onclick="window.${a.replyFn}({dataset:{id:${msgId}, author:'${author.replace(/'/g, "\\'")}', text:'${text.replace(/'/g, "\\'")}'}}); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Reply</button>`;
+            actionsHtml += `<button type="button" onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'").replace(/\n/g, "\\n")}'); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Copy</button>`;
+
+            menu.innerHTML = emojiHtml + '<div style="display:flex;flex-direction:column;gap:2px;">' + actionsHtml + '</div>';
+            menu.style.display = 'flex';
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+
+            setTimeout(() => {
+                const rect = menu.getBoundingClientRect();
+                if (rect.right > window.innerWidth) menu.style.left = (window.innerWidth - rect.width - 10) + 'px';
+                if (rect.bottom > window.innerHeight) menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
+            }, 0);
+        };
+
+        // Long-press on messages (touch) — registered once per page
+        if (!window.__richChatLongPress) (function () {
+            window.__richChatLongPress = true;
+            let touchTimer = null;
+            let touchStartX = 0, touchStartY = 0;
+
+            document.addEventListener('touchstart', (e) => {
+                const msgEl = e.target.closest('.dashboard-group-chat-message');
+                if (msgEl) {
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    touchTimer = setTimeout(() => {
+                        touchTimer = null;
+                        const onclickStr = msgEl.getAttribute('oncontextmenu');
+                        if (onclickStr) {
+                            const match = onclickStr.match(/openMessageContextMenu\(event,\s*(\d+),\s*'([^']*)',\s*'([^']*)'\)/);
+                            if (match && typeof window.openMessageContextMenu === 'function') {
+                                const synthEvent = { clientX: touchStartX, clientY: touchStartY, preventDefault: () => {} };
+                                const author = match[2].replace(/\\'/g, "'");
+                                const text = match[3].replace(/\\'/g, "'").replace(/\\n/g, "\n");
+                                window.openMessageContextMenu(synthEvent, parseInt(match[1], 10), author, text);
+                            }
+                        }
+                    }, 500);
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+            });
+            document.addEventListener('touchmove', (e) => {
+                if (touchTimer) {
+                    const touch = e.touches[0];
+                    if (Math.abs(touch.clientX - touchStartX) > 10 || Math.abs(touch.clientY - touchStartY) > 10) {
+                        clearTimeout(touchTimer);
+                        touchTimer = null;
+                    }
+                }
+            });
+        })();
+
+        /* ---------------- reactions ---------------- */
+        window.toggleMessageReaction = async function (messageId, reaction) {
+            const msg = (a.getMessages() || []).find(m => Number(m.id) === Number(messageId));
+            if (msg) {
+                if (!msg.reactions) msg.reactions = {};
+                if (!msg.reactions[reaction]) msg.reactions[reaction] = [];
+                const userIndex = msg.reactions[reaction].indexOf(Number(a.currentUserId));
+                if (userIndex > -1) {
+                    msg.reactions[reaction].splice(userIndex, 1);
+                    if (msg.reactions[reaction].length === 0) delete msg.reactions[reaction];
+                } else {
+                    msg.reactions[reaction].push(Number(a.currentUserId));
+                }
+                a.afterReaction();
+            }
+            try {
+                await fetch(a.reactUrl || '/api/signals/react-message.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': (a.csrf ? a.csrf() : window.CSRF_TOKEN) || '' },
+                    body: JSON.stringify({ message_id: messageId, reaction: reaction }),
+                    credentials: 'include'
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        /* ---------------- @mentions ---------------- */
+        window.mentionState = { active: false, query: '', members: [], selectedIndex: 0 };
+
+        function renderMentionDropdown() {
+            const dropdown = document.getElementById('mentionAutocomplete');
+            if (!dropdown) return;
+            dropdown.innerHTML = window.mentionState.members.map((m, idx) => {
+                const name = m.display_name || m.user_login || 'User #' + m.user_id;
+                const bg = idx === window.mentionState.selectedIndex ? 'rgba(255,255,255,0.1)' : 'transparent';
+                return `<div onmousedown="window.selectMention(${idx}); return false;" style="padding:6px 12px;border-radius:6px;cursor:pointer;background:${bg};color:#fff;font-size:13px;display:flex;align-items:center;gap:8px;" onmouseover="window.mentionState.selectedIndex=${idx};renderMentionDropdown()">
+                    <div style="width:20px;height:20px;border-radius:50%;background:rgba(242,202,80,0.2);color:#f2ca50;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${name.charAt(0).toUpperCase()}</div>
+                    ${esc(name)}
+                </div>`;
+            }).join('');
+        }
+        window.renderMentionDropdown = renderMentionDropdown;
+
+        window.handleMentionAutocomplete = function (inputEl) {
+            const val = inputEl.value;
+            const cursor = inputEl.selectionStart;
+            const textBeforeCursor = val.slice(0, cursor);
+            const match = textBeforeCursor.match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
+            const dropdown = document.getElementById('mentionAutocomplete');
+
+            if (match) {
+                const query = match[1].toLowerCase();
+                window.mentionState.active = true;
+                window.mentionState.query = query;
+
+                let members = a.getMembers() || [];
+                if (query) {
+                    members = members.filter(m => (m.display_name || m.user_login || '').toLowerCase().includes(query));
+                }
+                members = members.slice(0, 10);
+                window.mentionState.members = members;
+                window.mentionState.selectedIndex = 0;
+
+                if (members.length > 0 && dropdown) {
+                    renderMentionDropdown();
+                    dropdown.style.display = 'flex';
+                } else if (dropdown) {
+                    dropdown.style.display = 'none';
+                }
+            } else {
+                window.mentionState.active = false;
+                if (dropdown) dropdown.style.display = 'none';
+            }
+        };
+
+        window.selectMention = function (idx) {
+            if (!window.mentionState.active) return;
+            const member = window.mentionState.members[idx];
+            if (!member) return;
+            const input = a.getInput();
+            if (!input) return;
+
+            const val = input.value;
+            const cursor = input.selectionStart;
+            const match = val.slice(0, cursor).match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
+
+            if (match) {
+                const name = member.display_name || member.user_login;
+                const mentionText = '@' + name.replace(/\s+/g, '') + ' ';
+                const replaceStart = cursor - match[1].length - 1;
+                input.value = val.slice(0, replaceStart) + mentionText + val.slice(cursor);
+                input.focus();
+                const newCursor = replaceStart + mentionText.length;
+                input.setSelectionRange(newCursor, newCursor);
+            }
+
+            window.mentionState.active = false;
+            const dropdown = document.getElementById('mentionAutocomplete');
+            if (dropdown) dropdown.style.display = 'none';
+        };
+
+        window.handleMentionKeydown = function (e) {
+            if (!window.mentionState || !window.mentionState.active) {
+                if (a.sendOnEnter && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); a.send(); }
+                return;
+            }
+            const dropdown = document.getElementById('mentionAutocomplete');
+            const n = window.mentionState.members.length;
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const delta = e.key === 'ArrowDown' ? 1 : -1;
+                window.mentionState.selectedIndex = (window.mentionState.selectedIndex + delta + n) % n;
+                renderMentionDropdown();
+                if (dropdown && dropdown.children[window.mentionState.selectedIndex]) {
+                    dropdown.children[window.mentionState.selectedIndex].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                window.selectMention(window.mentionState.selectedIndex);
+            } else if (e.key === 'Escape') {
+                window.mentionState.active = false;
+                if (dropdown) dropdown.style.display = 'none';
+            }
+        };
+
+        window.openProfilePreview = async function (el, userId) {
+            if (!userId) return;
+            const existingModal = document.getElementById('profilePreviewModal');
+            if (existingModal) existingModal.remove();
+
+            const rect = el.getBoundingClientRect();
+            
+            const modal = document.createElement('div');
+            modal.id = 'profilePreviewModal';
+            modal.style.cssText = `position:fixed; left:${rect.left}px; top:${rect.bottom + 8}px; width:280px; background:#1e2025; border:1px solid #333; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:99999; padding:16px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; color:#fff; display:flex; flex-direction:column; gap:12px;`;
+            
+            modal.innerHTML = '<div style="text-align:center;color:#888;font-size:13px;padding:20px 0;">Loading profile...</div>';
+            document.body.appendChild(modal);
+
+            const closeHandler = (e) => {
+                if (!modal.contains(e.target) && e.target !== el) {
+                    modal.remove();
+                    document.removeEventListener('click', closeHandler);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', closeHandler), 10);
+
+            try {
+                const res = await fetch(`/api/signals/profile-preview.php?user_id=${userId}`);
+                const data = await res.json();
+                if (!data.success) throw new Error();
+                
+                const p = data.profile;
+                const now = Math.floor(Date.now() / 1000);
+                const diff = now - p.last_active;
+                let isOnline = p.last_active > 0 && diff < 120;
+                let lastSeenText = isOnline ? '<span style="color:#28a745;font-weight:600;">Online</span>' : `Last seen ${Math.floor(diff/60)}m ago`;
+                if (!isOnline && diff >= 3600) lastSeenText = `Last seen ${Math.floor(diff/3600)}h ago`;
+                if (!isOnline && diff >= 86400) lastSeenText = `Last seen ${Math.floor(diff/86400)}d ago`;
+                if (p.last_active === 0) lastSeenText = 'Offline';
+
+                modal.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, #F2CA50, #FFDB70);color:#0e0e0e;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;position:relative;">
+                            ${esc(p.avatar_char)}
+                            <div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:${isOnline ? '#28a745' : '#6c757d'};border:2px solid #1e2025;"></div>
+                        </div>
+                        <div style="flex:1;overflow:hidden;">
+                            <div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.display_name)}</div>
+                            <div style="font-size:12px;color:#8f95a3;margin-top:2px;">${esc(p.handle)}</div>
+                        </div>
+                    </div>
+                    ${p.bio ? `<div style="font-size:13px;color:#cfd4dd;line-height:1.4;margin:4px 0;">${esc(p.bio)}</div>` : ''}
+                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-top:4px;">
+                        <span style="color:#8f95a3;">${p.followers} followers</span>
+                        <span style="color:#8f95a3;">${lastSeenText}</span>
+                    </div>
+                    <a href="/trading-floor/?profile=${p.user_id}" style="display:block;text-align:center;background:#2a2c33;color:#fff;text-decoration:none;padding:8px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;transition:background 0.2s;">View Full Profile</a>
+                `;
+            } catch (e) {
+                modal.innerHTML = '<div style="text-align:center;color:#ff5b5b;font-size:13px;padding:20px 0;">Failed to load profile.</div>';
+            }
+        };
+    }
+
+    /* ------------------------------------------------------------------
      * Chat engine
      * ------------------------------------------------------------------ */
     function init(opts) {
@@ -377,128 +667,6 @@
             }
         }
 
-        /* ---------------- context menu ---------------- */
-        window.openMessageContextMenu = function (e, msgId, author, text) {
-            e.preventDefault();
-
-            let menu = document.getElementById('messageContextMenu');
-            if (!menu) {
-                menu = document.createElement('div');
-                menu.id = 'messageContextMenu';
-                menu.style.position = 'fixed';
-                menu.style.background = '#1a1d24';
-                menu.style.border = '1px solid rgba(255,255,255,0.1)';
-                menu.style.borderRadius = '12px';
-                menu.style.padding = '8px';
-                menu.style.zIndex = '9999';
-                menu.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
-                menu.style.display = 'flex';
-                menu.style.flexDirection = 'column';
-                menu.style.gap = '8px';
-                document.body.appendChild(menu);
-
-                document.addEventListener('click', function (ev) {
-                    if (ev.target.closest('#messageContextMenu')) return;
-                    menu.style.display = 'none';
-                });
-                document.addEventListener('contextmenu', function (ev) {
-                    if (!ev.target.closest('.dashboard-group-chat-message')) {
-                        menu.style.display = 'none';
-                    }
-                });
-            }
-
-            const emojis = ['👍', '❤️', '😂', '🔥', '🚀', '👀'];
-            let emojiHtml = '<div style="display:flex;gap:8px;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.05);">';
-            for (const emoji of emojis) {
-                emojiHtml += `<button type="button" onclick="window.toggleMessageReaction(${msgId}, '${emoji}'); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">${emoji}</button>`;
-            }
-            emojiHtml += '</div>';
-
-            let actionsHtml = `<button type="button" onclick="window.replyToMessage({dataset:{id:${msgId}, author:'${author.replace(/'/g, "\\'")}', text:'${text.replace(/'/g, "\\'")}'}}); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Reply</button>`;
-            actionsHtml += `<button type="button" onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'").replace(/\n/g, "\\n")}'); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Copy</button>`;
-
-            menu.innerHTML = emojiHtml + '<div style="display:flex;flex-direction:column;gap:2px;">' + actionsHtml + '</div>';
-            menu.style.display = 'flex';
-            menu.style.left = e.clientX + 'px';
-            menu.style.top = e.clientY + 'px';
-
-            setTimeout(() => {
-                const rect = menu.getBoundingClientRect();
-                if (rect.right > window.innerWidth) menu.style.left = (window.innerWidth - rect.width - 10) + 'px';
-                if (rect.bottom > window.innerHeight) menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
-            }, 0);
-        };
-
-        // Long-press on messages (touch)
-        (function () {
-            let touchTimer = null;
-            let touchStartX = 0, touchStartY = 0;
-
-            document.addEventListener('touchstart', (e) => {
-                const msgEl = e.target.closest('.dashboard-group-chat-message');
-                if (msgEl) {
-                    const touch = e.touches[0];
-                    touchStartX = touch.clientX;
-                    touchStartY = touch.clientY;
-                    touchTimer = setTimeout(() => {
-                        touchTimer = null;
-                        const onclickStr = msgEl.getAttribute('oncontextmenu');
-                        if (onclickStr) {
-                            const match = onclickStr.match(/openMessageContextMenu\(event,\s*(\d+),\s*'([^']*)',\s*'([^']*)'\)/);
-                            if (match && typeof window.openMessageContextMenu === 'function') {
-                                const synthEvent = { clientX: touchStartX, clientY: touchStartY, preventDefault: () => {} };
-                                const author = match[2].replace(/\\'/g, "'");
-                                const text = match[3].replace(/\\'/g, "'").replace(/\\n/g, "\n");
-                                window.openMessageContextMenu(synthEvent, parseInt(match[1], 10), author, text);
-                            }
-                        }
-                    }, 500);
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchend', () => {
-                if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
-            });
-            document.addEventListener('touchmove', (e) => {
-                if (touchTimer) {
-                    const touch = e.touches[0];
-                    if (Math.abs(touch.clientX - touchStartX) > 10 || Math.abs(touch.clientY - touchStartY) > 10) {
-                        clearTimeout(touchTimer);
-                        touchTimer = null;
-                    }
-                }
-            });
-        })();
-
-        /* ---------------- reactions ---------------- */
-        window.toggleMessageReaction = async function (messageId, reaction) {
-            const msg = (window.currentMessages || []).find(m => Number(m.id) === Number(messageId));
-            if (msg) {
-                if (!msg.reactions) msg.reactions = {};
-                if (!msg.reactions[reaction]) msg.reactions[reaction] = [];
-                const userIndex = msg.reactions[reaction].indexOf(Number(CURRENT_USER_ID));
-                if (userIndex > -1) {
-                    msg.reactions[reaction].splice(userIndex, 1);
-                    if (msg.reactions[reaction].length === 0) delete msg.reactions[reaction];
-                } else {
-                    msg.reactions[reaction].push(Number(CURRENT_USER_ID));
-                }
-                currentMessagesCache = '';
-                renderMessages(window.currentMessages);
-            }
-            try {
-                await fetch('/api/signals/react-message.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN || '' },
-                    body: JSON.stringify({ message_id: messageId, reaction: reaction }),
-                    credentials: 'include'
-                });
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
         /* ---------------- attachments ---------------- */
         window.handleDashboardAttachment = function (event) {
             const file = event.target.files[0];
@@ -644,101 +812,17 @@
             }
         });
 
-        /* ---------------- @mentions ---------------- */
         window.currentGroupMembers = [];
-        window.mentionState = { active: false, query: '', members: [], selectedIndex: 0 };
 
-        function renderMentionDropdown() {
-            const dropdown = document.getElementById('mentionAutocomplete');
-            if (!dropdown) return;
-            dropdown.innerHTML = window.mentionState.members.map((m, idx) => {
-                const name = m.display_name || m.user_login || 'User #' + m.user_id;
-                const bg = idx === window.mentionState.selectedIndex ? 'rgba(255,255,255,0.1)' : 'transparent';
-                return `<div onmousedown="window.selectMention(${idx}); return false;" style="padding:6px 12px;border-radius:6px;cursor:pointer;background:${bg};color:#fff;font-size:13px;display:flex;align-items:center;gap:8px;" onmouseover="window.mentionState.selectedIndex=${idx};renderMentionDropdown()">
-                    <div style="width:20px;height:20px;border-radius:50%;background:rgba(242,202,80,0.2);color:#f2ca50;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${name.charAt(0).toUpperCase()}</div>
-                    ${escapeHtml(name)}
-                </div>`;
-            }).join('');
-        }
-        window.renderMentionDropdown = renderMentionDropdown;
-
-        window.handleMentionAutocomplete = function (inputEl) {
-            const val = inputEl.value;
-            const cursor = inputEl.selectionStart;
-            const textBeforeCursor = val.slice(0, cursor);
-            const match = textBeforeCursor.match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
-            const dropdown = document.getElementById('mentionAutocomplete');
-
-            if (match) {
-                const query = match[1].toLowerCase();
-                window.mentionState.active = true;
-                window.mentionState.query = query;
-
-                let members = window.currentGroupMembers || [];
-                if (query) {
-                    members = members.filter(m => (m.display_name || m.user_login || '').toLowerCase().includes(query));
-                }
-                members = members.slice(0, 10);
-                window.mentionState.members = members;
-                window.mentionState.selectedIndex = 0;
-
-                if (members.length > 0 && dropdown) {
-                    renderMentionDropdown();
-                    dropdown.style.display = 'flex';
-                } else if (dropdown) {
-                    dropdown.style.display = 'none';
-                }
-            } else {
-                window.mentionState.active = false;
-                if (dropdown) dropdown.style.display = 'none';
-            }
-        };
-
-        window.selectMention = function (idx) {
-            if (!window.mentionState.active) return;
-            const member = window.mentionState.members[idx];
-            if (!member) return;
-            if (!input) return;
-
-            const val = input.value;
-            const cursor = input.selectionStart;
-            const match = val.slice(0, cursor).match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
-
-            if (match) {
-                const name = member.display_name || member.user_login;
-                const mentionText = '@' + name.replace(/\s+/g, '') + ' ';
-                const replaceStart = cursor - match[1].length - 1;
-                input.value = val.slice(0, replaceStart) + mentionText + val.slice(cursor);
-                input.focus();
-                const newCursor = replaceStart + mentionText.length;
-                input.setSelectionRange(newCursor, newCursor);
-            }
-
-            window.mentionState.active = false;
-            const dropdown = document.getElementById('mentionAutocomplete');
-            if (dropdown) dropdown.style.display = 'none';
-        };
-
-        window.handleMentionKeydown = function (e) {
-            if (!window.mentionState || !window.mentionState.active) return;
-            const dropdown = document.getElementById('mentionAutocomplete');
-            const n = window.mentionState.members.length;
-            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                const delta = e.key === 'ArrowDown' ? 1 : -1;
-                window.mentionState.selectedIndex = (window.mentionState.selectedIndex + delta + n) % n;
-                renderMentionDropdown();
-                if (dropdown && dropdown.children[window.mentionState.selectedIndex]) {
-                    dropdown.children[window.mentionState.selectedIndex].scrollIntoView({ block: 'nearest' });
-                }
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                window.selectMention(window.mentionState.selectedIndex);
-            } else if (e.key === 'Escape') {
-                window.mentionState.active = false;
-                if (dropdown) dropdown.style.display = 'none';
-            }
-        };
+        installUi({
+            currentUserId: CURRENT_USER_ID,
+            replyFn: 'replyToMessage',
+            getInput: () => input,
+            getMembers: () => window.currentGroupMembers || [],
+            getMessages: () => window.currentMessages,
+            afterReaction: () => { currentMessagesCache = ''; renderMessages(window.currentMessages); },
+            csrf: () => window.CSRF_TOKEN
+        });
 
         /* ---------------- boot + polling ---------------- */
         initChat();
@@ -756,5 +840,5 @@
         return { refresh: initChat, reload: loadMessages };
     }
 
-    window.GroupChat = { init: init, buildMessagesHtml: buildMessagesHtml };
+    window.GroupChat = { init: init, buildMessagesHtml: buildMessagesHtml, installUi: installUi };
 })();

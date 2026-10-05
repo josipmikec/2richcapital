@@ -374,64 +374,7 @@ $user_id = $_SESSION['user_id'] ?? $_SESSION['userid'];
             document.getElementById('imageLightboxModal').style.display = 'flex';
         };
 
-        window.openProfilePreview = async function(el, userId) {
-            if (!userId) return;
-            const existingModal = document.getElementById('profilePreviewModal');
-            if (existingModal) existingModal.remove();
-
-            const rect = el.getBoundingClientRect();
-            
-            const modal = document.createElement('div');
-            modal.id = 'profilePreviewModal';
-            modal.style.cssText = `position:fixed; left:${rect.left}px; top:${rect.bottom + 8}px; width:280px; background:#1e2025; border:1px solid #333; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:99999; padding:16px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; color:#fff; display:flex; flex-direction:column; gap:12px;`;
-            
-            modal.innerHTML = '<div style="text-align:center;color:#888;font-size:13px;padding:20px 0;">Loading profile...</div>';
-            document.body.appendChild(modal);
-
-            const closeHandler = (e) => {
-                if (!modal.contains(e.target) && e.target !== el) {
-                    modal.remove();
-                    document.removeEventListener('click', closeHandler);
-                }
-            };
-            setTimeout(() => document.addEventListener('click', closeHandler), 10);
-
-            try {
-                const res = await fetch(`/api/signals/profile-preview.php?user_id=${userId}`);
-                const data = await res.json();
-                if (!data.success) throw new Error();
-                
-                const p = data.profile;
-                const now = Math.floor(Date.now() / 1000);
-                const diff = now - p.last_active;
-                let isOnline = p.last_active > 0 && diff < 120;
-                let lastSeenText = isOnline ? '<span style="color:#28a745;font-weight:600;">Online</span>' : `Last seen ${Math.floor(diff/60)}m ago`;
-                if (!isOnline && diff >= 3600) lastSeenText = `Last seen ${Math.floor(diff/3600)}h ago`;
-                if (!isOnline && diff >= 86400) lastSeenText = `Last seen ${Math.floor(diff/86400)}d ago`;
-                if (p.last_active === 0) lastSeenText = 'Offline';
-
-                modal.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, #F2CA50, #FFDB70);color:#0e0e0e;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;position:relative;">
-                            ${escapeHtml(p.avatar_char)}
-                            <div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:${isOnline ? '#28a745' : '#6c757d'};border:2px solid #1e2025;"></div>
-                        </div>
-                        <div style="flex:1;overflow:hidden;">
-                            <div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.display_name)}</div>
-                            <div style="font-size:12px;color:#8f95a3;margin-top:2px;">${escapeHtml(p.handle)}</div>
-                        </div>
-                    </div>
-                    ${p.bio ? `<div style="font-size:13px;color:#cfd4dd;line-height:1.4;margin:4px 0;">${escapeHtml(p.bio)}</div>` : ''}
-                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-top:4px;">
-                        <span style="color:#8f95a3;">${p.followers} followers</span>
-                        <span style="color:#8f95a3;">${lastSeenText}</span>
-                    </div>
-                    <a href="/trading-floor/?profile=${p.user_id}" style="display:block;text-align:center;background:#2a2c33;color:#fff;text-decoration:none;padding:8px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;transition:background 0.2s;">View Full Profile</a>
-                `;
-            } catch (e) {
-                modal.innerHTML = '<div style="text-align:center;color:#ff5b5b;font-size:13px;padding:20px 0;">Failed to load profile.</div>';
-            }
-        };
+        // openProfilePreview now lives in assets/js/group-chat.js
 
         // Chat engine is shared with the dashboard card (assets/js/group-chat.js)
         window.GroupChat.init({
