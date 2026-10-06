@@ -2701,7 +2701,7 @@ async function openCalendarApiModal(providedKey = null) {
     const body = document.getElementById('calendarApiBody');
     if (!modal || !body) return;
 
-    modal.classList.add('active');
+    modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
 
     body.innerHTML = '<div style="color:#8f95a3;">Loading API Key...</div>';
@@ -2738,7 +2738,7 @@ async function openCalendarApiModal(providedKey = null) {
 function closeCalendarApiModal() {
     const modal = document.getElementById('calendarApiModal');
     if (modal) {
-        modal.classList.remove('active');
+        modal.classList.remove('open');
         modal.setAttribute('aria-hidden', 'true');
     }
 }
