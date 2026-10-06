@@ -1,10 +1,13 @@
 <?php
-define('WP_USE_THEMES', false);
-require_once dirname(__DIR__, 3) . '/wp-load.php';
+require_once __DIR__ . '/../auth/session-config.php';
+require_once __DIR__ . '/../auth/feature-flags.php';
 
-if (!is_user_logged_in() || !current_user_can('manage_options')) {
-    wp_redirect(site_url('/app/login/'));
-    exit;
+define('WP_USE_THEMES', false);
+require_once dirname(__DIR__, 2) . '/wp-load.php';
+
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated']) || !rich_is_staff()) {
+    http_response_code(403);
+    exit('Unauthorized');
 }
 ?>
 <!DOCTYPE html>
