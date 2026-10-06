@@ -2607,6 +2607,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         if (section === 'profile' && profile) { profile.hidden = false; profile.style.display = 'block'; if (profileLink) profileLink.classList.add('active'); }
         else if (section === 'groups' && groups) { bootFloorSignals(); groups.hidden = false; groups.style.display = 'block'; if (groupsLink) groupsLink.classList.add('active'); }
         else if (feed) { feed.hidden = false; feed.style.display = 'block'; if (homeLink) homeLink.classList.add('active'); }
+        
+        if (typeof window.triggerBrandFlip === 'function') {
+            const sectionLabels = { 'home': 'Global Feed', 'groups': 'Groups', 'profile': 'Profile' };
+            window.triggerBrandFlip(sectionLabels[section] || 'Trading Floor', 2000);
+        }
     }
 
     function openFloorSectionFromHash() {
