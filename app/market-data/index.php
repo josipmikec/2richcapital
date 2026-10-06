@@ -579,7 +579,11 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
                             <button class="md-cal-filter-btn" data-range="today">Today</button>
                             <button class="md-cal-filter-btn" data-range="tomorrow">Tomorrow</button>
                             <button class="md-cal-filter-btn" data-range="this_week">This Week</button>
-                            <button class="md-cal-filter-btn" data-range="next_week">Next Week</button>
+                        </div>
+                        
+                        <!-- Search input -->
+                        <div class="md-cal-search" style="margin-left: 12px; position: relative;">
+                            <input type="text" id="calSearchInput" placeholder="Search event..." style="background:#151515; border:1px solid #2a2a2a; border-radius:6px; color:#f5f5f5; font-size:12px; padding:6px 12px; width:180px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#f2ca50'" onblur="this.style.borderColor='#2a2a2a'" onkeyup="activeSearch = this.value.toLowerCase(); applyFilters();">
                         </div>
 
                         <!-- Controls flush far right via margin-left: auto -->
@@ -2325,6 +2329,11 @@ function applyFilters() {
     // Currency — MULTI-select: prikazuje event ako mu je valuta u Setu
     if (!activeCurrency.has('all')) {
         filtered = filtered.filter(e => activeCurrency.has(e.currency.toUpperCase()));
+    }
+
+    // Search
+    if (typeof activeSearch !== 'undefined' && activeSearch.trim() !== '') {
+        filtered = filtered.filter(e => (e.title || '').toLowerCase().includes(activeSearch));
     }
 
     renderCalendar(filtered);
