@@ -358,10 +358,9 @@
         window.deleteChatMessage = async function(msgId) {
             if (!confirm('Are you sure you want to permanently delete this message? This cannot be undone.')) return;
             try {
-                const res = await fetch('/api/signals/messages.php', {
+                const res = await fetch('/api/signals/messages.php?message_id=' + msgId, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': (a.csrf ? a.csrf() : window.CSRF_TOKEN) || '' },
-                    body: JSON.stringify({ message_id: msgId })
+                    headers: { 'X-CSRF-Token': (a.csrf ? a.csrf() : window.CSRF_TOKEN) || '' }
                 });
                 const data = await res.json();
                 if (data.success) {
