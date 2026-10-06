@@ -7,7 +7,7 @@ ob_end_clean();
 header('Content-Type: application/json');
 
 // Secret key — bot must send this header
-define('BOT_SECRET', '2c08820cf91fa7c45403c8772922ccbbd3e874d3a9a135b9d99d91622beb883e');
+define('BOT_SECRET', defined('NEWS_BOT_SECRET') ? NEWS_BOT_SECRET : '');
 
 $incoming_secret = $_SERVER['HTTP_X_BOT_SECRET'] ?? '';
 if (!hash_equals(BOT_SECRET, $incoming_secret)) {

@@ -1,5 +1,9 @@
 <?php
-if (php_sapi_name() !== 'cli' && (!isset($_GET['secret']) || $_GET['secret'] !== '2c08820cf91fa7c45403c8772922ccbbd3e874d3a9a135b9d99d91622beb883e')) {
+$envPath = dirname(__DIR__, 3) . '/.env';
+$env = file_exists($envPath) ? parse_ini_file($envPath) : [];
+$secret = $env['NEWS_BOT_SECRET'] ?? '';
+
+if (php_sapi_name() !== 'cli' && (!isset($_GET['secret']) || $_GET['secret'] !== $secret)) {
     http_response_code(401);
     die('Unauthorized');
 }

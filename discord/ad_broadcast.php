@@ -14,7 +14,9 @@ if (php_sapi_name() !== 'cli') {
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
-define('DISCORD_WEBHOOK_ADS', 'https://discord.com/api/webhooks/1536108227324805211/gUf7S1axlyUoj7yQGVFxdwL5oJpys3ntFzAtR3GPfTcjD_4vUzRHa-thlzoBNnq1zx8U');
+$envPath = dirname(__DIR__) . '/.env';
+$env = file_exists($envPath) ? parse_ini_file($envPath) : [];
+define('DISCORD_WEBHOOK_ADS', $env['DISCORD_WEBHOOK_ADS'] ?? '');
 define('DISCORD_BOT_NAME',    '2rich');
 define('DISCORD_BOT_AVATAR',  'https://2rich.capital/discord/img/2rich-logo.png');
 define('SITE_URL',            'https://2rich.capital');
