@@ -1551,7 +1551,9 @@ class TwoRichUDFDatafeed {
         const fromSec = Number(periodParams?.from || 0);
         const toSec = Number(periodParams?.to || 0);
         let url = this.base + '/candles.php?symbol=' + symbol + '&timeframe=' + mapped.api + '&limit=' + countBack;
-        if (fromSec > 0) url += '&from=' + encodeURIComponent(fromSec);
+        // CRITICAL FIX: DO NOT pass 'from' to the server. If we do, a request spanning a weekend will return 0 rows 
+        // and trigger noData=true, permanently breaking TradingView leftward pagination.
+        // Instead, just ask for the last `countBack` candles before `to`.
         if (toSec > 0) url += '&to=' + encodeURIComponent(toSec);
 
         console.log('[2RICH getBars]', { symbol: info.ticker || info.name || currentSymbol, resolution, mapped, url, periodParams });
@@ -1576,9 +1578,10 @@ class TwoRichUDFDatafeed {
                     .filter(b => Number.isFinite(b.time) && Number.isFinite(b.open) && Number.isFinite(b.high) && Number.isFinite(b.low) && Number.isFinite(b.close))
                     .sort((a, b) => a.time - b.time);
 
-                const serverAlreadyFiltered = fromSec > 0 || toSec > 0;
-                if (!serverAlreadyFiltered && (fromMs || toMs)) {
-                    bars = bars.filter(b => (!fromMs || b.time >= fromMs) && (!toMs || b.time < toMs));
+                // Let TradingView handle any extra candles we return; this massively improves pagination UX.
+                // We only hard-filter 'toMs' just in case to avoid overlapping bugs.
+                if (toMs) {
+                    bars = bars.filter(b => b.time < toMs);
                 }
 
                 if (!bars.length && Array.isArray(x.candles) && x.candles.length) {
