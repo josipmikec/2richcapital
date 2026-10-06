@@ -1965,13 +1965,6 @@ function mountNativeLayoutGroup() {
         host.style.setProperty('background-color', 'transparent', 'important');
         host.style.setProperty('border', '0', 'important');
         host.style.setProperty('box-shadow', 'none', 'important');
-
-        // Move to the absolute right end of the toolbar
-        setTimeout(() => {
-            if (host.parentNode) {
-                host.parentNode.appendChild(host);
-            }
-        }, 100);
     }).catch(err => console.error('[2RICH native layout mount failed]', err));
 }
 
