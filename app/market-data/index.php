@@ -458,15 +458,6 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
     <!-- Main Content -->
     <main class="main-content">
 
-        <!-- ═══════════════════════════════════════════════════════════════
-             PAGE HEADER
-        ═══════════════════════════════════════════════════════════════ -->
-        <div class="md-page-header">
-            <div>
-                <h2 class="md-page-title">Market Data</h2>
-                <p class="md-page-subtitle">Real-time feeds &amp; institutional intelligence</p>
-            </div>
-        </div>
 
         <!-- ═══════════════════════════════════════════════════════════════
              TAB NAVIGATION

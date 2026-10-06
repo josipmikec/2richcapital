@@ -81,3 +81,4 @@ $is_paying = !empty($user_plan) && strtolower(trim((string)$user_plan)) !== 'obs
 })();
 </script>
 <?php endif; ?>
+<?php include __DIR__ . '/ny-market-bell.php'; ?>
