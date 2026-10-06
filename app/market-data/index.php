@@ -2670,7 +2670,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ── Calendar API Keys ────────────────────────────────────────────────────────
 async function loadCalendarApiKey() {
     try {
-        const res = await fetch('../api/market/generate-calendar-key.php');
+        const res = await fetch('../api/market/generate-calendar-key.php', { credentials: 'include' });
+        if (!res.ok) throw new Error('Not logged in');
         const data = await res.json();
         return data.api_key;
     } catch (e) {
@@ -2682,7 +2683,10 @@ async function generateCalendarApiKey() {
     const btn = document.getElementById('genCalApiBtn');
     if (btn) btn.textContent = 'Generating...';
     try {
-        const res = await fetch('../api/market/generate-calendar-key.php', { method: 'POST' });
+        const res = await fetch('../api/market/generate-calendar-key.php', { 
+            method: 'POST',
+            credentials: 'include'
+        });
         const data = await res.json();
         if (data.success && data.api_key) {
             openCalendarApiModal(data.api_key);
