@@ -2443,7 +2443,7 @@ async function loadEconomicCalendar(forceBust = false) {
 
         const res = await fetch(
             `https://2rich.capital/wp-admin/admin-ajax.php?action=tworich_economic_calendar${weekParam}`,
-            { credentials: 'include', signal: controller.signal }
+            { credentials: 'include', signal: controller.signal, cache: 'no-store' }
         );
         clearTimeout(timeout);
 

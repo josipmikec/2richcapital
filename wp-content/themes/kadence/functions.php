@@ -479,6 +479,7 @@ function tworich_economic_calendar_ajax() {
     ]);
 
     if (is_wp_error($response)) {
+        set_transient($cache_key, [], 30); // Cache failure to prevent hammering
         wp_send_json([]);
         return;
     }
@@ -487,6 +488,7 @@ function tworich_economic_calendar_ajax() {
     $data = json_decode($body, true);
 
     if (!is_array($data)) {
+        set_transient($cache_key, [], 30); // Cache failure
         wp_send_json([]);
         return;
     }
