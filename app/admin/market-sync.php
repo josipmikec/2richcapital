@@ -181,6 +181,54 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated']) || !rich_
             color: var(--warning);
             border: 1px solid rgba(234, 179, 8, 0.2);
         }
+
+        .tf-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        
+        .tf-row:last-child {
+            border-bottom: none;
+        }
+
+        .tf-label {
+            font-size: 12px;
+            font-weight: 600;
+            width: 40px;
+        }
+
+        .tf-progress-wrap {
+            flex: 1;
+            margin: 0 12px;
+        }
+
+        .tf-progress-bg {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .tf-progress-fill {
+            height: 100%;
+            background: var(--gold-gradient);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .tf-status {
+            font-size: 11px;
+            text-align: right;
+            width: 90px;
+        }
+        
+        .tf-status.healthy { color: var(--success); }
+        .tf-status.syncing { color: var(--warning); }
+        .tf-status.stale { color: var(--danger); }
     </style>
 </head>
 <body>
@@ -211,56 +259,78 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated']) || !rich_
             grid.innerHTML = '';
             
             if (data.states && Array.isArray(data.states)) {
+                // Group by symbol
+                const groups = {};
                 data.states.forEach(item => {
-                    const targetBars = item.timeframe.includes('M15') ? 10000 : 8000;
-                    let currentRows = parseInt(item.rows_synced) || 0;
-                    let pct = Math.min(100, Math.round((currentRows / targetBars) * 100));
-                    
-                    // If it's very close to target, consider it seeded
-                    const isSeeded = currentRows >= (targetBars - 500); 
-                    if (isSeeded) pct = 100;
-                    
-                    const lastAttempt = new Date(item.last_attempt_at + ' UTC');
-                    const secondsAgo = Math.round((new Date() - lastAttempt) / 1000);
-                    
-                    let statusClass = 'healthy';
-                    let statusText = 'Live';
-                    
-                    if (secondsAgo > 300) {
-                        statusClass = 'stale';
-                        statusText = 'Stale (> 5m)';
-                    } else if (!isSeeded) {
-                        statusClass = 'syncing';
-                        statusText = 'Backfilling...';
-                    }
+                    const sym = item.display_symbol || item.mt5_symbol;
+                    if (!groups[sym]) groups[sym] = [];
+                    groups[sym].push(item);
+                });
+                
+                // Sort symbols alphabetically
+                const sortedSymbols = Object.keys(groups).sort();
+                
+                const tfOrder = { 'M1':1, 'M5':2, 'M15':3, 'H1':4, 'H4':5, 'H8':6, 'D1':7, 'W1':8, 'MN1':9 };
 
-                    grid.innerHTML += `
+                let html = '';
+                sortedSymbols.forEach(sym => {
+                    const items = groups[sym];
+                    items.sort((a,b) => (tfOrder[a.timeframe] || 99) - (tfOrder[b.timeframe] || 99));
+                    
+                    let isFullySeeded = true;
+                    
+                    let tfHtml = '';
+                    items.forEach(item => {
+                        const targetBars = item.timeframe.includes('M15') ? 10000 : 8000;
+                        let currentRows = parseInt(item.rows_synced) || 0;
+                        let pct = Math.min(100, Math.round((currentRows / targetBars) * 100));
+                        
+                        const isSeeded = currentRows >= (targetBars - 500); 
+                        if (isSeeded) pct = 100; else isFullySeeded = false;
+                        
+                        const lastAttempt = new Date(item.last_attempt_at + ' UTC');
+                        const secondsAgo = Math.round((new Date() - lastAttempt) / 1000);
+                        
+                        let statusClass = 'healthy';
+                        let statusText = 'Live (' + secondsAgo + 's)';
+                        
+                        if (secondsAgo > 300) {
+                            statusClass = 'stale';
+                            statusText = 'Stale';
+                        } else if (!isSeeded) {
+                            statusClass = 'syncing';
+                            statusText = pct + '%';
+                        }
+
+                        tfHtml += `
+                            <div class="tf-row">
+                                <div class="tf-label">${item.timeframe}</div>
+                                <div class="tf-progress-wrap">
+                                    <div class="tf-progress-bg">
+                                        <div class="tf-progress-fill" style="width: ${pct}%"></div>
+                                    </div>
+                                </div>
+                                <div class="tf-status ${statusClass}">${statusText}</div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
                         <div class="card">
                             <div class="symbol-title">
                                 <div>
-                                    ${item.display_symbol || item.mt5_symbol} 
-                                    <span class="seed-badge ${isSeeded ? 'done' : 'active'}">${isSeeded ? 'SEEDED' : 'SEEDING'}</span>
+                                    ${sym}
                                 </div>
-                                <span class="timeframe-badge">${item.timeframe}</span>
+                                <span class="seed-badge ${isFullySeeded ? 'done' : 'active'}">${isFullySeeded ? 'FULLY SEEDED' : 'SEEDING'}</span>
                             </div>
-                            
-                            <div class="stat-row">
-                                <span class="stat-label">Last Attempt:</span>
-                                <span class="stat-value ${statusClass}">${secondsAgo}s ago</span>
+                            <div class="tf-list">
+                                ${tfHtml}
                             </div>
-                            
-                            <div class="stat-row">
-                                <span class="stat-label">Status:</span>
-                                <span class="stat-value ${statusClass}">${statusText}</span>
-                            </div>
-                            
-                            <div class="progress-bar-container">
-                                <div class="progress-bar" style="width: ${pct}%"></div>
-                            </div>
-                            <div class="progress-text">${currentRows.toLocaleString()} / ${targetBars.toLocaleString()} bars</div>
                         </div>
                     `;
                 });
+                
+                grid.innerHTML = html;
             }
             
         } catch(e) {
