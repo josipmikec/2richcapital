@@ -532,8 +532,27 @@ function tworich_economic_calendar_ajax() {
     }
     unset($event);
 
-    // Cache: 1 min for this_week (actuals), 5 min for next_week (stable data)
-    $ttl = ($week === 'next_week') ? 5 * MINUTE_IN_SECONDS : 1 * MINUTE_IN_SECONDS;
+    // Dynamic Cache TTL
+    $ttl = 60; // 1 min default for this_week
+    if ($week === 'next_week') {
+        $ttl = 300; // 5 min
+    } else {
+        $now = time();
+        $has_imminent_missing = false;
+        foreach ($events as $e) {
+            if ($e['actual'] === '-') {
+                $diff = $e['utc'] - $now;
+                // If event is between 5 minutes ago and 2 minutes from now
+                if ($diff > -300 && $diff < 120) {
+                    $has_imminent_missing = true;
+                    break;
+                }
+            }
+        }
+        if ($has_imminent_missing) {
+            $ttl = 15; // Aggressively cache for only 15 seconds while waiting for actual result!
+        }
+    }
     set_transient($cache_key, $events, $ttl);
 
     wp_send_json($events);
