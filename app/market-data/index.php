@@ -653,7 +653,7 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
                             <button class="md-cal-filter-btn" data-currency="CHF">CHF</button>
                             <button class="md-cal-filter-btn" data-currency="NZD">NZD</button>
                         </div>
-                        <span class="md-cal-filter-hint">Možeš odabrati više valuta</span>
+
                     </div>
 
                 </div>
@@ -2427,13 +2427,12 @@ async function loadEconomicCalendar(forceBust = false) {
     }
 
     try {
-        const bust      = `&bust=${Date.now()}`;
         const weekParam = `&week=${activeWeek}`;
         const controller = new AbortController();
         const timeout    = setTimeout(() => controller.abort(), 12000);
 
         const res = await fetch(
-            `https://2rich.capital/wp-admin/admin-ajax.php?action=tworich_economic_calendar${bust}${weekParam}`,
+            `https://2rich.capital/wp-admin/admin-ajax.php?action=tworich_economic_calendar${weekParam}`,
             { credentials: 'include', signal: controller.signal }
         );
         clearTimeout(timeout);
