@@ -2277,46 +2277,15 @@ function actualClass(actual, forecast) {
     return 'actual-inline';
 }
 
-function getNYOffsetString() {
-    try {
-        const fmt   = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', timeZoneName: 'shortOffset' });
-        const parts = fmt.formatToParts(new Date());
-        const tz    = parts.find(p => p.type === 'timeZoneName');
-        const match = tz && tz.value.match(/GMT([+-]\d+)/);
-        if (match) {
-            const hours = parseInt(match[1], 10);
-            const sign  = hours < 0 ? '-' : '+';
-            const abs   = Math.abs(hours);
-            return sign + String(abs).padStart(2, '0') + '00';
-        }
-    } catch (e) {}
-    return '-0500';
-}
-const NY_OFFSET = getNYOffsetString();
-
-function eventDateNY(event) {
-    try {
-        const year    = new Date().getFullYear();
-        const timeStr = (event.time || '').replace(/\s*(EST|EDT|ET)\s*/i, '').trim();
-        const t       = /\d/.test(timeStr) ? timeStr : '00:00';
-        const d       = new Date(`${event.date} ${year} ${t} GMT${NY_OFFSET}`);
-        return isNaN(d.getTime()) ? null : d;
-    } catch (e) { return null; }
-}
-
-function todayNY() { return new Date(new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York' })); }
-
 function isToday(event) {
-    const d = eventDateNY(event);
-    if (!d) return false;
-    const n = todayNY();
+    const d = new Date(event.utc * 1000);
+    const n = new Date();
     return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
 }
 
 function isTomorrow(event) {
-    const d = eventDateNY(event);
-    if (!d) return false;
-    const n = todayNY();
+    const d = new Date(event.utc * 1000);
+    const n = new Date();
     n.setDate(n.getDate() + 1);
     return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
 }
@@ -2325,9 +2294,7 @@ function hasImminentEvent() {
     const now = Date.now();
     return calAllEvents.some(ev => {
         if (!ev.actual || ev.actual === '-') {
-            const d    = eventDateNY(ev);
-            if (!d) return false;
-            const diff = (d.getTime() - now) / 1000;
+            const diff = (ev.utc * 1000 - now) / 1000;
             return diff > -120 && diff < CAL_BURST_WINDOW;
         }
         return false;
@@ -2376,21 +2343,20 @@ function renderCalendar(events) {
 
     const groups = {};
     events.forEach(event => {
-        const key = event.date || 'Unknown';
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(event);
+        const evDate = new Date(event.utc * 1000);
+        let groupKey = event.date || 'Unknown';
+        if (window.formatUserDate && !isNaN(evDate.getTime())) {
+            groupKey = window.formatUserDate(evDate.toISOString(), 'date');
+        }
+        
+        event.isAllDay = event.impact === 'Holiday' || (event.title || '').toLowerCase().includes('opec');
+        
+        if (!groups[groupKey]) groups[groupKey] = [];
+        groups[groupKey].push(event);
     });
 
     let html = '';
-    Object.entries(groups).forEach(([date, dayEvents]) => {
-        let displayDate = date;
-        if (dayEvents.length > 0 && window.formatUserDate) {
-            const firstDateObj = eventDateNY(dayEvents[0]);
-            if (firstDateObj && !isNaN(firstDateObj.getTime())) {
-                displayDate = window.formatUserDate(firstDateObj.toISOString(), 'date');
-            }
-        }
-        
+    Object.entries(groups).forEach(([displayDate, dayEvents]) => {
         html += `<div class="md-cal-day-group"><div class="md-cal-day-header">${displayDate}</div>`;
         dayEvents.forEach(event => {
             const impCls    = impactClass(event.impact);
@@ -2401,9 +2367,11 @@ function renderCalendar(events) {
             const hasActual = !!actual;
 
             let displayTime = event.time;
-            if (window.formatUserDate) {
-                const evDate = eventDateNY(event);
-                if (evDate && !isNaN(evDate.getTime())) {
+            if (event.isAllDay) {
+                displayTime = 'All Day';
+            } else if (window.formatUserDate) {
+                const evDate = new Date(event.utc * 1000);
+                if (!isNaN(evDate.getTime())) {
                     displayTime = window.formatUserDate(evDate.toISOString(), 'time');
                 }
             }
