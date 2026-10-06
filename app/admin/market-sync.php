@@ -210,56 +210,58 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated']) || !rich_
             const grid = document.getElementById('sync-grid');
             grid.innerHTML = '';
             
-            data.forEach(item => {
-                const targetBars = item.timeframe.includes('M15') ? 10000 : 8000;
-                let currentRows = parseInt(item.rows_synced) || 0;
-                let pct = Math.min(100, Math.round((currentRows / targetBars) * 100));
-                
-                // If it's very close to target, consider it seeded
-                const isSeeded = currentRows >= (targetBars - 500); 
-                if (isSeeded) pct = 100;
-                
-                const lastAttempt = new Date(item.last_attempt_at + ' UTC');
-                const secondsAgo = Math.round((new Date() - lastAttempt) / 1000);
-                
-                let statusClass = 'healthy';
-                let statusText = 'Live';
-                
-                if (secondsAgo > 300) {
-                    statusClass = 'stale';
-                    statusText = 'Stale (> 5m)';
-                } else if (!isSeeded) {
-                    statusClass = 'syncing';
-                    statusText = 'Backfilling...';
-                }
+            if (data.states && Array.isArray(data.states)) {
+                data.states.forEach(item => {
+                    const targetBars = item.timeframe.includes('M15') ? 10000 : 8000;
+                    let currentRows = parseInt(item.rows_synced) || 0;
+                    let pct = Math.min(100, Math.round((currentRows / targetBars) * 100));
+                    
+                    // If it's very close to target, consider it seeded
+                    const isSeeded = currentRows >= (targetBars - 500); 
+                    if (isSeeded) pct = 100;
+                    
+                    const lastAttempt = new Date(item.last_attempt_at + ' UTC');
+                    const secondsAgo = Math.round((new Date() - lastAttempt) / 1000);
+                    
+                    let statusClass = 'healthy';
+                    let statusText = 'Live';
+                    
+                    if (secondsAgo > 300) {
+                        statusClass = 'stale';
+                        statusText = 'Stale (> 5m)';
+                    } else if (!isSeeded) {
+                        statusClass = 'syncing';
+                        statusText = 'Backfilling...';
+                    }
 
-                grid.innerHTML += `
-                    <div class="card">
-                        <div class="symbol-title">
-                            <div>
-                                ${item.mt5_symbol} 
-                                <span class="seed-badge ${isSeeded ? 'done' : 'active'}">${isSeeded ? 'SEEDED' : 'SEEDING'}</span>
+                    grid.innerHTML += `
+                        <div class="card">
+                            <div class="symbol-title">
+                                <div>
+                                    ${item.display_symbol || item.mt5_symbol} 
+                                    <span class="seed-badge ${isSeeded ? 'done' : 'active'}">${isSeeded ? 'SEEDED' : 'SEEDING'}</span>
+                                </div>
+                                <span class="timeframe-badge">${item.timeframe}</span>
                             </div>
-                            <span class="timeframe-badge">${item.timeframe}</span>
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">Last Attempt:</span>
+                                <span class="stat-value ${statusClass}">${secondsAgo}s ago</span>
+                            </div>
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">Status:</span>
+                                <span class="stat-value ${statusClass}">${statusText}</span>
+                            </div>
+                            
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: ${pct}%"></div>
+                            </div>
+                            <div class="progress-text">${currentRows.toLocaleString()} / ${targetBars.toLocaleString()} bars</div>
                         </div>
-                        
-                        <div class="stat-row">
-                            <span class="stat-label">Last Attempt:</span>
-                            <span class="stat-value ${statusClass}">${secondsAgo}s ago</span>
-                        </div>
-                        
-                        <div class="stat-row">
-                            <span class="stat-label">Status:</span>
-                            <span class="stat-value ${statusClass}">${statusText}</span>
-                        </div>
-                        
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${pct}%"></div>
-                        </div>
-                        <div class="progress-text">${currentRows.toLocaleString()} / ${targetBars.toLocaleString()} bars</div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            }
             
         } catch(e) {
             console.error(e);
