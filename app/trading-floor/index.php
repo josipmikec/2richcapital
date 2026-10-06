@@ -340,6 +340,14 @@ $profile_handle = $profile_handle !== '' ? ltrim($profile_handle, '@') : strtolo
 $profile_bio = trim((string)($profile_row['bio'] ?? ''));
 $profile_primary_market = trim((string)($profile_row['primary_market'] ?? ''));
 $profile_trading_style = trim((string)($profile_row['trading_style'] ?? ''));
+
+$current_user_profile = $wpdb->get_row($wpdb->prepare(
+    "SELECT display_name, trading_handle FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+    $user_id
+), ARRAY_A);
+$current_display_name = $current_user_profile['display_name'] ?? $user_name;
+$current_handle = trim((string)($current_user_profile['trading_handle'] ?? ''));
+$current_handle = $current_handle !== '' ? ('@' . ltrim($current_handle, '@')) : ('@' . strtolower(str_replace(' ', '', $current_display_name)));
 $trader_results = $wpdb->get_results(
     "SELECT u.ID AS user_id,
             COALESCE(NULLIF(p.display_name, ''), NULLIF(u.display_name, ''), NULLIF(u.user_nicename, ''), NULLIF(u.user_login, ''), CONCAT('User #', u.ID)) AS display_name,
@@ -1800,7 +1808,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                                     <div class="group-feed-top">
                                         <div>
                                             <div class="group-card-kicker"><?php echo $profile_post['post_type'] === 'analysis' ? 'Analysis' : 'Trade'; ?></div>
-                                            <div class="group-feed-title" style="font-size:16px; font-weight:600;"><?php echo esc_html($profile_post['author_name']); ?></div>
+                                            <div class="group-feed-title" style="font-size:15px; font-weight:600;"><?php echo esc_html($profile_post['author_name']); ?></div>
                                             <div class="group-feed-meta"><?php echo esc_html($profile_post['created_label']); ?></div>
                                         </div>
                                     </div>
@@ -1992,10 +2000,10 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         <!-- Right Sidebar -->
         <aside class="tf-right-col">
             <div class="right-user-card">
-                <div class="right-avatar"><?php echo strtoupper(substr($user_name,0,1)); ?></div>
+                <div class="right-avatar"><?php echo strtoupper(substr($current_display_name,0,1)); ?></div>
                 <div class="right-user-info">
-                    <div class="right-user-name"><?= htmlspecialchars($user_name) ?></div>
-                    <div class="right-user-email"><?= htmlspecialchars($user_email) ?></div>
+                    <div class="right-user-name"><?= htmlspecialchars($current_display_name) ?></div>
+                    <div class="right-user-email" style="font-weight:700; color:#888; font-size:11px;"><?= htmlspecialchars($current_handle) ?></div>
                 </div>
                 <button class="right-switch-btn" onclick="openFloorSection('profile')">Profile</button>
             </div>
@@ -4688,7 +4696,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         }
         const feedIndexAttr = Number.isInteger(Number(post.feed_index)) ? ` data-feed-index="${Number(post.feed_index)}"` : '';
         const authorTextLinkStart = Number(post.user_id || 0) > 0 ? `<a href="${authorProfileHref}" class="group-feed-text-link" style="color:inherit;text-decoration:none;" onclick="event.stopPropagation();">` : '';
-        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"${feedIndexAttr}><div class="group-feed-top"><div class="group-feed-author">${authorLinkStart}<div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div>${authorLinkEnd}<div class="group-feed-author-copy"><div class="group-feed-title" style="font-size:${compact ? '16px' : '18px'}; font-weight:500;">${authorTextLinkStart}${author}${authorLinkEnd}${groupBadge}</div><div class="group-feed-meta group-feed-meta-inline">${time}</div></div></div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
+        return `<article class="group-feed-card social-layout-${layout}" data-layout="${layout}" data-post-id="${escapeHtml(post.id)}"${feedIndexAttr}><div class="group-feed-top"><div class="group-feed-author">${authorLinkStart}<div class="group-feed-avatar-wrap">${avatarUrl ? `<img class="group-feed-avatar" src="${avatarUrl}" alt="${author}" loading="lazy" decoding="async">` : `<div class="group-feed-avatar group-feed-avatar-fallback">${author.charAt(0)}</div>`}</div>${authorLinkEnd}<div class="group-feed-author-copy"><div class="group-feed-title" style="font-size:15px; font-weight:600;">${authorTextLinkStart}${author}${authorLinkEnd}${groupBadge}</div><div class="group-feed-meta group-feed-meta-inline">${time}</div></div></div>${menu}</div>${content}<div class="group-feed-actions" aria-label="Post engagement"><button type="button" class="group-feed-action" onclick="toggleLike(this)" aria-label="Like post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span class="like-count">${Number(post.likes_count || post.likes || 0)}</span></button><button type="button" class="group-feed-action" onclick="openFeedPostModalById(${Number(post.id)})" aria-label="Comment on post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>${Number(post.comments_count || post.comments || 0)}</span></button><button type="button" class="group-feed-action" onclick="sharePost(${Number(post.id)})" aria-label="Share post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><span class="group-feed-action-spacer"></span><button type="button" class="group-feed-action" onclick="toggleBookmark(this)" aria-label="Save post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"></path></svg></button></div></article>`;
 
     }
 
