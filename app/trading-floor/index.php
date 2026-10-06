@@ -2582,7 +2582,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         if (savedPanel) savedPanel.classList.add('active');
     }
 
-    function openFloorSection(section) {
+    function openFloorSection(section, isInitialLoad = false) {
         const app = document.querySelector('.dashboard-container');
         const feed = document.getElementById('feedCol');
         const profile = document.getElementById('floor-profile-panel');
@@ -2608,29 +2608,30 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         else if (section === 'groups' && groups) { bootFloorSignals(); groups.hidden = false; groups.style.display = 'block'; if (groupsLink) groupsLink.classList.add('active'); }
         else if (feed) { feed.hidden = false; feed.style.display = 'block'; if (homeLink) homeLink.classList.add('active'); }
         
-        if (typeof window.triggerBrandFlip === 'function') {
+        if (!isInitialLoad && typeof window.triggerBrandFlip === 'function') {
             const sectionLabels = { 'home': 'Global Feed', 'groups': 'Groups', 'profile': 'Profile' };
-            window.triggerBrandFlip(sectionLabels[section] || 'Trading Floor', 2000);
+            window.triggerBrandFlip(sectionLabels[section] || 'Trading Floor', 1700);
         }
     }
 
-    function openFloorSectionFromHash() {
+    function openFloorSectionFromHash(event) {
+        const isInitialLoad = event && event.type === 'DOMContentLoaded';
         const rawHash = window.location.hash.replace(/^#/, '');
         const hash = rawHash.toLowerCase();
         const requestedGroup = new URLSearchParams(rawHash.replace(/&/g, '&')).get('group');
         const requestedUserId = new URLSearchParams(window.location.search).get('user_id');
         if (requestedUserId && /^\d+$/.test(requestedUserId) && Number(requestedUserId) > 0) {
-            openFloorSection('profile');
+            openFloorSection('profile', isInitialLoad);
         } else if (hash.startsWith('profile')) {
-            openFloorSection('profile');
+            openFloorSection('profile', isInitialLoad);
         } else if (hash.startsWith('groups')) {
-            openFloorSection('groups');
+            openFloorSection('groups', isInitialLoad);
             if (requestedGroup) {
                 window.__requestedTradingGroupId = String(requestedGroup);
                 if (typeof bootFloorSignals === 'function') bootFloorSignals();
             }
         } else {
-            openFloorSection('home');
+            openFloorSection('home', isInitialLoad);
         }
     }
 

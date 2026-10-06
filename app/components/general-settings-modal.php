@@ -1497,7 +1497,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             setTimeout(() => {
-                window.triggerBrandFlip(isWelcome ? null : flipText, isWelcome ? 5000 : 3000);
+                window.triggerBrandFlip(isWelcome ? null : flipText, isWelcome ? 5000 : 2500);
             }, 400); 
         };
 
