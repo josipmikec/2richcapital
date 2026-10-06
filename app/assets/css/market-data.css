@@ -345,10 +345,14 @@
    ========================================== */
 
 .md-calendar-card {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 180px);
   background: linear-gradient(180deg, rgba(18,18,18,0.96) 0%, rgba(10,10,10,0.98) 100%);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 18px;
   padding: 24px;
+  padding-bottom: 12px; /* Less bottom padding so it clips closer to the edge */
   box-shadow: 0 10px 30px rgba(0,0,0,0.28);
   margin-bottom: 22px;
 }
@@ -647,13 +651,13 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-height: calc(100vh - 440px);
+  flex-grow: 1;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 8px;
   background: #111;
   border-radius: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 .md-calendar-list::-webkit-scrollbar {
