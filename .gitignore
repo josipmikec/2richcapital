@@ -1,3 +1,9 @@
 # Ignore local WordPress configuration
 wp-config.php
 .env
+
+# Ignored artifacts
+.DS_Store
+*.zip
+*.log
+scratch*.php

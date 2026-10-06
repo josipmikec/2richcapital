@@ -2205,21 +2205,12 @@ $is_paying = !empty($user_plan) && strtolower(trim((string)$user_plan)) !== 'obs
             userChoseTab: false,
         };
 
-        function formatPrice(group) {
-            return group.pricing_type === 'free' ? 'Join Free' : 'Subscribe';
-        }
 
         function formatMoney(value) {
             const n = Number(value || 0);
             return '$' + n.toFixed(0);
         }
 
-        function priceBadge(group) {
-            if (group.pricing_type === 'free') {
-                return '<span class="signals-badge free">Free</span>';
-            }
-            return '<span class="signals-badge paid">' + formatMoney(group.price) + '/mo</span>';
-        }
 
         function switchSignalsTab(tab, userInitiated) {
             state.activeTab = tab;

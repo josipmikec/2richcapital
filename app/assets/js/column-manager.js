@@ -20,14 +20,6 @@ if (typeof globalThis.availableJournals === 'undefined') {
     globalThis.availableJournals = [];
 }
 
-function openColumnManager() {
-    const modal = document.getElementById('columnManagerModal');
-    if (!modal) return;
-    modal.style.display = 'flex';
-    showSettingsTab('journals');
-    getCmCsrfToken();
-    loadSettingsManager();
-}
 
 function closeColumnManager() {
     const modal = document.getElementById('columnManagerModal');
@@ -341,29 +333,7 @@ async function saveColumnVisibility() {
 }
 
 
-function handleColumnTypeChange() {
-    const type = document.getElementById('customColumnType').value;
-    const wrap = document.getElementById('selectOptionsWrap');
-    if (wrap) {
-        wrap.style.display = (type === 'select' || type === 'dropdown') ? 'block' : 'none';
-    }
-}
 
-function addSelectOption() {
-    const container = document.getElementById('selectOptionsList');
-    if (!container) return;
-
-    const optionCount = container.querySelectorAll('input').length + 1;
-    const inputId = `selectOption${optionCount}`;
-
-    const option = document.createElement('div');
-    option.className = 'option-item';
-    option.innerHTML = `
-        <label for="${inputId}" class="sr-only">Option ${optionCount}</label>
-        <input type="text" id="${inputId}" name="select_options[]" placeholder="Option ${optionCount}">
-    `;
-    container.appendChild(option);
-}
 
 function encodeOptionsForPost(optionsArray) {
     try {
@@ -373,91 +343,6 @@ function encodeOptionsForPost(optionsArray) {
     }
 }
 
-async function createCustomColumn() {
-    const nameInput = document.getElementById('customColumnName');
-    const typeInput = document.getElementById('customColumnType');
-    if (!nameInput || !typeInput) return;
-
-    const name = nameInput.value.trim();
-    const type = typeInput.value;
-
-    if (!name) {
-        alert('Please enter a column name');
-        return;
-    }
-
-    let selectOptions = null;
-
-    if (type === 'select' || type === 'dropdown') {
-        const rawOptions = Array.from(document.querySelectorAll('#selectOptionsList input'))
-            .map(input => input.value.trim())
-            .filter(Boolean);
-
-        if (rawOptions.length < 2) {
-            alert('Please add at least 2 dropdown options');
-            return;
-        }
-        selectOptions = encodeOptionsForPost(rawOptions);
-    }
-
-    try {
-        await getCmCsrfToken();
-        const response = await fetch('/api/columns/create-custom.php', {
-            method: 'POST',
-            credentials: 'include',
-            headers: cmCsrfHeaders(),
-            body: JSON.stringify({
-                column_name: name,
-                data_type: type,
-                select_options: selectOptions
-            })
-        });
-
-
-        const raw = await response.text();
-        console.log('create-custom raw response:', raw);
-
-        let data;
-        try {
-            data = JSON.parse(raw);
-        } catch (e) {
-            throw new Error(`Invalid JSON response: ${raw}`);
-        }
-
-        if (data.success) {
-            nameInput.value = '';
-            typeInput.value = 'text';
-
-            const wrap = document.getElementById('selectOptionsWrap');
-            if (wrap) wrap.style.display = 'none';
-
-            const list = document.getElementById('selectOptionsList');
-            if (list) {
-                list.innerHTML = `
-                    <div class="option-item">
-                        <label for="selectOption1" class="sr-only">Option 1</label>
-                        <input type="text" id="selectOption1" name="select_options[]" placeholder="Option 1">
-                    </div>
-                    <div class="option-item">
-                        <label for="selectOption2" class="sr-only">Option 2</label>
-                        <input type="text" id="selectOption2" name="select_options[]" placeholder="Option 2">
-                    </div>
-                `;
-            }
-
-            await loadColumnManager();
-            if (typeof loadColumnsAndRenderTable === 'function') {
-                await loadColumnsAndRenderTable();
-            }
-        } else {
-            console.error('Create custom column failed:', data);
-            alert(data.message || 'Failed to create custom column.');
-        }
-    } catch (error) {
-        console.error('Error creating custom column:', error);
-        alert('Error creating custom column.');
-    }
-}
 
 async function deleteCustomColumn(id) {
     if (!confirm('Delete this custom column? This cannot be undone.')) return;

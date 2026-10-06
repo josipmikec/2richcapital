@@ -1398,10 +1398,6 @@ function savePreferences() {
     });
 }
 
-function saveProfile() {
-    const form = document.getElementById('profileSaveForm');
-    if (form) form.submit();
-}
 
 
 function checkPasswordStrength(val) {

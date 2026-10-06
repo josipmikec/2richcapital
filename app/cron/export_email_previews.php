@@ -1,4 +1,8 @@
 <?php
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
 function getEmailHTML($title, $body, $btnText, $btnUrl) {
     return '
 <!DOCTYPE html>

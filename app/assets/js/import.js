@@ -74,16 +74,6 @@ function importMT5() {
     modal.style.display = 'flex';
 }
 
-function importExcel() {
-    const jid = syncJournalIdFromPage();
-    if (!jid) {
-        alert('Please select a journal first before importing.');
-        return;
-    }
-    const modal = document.getElementById('excelModal');
-    if (!modal) return;
-    modal.style.display = 'flex';
-}
 
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);

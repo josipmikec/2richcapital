@@ -1861,16 +1861,6 @@ function syncNativeTimeframeGroup() {
 
 function richChartApi() { return getTvWidget() && typeof getTvWidget().activeChart === 'function' ? getTvWidget().activeChart() : null; }
 function richToolbarStatus(message) { const el=document.getElementById('richToolbarStatus'); if(el) el.textContent=message; }
-function richOpenSymbolModal() {
-    const chart = richChartApi();
-    try {
-        if (chart?.executeActionById) chart.executeActionById('chartDialogSearch');
-        else richToolbarStatus('Symbol search API unavailable');
-    } catch (e) {
-        richToolbarStatus('Symbol search unavailable');
-        console.error(e);
-    }
-}
 function richSetInterval(interval) { changeInterval(interval); document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.richInterval===String(interval))); syncNativeTimeframeGroup(); }
 function richSetCandles() { const chart=richChartApi(); try { if(chart && typeof chart.setChartType==='function') { chart.setChartType(1); richToolbarStatus('Candles'); } else if(chart && typeof chart.executeActionById==='function') { chart.executeActionById('chartType'); richToolbarStatus('Chart type'); } else richToolbarStatus('Chart type API unavailable'); } catch(e){ richToolbarStatus('Candles unavailable'); console.error(e); } }
 function richOpenIndicators() { const chart=richChartApi(); try { if(chart && typeof chart.executeActionById==='function') chart.executeActionById('insertIndicator'); else richToolbarStatus('Indicators API unavailable'); } catch(e){ richToolbarStatus('Indicators unavailable'); console.error(e); } }
@@ -2220,11 +2210,6 @@ function switchTab(btn, paneId) {
     if (target) target.classList.add('active');
 }
 
-function openCalendarFromHash() {
-    if (window.location.hash !== '#calendar') return;
-    const calendarTab = document.querySelector('.md-tab[onclick*="tab-calendar"]');
-    if (calendarTab) switchTab(calendarTab, 'tab-calendar');
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ECONOMIC CALENDAR

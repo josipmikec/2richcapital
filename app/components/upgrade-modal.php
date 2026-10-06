@@ -273,7 +273,7 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
                     <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> 2RICH TRADING JOURNAL</li>
                     <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> REAL-TIME NEWS FEED</li>
                     <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> TRADINGVIEW CHARTING</li>
-                    <li><svg width="12" height="12" viewBox="0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ECONOMIC CALENDAR ALERTS</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ECONOMIC CALENDAR ALERTS</li>
                 </ul>
                 <div class="uc-footer">
                     <?php if ($current_plan !== 'observer'): ?>

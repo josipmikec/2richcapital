@@ -22,19 +22,6 @@ $groups_table = $wpdb->prefix . 'rich_signal_groups';
 $audit_table = $wpdb->prefix . 'rich_signal_group_audit_log';
 $profile_table = $wpdb->prefix . 'rich_user_profiles';
 
-function rich_resolve_profile_display_name($wpdb, $profile_table, $fallback_name, $user_id) {
-    $profile_name = $wpdb->get_var($wpdb->prepare(
-        "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
-        (int) $user_id
-    ));
-    if (is_string($profile_name) && trim($profile_name) !== '') {
-        return $profile_name;
-    }
-    if (is_string($fallback_name) && trim($fallback_name) !== '') {
-        return $fallback_name;
-    }
-    return 'User #' . (int) $user_id;
-}
 
 if ($method === 'GET') {
     $group_id = (int) ($_GET['group_id'] ?? 0);

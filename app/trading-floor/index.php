@@ -2638,7 +2638,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         floorSignalsState.loading = true;
         floorSignalsState.error = '';
         try {
-            console.log('[TradingFloorDebug] groups fetch start', {
                 listGroupsUrl: signalsUrl('list-groups.php'),
                 myMembershipsUrl: signalsUrl('my-memberships.php'),
                 pathname: window.location.pathname,
@@ -2654,7 +2653,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     headers: { 'X-CSRF-Token': SIGNALS_CSRF }
                 })
             ]);
-            console.log('[TradingFloorDebug] groups fetch responses', {
                 listGroupsOk: groupsRes.ok,
                 listGroupsStatus: groupsRes.status,
                 listGroupsUrl: groupsRes.url,
@@ -3204,35 +3202,14 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         return 'Free';
     }
 
-    function visibilityLabel(value) {
-        if (value === 'private') return 'Private';
-        if (value === 'unlisted') return 'Unlisted';
-        return 'Listed';
-    }
 
-    function joinModeLabel(value) {
-        if (value === 'request') return 'Request to join';
-        if (value === 'invite') return 'Invite only';
-        return 'Open join';
-    }
 
-    function statusBadge(value) {
-        if (value === 'draft') return 'Draft';
-        if (value === 'pending_review') return 'Pending review';
-        if (value === 'suspended') return 'Suspended';
-        if (value === 'archived') return 'Archived';
-        return 'Live';
-    }
 
     function verifiedBadge(group) {
         if (!group || !group.is_verified) return '';
         return '<span class="group-verified-badge" title="Verified group">✓ Verified</span>';
     }
 
-    function groupCardAccent(group) {
-        const palette = ['#F2CA50', '#6EE7B7', '#38BDF8', '#A78BFA', '#FB7185', '#F59E0B'];
-        return palette[(Number(group.id) || 1) % palette.length];
-    }
 
     function groupAvatarHtml(group) {
         const src = group && (group.avatar_url || group.owner_avatar || group.avatar || group.profile_image || group.image || group.owner_profile_photo || group.group_avatar);
@@ -4220,7 +4197,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
 
     async function publishDraftGroup(groupId) {
         floorSignalsState.createMessage = 'Publishing group…';
-        console.log('[TradingFloorDebug] publishDraftGroup start', { groupId, url: signalsUrl('publish-group.php') });
         renderGroupsPanel();
         try {
             const res = await fetch(signalsUrl('publish-group.php'), {
@@ -4229,9 +4205,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
                 body: JSON.stringify({ group_id: groupId })
             });
-            console.log('[TradingFloorDebug] publishDraftGroup response meta', { ok: res.ok, status: res.status, url: res.url });
             const data = await res.json().catch(() => ({}));
-            console.log('[TradingFloorDebug] publishDraftGroup response body', data);
             const errors = Array.isArray(data.errors) ? data.errors.filter(Boolean) : [];
             const publishErrors = errors.length ? ' Complete these items first: ' + errors.join(' ') : '';
             floorSignalsState.createMessage = (data.message || (data.success ? 'Group published.' : 'Publish failed.')) + publishErrors;
@@ -4247,7 +4221,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 await bootFloorSignals();
             }
         } catch (err) {
-            console.log('[TradingFloorDebug] publishDraftGroup error', err);
             floorSignalsState.createMessage = err && err.message ? err.message : 'Publish failed.';
         }
         renderGroupsPanel();
@@ -4275,39 +4248,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         renderGroupsPanel();
     }
 
-    async function loadGroupAnalytics(groupId) {
-        try {
-            const res = await fetch(`${signalsUrl('group-analytics.php')}?group_id=${encodeURIComponent(groupId)}`, {
-                credentials: 'include',
-                headers: { 'X-CSRF-Token': SIGNALS_CSRF }
-            });
-            return await res.json().catch(() => ({}));
-        } catch (err) {
-            return { success: false, message: err && err.message ? err.message : 'Analytics unavailable.' };
-        }
-    }
 
-    async function loadGroupStaff(groupId) {
-        try {
-            const res = await fetch(`${signalsUrl('group-staff.php')}?group_id=${encodeURIComponent(groupId)}`, {
-                credentials: 'include',
-                headers: { 'X-CSRF-Token': SIGNALS_CSRF }
-            });
-            return await res.json().catch(() => ({}));
-        } catch (err) {
-            return { success: false, message: err && err.message ? err.message : 'Staff unavailable.' };
-        }
-    }
 
-    async function inviteGroupStaff(groupId, email, role) {
-        const res = await fetch(signalsUrl('invite.php'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
-            body: JSON.stringify({ group_id: groupId, invitee: email, role })
-        });
-        return await res.json().catch(() => ({}));
-    }
 
     async function createGroupSignal(payload) {
         const res = await fetch(signalsUrl('create-signal.php'), {
@@ -4319,45 +4261,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         return await res.json().catch(() => ({}));
     }
 
-    async function updateGroupSignal(payload) {
-        const res = await fetch(signalsUrl('update-signal.php'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
-            body: JSON.stringify(payload)
-        });
-        return await res.json().catch(() => ({}));
-    }
 
-    async function closeGroupSignal(payload) {
-        const res = await fetch(signalsUrl('close-signal.php'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
-            body: JSON.stringify(payload)
-        });
-        return await res.json().catch(() => ({}));
-    }
 
-    async function updateOwnedGroup(payload) {
-        const res = await fetch(signalsUrl('update-group.php'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
-            body: JSON.stringify(payload)
-        });
-        return await res.json().catch(() => ({}));
-    }
 
-    async function archiveOwnedGroup(groupId) {
-        const res = await fetch(signalsUrl('archive-group.php'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': SIGNALS_CSRF },
-            body: JSON.stringify({ group_id: groupId })
-        });
-        return await res.json().catch(() => ({}));
-    }
 
 
 
@@ -4537,12 +4443,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
     function closeStory() { clearTimeout(storyTimer); document.getElementById('storyOverlay').classList.remove('active'); }
 
     // Search
-    function toggleSearch() {
-        const o = document.getElementById('searchOverlay');
-        const open = o.classList.toggle('active');
-        document.getElementById('searchBtn').classList.toggle('active', open);
-        if (open) setTimeout(() => document.getElementById('searchInput').focus(), 50);
-    }
 
     // DM
     function applyInboxPanelState(frontPanelId = 'dmPanel', collapsedPanelId = null) {
@@ -5090,22 +4990,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         el.textContent = message;
     }
 
-    function applyCreateTabUi(tab) {
-        document.querySelectorAll('.create-tab').forEach(t => t.classList.remove('active'));
-        const activeTab = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-        if (activeTab) activeTab.classList.add('active');
-        const submit = document.getElementById('createSubmitBtn');
-        const symbol = document.getElementById('createSymbol');
-        const direction = document.getElementById('createDirection');
-        const pnl = document.getElementById('createPnl');
-        const rr = document.getElementById('createRr');
-        if (submit) submit.textContent = tab === 'analysis' ? 'Post Analysis' : 'Post Trade';
-        const isTrade = tab === 'trade';
-        if (symbol) symbol.disabled = !isTrade;
-        if (direction) direction.disabled = !isTrade;
-        if (pnl) pnl.disabled = !isTrade;
-        if (rr) rr.disabled = !isTrade;
-    }
 
     function openCreateModal(type='post', groupId = null) {
         document.getElementById('createModal').classList.add('active');
@@ -5406,7 +5290,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 session_name: String(formData.get('timeframe') || '').trim(),
                 source: 'manual_group_entry'
             };
-            console.log('[TradingFloorDebug] signal form payload', payload);
             if (!payload.symbol || !payload.direction) {
                 if (status) status.textContent = `Symbol and direction are required. symbol="${payload.symbol}" direction="${payload.direction}"`;
                 return;
@@ -5432,7 +5315,6 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             if (status) status.textContent = 'Saving signal...';
             try {
                 const res = await createGroupSignal(payload);
-                console.log('[TradingFloorDebug] createGroupSignal response', res);
                 if (res && res.success) {
                     if (status) status.textContent = res.message || 'Signal posted successfully.';
                     await bootFloorSignals();
@@ -5495,14 +5377,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         const url = `${window.location.origin}${window.location.pathname}?post_id=${encodeURIComponent(postId)}`;
         try { if(navigator.share) await navigator.share({title:'2RICH CAPITAL post',url}); else if(navigator.clipboard){await navigator.clipboard.writeText(url); window.alert('Post link copied.');} else window.prompt('Copy this post link:',url); await engagementRequest('share',postId); } catch(error) { if(error.name !== 'AbortError') window.alert(error.message || 'Could not share post.'); }
     }
-    function toggleFollow(btn) { btn.classList.toggle('following'); btn.textContent=btn.classList.contains('following')?'Following':'Follow'; }
 
     document.addEventListener('keydown', e => { if(e.key==='Escape'){closeStory();document.getElementById('searchOverlay').classList.remove('active');closeCreateModal();closeGroupSignalModal();} });
     document.addEventListener('click', function (event) {
         const publishBtn = event.target.closest('[data-draft-publish]');
         if (publishBtn) {
             const groupId = publishBtn.getAttribute('data-group-id') || '';
-            console.log('[TradingFloorDebug] draft publish click', { groupId });
             event.preventDefault();
             publishDraftGroup(groupId);
             return;

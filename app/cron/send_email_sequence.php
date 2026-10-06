@@ -2,6 +2,11 @@
 // Script to send 24-hour and 5-day welcome follow-up emails.
 // Run via cron hourly: `php /Users/josipmikec/Documents/2rich/2rich.capital/app/cron/send_email_sequence.php`
 
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
 define('WP_USE_THEMES', false);
 require_once dirname(__DIR__, 2) . '/wp-load.php';
 

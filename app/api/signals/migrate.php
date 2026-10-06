@@ -15,6 +15,12 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
+$user = get_userdata($_SESSION['user_id']);
+if (!$user || !user_can($user, 'manage_options')) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Forbidden']);
+    exit;
+}
 
 global $wpdb;
 
