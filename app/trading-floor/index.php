@@ -405,7 +405,7 @@ if (!function_exists('tf_add_engagement_data')) {
             $post_id = (int) ($post['id'] ?? 0);
             $post['likes_count'] = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$likes_table} WHERE post_id = %d", $post_id));
             $post['saves_count'] = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$saves_table} WHERE post_id = %d", $post_id));
-            $comments = $wpdb->get_results($wpdb->prepare("SELECT c.body, c.created_at, COALESCE(u.display_name, 'Trader') AS author_name FROM {$comments_table} c LEFT JOIN {$wpdb->users} u ON u.ID = c.user_id WHERE c.post_id = %d ORDER BY c.created_at ASC LIMIT 50", $post_id), ARRAY_A);
+            $comments = $wpdb->get_results($wpdb->prepare("SELECT c.body, c.created_at, COALESCE(NULLIF(rup.trading_handle, ''), NULLIF(rup.display_name, ''), u.display_name, 'Trader') AS author_name FROM {$comments_table} c LEFT JOIN {$wpdb->users} u ON u.ID = c.user_id LEFT JOIN {$wpdb->prefix}rich_user_profiles rup ON rup.user_id = u.ID WHERE c.post_id = %d ORDER BY c.created_at ASC LIMIT 50", $post_id), ARRAY_A);
             $post['comments_count'] = count($comments);
             $post['comments_preview'] = $comments ?: [];
         }
@@ -448,9 +448,10 @@ $profile_visibility_label = $is_own_profile ? 'Public profile preview' : 'Public
 
 $profile_section_note = $is_own_profile ? 'This is your public Trading Floor profile.' : "You are viewing this trader's public profile.";
 $profile_post_rows = $wpdb->get_results($wpdb->prepare(
-    "SELECT p.*, u.display_name, u.user_nicename, u.user_login, g.name AS group_name, g.slug AS group_slug
+    "SELECT p.*, COALESCE(NULLIF(rup.trading_handle, ''), NULLIF(rup.display_name, ''), u.display_name, u.user_nicename, u.user_login) AS display_name, u.user_nicename, u.user_login, g.name AS group_name, g.slug AS group_slug
      FROM {$post_table} p
      LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+     LEFT JOIN {$wpdb->prefix}rich_user_profiles rup ON rup.user_id = u.ID
      LEFT JOIN {$wpdb->prefix}rich_signal_groups g ON g.id = p.group_id
      WHERE p.user_id = %d
      ORDER BY p.created_at DESC
@@ -464,9 +465,10 @@ $profile_posts = array_map(static function ($row) {
 $profile_posts = tf_add_engagement_data($profile_posts, $wpdb, $likes_table, $saves_table, $comments_table);
 
 $feed_post_rows = $wpdb->get_results($wpdb->prepare(
-    "SELECT p.*, u.display_name, u.user_nicename, u.user_login, g.name AS group_name, g.slug AS group_slug
+    "SELECT p.*, COALESCE(NULLIF(rup.trading_handle, ''), NULLIF(rup.display_name, ''), u.display_name, u.user_nicename, u.user_login) AS display_name, u.user_nicename, u.user_login, g.name AS group_name, g.slug AS group_slug
      FROM {$post_table} p
      LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+     LEFT JOIN {$wpdb->prefix}rich_user_profiles rup ON rup.user_id = u.ID
      LEFT JOIN {$wpdb->prefix}rich_signal_groups g ON g.id = p.group_id
      LEFT JOIN {$wpdb->prefix}rich_signal_memberships m ON m.group_id = p.group_id AND m.user_id = %d AND m.status = 'active'
      WHERE p.group_id IS NULL OR g.visibility != 'private' OR m.id IS NOT NULL
@@ -2592,6 +2594,8 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         [homeLink, groupsLink, profileLink].forEach(el => { if (el) el.classList.remove('active'); });
         if (app) app.classList.toggle('profile-mode', section === 'profile');
         if (app) app.classList.toggle('group-mode', section === 'groups');
+        if (app && section !== 'groups') app.classList.remove('group-workspace-mode');
+        
         if (section === 'profile' && profile) { profile.hidden = false; profile.style.display = 'block'; if (profileLink) profileLink.classList.add('active'); }
         else if (section === 'groups' && groups) { bootFloorSignals(); groups.hidden = false; groups.style.display = 'block'; if (groupsLink) groupsLink.classList.add('active'); }
         else if (feed) { feed.hidden = false; feed.style.display = 'block'; if (homeLink) homeLink.classList.add('active'); }

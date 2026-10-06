@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $reactions_table = $wpdb->prefix . 'rich_signal_message_reactions';
     $messages = array_map(static function ($item) use ($wpdb, $profile_table, $reactions_table) {
         $profile_name = $wpdb->get_var($wpdb->prepare(
-            "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+            "SELECT COALESCE(NULLIF(trading_handle, ''), NULLIF(display_name, '')) FROM {$profile_table} WHERE user_id = %d LIMIT 1",
             (int) $item['user_id']
         ));
         
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         if ($item['reply_to_id']) {
             $reply_profile_name = $wpdb->get_var($wpdb->prepare(
-                "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+                "SELECT COALESCE(NULLIF(trading_handle, ''), NULLIF(display_name, '')) FROM {$profile_table} WHERE user_id = %d LIMIT 1",
                 (int) $item['reply_to_user_id']
             ));
             $item['reply_to_author_name'] = is_string($reply_profile_name) && trim($reply_profile_name) !== '' ? $reply_profile_name : ($item['reply_to_author_fallback'] ?? ('User #' . (int) $item['reply_to_user_id']));
@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $author = wp_get_current_user();
     $author_fallback_name = $author && $author->exists() ? ($author->display_name ?: $author->user_login) : ('User #' . $user_id);
     $profile_name = $wpdb->get_var($wpdb->prepare(
-        "SELECT display_name FROM {$profile_table} WHERE user_id = %d LIMIT 1",
+        "SELECT COALESCE(NULLIF(trading_handle, ''), NULLIF(display_name, '')) FROM {$profile_table} WHERE user_id = %d LIMIT 1",
         $user_id
     ));
     $final_author_name = is_string($profile_name) && trim($profile_name) !== '' ? $profile_name : $author_fallback_name;
