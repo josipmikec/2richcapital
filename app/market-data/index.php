@@ -377,7 +377,7 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
                 <span class="nav-tagline" style="margin-top: 4px;">INSTITUTIONAL GRADE TRADING</span>
             </div>
         <div class="nav-right">
-            <div class="tf-topbar-avatar" onclick="window.location.href='/app/trading-floor/'" title="Account">
+            <div class="tf-topbar-avatar" onclick="window.location.href='/trading-floor/?user_id=<?php echo $user_id; ?>'" title="Account">
                 <?php echo strtoupper(substr($_SESSION['user_name'] ?? 'M', 0, 1)); ?>
             </div>
             <div style="display:flex; gap:8px;">

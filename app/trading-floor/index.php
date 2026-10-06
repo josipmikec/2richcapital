@@ -1565,7 +1565,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 <span class="nav-tagline" style="margin-top: 4px;">INSTITUTIONAL GRADE TRADING</span>
             </div>
             <div class="nav-right">
-                <div class="tf-topbar-avatar" onclick="window.location.href='/app/trading-floor/'" title="Account">
+                <div class="tf-topbar-avatar" onclick="window.location.href='/trading-floor/?user_id=<?php echo $user_id; ?>'" title="Account">
                     <?php echo strtoupper(substr($user_name, 0, 1)); ?>
                 </div>
                 <div style="display:flex; gap:8px;">
@@ -2641,11 +2641,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         floorSignalsState.loading = true;
         floorSignalsState.error = '';
         try {
-                listGroupsUrl: signalsUrl('list-groups.php'),
-                myMembershipsUrl: signalsUrl('my-memberships.php'),
-                pathname: window.location.pathname,
-                origin: window.location.origin
-            });
+
             const [groupsRes, membershipsRes] = await Promise.all([
                 fetch(signalsUrl('list-groups.php'), {
                     credentials: 'include',
@@ -2656,13 +2652,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                     headers: { 'X-CSRF-Token': SIGNALS_CSRF }
                 })
             ]);
-                listGroupsOk: groupsRes.ok,
-                listGroupsStatus: groupsRes.status,
-                listGroupsUrl: groupsRes.url,
-                membershipsOk: membershipsRes.ok,
-                membershipsStatus: membershipsRes.status,
-                membershipsUrl: membershipsRes.url
-            });
+
             const groupsData = await groupsRes.json().catch(() => ({}));
             const membershipsData = await membershipsRes.json().catch(() => ({}));
             floorSignalsState.groups = Array.isArray(groupsData.groups) ? groupsData.groups.map(normalizeSignalGroup) : [];
