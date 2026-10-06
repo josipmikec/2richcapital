@@ -478,7 +478,7 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
              MARKET FEEDS PANE
         ═══════════════════════════════════════════════════════════════ -->
         <div class="md-pane active" id="tab-feeds">
-            <div id="chartLayoutControls" style="display:flex; justify-content:flex-end; gap:16px; align-items:center; padding-bottom:12px;">
+            <div id="chartLayoutControls" style="display:none; justify-content:flex-end; gap:16px; align-items:center; padding-bottom:12px;">
                 <label style="display:flex; align-items:center; gap:6px; color:#b2b5be; font-size:12px; font-weight:600; cursor:pointer; user-select:none;">
                     <input type="checkbox" id="syncSymbolCheck" onchange="toggleSyncSymbol()" style="accent-color:#F2CA50;">
                     Sync Symbols
@@ -1885,6 +1885,77 @@ function syncNativeTimeframeGroup() {
     document.querySelectorAll('#rich-native-timeframes [data-rich-interval]').forEach(btn => btn.classList.toggle('is-active', String(btn.dataset.richInterval) === String(currentInterval)));
 }
 
+function mountNativeLayoutGroup() {
+    if (!getTvWidget() || typeof getTvWidget().headerReady !== 'function' || typeof getTvWidget().createButton !== 'function') return;
+    getTvWidget().headerReady().then(() => {
+        if (document.getElementById('rich-native-layout-controls')) return;
+        
+        const host = getTvWidget().createButton({ align: 'right' });
+        host.id = 'rich-native-layout-controls';
+        host.title = 'Layout Options';
+        host.style.cssText = 'display:flex;align-items:center;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;gap:12px;margin-right:8px!important;';
+        
+        const syncLabel = document.createElement('label');
+        syncLabel.style.cssText = 'display:flex; align-items:center; gap:6px; color:#b2b5be; font-size:12px; font-weight:600; cursor:pointer; user-select:none; margin:0;';
+        const syncCheck = document.createElement('input');
+        syncCheck.type = 'checkbox';
+        syncCheck.style.cssText = 'accent-color:#F2CA50; margin:0; cursor:pointer;';
+        syncCheck.checked = localStorage.getItem('md_sync_symbol') === '1';
+        syncCheck.addEventListener('change', () => {
+            localStorage.setItem('md_sync_symbol', syncCheck.checked ? '1' : '0');
+            const outer = document.getElementById('syncSymbolCheck');
+            if (outer) outer.checked = syncCheck.checked;
+        });
+        syncLabel.appendChild(syncCheck);
+        syncLabel.appendChild(document.createTextNode(' Sync Symbols'));
+        
+        const layoutSelect = document.createElement('select');
+        layoutSelect.style.cssText = 'background:#131722; color:#b2b5be; border:1px solid #1e1e1e; border-radius:6px; padding:4px 8px; font-size:12px; font-weight:600; outline:none; cursor:pointer;';
+        const opts = [
+            {val: '1x1', text: '1x1 Layout'},
+            {val: '1x2', text: '1x2 Horizontal'},
+            {val: '2x1', text: '2x1 Vertical'},
+            {val: '2x2', text: '2x2 Grid'}
+        ];
+        opts.forEach(o => {
+            const opt = document.createElement('option');
+            opt.value = o.val;
+            opt.textContent = o.text;
+            layoutSelect.appendChild(opt);
+        });
+        layoutSelect.value = localStorage.getItem('md_chart_layout') || '1x1';
+        layoutSelect.addEventListener('change', () => {
+            changeChartLayout(layoutSelect.value);
+        });
+        
+        const popoutBtn = document.createElement('button');
+        popoutBtn.type = 'button';
+        popoutBtn.style.cssText = 'background:transparent; border:none; color:#b2b5be; cursor:pointer; padding:6px; display:flex; align-items:center;margin-left:4px;';
+        popoutBtn.title = 'Pop out charts';
+        popoutBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
+        popoutBtn.addEventListener('click', () => {
+            const isPopout = window.location.search.includes('popout=');
+            if (isPopout) {
+                const nav = document.querySelector('.top-nav');
+                if (nav) nav.classList.toggle('hidden');
+            } else {
+                window.open('/market-data?popout=true', 'Charts', 'width=1000,height=700');
+            }
+        });
+        popoutBtn.addEventListener('mouseover', () => popoutBtn.style.color = '#F2CA50');
+        popoutBtn.addEventListener('mouseout', () => popoutBtn.style.color = '#b2b5be');
+        
+        host.appendChild(syncLabel);
+        host.appendChild(layoutSelect);
+        host.appendChild(popoutBtn);
+        
+        host.style.setProperty('background', 'transparent', 'important');
+        host.style.setProperty('background-color', 'transparent', 'important');
+        host.style.setProperty('border', '0', 'important');
+        host.style.setProperty('box-shadow', 'none', 'important');
+    }).catch(err => console.error('[2RICH native layout mount failed]', err));
+}
+
 function richChartApi() { return getTvWidget() && typeof getTvWidget().activeChart === 'function' ? getTvWidget().activeChart() : null; }
 function richToolbarStatus(message) { const el=document.getElementById('richToolbarStatus'); if(el) el.textContent=message; }
 function richSetInterval(interval) { changeInterval(interval); document.querySelectorAll('[data-rich-interval]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.richInterval===String(interval))); syncNativeTimeframeGroup(); }
@@ -2050,6 +2121,7 @@ async function initChart() {
             }
         chartDebug('chart ready state', { symbol: currentSymbol, interval: currentInterval, userSettingKeys: Object.keys(tvUserSettings) });
         mountNativeTimeframeGroup();
+        mountNativeLayoutGroup();
         richToolbarStatus('Chart ready');
         injectTwoRichTemplateOptions();
         
