@@ -612,6 +612,14 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
                                 </svg>
                                 Filters
                             </button>
+
+                            <!-- API Access -->
+                            <button class="md-cal-filter-toggle" onclick="openCalendarApiModal()" title="API Access">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                                </svg>
+                                API Access
+                            </button>
                         </div>
                     </div>
 
@@ -2658,7 +2666,93 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (el) el.checked = true;
     }
 });
+
+// ── Calendar API Keys ────────────────────────────────────────────────────────
+async function loadCalendarApiKey() {
+    try {
+        const res = await fetch('../api/market/generate-calendar-key.php');
+        const data = await res.json();
+        return data.api_key;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function generateCalendarApiKey() {
+    const btn = document.getElementById('genCalApiBtn');
+    if (btn) btn.textContent = 'Generating...';
+    try {
+        const res = await fetch('../api/market/generate-calendar-key.php', { method: 'POST' });
+        const data = await res.json();
+        if (data.success && data.api_key) {
+            openCalendarApiModal(data.api_key);
+        }
+    } catch (e) {
+        if (btn) btn.textContent = 'Failed. Try again.';
+    }
+}
+
+async function openCalendarApiModal(providedKey = null) {
+    const modal = document.getElementById('calendarApiModal');
+    const body = document.getElementById('calendarApiBody');
+    if (!modal || !body) return;
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+
+    body.innerHTML = '<div style="color:#8f95a3;">Loading API Key...</div>';
+
+    const apiKey = providedKey || await loadCalendarApiKey();
+    
+    const keyHtml = apiKey 
+        ? `<div style="margin-top:16px;padding:12px;background:rgba(242,202,80,0.1);border:1px solid rgba(242,202,80,0.2);border-radius:8px;display:flex;flex-direction:column;gap:8px;">
+            <span style="font-size:12px;color:#f2ca50;font-weight:600;text-transform:uppercase;">Your Secret Key</span>
+            <code style="color:#f5f5f5;font-size:14px;word-break:break-all;">${apiKey}</code>
+           </div>
+           <div style="margin-top:16px;font-size:13px;color:#8f95a3;line-height:1.5;">
+            <strong>Bot Endpoint:</strong><br>
+            <code style="color:#f5f5f5;">GET https://2rich.capital/app/api/market/bot-calendar.php?api_key=${apiKey}</code><br><br>
+            <em>Optional Parameters:</em><br>
+            <code>&amp;impact=High</code> (Only High impact)<br>
+            <code>&amp;currency=USD,EUR</code> (Specific currencies)
+           </div>`
+        : `<p style="color:#8f95a3;font-size:14px;margin-bottom:16px;">You don't have a Calendar API key yet. Generate one to allow your external trading bots to read economic events.</p>`;
+
+    body.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:16px;">
+            <p style="color:#bcc1ca;font-size:14px;line-height:1.5;margin:0;">
+                Use this API Key to securely fetch the economic calendar data into your trading bots.
+            </p>
+            ${keyHtml}
+            <button id="genCalApiBtn" style="margin-top:12px;width:100%;padding:12px;background:rgba(242,202,80,0.1);border:1px solid rgba(242,202,80,0.4);color:#f2ca50;border-radius:8px;cursor:pointer;font-weight:600;" onclick="generateCalendarApiKey()">
+                ${apiKey ? 'Revoke & Generate New Key' : 'Generate API Key'}
+            </button>
+        </div>
+    `;
+}
+
+function closeCalendarApiModal() {
+    const modal = document.getElementById('calendarApiModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+}
 </script>
+<!-- Calendar API Modal -->
+<div class="general-settings-overlay" id="calendarApiModal" aria-hidden="true" onclick="if(event.target===this) closeCalendarApiModal()">
+    <div class="general-settings-modal" style="max-width:480px;">
+        <div class="gs-modal-header">
+            <h2 class="gs-modal-title">Calendar API Access</h2>
+            <button class="gs-modal-close" onclick="closeCalendarApiModal()" aria-label="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="gs-modal-body" id="calendarApiBody" style="padding: 24px;">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+</div>
 <?php require_once __DIR__ . '/../components/general-settings-modal.php'; ?>
 </body>
 </html>
