@@ -2474,7 +2474,7 @@ function manageBurstMode() {
         calBurstMode = true;
         clearInterval(calRefreshTimer);
         clearInterval(calBurstTimer);
-        calBurstTimer = setInterval(() => { loadEconomicCalendar(true); setCountdown(CAL_BURST_INTERVAL); }, CAL_BURST_INTERVAL * 1000);
+        calBurstTimer = setInterval(() => { loadEconomicCalendar(false); setCountdown(CAL_BURST_INTERVAL); }, CAL_BURST_INTERVAL * 1000);
         setCountdown(CAL_BURST_INTERVAL);
     } else if (!imminent && calBurstMode) {
         calBurstMode = false;
@@ -2485,7 +2485,7 @@ function manageBurstMode() {
 
 function startNormalRefresh() {
     clearInterval(calRefreshTimer);
-    calRefreshTimer = setInterval(() => { loadEconomicCalendar(true); setCountdown(CAL_NORMAL_INTERVAL); }, CAL_NORMAL_INTERVAL * 1000);
+    calRefreshTimer = setInterval(() => { loadEconomicCalendar(false); setCountdown(CAL_NORMAL_INTERVAL); }, CAL_NORMAL_INTERVAL * 1000);
     setCountdown(CAL_NORMAL_INTERVAL);
 }
 

@@ -453,39 +453,7 @@ function tworich_economic_calendar_ajax() {
     // Allow frontend to bust the transient cache
     $force_refresh = isset($_GET['bust']) && !empty($_GET['bust']);
 
-    // Check if any cached events are imminent (within ±30 min of now in NY time).
-    // Only skip cache logic for this_week — next_week events are never imminent.
-    if (!$force_refresh && $week === 'this_week') {
-        $cached = get_transient($cache_key);
-        if ($cached !== false) {
-            $ny_now      = new DateTime('now', new DateTimeZone('America/New_York'));
-            $window_start = clone $ny_now;
-            $window_start->modify('-30 minutes');
-            $window_end   = clone $ny_now;
-            $window_end->modify('+30 minutes');
-
-            $has_imminent = false;
-            foreach ($cached as $ev) {
-                $time_clean = preg_replace('/\s*(EST|EDT|ET)\s*/i', '', $ev['time'] ?? '');
-                $year = $ny_now->format('Y');
-                try {
-                    $ev_dt = new DateTime($ev['date'] . ' ' . $year . ' ' . $time_clean, new DateTimeZone('America/New_York'));
-                    if ($ev_dt >= $window_start && $ev_dt <= $window_end) {
-                        $has_imminent = true;
-                        break;
-                    }
-                } catch (Exception $e) {
-                    continue;
-                }
-            }
-
-            if (!$has_imminent) {
-                wp_send_json($cached);
-                return;
-            }
-        }
-    } elseif (!$force_refresh && $week === 'next_week') {
-        // Next week: no imminent-event bypass needed — use cache normally
+    if (!$force_refresh) {
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             wp_send_json($cached);
