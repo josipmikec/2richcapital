@@ -2384,28 +2384,38 @@ function renderCalendar(events) {
                 }
             }
 
-            html += `<div class="md-calendar-item">
-                <div class="md-cal-item-left">
-                    <div class="md-calendar-time">${displayTime}</div>
-                    <span class="md-impact-pill ${impCls}">${event.impact || 'Low'}</span>
+            const currencyFlags = {
+                'USD': '🇺🇸', 'EUR': '🇪🇺', 'GBP': '🇬🇧', 'JPY': '🇯🇵',
+                'AUD': '🇦🇺', 'CAD': '🇨🇦', 'CHF': '🇨🇭', 'NZD': '🇳🇿',
+                'CNY': '🇨🇳', 'ALL': '🌐'
+            };
+            const curr = event.currency || 'N/A';
+            const flag = currencyFlags[curr] || '';
+
+            html += `<div class="md-calendar-item" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);gap:16px;">
+                <div style="width:80px;flex-shrink:0;color:#f5f5f5;font-weight:500;font-size:13px;">${displayTime}</div>
+                <div style="width:80px;flex-shrink:0;">
+                    <span class="md-impact-pill ${impCls}" style="display:inline-flex;justify-content:center;width:100%;font-size:11px;">${event.impact || 'Low'}</span>
                 </div>
-                <div class="md-cal-item-body">
-                    <div class="md-calendar-title-row">
-                        <div class="md-calendar-currency">${event.currency || 'N/A'}</div>
-                        <div class="md-calendar-event-title">${event.title || 'Economic Event'}</div>
-                    </div>
-                    <div class="md-calendar-stats">
-                        <span class="md-cal-stat ${actCls}">
-                            <span class="md-calendar-label">Act</span>
-                            ${hasActual ? actual : '<span class="md-cal-pending">Pending</span>'}
-                        </span>
-                        <span class="md-cal-stat">
-                            <span class="md-calendar-label">Fcst</span>${forecast || '-'}
-                        </span>
-                        <span class="md-cal-stat">
-                            <span class="md-calendar-label">Prev</span>${previous || '-'}
-                        </span>
-                    </div>
+                <div style="width:70px;flex-shrink:0;color:#8f95a3;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;">
+                    <span>${flag}</span> <span>${curr}</span>
+                </div>
+                <div style="flex-grow:1;color:#f5f5f5;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    ${event.title || 'Economic Event'}
+                </div>
+                <div style="display:flex;gap:24px;flex-shrink:0;font-size:13px;">
+                    <span class="md-cal-stat ${actCls}" style="display:flex;align-items:center;gap:6px;">
+                        <span style="color:#8f95a3;font-size:11px;text-transform:uppercase;">Act</span>
+                        <strong style="font-weight:600;">${hasActual ? actual : '<span style="color:#8f95a3;font-style:italic;font-weight:normal;">Pending</span>'}</strong>
+                    </span>
+                    <span class="md-cal-stat" style="display:flex;align-items:center;gap:6px;">
+                        <span style="color:#8f95a3;font-size:11px;text-transform:uppercase;">Fcst</span>
+                        <strong style="color:#f5f5f5;font-weight:500;">${forecast || '-'}</strong>
+                    </span>
+                    <span class="md-cal-stat" style="display:flex;align-items:center;gap:6px;">
+                        <span style="color:#8f95a3;font-size:11px;text-transform:uppercase;">Prev</span>
+                        <strong style="color:#f5f5f5;font-weight:500;">${previous || '-'}</strong>
+                    </span>
                 </div>
             </div>`;
         });
