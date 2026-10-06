@@ -647,6 +647,24 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  max-height: 65vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+}
+
+.md-calendar-list::-webkit-scrollbar {
+  width: 6px;
+}
+.md-calendar-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.md-calendar-list::-webkit-scrollbar-thumb {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+.md-calendar-list::-webkit-scrollbar-thumb:hover {
+  background: #333;
 }
 
 /* Day group */

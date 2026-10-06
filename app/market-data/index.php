@@ -2404,10 +2404,10 @@ function renderCalendar(events) {
                     ${event.title || 'Economic Event'}
                 </div>
                 <div style="display:flex;gap:24px;flex-shrink:0;font-size:13px;">
-                    <span class="md-cal-stat ${actCls}" style="display:flex;align-items:center;gap:6px;">
-                        <span style="color:#8f95a3;font-size:11px;text-transform:uppercase;">Act</span>
-                        <strong style="font-weight:600;">${hasActual ? actual : '<span style="color:#8f95a3;font-style:italic;font-weight:normal;">Pending</span>'}</strong>
-                    </span>
+                    <a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:4px;color:#f2ca50;text-decoration:none;font-size:11px;font-weight:600;padding:4px 8px;background:rgba(242,202,80,0.05);border-radius:4px;border:1px solid rgba(242,202,80,0.2);transition:all 0.2s ease;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        LIVE
+                    </a>
                     <span class="md-cal-stat" style="display:flex;align-items:center;gap:6px;">
                         <span style="color:#8f95a3;font-size:11px;text-transform:uppercase;">Fcst</span>
                         <strong style="color:#f5f5f5;font-weight:500;">${forecast || '-'}</strong>
