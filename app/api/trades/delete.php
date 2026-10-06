@@ -76,9 +76,23 @@ if ($journal_id > 0 && intval($trade['journal_id']) !== $journal_id) {
     exit;
 }
 
+require_once __DIR__ . '/../../components/r2-storage.php';
+
 $wpdb->query('START TRANSACTION');
 
 try {
+    // Hard-delete any R2 media linked in this trade's note or custom columns
+    $trade_note = $wpdb->get_var($wpdb->prepare("SELECT note FROM {$trades_table} WHERE id = %d", $trade_id));
+    $custom_values = $wpdb->get_col($wpdb->prepare("SELECT value FROM {$custom_values_table} WHERE trade_id = %d", $trade_id));
+    
+    $all_text = $trade_note . ' ' . implode(' ', $custom_values ?: []);
+    if (preg_match_all('/' . preg_quote(R2_PUBLIC_URL, '/') . '([^\s"\'<]+)/', $all_text, $matches)) {
+        foreach ($matches[1] as $r2_path) {
+            $r2_path = ltrim($r2_path, '/');
+            rich_r2_delete_file($r2_path);
+        }
+    }
+
     $wpdb->delete($custom_values_table, ['trade_id' => $trade_id], ['%d']);
     $deleted = $wpdb->delete($trades_table, ['id' => $trade_id], ['%d']);
 

@@ -47,6 +47,18 @@ if (!$owns) {
     exit;
 }
 
+require_once __DIR__ . '/../../components/r2-storage.php';
+
+// Hard-delete any R2 media linked in this custom column's values
+$custom_values = $wpdb->get_col($wpdb->prepare("SELECT value FROM {$custom_values_table} WHERE column_id = %d", $column_id));
+$all_text = implode(' ', $custom_values ?: []);
+if (preg_match_all('/' . preg_quote(R2_PUBLIC_URL, '/') . '([^\s"\'<]+)/', $all_text, $matches)) {
+    foreach ($matches[1] as $r2_path) {
+        $r2_path = ltrim($r2_path, '/');
+        rich_r2_delete_file($r2_path);
+    }
+}
+
 $wpdb->delete(
     $custom_values_table,
     ['column_id' => $column_id],

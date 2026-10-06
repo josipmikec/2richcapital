@@ -237,5 +237,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $raw = file_get_contents('php://input');
+    $payload = json_decode($raw, true);
+    if (!is_array($payload)) $payload = $_GET;
+
+    $message_id = isset($payload['message_id']) ? (int) $payload['message_id'] : 0;
+    
+    if ($message_id <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid message ID']);
+        exit;
+    }
+
+    $msg = $wpdb->get_row($wpdb->prepare(
+        "SELECT id, user_id, group_id, message FROM {$messages_table} WHERE id = %d LIMIT 1",
+        $message_id
+    ), ARRAY_A);
+
+    if (!$msg) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Message not found']);
+        exit;
+    }
+
+    $is_author = ((int)$msg['user_id'] === $user_id);
+    
+    // Check if staff/admin if not author
+    $is_staff = false;
+    if (!$is_author) {
+        $staff = $wpdb->get_row($wpdb->prepare(
+            "SELECT role FROM {$memberships_table} WHERE user_id = %d AND group_id = %d AND status = 'active' AND role IN ('owner', 'admin', 'moderator') LIMIT 1",
+            $user_id, (int)$msg['group_id']
+        ));
+        if ($staff || rich_is_staff()) {
+            $is_staff = true;
+        }
+    }
+
+    if (!$is_author && !$is_staff) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Permission denied']);
+        exit;
+    }
+
+    // 1. Find and hard-delete any R2 media attached to this message
+    require_once '../../components/r2-storage.php';
+    
+    $r2_base = preg_quote(R2_PUBLIC_URL, '/');
+    // Match URLs like: https://pub-...r2.dev/group_X/chat/123.jpg
+    if (preg_match_all('/(' . $r2_base . '[^\s"\']+)/', $msg['message'], $matches)) {
+        foreach ($matches[1] as $media_url) {
+            rich_r2_delete_file($media_url);
+        }
+    }
+
+    // 2. Hard delete message from database
+    $wpdb->delete($messages_table, ['id' => $message_id], ['%d']);
+    
+    // Also delete any reactions tied to it
+    $reactions_table = $wpdb->prefix . 'rich_signal_message_reactions';
+    $wpdb->delete($reactions_table, ['message_id' => $message_id], ['%d']);
+
+    echo json_encode(['success' => true, 'message' => 'Message and associated media deleted forever.']);
+    exit;
+}
+
 http_response_code(405);
 echo json_encode(['success' => false, 'message' => 'Method not allowed']);

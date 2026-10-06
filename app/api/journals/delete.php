@@ -58,6 +58,26 @@ if ($total <= 1) {
     exit;
 }
 
+require_once __DIR__ . '/../../components/r2-storage.php';
+
+// Hard-delete any R2 media linked in this journal's trades (note or custom columns)
+$trades_table = $wpdb->prefix . 'rich_trades';
+$custom_values_table = $wpdb->prefix . 'rich_custom_column_values';
+
+$trades_notes = $wpdb->get_col($wpdb->prepare("SELECT note FROM {$trades_table} WHERE journal_id = %d", $journal_id));
+$custom_values = $wpdb->get_col($wpdb->prepare(
+    "SELECT c.value FROM {$custom_values_table} c INNER JOIN {$trades_table} t ON c.trade_id = t.id WHERE t.journal_id = %d", 
+    $journal_id
+));
+
+$all_text = implode(' ', $trades_notes ?: []) . ' ' . implode(' ', $custom_values ?: []);
+if (preg_match_all('/' . preg_quote(R2_PUBLIC_URL, '/') . '([^\s"\'<]+)/', $all_text, $matches)) {
+    foreach ($matches[1] as $r2_path) {
+        $r2_path = ltrim($r2_path, '/');
+        rich_r2_delete_file($r2_path);
+    }
+}
+
 $deleted = $wpdb->delete(
     $table,
     ['id' => $journal_id, 'user_id' => $user_id],

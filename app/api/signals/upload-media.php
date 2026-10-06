@@ -35,16 +35,9 @@ if ($group_id <= 0) {
 // -------------------------------------------------------------
 // R2 / S3 CLOUD STORAGE CONFIGURATION
 // -------------------------------------------------------------
-$r2_access_key = '03e93381c315af26a27e301455085bae';
-$r2_secret_key = '6bdfdd3a039cffb3656cf1ba054b4031ef4a04b0b15abfddd63526b322482944';
-$r2_bucket = '2rich-chat-media';
-$r2_endpoint = 'https://025f29208947cca0c77b4ab45d61e907.r2.cloudflarestorage.com';
-$r2_public_url = 'https://pub-cc86db20f3b2468e9bff2275eb9ad38a.r2.dev'; 
+require_once __DIR__ . '/../../components/r2-storage.php';
 
-$r2_region = 'auto'; // R2 uses 'auto', S3 uses standard regions
-// -------------------------------------------------------------
-
-if ($r2_access_key === 'YOUR_ACCESS_KEY_HERE') {
+if (R2_ACCESS_KEY === 'YOUR_ACCESS_KEY_HERE') {
     echo json_encode(['success' => false, 'message' => 'Cloud Storage keys are not configured yet!']);
     exit;
 }
@@ -82,7 +75,7 @@ $filename = 'group_' . $group_id . '/chat/' . uniqid() . '_' . time() . '.' . $e
 $file_contents = file_get_contents($file['tmp_name']);
 
 // AWS V4 Signature generation for R2/S3
-$host = parse_url($r2_endpoint, PHP_URL_HOST);
+$host = parse_url(R2_ENDPOINT, PHP_URL_HOST);
 $service = 's3';
 $timestamp = gmdate('Ymd\THis\Z');
 $date = gmdate('Ymd');
@@ -104,20 +97,20 @@ foreach ($headers as $k => $v) {
 }
 $signed_headers = rtrim($signed_headers, ';');
 
-$canonical_request = "PUT\n/" . $r2_bucket . "/" . $filename . "\n\n" . $canonical_headers . "\n" . $signed_headers . "\n" . $payload_hash;
-$credential_scope = $date . '/' . $r2_region . '/' . $service . '/aws4_request';
+$canonical_request = "PUT\n/" . R2_BUCKET . "/" . $filename . "\n\n" . $canonical_headers . "\n" . $signed_headers . "\n" . $payload_hash;
+$credential_scope = $date . '/' . R2_REGION . '/' . $service . '/aws4_request';
 $string_to_sign = "AWS4-HMAC-SHA256\n" . $timestamp . "\n" . $credential_scope . "\n" . hash('sha256', $canonical_request);
 
-$kSecret = 'AWS4' . $r2_secret_key;
+$kSecret = 'AWS4' . R2_SECRET_KEY;
 $kDate = hash_hmac('sha256', $date, $kSecret, true);
-$kRegion = hash_hmac('sha256', $r2_region, $kDate, true);
+$kRegion = hash_hmac('sha256', R2_REGION, $kDate, true);
 $kService = hash_hmac('sha256', $service, $kRegion, true);
 $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
 $signature = hash_hmac('sha256', $string_to_sign, $kSigning);
 
-$authorization_header = "AWS4-HMAC-SHA256 Credential={$r2_access_key}/{$credential_scope}, SignedHeaders={$signed_headers}, Signature={$signature}";
+$authorization_header = "AWS4-HMAC-SHA256 Credential=" . R2_ACCESS_KEY . "/{$credential_scope}, SignedHeaders={$signed_headers}, Signature={$signature}";
 
-$url = rtrim($r2_endpoint, '/') . '/' . $r2_bucket . '/' . $filename;
+$url = rtrim(R2_ENDPOINT, '/') . '/' . R2_BUCKET . '/' . $filename;
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
@@ -134,7 +127,7 @@ $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($http_code >= 200 && $http_code < 300) {
-    $public_url = rtrim($r2_public_url, '/') . '/' . $filename;
+    $public_url = rtrim(R2_PUBLIC_URL, '/') . '/' . $filename;
     echo json_encode([
         'success' => true,
         'url' => $public_url,

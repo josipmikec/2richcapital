@@ -235,7 +235,7 @@
                 ? `<button type="button" class="dashboard-group-chat-message-reply" onclick="${o.replyHandler}" data-id="${item.id}" data-author="${replyAuthor}" data-text="${replyText}" aria-label="Reply" title="Reply to ${replyAuthor}"${o.replyIconStyle ? ' style="' + o.replyIconStyle + '"' : ''}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg></button>`
                 : '';
 
-            html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}'); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${item.user_id}" onclick="window.openProfilePreview(this, ${item.user_id})" style="cursor:pointer;">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${esc(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
+            html += `<div class="dashboard-group-chat-message${highlightClass}" oncontextmenu="window.openMessageContextMenu(event, ${item.id}, '${authorJs}', '${textJs}', ${item.user_id}); return false;">${replyHtml}<div class="dashboard-group-chat-message-meta"><span class="dashboard-group-chat-message-author" data-user-id="${item.user_id}" onclick="window.openProfilePreview(this, ${item.user_id})" style="cursor:pointer;">${safeAuthor}</span><div style="display:flex;align-items:center;gap:6px;"><span>${esc(timestamp)}</span>${replyIcon}</div></div><div class="dashboard-group-chat-message-text">${msgText}</div>${reactionsHtml}</div>`;
         });
         return { html: html, hasNewExternal: hasNew, newExternal: newExternal };
     }
@@ -250,7 +250,7 @@
 
     function installUi(a) {
         /* ---------------- context menu ---------------- */
-        window.openMessageContextMenu = function (e, msgId, author, text) {
+        window.openMessageContextMenu = function (e, msgId, author, text, authorId) {
             e.preventDefault();
 
             let menu = document.getElementById('messageContextMenu');
@@ -289,6 +289,16 @@
 
             let actionsHtml = `<button type="button" onclick="window.${a.replyFn}({dataset:{id:${msgId}, author:'${author.replace(/'/g, "\\'")}', text:'${text.replace(/'/g, "\\'")}'}}); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Reply</button>`;
             actionsHtml += `<button type="button" onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'").replace(/\n/g, "\\n")}'); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#cfd4dd;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Copy</button>`;
+            
+            const isMine = String(authorId) === String(a.currentUserId);
+            let isStaff = false;
+            const staffList = a.getMembers ? a.getMembers() : [];
+            if (staffList.some(m => String(m.user_id) === String(a.currentUserId) && (m.role === 'owner' || m.role === 'admin' || m.role === 'moderator'))) {
+                isStaff = true;
+            }
+            if (isMine || isStaff) {
+                actionsHtml += `<button type="button" onclick="window.deleteChatMessage(${msgId}); document.getElementById('messageContextMenu').style.display='none'" style="background:none;border:none;color:#f87171;font-size:13px;text-align:left;cursor:pointer;padding:8px 12px;border-radius:6px;transition:background 0.2s;margin-top:4px;border-top:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Delete Message</button>`;
+            }
 
             menu.innerHTML = emojiHtml + '<div style="display:flex;flex-direction:column;gap:2px;">' + actionsHtml + '</div>';
             menu.style.display = 'flex';
@@ -318,12 +328,13 @@
                         touchTimer = null;
                         const onclickStr = msgEl.getAttribute('oncontextmenu');
                         if (onclickStr) {
-                            const match = onclickStr.match(/openMessageContextMenu\(event,\s*(\d+),\s*'([^']*)',\s*'([^']*)'\)/);
+                            const match = onclickStr.match(/openMessageContextMenu\(event,\s*(\d+),\s*'([^']*)',\s*'([^']*)'(?:,\s*(\d+))?\)/);
                             if (match && typeof window.openMessageContextMenu === 'function') {
                                 const synthEvent = { clientX: touchStartX, clientY: touchStartY, preventDefault: () => {} };
                                 const author = match[2].replace(/\\'/g, "'");
                                 const text = match[3].replace(/\\'/g, "'").replace(/\\n/g, "\n");
-                                window.openMessageContextMenu(synthEvent, parseInt(match[1], 10), author, text);
+                                const authorId = match[4] ? parseInt(match[4], 10) : 0;
+                                window.openMessageContextMenu(synthEvent, parseInt(match[1], 10), author, text, authorId);
                             }
                         }
                     }, 500);
@@ -343,6 +354,25 @@
                 }
             });
         })();
+
+        window.deleteChatMessage = async function(msgId) {
+            if (!confirm('Are you sure you want to permanently delete this message? This cannot be undone.')) return;
+            try {
+                const res = await fetch('/api/signals/messages.php', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': (a.csrf ? a.csrf() : window.CSRF_TOKEN) || '' },
+                    body: JSON.stringify({ message_id: msgId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (typeof window.__dashboardGroupChatPoller !== 'undefined') window.__dashboardGroupChatPoller();
+                } else {
+                    alert(data.message || 'Failed to delete message.');
+                }
+            } catch(e) {
+                alert('Error deleting message.');
+            }
+        };
 
         /* ---------------- reactions ---------------- */
         window.toggleMessageReaction = async function (messageId, reaction) {
@@ -724,7 +754,13 @@
             currentMessagesCache = '';
             const group = memberships.find(item => Number(item.id) === selectedGroupId);
             if (!group) return;
-            state.innerHTML = `<select class="dashboard-group-chat-switcher" aria-label="Select joined group">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>`;
+            let isStaff = false;
+            if (group.role === 'owner' || group.role === 'admin' || window.IS_STAFF) isStaff = true;
+            let clearHtml = '';
+            if (isStaff) {
+                clearHtml = `<button type="button" onclick="window.clearDashboardChat()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" title="Clear Chat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`;
+            }
+            state.innerHTML = `<div style="display:flex;align-items:center;gap:8px;width:100%;"><select class="dashboard-group-chat-switcher" aria-label="Select joined group" style="flex:1;">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>${clearHtml}</div>`;
             state.hidden = false;
             state.querySelector('select').addEventListener('change', e => selectGroup(e.target.value));
             setComposerVisible(true);
@@ -737,6 +773,27 @@
                 if (d.success) window.currentGroupMembers = d.staff || [];
             } catch (e) {}
         }
+
+        window.clearDashboardChat = async function() {
+            if (!selectedGroupId) return;
+            if (!confirm('Are you absolutely sure you want to permanently clear all messages and media in this chat group? This cannot be undone.')) return;
+            try {
+                const res = await fetch('/api/signals/clear-chat.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN || '' },
+                    body: JSON.stringify({ group_id: selectedGroupId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    messages.innerHTML = '<div class="dashboard-group-chat-empty">Chat cleared successfully.</div>';
+                    if (typeof window.__dashboardGroupChatPoller !== 'undefined') window.__dashboardGroupChatPoller();
+                } else {
+                    alert(data.message || 'Failed to clear chat.');
+                }
+            } catch(e) {
+                alert('Error clearing chat.');
+            }
+        };
 
         async function initChat() {
             try {
@@ -846,6 +903,7 @@
         } catch (e) {
             setInterval(loadMessages, 4000);
         }
+        window.__dashboardGroupChatPoller = loadMessages;
 
         return { refresh: initChat, reload: loadMessages };
     }
