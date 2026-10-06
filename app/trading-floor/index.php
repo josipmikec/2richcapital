@@ -1543,6 +1543,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
 
     <div class="dashboard-background"></div>
 
+<?php include __DIR__ . '/../components/promo-bar.php'; ?>
+
+
     <!-- Top Navigation -->
     <nav class="top-nav">
         <div class="nav-container">
@@ -1562,7 +1565,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 <span class="nav-tagline" style="margin-top: 4px;">INSTITUTIONAL GRADE TRADING</span>
             </div>
             <div class="nav-right">
-                <div class="tf-topbar-avatar" onclick="openGlobalSettingsModal('profile')" title="Account">
+                <div class="tf-topbar-avatar" onclick="window.location.href='/app/trading-floor/'" title="Account">
                     <?php echo strtoupper(substr($user_name, 0, 1)); ?>
                 </div>
                 <div style="display:flex; gap:8px;">

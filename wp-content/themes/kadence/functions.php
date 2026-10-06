@@ -448,17 +448,24 @@ function tworich_economic_calendar_ajax() {
     // ── Week range param ─────────────────────────────────────────────────
     $week = isset($_GET['week']) && $_GET['week'] === 'next_week' ? 'next_week' : 'this_week';
 
-    $cache_key = 'tworich_economic_calendar_' . $week;
+    $cache_key = 'tworich_economic_calendar_perm_' . $week;
+    $cache_data = get_option($cache_key);
 
-    // Allow frontend to bust the transient cache
+    // Allow frontend to bust the cache (user clicked Refresh)
     $force_refresh = isset($_GET['bust']) && !empty($_GET['bust']);
 
-    if (!$force_refresh) {
-        $cached = get_transient($cache_key);
-        if ($cached !== false) {
-            wp_send_json($cached);
-            return;
+    // Check if cache is still valid
+    $is_valid = false;
+    if ($cache_data && isset($cache_data['timestamp']) && isset($cache_data['events'])) {
+        $ttl = isset($cache_data['ttl']) ? $cache_data['ttl'] : 60;
+        if ((time() - $cache_data['timestamp']) < $ttl) {
+            $is_valid = true;
         }
+    }
+
+    if (!$force_refresh && $is_valid) {
+        wp_send_json($cache_data['events']);
+        return;
     }
 
     // ── Feed URL: this week or next week ─────────────────────────────────
@@ -478,16 +485,17 @@ function tworich_economic_calendar_ajax() {
         ],
     ]);
 
-    if (is_wp_error($response)) {
-        wp_send_json_error('Fetch failed');
-        return;
-    }
-
     $body = wp_remote_retrieve_body($response);
     $data = json_decode($body, true);
 
-    if (!is_array($data)) {
-        wp_send_json_error('Invalid JSON from source');
+    // If FF blocked us or returned invalid JSON
+    if (is_wp_error($response) || !is_array($data) || empty($data)) {
+        if ($cache_data && isset($cache_data['events'])) {
+            // Serve stale cache instead of failing!
+            wp_send_json($cache_data['events']);
+            return;
+        }
+        wp_send_json_error('Invalid JSON: ' . substr($body, 0, 100));
         return;
     }
 
@@ -553,7 +561,12 @@ function tworich_economic_calendar_ajax() {
             $ttl = 15; // Aggressively cache for only 15 seconds while waiting for actual result!
         }
     }
-    set_transient($cache_key, $events, $ttl);
+    
+    update_option($cache_key, [
+        'timestamp' => time(),
+        'ttl'       => $ttl,
+        'events'    => $events
+    ], false);
 
     wp_send_json($events);
 }
