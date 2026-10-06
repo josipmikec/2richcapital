@@ -662,7 +662,18 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
 
                 </div>
 
-                <div class="md-calendar-list" id="economicCalendar">
+                <div class="md-calendar-list-header" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #1a1a1a;color:#8f95a3;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:0.1em;background:#0d0d0d;border-top-left-radius:8px;border-top-right-radius:8px;padding-right:24px;gap:16px;">
+                    <div style="width:80px;flex-shrink:0;">Time</div>
+                    <div style="width:80px;flex-shrink:0;">Impact</div>
+                    <div style="width:70px;flex-shrink:0;">Cur</div>
+                    <div style="flex-grow:1;">Event</div>
+                    <div style="display:flex;gap:24px;flex-shrink:0;width:160px;justify-content:flex-end;">
+                        <span style="width:28px;text-align:center;">Link</span>
+                        <span style="width:40px;text-align:right;">Fcst</span>
+                        <span style="width:40px;text-align:right;">Prev</span>
+                    </div>
+                </div>
+                <div class="md-calendar-list" id="economicCalendar" style="border-top-left-radius:0; border-top-right-radius:0;">
                     <div class="md-calendar-loading">Loading upcoming events...</div>
                 </div>
             </div>
@@ -2423,19 +2434,12 @@ function renderCalendar(events) {
                 <div style="flex-grow:1;color:#f5f5f5;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                     ${event.title || 'Economic Event'}
                 </div>
-                <div style="display:flex;gap:24px;flex-shrink:0;font-size:13px;">
-                    <a href="${ffUrl}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:4px;color:#f2ca50;text-decoration:none;font-size:11px;font-weight:600;padding:4px 8px;background:rgba(242,202,80,0.05);border-radius:4px;border:1px solid rgba(242,202,80,0.2);transition:all 0.2s ease;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                        LIVE
+                <div style="display:flex;gap:24px;flex-shrink:0;font-size:13px;align-items:center;width:160px;justify-content:flex-end;">
+                    <a href="${ffUrl}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;width:28px;height:24px;color:#f2ca50;text-decoration:none;background:rgba(242,202,80,0.05);border-radius:4px;border:1px solid rgba(242,202,80,0.2);transition:all 0.2s ease;" title="Open in Forex Factory">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     </a>
-                    <span class="md-cal-stat" style="display:flex;align-items:center;gap:6px;">
-                        <span style="color:#8f95a3;font-size:11px;text-transform:uppercase;">Fcst</span>
-                        <strong style="color:#f5f5f5;font-weight:500;">${forecast || '-'}</strong>
-                    </span>
-                    <span class="md-cal-stat" style="display:flex;align-items:center;gap:6px;">
-                        <span style="color:#8f95a3;font-size:11px;text-transform:uppercase;">Prev</span>
-                        <strong style="color:#f5f5f5;font-weight:500;">${previous || '-'}</strong>
-                    </span>
+                    <span style="width:40px;text-align:right;color:#f5f5f5;font-weight:500;">${forecast || '-'}</span>
+                    <span style="width:40px;text-align:right;color:#f5f5f5;font-weight:500;">${previous || '-'}</span>
                 </div>
             </div>`;
         });
