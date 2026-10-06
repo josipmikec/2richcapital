@@ -1,15 +1,16 @@
 <?php
 // app/api/market/generate-calendar-key.php
+require_once dirname(__DIR__, 2) . '/auth/session-config.php';
 require_once dirname(__DIR__, 3) . '/wp-load.php';
 
 header('Content-Type: application/json');
 
-if (!is_user_logged_in()) {
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     http_response_code(401);
     die(json_encode(['success' => false, 'error' => 'Not logged in']));
 }
 
-$user_id = get_current_user_id();
+$user_id = intval($_SESSION['user_id']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Generate a new 32-character hex API key
