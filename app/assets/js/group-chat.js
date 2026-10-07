@@ -755,13 +755,13 @@
             const group = memberships.find(item => Number(item.id) === selectedGroupId);
             if (!group) return;
             state.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:8px 12px;box-sizing:border-box;">
-                <button type="button" onclick="window.showGroupChatMenu()" style="background:none;border:none;color:#a9afb8;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a9afb8'" title="Back to menu">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <div style="display:flex;align-items:center;gap:4px;width:100%;padding:4px 0 8px 0;box-sizing:border-box;">
+                <button type="button" onclick="window.showGroupChatMenu()" style="background:none;border:none;color:#8f95a3;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#8f95a3'" title="Back to menu">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>
-                <div style="flex:1;font-size:13px;font-weight:700;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(group.name)}</div>
-                <button type="button" onclick="alert('Search functionality coming soon')" style="background:none;border:none;color:#a9afb8;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a9afb8'" title="Search chat">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <div style="flex:1;font-size:12px;font-weight:700;color:#d8dbe1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;">${escapeHtml(group.name)}</div>
+                <button type="button" onclick="alert('Search functionality coming soon')" style="background:none;border:none;color:#8f95a3;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#8f95a3'" title="Search chat">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </button>
             </div>`;
             state.hidden = false;
@@ -782,7 +782,6 @@
             messages.innerHTML = '';
             selectedGroupId = null;
             if (remember) localStorage.removeItem('2rich_chat_id');
-            clearPoll();
             
             let menuHtml = '<div style="display:flex;flex-direction:column;gap:6px;width:100%;">';
             for (let m of memberships) {
