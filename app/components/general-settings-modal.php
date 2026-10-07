@@ -468,8 +468,6 @@ window.formatUserDate = function(dateStr, mode = 'time') {
         
         <div class="settings-modal-header-top">
             <div>
-                <h3 class="settings-modal-title">Settings</h3>
-                <p class="settings-modal-subtitle">Manage preferences and customize your platform experience.</p>
             </div>
             <button class="settings-modal-close" onclick="closeGlobalSettingsModal()">&times;</button>
         </div>
