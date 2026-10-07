@@ -880,18 +880,18 @@ foreach ($_dashboard_initial_order as $card_id) {
                         <?php
                         global $wpdb;
                         $news_filter_pref = $wpdb->get_var($wpdb->prepare("SELECT pref_value FROM {$wpdb->prefix}rich_user_preferences WHERE user_id = %d AND pref_key = 'news_source_filter'", $user_id));
-                        if (!$news_filter_pref) $news_filter_pref = 'all';
+                        if (!$news_filter_pref || $news_filter_pref === 'all') $news_filter_pref = 'financialjuice,investing.com,barchart,investinglive';
+                        $active_sources = explode(',', $news_filter_pref);
                         ?>
                         <div style="position:relative; display:inline-block; margin-left:auto; margin-right:8px;">
                             <button class="news-popout-btn" onclick="toggleNewsFilterMenu(event)" title="Filter sources">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                             </button>
                             <div id="newsFilterMenu" onclick="event.stopPropagation()" style="display:none; position:absolute; top:calc(100% + 4px); right:0; background:#151515; border:1px solid #2a2a2a; border-radius:8px; padding:8px; z-index:100; min-width:140px; box-shadow:0 12px 35px rgba(0,0,0,0.45);">
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="all" <?php echo $news_filter_pref === 'all' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">All Sources</label>
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="financialjuice" <?php echo $news_filter_pref === 'financialjuice' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">FinancialJuice</label>
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="investing.com" <?php echo $news_filter_pref === 'investing.com' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Investing.com</label>
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="barchart" <?php echo $news_filter_pref === 'barchart' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Barchart</label>
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="investinglive" <?php echo $news_filter_pref === 'investinglive' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Investinglive</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="checkbox" value="financialjuice" <?php echo in_array('financialjuice', $active_sources) ? 'checked' : ''; ?> onchange="window.applyNewsFilter();" style="margin:0; accent-color:#F2CA50;">FinancialJuice</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="checkbox" value="investing.com" <?php echo in_array('investing.com', $active_sources) ? 'checked' : ''; ?> onchange="window.applyNewsFilter();" style="margin:0; accent-color:#F2CA50;">Investing.com</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="checkbox" value="barchart" <?php echo in_array('barchart', $active_sources) ? 'checked' : ''; ?> onchange="window.applyNewsFilter();" style="margin:0; accent-color:#F2CA50;">Barchart</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="checkbox" value="investinglive" <?php echo in_array('investinglive', $active_sources) ? 'checked' : ''; ?> onchange="window.applyNewsFilter();" style="margin:0; accent-color:#F2CA50;">Investinglive</label>
                             </div>
                         </div>
                         <button class="news-popout-btn" onclick="openNewsWindow()" title="Open in new window">
@@ -1564,7 +1564,31 @@ foreach ($_dashboard_initial_order as $card_id) {
 	        function formatTime(datetimeStr) {
 	            return window.formatUserDate ? window.formatUserDate(datetimeStr, 'time') : new Date(datetimeStr + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 	        }
-	
+	        
+	        function formatDate(datetimeStr) {
+	            return window.formatUserDate ? window.formatUserDate(datetimeStr, 'date') : new Date(datetimeStr + 'Z').toLocaleDateString();
+	        }
+	        
+	        let updateSeparatorsTimeout;
+	        function debouncedUpdateSeparators(list) {
+	            clearTimeout(updateSeparatorsTimeout);
+	            updateSeparatorsTimeout = setTimeout(() => {
+	                list.querySelectorAll('.dashboard-group-chat-date-separator').forEach(el => el.remove());
+	                let lastDate = '';
+	                const items = Array.from(list.querySelectorAll('.news-item')).filter(el => el.style.display !== 'none');
+	                items.forEach(item => {
+	                    const itemDate = item.getAttribute('data-date');
+	                    if (itemDate && itemDate !== lastDate) {
+	                        lastDate = itemDate;
+	                        const sep = document.createElement('div');
+	                        sep.className = 'dashboard-group-chat-date-separator';
+	                        sep.innerHTML = `<span>${itemDate}</span>`;
+	                        list.insertBefore(sep, item);
+	                    }
+	                });
+	            }, 100);
+	        }
+
 	        function setStatus(connected) {
 	            const dot = document.getElementById('newsFeedStatus')?.querySelector('.news-dot');
 	            const text = document.getElementById('newsFeedStatus')?.querySelector('.news-status-text');
@@ -1587,11 +1611,15 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            div.setAttribute('data-news-id', item.id);
 	            const itemAuthor = item.author ? item.author.toLowerCase() : '';
 	            div.setAttribute('data-author', itemAuthor);
+	            div.setAttribute('data-date', formatDate(item.created_at || item.createdat));
 	            div.className = 'news-item' + (isNew ? ' new-item' : '');
 	            
-	            const currentFilter = list.getAttribute('data-filter') || 'all';
-	            if (currentFilter !== 'all' && !itemAuthor.includes(currentFilter)) {
-	                div.style.display = 'none';
+	            const currentFilter = list.getAttribute('data-filter');
+	            if (currentFilter !== null) {
+	                const allowed = currentFilter.split(',');
+	                if (!allowed.some(src => itemAuthor.includes(src))) {
+	                    div.style.display = 'none';
+	                }
 	            }
 	            div.innerHTML = `
 	                <div class="news-item-text">${item.message}</div>
@@ -1614,24 +1642,31 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            if (items.length > 1000) {
 	                items[0].remove();
 	            }
+	            
+	            debouncedUpdateSeparators(list);
 	        }
 	
-	        window.applyNewsFilter = function(filterValue) {
-	            const filter = filterValue.toLowerCase();
+	        window.applyNewsFilter = function() {
+	            const menu = document.getElementById('newsFilterMenu');
+	            if (!menu) return;
+	            const checked = Array.from(menu.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+	            const filterStr = checked.join(',');
+	
 	            const list = document.getElementById('newsFeedList');
 	            if (list) {
-	                list.setAttribute('data-filter', filter);
+	                list.setAttribute('data-filter', filterStr);
 	                
 	                const items = list.querySelectorAll('.news-item');
 	                items.forEach(item => {
 	                    const author = item.getAttribute('data-author') || '';
-	                    if (filter === 'all' || author.includes(filter)) {
+	                    if (checked.some(src => author.includes(src))) {
 	                        item.style.display = '';
 	                    } else {
 	                        item.style.display = 'none';
 	                    }
 	                });
 	                list.scrollTop = list.scrollHeight;
+	                debouncedUpdateSeparators(list);
 	            }
 	            
 	            const csrfToken = window.CSRF_TOKEN || '';
@@ -1641,7 +1676,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            fetch('/api/preferences/set.php', {
 	                method: 'POST',
 	                headers: headers,
-	                body: JSON.stringify({ key: 'news_source_filter', value: filter })
+	                body: JSON.stringify({ key: 'news_source_filter', value: filterStr })
 	            });
 	        };
 	

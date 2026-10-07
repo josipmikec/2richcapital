@@ -806,16 +806,7 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         </div>
 
         <div class="account-section active" id="section-profile">
-            <div class="page-header">
-                <div class="page-header-left">
-                    <h2>Profile</h2>
-                    <p>Manage your public trading identity</p>
-                </div>
-                <div class="page-header-actions">
-                    <button class="page-header-action page-header-action--ghost" onclick="window.location.href='/trading-floor#profile'">View Profile</button>
-                    <button class="page-header-action" type="submit" form="profileSaveForm">Save Changes</button>
-                </div>
-            </div>
+
 
             <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Edit Profile</span></div>
@@ -871,18 +862,18 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <input type="email" class="settings-input" value="<?= htmlspecialchars($user_email) ?>" disabled>
                         <div class="settings-input-hint">Email is managed through your WordPress account.</div>
                     </div>
+                    </div>
                 </div>
-                    </form>
+
+                <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:12px;">
+                    <button type="button" class="settings-btn" onclick="window.location.href='/trading-floor#profile'" style="background:transparent; color:#d8d8d8; border:1px solid rgba(255,255,255,0.1); padding:12px 24px; font-weight:600; border-radius:8px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">View Profile</button>
+                    <button type="submit" class="settings-btn" style="background:#F2CA50; color:#0e0e0e; border:none; padding:12px 24px; font-weight:600; border-radius:8px; cursor:pointer;">Save Changes</button>
+                </div>
+            </form>
             </div>
         </div>
 
         <div class="account-section" id="section-preferences">
-            <div class="page-header">
-                <div class="page-header-left">
-                    <h2>Preferences</h2>
-                    <p>Customise your trading defaults</p>
-                </div>
-            </div>
 
                 <div class="settings-card">
                 <div class="settings-card-header"><span class="settings-card-title">Trade Defaults</span></div>
@@ -953,12 +944,6 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         </div>
 
         <div class="account-section" id="section-notifications">
-            <div class="page-header">
-                <div class="page-header-left">
-                    <h2>Notifications</h2>
-                    <p>Control what alerts you receive</p>
-                </div>
-            </div>
 
             <?php if (!empty($notif_flash)): ?>
                 <div style="margin-bottom: 24px; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; <?= $notif_flash['type'] === 'error' ? 'background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);' : 'background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.2);' ?>">
@@ -1051,12 +1036,6 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         </div>
 
         <div class="account-section" id="section-security">
-            <div class="page-header">
-                <div class="page-header-left">
-                    <h2>Security</h2>
-                    <p>Protect your account</p>
-                </div>
-            </div>
 
             <div class="settings-card" style="margin-bottom:24px;">
                 <div class="settings-card-header"><span class="settings-card-title">Password</span></div>
@@ -1129,12 +1108,6 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         </div>
 
         <div class="account-section" id="section-mt5">
-            <div class="page-header">
-                <div class="page-header-left">
-                    <h2>MT5 Sync</h2>
-                    <p>Connect your MetaTrader 5 account and sync trades every 5 minutes</p>
-                </div>
-            </div>
 
             <?php if (!empty($mt5_flash['message'])): ?>
                 <div class="settings-card" style="border-color: <?php echo $mt5_flash['type'] === 'success' ? 'rgba(74,222,128,0.20)' : 'rgba(248,113,113,0.20)'; ?>;">
