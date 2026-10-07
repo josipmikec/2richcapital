@@ -1634,7 +1634,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	                list.scrollTop = list.scrollHeight;
 	            }
 	            
-	            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+	            const csrfToken = window.CSRF_TOKEN || '';
 	            const headers = { 'Content-Type': 'application/json' };
 	            if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
 	            

@@ -292,7 +292,7 @@ if (
                 feed.scrollTop = feed.scrollHeight;
             }
             
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || (window.opener && window.opener.document.querySelector('meta[name="csrf-token"]')?.content) || '';
+            const csrfToken = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?> || (window.opener && window.opener.CSRF_TOKEN) || '';
             const headers = { 'Content-Type': 'application/json' };
             if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
 
