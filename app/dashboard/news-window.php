@@ -14,7 +14,7 @@ if (
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live News Feed — 2RICH CAPITAL</title>
+    <title>News Feed — 2RICH CAPITAL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -178,7 +178,7 @@ if (
 <body>
 
     <div class="nw-header">
-        <span class="nw-brand">2RICH — Live News</span>
+        <span class="nw-brand">2RICH — News Feed</span>
         <div style="display:flex; align-items:center; gap:16px;">
             <div style="position:relative; display:inline-block;">
                 <?php
