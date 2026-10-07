@@ -466,11 +466,7 @@ window.formatUserDate = function(dateStr, mode = 'time') {
 <div class="general-settings-overlay" id="globalGeneralSettingsOverlay">
     <div class="settings-modal-shell" onclick="event.stopPropagation()">
         
-        <div class="settings-modal-header-top">
-            <div>
-            </div>
-            <button class="settings-modal-close" onclick="closeGlobalSettingsModal()">&times;</button>
-        </div>
+
 
         <div class="settings-tabs" role="tablist">
             <button class="settings-tab active" onclick="switchGlobalSettingsTab('dashboard')">Dashboard</button>
@@ -478,6 +474,7 @@ window.formatUserDate = function(dateStr, mode = 'time') {
             <button class="settings-tab" onclick="switchGlobalSettingsTab('preferences')">Preferences</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('profile')">Public Profile</button>
             <button class="settings-tab" onclick="switchGlobalSettingsTab('notifications')">Notifications</button>
+            <button class="settings-modal-close" onclick="closeGlobalSettingsModal()" style="margin-left: auto; margin-bottom: 8px; font-size: 20px;">&times;</button>
         </div>
 
         <div class="settings-modal-body">
