@@ -871,7 +871,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                     </div>
                     <div class="widget-body news-widget-body" style="min-height:300px;"></div>
                     <?php else: ?>
-                    <div class="widget-tabs news-widget-tabs">
+                    <div class="widget-tabs news-widget-tabs" style="overflow:visible;">
                         <button class="wtab active">Live News Feed</button>
                         <span class="news-feed-status" id="newsFeedStatus">
                             <span class="news-dot disconnected"></span>
