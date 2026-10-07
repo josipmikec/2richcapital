@@ -3651,10 +3651,13 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
             const accessLabel = m.can_manage ? 'Can manage' : (m.can_post ? 'Can post' : 'Read only');
             return `
                 <article class="group-row-card">
-                    <div>
-                        <div class="group-card-kicker">Your membership · ${roleLabel}</div>
-                        <h3>${name}</h3>
-                        <p>${m.visibility || 'listed'} · ${m.status || 'live'} · ${accessLabel}</p>
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        ${groupAvatarHtml(m)}
+                        <div>
+                            <div class="group-card-kicker">Your membership · ${roleLabel}</div>
+                            <h3>${name}</h3>
+                            <p>${m.visibility || 'listed'} · ${m.status || 'live'} · ${accessLabel}</p>
+                        </div>
                     </div>
                     <div class="group-row-actions">
                         <button class="group-pill-btn" type="button" onclick='openFloorSignalGroup(${JSON.stringify(String(m.group_id || m.id))})'>Open</button>
