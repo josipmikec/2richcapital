@@ -57,7 +57,7 @@ foreach ($memberships as &$m) {
          FROM {$messages_table} msg
          LEFT JOIN {$wpdb->users} u ON u.ID = msg.user_id
          LEFT JOIN {$profile_table} p ON p.user_id = msg.user_id
-         WHERE msg.group_id = %d AND msg.status = 'active'
+         WHERE msg.group_id = %d
          ORDER BY msg.created_at DESC LIMIT 1",
         $m['id']
     ));

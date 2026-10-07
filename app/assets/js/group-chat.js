@@ -783,7 +783,7 @@
             selectedGroupId = null;
             if (remember) localStorage.removeItem('2rich_chat_id');
             
-            let menuHtml = '<div style="display:flex;flex-direction:column;gap:6px;width:100%;">';
+            let menuHtml = '<div style="display:flex;flex-direction:column;gap:6px;width:100%;max-height:240px;overflow-y:auto;scrollbar-width:none;padding-right:4px;">';
             for (let m of memberships) {
                 let previewText = '';
                 if (m.latest_message) {
