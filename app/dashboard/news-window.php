@@ -180,13 +180,18 @@ if (
     <div class="nw-header">
         <span class="nw-brand">2RICH — Live News</span>
         <div style="display:flex; align-items:center; gap:16px;">
-            <select id="newsSourceFilter" onchange="applyNewsFilter(this)" style="background:#131722; color:#b2b5be; border:1px solid #1e1e1e; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:600; outline:none; cursor:pointer;">
-                <option value="all">All Sources</option>
-                <option value="financialjuice">FinancialJuice</option>
-                <option value="investing.com">Investing.com</option>
-                <option value="barchart">Barchart</option>
-                <option value="investinglive">Investinglive</option>
-            </select>
+            <div style="position:relative; display:inline-block;">
+                <button class="news-popout-btn nw-filter-btn" onclick="toggleNewsFilterMenu(event)" title="Filter sources" style="background:transparent; border:none; color:#b2b5be; cursor:pointer; padding:6px; display:flex; align-items:center;" onmouseover="this.style.color='#F2CA50'" onmouseout="this.style.color='#b2b5be'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                </button>
+                <div id="newsFilterMenu" onclick="event.stopPropagation()" style="display:none; position:absolute; top:calc(100% + 4px); right:0; background:#151515; border:1px solid #2a2a2a; border-radius:8px; padding:8px; z-index:100; min-width:140px; box-shadow:0 12px 35px rgba(0,0,0,0.45);">
+                    <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="all" checked onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">All Sources</label>
+                    <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="financialjuice" onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">FinancialJuice</label>
+                    <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="investing.com" onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Investing.com</label>
+                    <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="barchart" onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Barchart</label>
+                    <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="investinglive" onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Investinglive</label>
+                </div>
+            </div>
             <div class="nw-status">
                 <span class="news-dot disconnected" id="nwDot"></span>
                 <span id="nwStatusText">Connecting...</span>
@@ -260,8 +265,8 @@ if (
             }
         }
 
-        function applyNewsFilter(selectElement) {
-            const filter = selectElement.value.toLowerCase();
+        window.applyNewsFilter = function(filterValue) {
+            const filter = filterValue.toLowerCase();
             const feed = document.getElementById('nwFeed');
             if (!feed) return;
             feed.setAttribute('data-filter', filter);
@@ -276,7 +281,19 @@ if (
                 }
             });
             feed.scrollTop = feed.scrollHeight;
-        }
+        };
+
+        window.toggleNewsFilterMenu = function(e) {
+            const menu = document.getElementById('newsFilterMenu');
+            if(menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            if(e) e.stopPropagation();
+        };
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('newsFilterMenu');
+            if (menu && e.target.closest('.nw-filter-btn') === null) {
+                menu.style.display = 'none';
+            }
+        });
 
         function connect() {
             if (es) es.close();
