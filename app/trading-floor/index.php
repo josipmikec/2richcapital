@@ -3408,7 +3408,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                             <button type="button" class="group-chat-popout-btn" onclick="openGroupMessagesWindow()" title="Open in new window" aria-label="Open messages in new window">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
                             </button>
-                            ${(current.role === 'owner' || current.role === 'admin' || window.IS_STAFF) ? `
+                            ${(current.can_manage || current.is_owner || window.IS_STAFF) ? `
                             <button type="button" class="group-chat-popout-btn" onclick="clearTradingFloorChat()" title="Clear Chat" aria-label="Clear chat" style="margin-left:auto;color:#f87171;">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
