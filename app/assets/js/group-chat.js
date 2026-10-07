@@ -754,9 +754,17 @@
             currentMessagesCache = '';
             const group = memberships.find(item => Number(item.id) === selectedGroupId);
             if (!group) return;
-            state.innerHTML = `<select class="dashboard-group-chat-switcher" aria-label="Select joined group" style="width:100%;">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>`;
+            state.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:8px 12px;box-sizing:border-box;">
+                <button type="button" onclick="window.showGroupChatMenu()" style="background:none;border:none;color:#a9afb8;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a9afb8'" title="Back to menu">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <div style="flex:1;font-size:13px;font-weight:700;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(group.name)}</div>
+                <button type="button" onclick="alert('Search functionality coming soon')" style="background:none;border:none;color:#a9afb8;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#a9afb8'" title="Search chat">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </div>`;
             state.hidden = false;
-            state.querySelector('select').addEventListener('change', e => selectGroup(e.target.value));
             setComposerVisible(true);
             setCta('Visit Group', `/trading-floor#groups&group=${encodeURIComponent(String(group.id))}`, true);
             await loadMessages();
@@ -767,6 +775,32 @@
                 if (d.success) window.currentGroupMembers = d.staff || [];
             } catch (e) {}
         }
+
+        window.showGroupChatMenu = function() {
+            setComposerVisible(false);
+            if (footer) footer.hidden = true;
+            messages.innerHTML = '';
+            selectedGroupId = null;
+            if (remember) localStorage.removeItem('2rich_chat_id');
+            clearPoll();
+            
+            let menuHtml = '<div style="display:flex;flex-direction:column;gap:6px;width:100%;">';
+            for (let m of memberships) {
+                menuHtml += `
+                <div onclick="window.selectDashboardGroup(${m.id})" style="display:flex;align-items:center;padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;cursor:pointer;transition:background 0.2s, border-color 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.02)';this.style.borderColor='rgba(255,255,255,0.05)';">
+                    <div style="width:32px;height:32px;border-radius:6px;background:rgba(242,202,80,0.1);display:flex;align-items:center;justify-content:center;color:#f2ca50;font-weight:700;font-size:12px;margin-right:12px;flex-shrink:0;">${escapeHtml(m.name.charAt(0).toUpperCase())}</div>
+                    <div style="flex:1;font-size:13px;font-weight:600;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.name)}</div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" style="flex-shrink:0;margin-left:8px;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>`;
+            }
+            menuHtml += '</div>';
+            state.innerHTML = menuHtml;
+            state.hidden = false;
+        };
+
+        window.selectDashboardGroup = function(id) {
+            selectGroup(id);
+        };
 
         window.clearDashboardChat = async function() {
             if (!selectedGroupId) return;
@@ -802,7 +836,7 @@
                     setCta('Choose a Group', '/trading-floor#groups', true);
                     return;
                 }
-                let targetId = memberships[0].id;
+                let targetId = null;
                 if (preselectFromUrl) {
                     const preselectId = new URLSearchParams(window.location.search).get('group_id');
                     if (preselectId && memberships.some(m => String(m.id) === String(preselectId))) targetId = preselectId;
@@ -810,7 +844,12 @@
                     const savedChat = localStorage.getItem('2rich_chat_id');
                     if (savedChat && memberships.find(m => Number(m.id) === Number(savedChat))) targetId = savedChat;
                 }
-                await selectGroup(targetId);
+                
+                if (targetId) {
+                    await selectGroup(targetId);
+                } else {
+                    window.showGroupChatMenu();
+                }
             } catch (e) {
                 if (footer) footer.hidden = true;
                 showState(`<div class="widget-content-block"><p class="widget-content-text">${escapeHtml(e.message)}</p></div>`);
