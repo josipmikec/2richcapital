@@ -292,9 +292,13 @@ if (
                 feed.scrollTop = feed.scrollHeight;
             }
             
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || (window.opener && window.opener.document.querySelector('meta[name="csrf-token"]')?.content) || '';
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+
             fetch('/api/preferences/set.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify({ key: 'news_source_filter', value: filter })
             });
         };
