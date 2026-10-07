@@ -179,9 +179,18 @@ if (
 
     <div class="nw-header">
         <span class="nw-brand">2RICH — Live News</span>
-        <div class="nw-status">
-            <span class="news-dot disconnected" id="nwDot"></span>
-            <span id="nwStatusText">Connecting...</span>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <select id="newsSourceFilter" onchange="applyNewsFilter(this)" style="background:#131722; color:#b2b5be; border:1px solid #1e1e1e; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:600; outline:none; cursor:pointer;">
+                <option value="all">All Sources</option>
+                <option value="financialjuice">FinancialJuice</option>
+                <option value="investing.com">Investing.com</option>
+                <option value="barchart">Barchart</option>
+                <option value="investinglive">Investinglive</option>
+            </select>
+            <div class="nw-status">
+                <span class="news-dot disconnected" id="nwDot"></span>
+                <span id="nwStatusText">Connecting...</span>
+            </div>
         </div>
     </div>
 
@@ -220,7 +229,14 @@ if (
 
             const div = document.createElement('div');
             div.setAttribute('data-news-id', item.id);
+            const itemAuthor = item.author ? item.author.toLowerCase() : '';
+            div.setAttribute('data-author', itemAuthor);
             div.className = 'news-item' + (isNew ? ' new-item' : '');
+            
+            const currentFilter = feed.getAttribute('data-filter') || 'all';
+            if (currentFilter !== 'all' && !itemAuthor.includes(currentFilter)) {
+                div.style.display = 'none';
+            }
             div.innerHTML = `
                 <div class="news-item-text">${item.message || ''}</div>
                 <div class="news-item-meta">
@@ -242,6 +258,24 @@ if (
             if (items.length > 200) {
                 items[0].remove();
             }
+        }
+
+        function applyNewsFilter(selectElement) {
+            const filter = selectElement.value.toLowerCase();
+            const feed = document.getElementById('nwFeed');
+            if (!feed) return;
+            feed.setAttribute('data-filter', filter);
+            
+            const items = feed.querySelectorAll('.news-item');
+            items.forEach(item => {
+                const author = item.getAttribute('data-author') || '';
+                if (filter === 'all' || author.includes(filter)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            feed.scrollTop = feed.scrollHeight;
         }
 
         function connect() {

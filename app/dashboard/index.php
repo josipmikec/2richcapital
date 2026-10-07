@@ -877,6 +877,13 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <span class="news-dot disconnected"></span>
                             <span class="news-status-text">Connecting...</span>
                         </span>
+                        <select id="newsSourceFilter" onchange="applyNewsFilter(this)" style="background:#131722; color:#b2b5be; border:1px solid #1e1e1e; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:600; outline:none; cursor:pointer; margin-right:8px;">
+                            <option value="all">All Sources</option>
+                            <option value="financialjuice">FinancialJuice</option>
+                            <option value="investing.com">Investing.com</option>
+                            <option value="barchart">Barchart</option>
+                            <option value="investinglive">Investinglive</option>
+                        </select>
                         <button class="news-popout-btn" onclick="openNewsWindow()" title="Open in new window">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <polyline points="15 3 21 3 21 9"></polyline>
@@ -1556,7 +1563,14 @@ foreach ($_dashboard_initial_order as $card_id) {
 	
 	            const div = document.createElement('div');
 	            div.setAttribute('data-news-id', item.id);
+	            const itemAuthor = item.author ? item.author.toLowerCase() : '';
+	            div.setAttribute('data-author', itemAuthor);
 	            div.className = 'news-item' + (isNew ? ' new-item' : '');
+	            
+	            const currentFilter = list.getAttribute('data-filter') || 'all';
+	            if (currentFilter !== 'all' && !itemAuthor.includes(currentFilter)) {
+	                div.style.display = 'none';
+	            }
 	            div.innerHTML = `
 	                <div class="news-item-text">${item.message}</div>
 	                <div class="news-item-meta">
@@ -1578,6 +1592,24 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            if (items.length > 200) {
 	                items[0].remove();
 	            }
+	        }
+	
+	        function applyNewsFilter(selectElement) {
+	            const filter = selectElement.value.toLowerCase();
+	            const list = document.getElementById('newsFeedList');
+	            if (!list) return;
+	            list.setAttribute('data-filter', filter);
+	            
+	            const items = list.querySelectorAll('.news-item');
+	            items.forEach(item => {
+	                const author = item.getAttribute('data-author') || '';
+	                if (filter === 'all' || author.includes(filter)) {
+	                    item.style.display = '';
+	                } else {
+	                    item.style.display = 'none';
+	                }
+	            });
+	            list.scrollTop = list.scrollHeight;
 	        }
 	
 	        function connect() {
