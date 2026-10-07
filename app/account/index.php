@@ -277,9 +277,9 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
         .account-tab-nav {
             display: flex;
             gap: 4px;
-            padding: 0 0 28px 0;
+            padding: 0 0 16px 0;
             border-bottom: 1px solid #1a1a1a;
-            margin-bottom: 32px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
         }
         .account-tab {
