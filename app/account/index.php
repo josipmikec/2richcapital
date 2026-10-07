@@ -862,7 +862,6 @@ $recent_trades = $wpdb->get_results($wpdb->prepare(
                         <input type="email" class="settings-input" value="<?= htmlspecialchars($user_email) ?>" disabled>
                         <div class="settings-input-hint">Email is managed through your WordPress account.</div>
                     </div>
-                    </div>
                     
                     <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:12px;">
                         <button type="button" class="settings-btn" onclick="window.location.href='/trading-floor#profile'" style="background:transparent; color:#d8d8d8; border:1px solid rgba(255,255,255,0.1); padding:12px 24px; font-weight:600; border-radius:8px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">View Profile</button>
