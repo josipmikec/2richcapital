@@ -38,6 +38,9 @@ $memberships = $wpdb->get_results($wpdb->prepare(
 
 
 $memberships = $memberships ?: [];
+$messages_table = $wpdb->prefix . 'rich_signal_group_messages';
+$profile_table = $wpdb->prefix . 'rich_user_profiles';
+
 foreach ($memberships as &$m) {
     $m['id']            = (int) $m['id'];
     $m['price']         = (float) $m['price'];
@@ -47,6 +50,25 @@ foreach ($memberships as &$m) {
     $m['is_staff']      = in_array($m['role'], ['owner', 'admin', 'analyst'], true);
     $m['can_post']      = in_array($m['role'], ['owner', 'admin', 'analyst'], true);
     $m['can_manage']    = in_array($m['role'], ['owner', 'admin'], true);
+
+    // Fetch latest message
+    $latest = $wpdb->get_row($wpdb->prepare(
+        "SELECT msg.message, u.display_name, p.trading_handle
+         FROM {$messages_table} msg
+         LEFT JOIN {$wpdb->users} u ON u.ID = msg.user_id
+         LEFT JOIN {$profile_table} p ON p.user_id = msg.user_id
+         WHERE msg.group_id = %d AND msg.status = 'active'
+         ORDER BY msg.created_at DESC LIMIT 1",
+        $m['id']
+    ));
+    if ($latest) {
+        $m['latest_message'] = [
+            'author' => $latest->trading_handle ? '@' . $latest->trading_handle : ($latest->display_name ?: 'Member'),
+            'text'   => $latest->message
+        ];
+    } else {
+        $m['latest_message'] = null;
+    }
 }
 unset($m);
 
