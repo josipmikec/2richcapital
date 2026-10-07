@@ -35,7 +35,7 @@ if ($b64 && $value !== null) {
     }
 }
 
-$allowed_keys = ['default_stop_distance', 'default_direction', 'default_session', 'show_pl_currency', 'compact_rows', 'auto_calc_pl', 'market_data_chart_settings', 'market_data_watchlist', 'market_data_chart_state', 'market_data_chart_layout'];
+$allowed_keys = ['default_stop_distance', 'default_direction', 'default_session', 'show_pl_currency', 'compact_rows', 'auto_calc_pl', 'market_data_chart_settings', 'market_data_watchlist', 'market_data_chart_state', 'market_data_chart_layout', 'news_source_filter'];
 
 $prefs = [];
 if (isset($input['prefs']) && is_array($input['prefs'])) {

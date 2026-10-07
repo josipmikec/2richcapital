@@ -877,16 +877,21 @@ foreach ($_dashboard_initial_order as $card_id) {
                             <span class="news-dot disconnected"></span>
                             <span class="news-status-text">Connecting...</span>
                         </span>
+                        <?php
+                        global $wpdb;
+                        $news_filter_pref = $wpdb->get_var($wpdb->prepare("SELECT pref_value FROM {$wpdb->prefix}rich_user_preferences WHERE user_id = %d AND pref_key = 'news_source_filter'", $user_id));
+                        if (!$news_filter_pref) $news_filter_pref = 'all';
+                        ?>
                         <div style="position:relative; display:inline-block; margin-left:auto; margin-right:8px;">
                             <button class="news-popout-btn" onclick="toggleNewsFilterMenu(event)" title="Filter sources">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                             </button>
                             <div id="newsFilterMenu" onclick="event.stopPropagation()" style="display:none; position:absolute; top:calc(100% + 4px); right:0; background:#151515; border:1px solid #2a2a2a; border-radius:8px; padding:8px; z-index:100; min-width:140px; box-shadow:0 12px 35px rgba(0,0,0,0.45);">
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="all" checked onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">All Sources</label>
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="financialjuice" onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">FinancialJuice</label>
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="investing.com" onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Investing.com</label>
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="barchart" onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Barchart</label>
-                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="investinglive" onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Investinglive</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="all" <?php echo $news_filter_pref === 'all' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">All Sources</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="financialjuice" <?php echo $news_filter_pref === 'financialjuice' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">FinancialJuice</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="investing.com" <?php echo $news_filter_pref === 'investing.com' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Investing.com</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="barchart" <?php echo $news_filter_pref === 'barchart' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Barchart</label>
+                                <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; color:#d8d8d8; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px;"><input type="radio" name="n_src" value="investinglive" <?php echo $news_filter_pref === 'investinglive' ? 'checked' : ''; ?> onchange="window.applyNewsFilter(this.value); toggleNewsFilterMenu(event);" style="margin:0; accent-color:#F2CA50;">Investinglive</label>
                             </div>
                         </div>
                         <button class="news-popout-btn" onclick="openNewsWindow()" title="Open in new window">
@@ -899,7 +904,7 @@ foreach ($_dashboard_initial_order as $card_id) {
                         </button>
                     </div>
                     <div class="widget-body news-widget-body">
-                        <div class="news-feed-list" id="newsFeedList">
+                        <div class="news-feed-list" id="newsFeedList" data-filter="<?php echo esc_attr($news_filter_pref); ?>">
                             <div class="news-feed-empty">Connecting to live feed...</div>
                         </div>
                         <button class="widget-action news-calendar-action" type="button" onclick="window.location.href='/market-data#calendar'">
@@ -1614,19 +1619,26 @@ foreach ($_dashboard_initial_order as $card_id) {
 	        window.applyNewsFilter = function(filterValue) {
 	            const filter = filterValue.toLowerCase();
 	            const list = document.getElementById('newsFeedList');
-	            if (!list) return;
-	            list.setAttribute('data-filter', filter);
+	            if (list) {
+	                list.setAttribute('data-filter', filter);
+	                
+	                const items = list.querySelectorAll('.news-item');
+	                items.forEach(item => {
+	                    const author = item.getAttribute('data-author') || '';
+	                    if (filter === 'all' || author.includes(filter)) {
+	                        item.style.display = '';
+	                    } else {
+	                        item.style.display = 'none';
+	                    }
+	                });
+	                list.scrollTop = list.scrollHeight;
+	            }
 	            
-	            const items = list.querySelectorAll('.news-item');
-	            items.forEach(item => {
-	                const author = item.getAttribute('data-author') || '';
-	                if (filter === 'all' || author.includes(filter)) {
-	                    item.style.display = '';
-	                } else {
-	                    item.style.display = 'none';
-	                }
+	            fetch('/api/preferences/set.php', {
+	                method: 'POST',
+	                headers: { 'Content-Type': 'application/json' },
+	                body: JSON.stringify({ key: 'news_source_filter', value: filter })
 	            });
-	            list.scrollTop = list.scrollHeight;
 	        };
 	
 	        function connect() {
