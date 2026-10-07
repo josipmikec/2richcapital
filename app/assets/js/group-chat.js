@@ -759,7 +759,7 @@
                 <button type="button" onclick="window.showGroupChatMenu()" style="background:none;border:none;color:#8f95a3;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#8f95a3'" title="Back to menu">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>
-                <a href="/trading-floor#groups&group=${encodeURIComponent(String(group.id))}" style="flex:1;font-size:12px;font-weight:700;color:#d8dbe1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#d8dbe1'">${escapeHtml(group.name)}</a>
+                <a href="/trading-floor#groups&group=${encodeURIComponent(String(group.id))}" style="flex:1;font-size:12px;font-weight:600;color:#d8dbe1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#d8dbe1'">${escapeHtml(group.name)}</a>
                 <button type="button" onclick="alert('Search functionality coming soon')" style="background:none;border:none;color:#8f95a3;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#8f95a3'" title="Search chat">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </button>
@@ -780,6 +780,7 @@
             window.showGroupChatMenu = function() {
             setComposerVisible(false);
             if (footer) footer.hidden = true;
+            if (cta) cta.hidden = true;
             if (messages) {
                 messages.innerHTML = '';
                 messages.style.display = 'none';
@@ -807,7 +808,7 @@
                 <div onclick="window.selectDashboardGroup(${m.id})" style="display:flex;align-items:center;padding:10px 8px;cursor:pointer;transition:background 0.2s;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.03)';" onmouseout="this.style.background='transparent';">
                     <div style="width:38px;height:38px;border-radius:50%;background:rgba(242,202,80,0.1);display:flex;align-items:center;justify-content:center;color:#f2ca50;font-weight:700;font-size:15px;margin-right:14px;flex-shrink:0;">${avatarHtml}</div>
                     <div style="flex:1;min-width:0;">
-                        <div style="font-size:13px;font-weight:700;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.name)}</div>
+                        <div style="font-size:13px;font-weight:600;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.name)}</div>
                         ${previewText}
                     </div>
                 </div>`;
