@@ -759,14 +759,15 @@
                 <button type="button" onclick="window.showGroupChatMenu()" style="background:none;border:none;color:#8f95a3;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#8f95a3'" title="Back to menu">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>
-                <div style="flex:1;font-size:12px;font-weight:700;color:#d8dbe1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;">${escapeHtml(group.name)}</div>
+                <a href="/trading-floor#groups&group=${encodeURIComponent(String(group.id))}" style="flex:1;font-size:12px;font-weight:700;color:#d8dbe1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#d8dbe1'">${escapeHtml(group.name)}</a>
                 <button type="button" onclick="alert('Search functionality coming soon')" style="background:none;border:none;color:#8f95a3;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#8f95a3'" title="Search chat">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </button>
             </div>`;
             state.hidden = false;
+            if (messages) messages.style.display = '';
             setComposerVisible(true);
-            setCta('Visit Group', `/trading-floor#groups&group=${encodeURIComponent(String(group.id))}`, true);
+            if (cta) cta.hidden = true;
             await loadMessages();
 
             try {
@@ -776,10 +777,13 @@
             } catch (e) {}
         }
 
-        window.showGroupChatMenu = function() {
+            window.showGroupChatMenu = function() {
             setComposerVisible(false);
             if (footer) footer.hidden = true;
-            messages.innerHTML = '';
+            if (messages) {
+                messages.innerHTML = '';
+                messages.style.display = 'none';
+            }
             selectedGroupId = null;
             if (remember) localStorage.removeItem('2rich_chat_id');
             

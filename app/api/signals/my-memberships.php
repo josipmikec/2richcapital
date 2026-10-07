@@ -63,7 +63,7 @@ foreach ($memberships as &$m) {
     ));
     if ($latest) {
         $m['latest_message'] = [
-            'author' => $latest->trading_handle ? '@' . $latest->trading_handle : ($latest->display_name ?: 'Member'),
+            'author' => $latest->trading_handle ? $latest->trading_handle : ($latest->display_name ?: 'Member'),
             'text'   => $latest->message
         ];
     } else {
