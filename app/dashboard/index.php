@@ -1611,7 +1611,7 @@ foreach ($_dashboard_initial_order as $card_id) {
 	            }
 	
 	            const items = list.querySelectorAll('.news-item');
-	            if (items.length > 200) {
+	            if (items.length > 1000) {
 	                items[0].remove();
 	            }
 	        }

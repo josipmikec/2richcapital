@@ -269,7 +269,7 @@ if (
             }
 
             const items = feed.querySelectorAll('.news-item');
-            if (items.length > 200) {
+            if (items.length > 1000) {
                 items[0].remove();
             }
         }

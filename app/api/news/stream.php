@@ -59,7 +59,7 @@ while (true) {
              FROM {$table}
              WHERE created_at <= %s
              ORDER BY created_at DESC
-             LIMIT 200",
+             LIMIT 1000",
             current_time('mysql')
         ),
         ARRAY_A
