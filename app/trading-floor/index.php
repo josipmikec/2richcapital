@@ -3408,6 +3408,11 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                             <button type="button" class="group-chat-popout-btn" onclick="openGroupMessagesWindow()" title="Open in new window" aria-label="Open messages in new window">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
                             </button>
+                            ${(current.role === 'owner' || current.role === 'admin' || window.IS_STAFF) ? `
+                            <button type="button" class="group-chat-popout-btn" onclick="clearTradingFloorChat()" title="Clear Chat" aria-label="Clear chat" style="margin-left:auto;color:#f87171;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                            ` : ''}
                         </div>
                         <div class="group-feed-card" style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;overflow:hidden;min-width:0;">
                             ${(() => {
@@ -4328,6 +4333,28 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         let url = '/dashboard/messages-window.php';
         if (floorSignalsState.activeGroupId) url += '?group_id=' + encodeURIComponent(String(floorSignalsState.activeGroupId));
         window.open(url, 'messagesWindow', 'width=480,height=800,resizable=yes,scrollbars=yes');
+    };
+
+    window.clearTradingFloorChat = async function() {
+        if (!floorSignalsState.activeGroupId) return;
+        if (!confirm('Are you absolutely sure you want to permanently clear all messages and media in this chat group? This cannot be undone.')) return;
+        try {
+            const res = await fetch('/api/signals/clear-chat.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN || '' },
+                body: JSON.stringify({ group_id: floorSignalsState.activeGroupId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (typeof window.pollFloorSignals === 'function') {
+                    window.pollFloorSignals();
+                }
+            } else {
+                alert(data.message || 'Failed to clear chat.');
+            }
+        } catch(e) {
+            alert('Error clearing chat.');
+        }
     };
     window.cancelGroupReply = function() {
         floorSignalsState.currentReplyToId = null;

@@ -754,13 +754,7 @@
             currentMessagesCache = '';
             const group = memberships.find(item => Number(item.id) === selectedGroupId);
             if (!group) return;
-            let isStaff = false;
-            if (group.role === 'owner' || group.role === 'admin' || window.IS_STAFF) isStaff = true;
-            let clearHtml = '';
-            if (isStaff) {
-                clearHtml = `<button type="button" onclick="window.clearDashboardChat()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" title="Clear Chat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`;
-            }
-            state.innerHTML = `<div style="display:flex;align-items:center;gap:8px;width:100%;"><select class="dashboard-group-chat-switcher" aria-label="Select joined group" style="flex:1;">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>${clearHtml}</div>`;
+            state.innerHTML = `<select class="dashboard-group-chat-switcher" aria-label="Select joined group" style="width:100%;">${memberships.map(item => `<option value="${item.id}" ${Number(item.id) === selectedGroupId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select>`;
             state.hidden = false;
             state.querySelector('select').addEventListener('change', e => selectGroup(e.target.value));
             setComposerVisible(true);
