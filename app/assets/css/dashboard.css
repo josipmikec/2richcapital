@@ -1403,7 +1403,7 @@ body {
 #chat-pane .widget-header { margin-bottom: 2px; }
 #chat-pane .dashboard-group-chat-state { flex: 0 0 auto; }
 #chat-pane .dashboard-group-chat-switcher { margin-bottom: 2px; }
-#chat-pane .dashboard-group-chat-messages { flex: 1 1 auto; min-height: 0; margin: 0; }
+#chat-pane .dashboard-group-chat-messages { flex: 1 1 auto; min-height: 0; max-height: none; margin: 0; }
 #chat-pane .dashboard-group-chat-footer { flex: 0 0 auto; margin-top: 0; padding-top: 2px; gap: 5px; }
 #chat-pane .dashboard-group-chat-meta { margin: 0; line-height: 1.2; }
 #chat-pane .dashboard-group-chat-composer { gap: 6px; }
@@ -1496,7 +1496,6 @@ body {
 .widget-signals .signals-state,
 .widget-market .market-pane-body,
 .widget-news .news-feed,
-.widget-chat #dashboardGroupChatState,
 .widget-chat #dashboardGroupChatMessages,
 .widget-journal .dashboard-journal-card { flex: 1 1 auto; }
 .widget-journal .dashboard-journal-card { justify-content: flex-start; }
