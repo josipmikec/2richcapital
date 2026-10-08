@@ -755,7 +755,7 @@
             const group = memberships.find(item => Number(item.id) === selectedGroupId);
             if (!group) return;
             state.innerHTML = `
-            <div style="display:flex;align-items:center;gap:4px;width:100%;padding:4px 0 8px 0;box-sizing:border-box;">
+            <div style="display:flex;align-items:center;gap:4px;width:100%;padding:0 0 4px 0;box-sizing:border-box;">
                 <button type="button" onclick="window.showGroupChatMenu()" style="background:none;border:none;color:#8f95a3;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" onmouseover="this.style.color='#f2ca50'" onmouseout="this.style.color='#8f95a3'" title="Back to menu">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>

@@ -1520,7 +1520,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             imageOpener: 'openGlobalImageModal',
             showReplyIcon: false,
             composerUsesHiddenAttr: true,
-            rememberSelection: true
+            rememberSelection: false
         });
         if (chat) window.refreshDashboardGroupChat = chat.refresh;
     })();

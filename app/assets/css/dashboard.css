@@ -1415,8 +1415,8 @@ body {
 
 /* Fill the chat card while preserving a balanced footer rhythm. */
 #chat-pane .dashboard-group-chat-messages {
-  height: 270px;
-  max-height: 270px;
+  height: 280px;
+  max-height: 280px;
 }
 #chat-pane .dashboard-group-chat-footer {
   gap: 9px;
@@ -1433,7 +1433,7 @@ body {
 
 /* Give the composer the same breathing room as the CTA. */
 #chat-pane .dashboard-group-chat-composer {
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
 
