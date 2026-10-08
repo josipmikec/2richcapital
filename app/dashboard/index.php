@@ -1519,7 +1519,7 @@ foreach ($_dashboard_initial_order as $card_id) {
             formatUserDate: (v, mode) => window.formatUserDate ? window.formatUserDate(v, mode) : null,
             imageOpener: 'openGlobalImageModal',
             showReplyIcon: false,
-            composerUsesHiddenAttr: false,
+            composerUsesHiddenAttr: true,
             rememberSelection: true
         });
         if (chat) window.refreshDashboardGroupChat = chat.refresh;
