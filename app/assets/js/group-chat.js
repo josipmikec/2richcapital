@@ -791,8 +791,12 @@
             let menuHtml = '<div style="display:flex;flex-direction:column;gap:6px;width:100%;max-height:240px;overflow-y:auto;scrollbar-width:none;padding-right:4px;">';
             for (let m of memberships) {
                 let previewText = '';
+                let timeHtml = '';
                 if (m.latest_message) {
                     previewText = `<div style="font-size:11px;color:#8f95a3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;"><span style="color:#a9afb8;">${escapeHtml(m.latest_message.author)}:</span> ${escapeHtml(m.latest_message.text)}</div>`;
+                    if (m.latest_message.created_at && typeof opts.formatUserDate === 'function') {
+                        timeHtml = `<div style="font-size:10px;color:#777;flex-shrink:0;">${escapeHtml(opts.formatUserDate(m.latest_message.created_at, 'relative_short'))}</div>`;
+                    }
                 } else {
                     previewText = `<div style="font-size:11px;color:#555;margin-top:3px;">No messages yet</div>`;
                 }
@@ -808,7 +812,10 @@
                 <div onclick="window.selectDashboardGroup(${m.id})" style="display:flex;align-items:center;padding:10px 8px;cursor:pointer;transition:background 0.2s;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.03)';" onmouseout="this.style.background='transparent';">
                     <div style="width:38px;height:38px;border-radius:50%;background:rgba(242,202,80,0.1);display:flex;align-items:center;justify-content:center;color:#f2ca50;font-weight:700;font-size:15px;margin-right:14px;flex-shrink:0;">${avatarHtml}</div>
                     <div style="flex:1;min-width:0;">
-                        <div style="font-size:13px;font-weight:600;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.name)}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+                            <div style="font-size:13px;font-weight:600;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.name)}</div>
+                            ${timeHtml}
+                        </div>
                         ${previewText}
                     </div>
                 </div>`;

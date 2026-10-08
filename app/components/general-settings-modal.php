@@ -63,6 +63,36 @@ window.formatUserDate = function(dateStr, mode = 'time') {
         }
     }
     
+    if (mode === 'relative_short') {
+        const tzOpts = { timeZone: opts.timeZone };
+        const nowStr = new Date().toLocaleDateString('en-CA', tzOpts);
+        const dStrObj = d.toLocaleDateString('en-CA', tzOpts);
+        
+        if (nowStr === dStrObj) {
+            let tOpts = { timeZone: opts.timeZone, hour: '2-digit', minute: '2-digit' };
+            if (window.USER_PREFS.time_format === 'h:i A') {
+                tOpts.hour12 = true; tOpts.hour = 'numeric';
+            } else {
+                tOpts.hour12 = false;
+            }
+            return d.toLocaleTimeString('en-US', tOpts);
+        }
+        
+        const nowMs = new Date().getTime();
+        const diffDays = (nowMs - d.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays < 7 && nowMs > d.getTime()) {
+            return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: opts.timeZone });
+        }
+        
+        let dateOpts = { timeZone: opts.timeZone };
+        const df = window.USER_PREFS.date_format;
+        if (df === 'Y-m-d') return d.toLocaleDateString('en-CA', dateOpts);
+        if (df === 'd/m/Y') return d.toLocaleDateString('en-GB', dateOpts);
+        
+        dateOpts.month = 'short'; dateOpts.day = 'numeric';
+        return d.toLocaleDateString('en-US', dateOpts);
+    }
+    
     if (mode === 'time') return d.toLocaleTimeString(locale, opts);
     if (mode === 'date') return d.toLocaleDateString(locale, opts);
     return d.toLocaleString(locale, opts);

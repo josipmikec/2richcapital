@@ -53,7 +53,7 @@ foreach ($memberships as &$m) {
 
     // Fetch latest message
     $latest = $wpdb->get_row($wpdb->prepare(
-        "SELECT msg.message, u.display_name, p.trading_handle
+        "SELECT msg.message, msg.created_at, u.display_name, p.trading_handle
          FROM {$messages_table} msg
          LEFT JOIN {$wpdb->users} u ON u.ID = msg.user_id
          LEFT JOIN {$profile_table} p ON p.user_id = msg.user_id
@@ -63,8 +63,9 @@ foreach ($memberships as &$m) {
     ));
     if ($latest) {
         $m['latest_message'] = [
-            'author' => $latest->trading_handle ? $latest->trading_handle : ($latest->display_name ?: 'Member'),
-            'text'   => $latest->message
+            'author'     => $latest->trading_handle ? $latest->trading_handle : ($latest->display_name ?: 'Member'),
+            'text'       => $latest->message,
+            'created_at' => $latest->created_at
         ];
     } else {
         $m['latest_message'] = null;

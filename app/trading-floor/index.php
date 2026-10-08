@@ -2690,6 +2690,9 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
                 floorSignalsState.activeGroupId = floorSignalsState.groups[0].id;
             }
             floorSignalsState.booted = true;
+            if (typeof window.refreshDashboardGroupChat === 'function') {
+                window.refreshDashboardGroupChat();
+            }
         } catch (err) {
             floorSignalsState.error = err && err.message ? err.message : 'Could not load groups.';
         } finally {
