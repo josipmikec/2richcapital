@@ -1528,5 +1528,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tryFlip();
     }
+
+    // Hide top nav on scroll down on mobile
+    let lastScrollY = window.scrollY;
+    window.addEventListener('scroll', () => {
+        if (window.innerWidth > 768) return;
+        const topNav = document.querySelector('.top-nav');
+        if (!topNav) return;
+        if (window.scrollY > lastScrollY && window.scrollY > 50) {
+            topNav.classList.add('nav-hidden');
+        } else {
+            topNav.classList.remove('nav-hidden');
+        }
+        lastScrollY = window.scrollY;
+    }, { passive: true });
 });
 </script>

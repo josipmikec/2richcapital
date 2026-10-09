@@ -105,7 +105,21 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
     .upgrade-cards { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 700px) {
-    .upgrade-cards { grid-template-columns: 1fr; }
+    .upgrade-cards { 
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 0 20px 40px;
+        -webkit-overflow-scrolling: touch;
+        gap: 16px;
+    }
+    .upgrade-cards::-webkit-scrollbar { display: none; }
+    .upgrade-card {
+        min-width: 85vw;
+        scroll-snap-align: center;
+        flex-shrink: 0;
+    }
 }
 
 .upgrade-card {

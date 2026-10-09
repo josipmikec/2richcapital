@@ -30,14 +30,14 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
     <style>
 <?php if ($is_popout): ?>
         /* Popout Mode: Expand chart to fill window, option to hide navbar */
-        .sidebar, .md-page-header, .md-tabs, #btnPopoutChart { display: none !important; }
+        .sidebar, .md-page-header, .md-tabs, #btnPopoutChart, .md-watchlist-sidebar { display: none !important; }
         
         body { 
             background: #0f0f0f !important; 
             overflow: hidden !important; 
             display: flex; 
             flex-direction: column; 
-            height: 100vh; 
+            height: 100dvh; 
             margin: 0; 
         }
         
@@ -661,19 +661,23 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
 
                 </div>
 
-                <div class="md-calendar-list-header" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);color:#8f95a3;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:0.1em;padding-right:24px;gap:16px;">
-                    <div style="width:80px;flex-shrink:0;">Time</div>
-                    <div style="width:80px;flex-shrink:0;">Impact</div>
-                    <div style="width:70px;flex-shrink:0;">Cur</div>
-                    <div style="flex-grow:1;">Event</div>
-                    <div style="display:flex;gap:24px;flex-shrink:0;width:180px;justify-content:flex-end;">
-                        <span style="width:28px;text-align:center;">Link</span>
-                        <span style="width:50px;text-align:right;">Fcst</span>
-                        <span style="width:50px;text-align:right;">Prev</span>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -18px; padding: 0 18px;">
+                    <div style="min-width: 600px;">
+                        <div class="md-calendar-list-header" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);color:#8f95a3;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:0.1em;padding-right:24px;gap:16px;">
+                            <div style="width:80px;flex-shrink:0;">Time</div>
+                            <div style="width:80px;flex-shrink:0;">Impact</div>
+                            <div style="width:70px;flex-shrink:0;">Cur</div>
+                            <div style="flex-grow:1;">Event</div>
+                            <div style="display:flex;gap:24px;flex-shrink:0;width:180px;justify-content:flex-end;">
+                                <span style="width:28px;text-align:center;">Link</span>
+                                <span style="width:50px;text-align:right;">Fcst</span>
+                                <span style="width:50px;text-align:right;">Prev</span>
+                            </div>
+                        </div>
+                        <div class="md-calendar-list" id="economicCalendar">
+                            <div class="md-calendar-loading">Loading upcoming events...</div>
+                        </div>
                     </div>
-                </div>
-                <div class="md-calendar-list" id="economicCalendar">
-                    <div class="md-calendar-loading">Loading upcoming events...</div>
                 </div>
             </div>
 

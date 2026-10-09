@@ -722,8 +722,12 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         .profile-inline-copy span { display:block; margin-top:2px; font-size:11px; color:#767b84; }
         @media (max-width: 720px) {
             .profile-social-strip, .profile-feed-grid { grid-template-columns:1fr; }
-            .profile-tabs { flex-direction:column; align-items:flex-start; }
-            .profile-hero { padding:22px; gap:18px; flex-direction:column; align-items:flex-start; }
+            .profile-tabs { flex-direction:column; align-items:flex-start; width: 100%; }
+            .profile-tab-list { width: 100%; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+            .profile-tab-list::-webkit-scrollbar { display: none; }
+            .profile-hero { padding:16px; gap:16px; flex-direction:column; align-items:flex-start; }
+            .profile-info { width: 100%; }
+            .profile-profile-actions { width: 100%; }
         }
         .profile-stats-row { display:flex; gap:18px; margin-top:10px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
         .profile-stat { display:inline-flex; align-items:baseline; gap:6px; text-align:left; border:0; padding:0; margin:0; background:transparent; font:inherit; color:inherit; appearance:none; -webkit-appearance:none; box-shadow:none; }
@@ -2608,10 +2612,7 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         else if (section === 'groups' && groups) { bootFloorSignals(); groups.hidden = false; groups.style.display = 'block'; if (groupsLink) groupsLink.classList.add('active'); }
         else if (feed) { feed.hidden = false; feed.style.display = 'block'; if (homeLink) homeLink.classList.add('active'); }
         
-        if (!isInitialLoad && typeof window.triggerBrandFlip === 'function') {
-            const sectionLabels = { 'home': 'Global Feed', 'groups': 'Groups', 'profile': 'Profile' };
-            window.triggerBrandFlip(sectionLabels[section] || 'Trading Floor', 1700);
-        }
+
     }
 
     function openFloorSectionFromHash(event) {
