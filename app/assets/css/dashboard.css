@@ -1399,7 +1399,7 @@ body {
 .dashboard-group-chat-attach:hover { color: #fff; background: rgba(255,255,255,0.08); }
 
 /* Chat card vertical rhythm */
-#chat-pane { padding: 14px 18px 16px; gap: 6px; }
+#chat-pane { padding: 14px 18px 16px; gap: 6px; min-height: 0; }
 #chat-pane .widget-header { margin-bottom: 2px; }
 #chat-pane .dashboard-group-chat-state { flex: 0 0 auto; }
 #chat-pane .dashboard-group-chat-switcher { margin-bottom: 2px; }
