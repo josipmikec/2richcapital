@@ -1403,7 +1403,7 @@ body {
 #chat-pane .widget-header { margin-bottom: 2px; }
 #chat-pane .dashboard-group-chat-state { flex: 0 0 auto; }
 #chat-pane .dashboard-group-chat-switcher { margin-bottom: 2px; }
-#chat-pane .dashboard-group-chat-messages { flex: 1 1 0px; min-height: 0; max-height: none; margin: 0; }
+#chat-pane .dashboard-group-chat-messages { flex: 0 0 auto; height: 190px; min-height: 0; margin: 0; }
 #chat-pane .dashboard-group-chat-footer { flex: 0 0 auto; margin-top: 0; padding-top: 2px; gap: 5px; }
 #chat-pane .dashboard-group-chat-meta { margin: 0; line-height: 1.2; }
 #chat-pane .dashboard-group-chat-composer { gap: 6px; }
@@ -1415,8 +1415,8 @@ body {
 
 /* Fill the chat card while preserving a balanced footer rhythm. */
 #chat-pane .dashboard-group-chat-messages {
-  /* Set flex-basis to 0 to prevent intrinsic content height from infinitely expanding the grid row. */
-  flex-basis: 0;
+  height: 270px;
+  max-height: 270px;
 }
 #chat-pane .dashboard-group-chat-footer {
   gap: 9px;
