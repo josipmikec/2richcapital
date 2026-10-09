@@ -31,22 +31,27 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
 <?php if ($is_popout): ?>
         /* Popout Mode: Expand chart to fill window, option to hide navbar */
         .sidebar, .md-page-header, .md-tabs, #btnPopoutChart, .md-watchlist-sidebar { display: none !important; }
-        
+        html { height: -webkit-fill-available; }
         body { 
             background: #0f0f0f !important; 
             overflow: hidden !important; 
             display: flex; 
             flex-direction: column; 
-            height: 100dvh; 
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%;
+            height: 100%;
             margin: 0; 
+            padding: 0;
         }
-        
         .top-nav { flex-shrink: 0; transition: margin-top 0.3s ease; }
         .top-nav.hidden { display: none !important; }
         
         .dashboard-container { 
             padding: 0 !important; 
             margin: 0 !important; 
+            max-width: 100% !important;
+            width: 100% !important;
             flex: 1; 
             display: flex; 
             flex-direction: column; 
@@ -64,9 +69,9 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
             overflow: hidden !important; 
         }
         
-        #tab-feeds { 
+        #tab-feeds, .md-pane.active { 
             flex: 1 !important; 
-            padding: 12px 0 0 0 !important; 
+            padding: 0 !important; 
             display: flex !important; 
             flex-direction: column !important; 
             margin: 0 !important;
@@ -661,23 +666,19 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
 
                 </div>
 
-                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -18px; padding: 0 18px;">
-                    <div style="min-width: 600px;">
-                        <div class="md-calendar-list-header" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);color:#8f95a3;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:0.1em;padding-right:24px;gap:16px;">
-                            <div style="width:80px;flex-shrink:0;">Time</div>
-                            <div style="width:80px;flex-shrink:0;">Impact</div>
-                            <div style="width:70px;flex-shrink:0;">Cur</div>
-                            <div style="flex-grow:1;">Event</div>
-                            <div style="display:flex;gap:24px;flex-shrink:0;width:180px;justify-content:flex-end;">
-                                <span style="width:28px;text-align:center;">Link</span>
-                                <span style="width:50px;text-align:right;">Fcst</span>
-                                <span style="width:50px;text-align:right;">Prev</span>
-                            </div>
-                        </div>
-                        <div class="md-calendar-list" id="economicCalendar">
-                            <div class="md-calendar-loading">Loading upcoming events...</div>
-                        </div>
+                <div class="md-calendar-list-header">
+                    <div class="cal-col-time">Time</div>
+                    <div class="cal-col-impact">Impact</div>
+                    <div class="cal-col-currency">Cur</div>
+                    <div class="cal-col-event">Event</div>
+                    <div class="cal-col-data">
+                        <span class="cal-col-link">Link</span>
+                        <span class="cal-col-fcst">Fcst</span>
+                        <span class="cal-col-prev">Prev</span>
                     </div>
+                </div>
+                <div class="md-calendar-list" id="economicCalendar">
+                    <div class="md-calendar-loading">Loading upcoming events...</div>
                 </div>
             </div>
 
@@ -2512,23 +2513,23 @@ function renderCalendar(events) {
             const curr = event.currency || 'N/A';
             const flag = currencyFlags[curr] || '';
 
-            html += `<div class="md-calendar-item" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);gap:16px;">
-                <div style="width:80px;flex-shrink:0;color:#f5f5f5;font-weight:500;font-size:13px;">${displayTime}</div>
-                <div style="width:80px;flex-shrink:0;">
-                    <span class="md-impact-pill ${impCls}" style="display:inline-flex;justify-content:center;width:100%;font-size:11px;">${event.impact || 'Low'}</span>
+            html += `<div class="md-calendar-item">
+                <div class="cal-col-time">${displayTime}</div>
+                <div class="cal-col-impact">
+                    <span class="md-impact-pill ${impCls}">${event.impact || 'Low'}</span>
                 </div>
-                <div style="width:70px;flex-shrink:0;color:#8f95a3;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;">
+                <div class="cal-col-currency">
                     <span>${flag}</span> <span>${curr}</span>
                 </div>
-                <div style="flex-grow:1;color:#f5f5f5;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <div class="cal-col-event">
                     ${event.title || 'Economic Event'}
                 </div>
-                <div style="display:flex;gap:24px;flex-shrink:0;font-size:13px;align-items:center;width:180px;justify-content:flex-end;">
-                    <a href="${ffUrl}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;width:28px;height:24px;color:#f2ca50;text-decoration:none;background:rgba(242,202,80,0.05);border-radius:4px;border:1px solid rgba(242,202,80,0.2);transition:all 0.2s ease;" title="Open in Forex Factory">
+                <div class="cal-col-data">
+                    <a href="${ffUrl}" target="_blank" rel="noopener noreferrer" class="cal-col-link" title="Open in Forex Factory">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     </a>
-                    <span style="width:50px;text-align:right;color:#f5f5f5;font-weight:500;">${forecast || '-'}</span>
-                    <span style="width:50px;text-align:right;color:#f5f5f5;font-weight:500;">${previous || '-'}</span>
+                    <span class="cal-col-fcst">${forecast || '-'}</span>
+                    <span class="cal-col-prev">${previous || '-'}</span>
                 </div>
             </div>`;
         });

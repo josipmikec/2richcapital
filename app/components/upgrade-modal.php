@@ -116,7 +116,9 @@ if ($current_plan === 'starter' || $current_plan === 'desk access') {
     }
     .upgrade-cards::-webkit-scrollbar { display: none; }
     .upgrade-card {
-        min-width: 85vw;
+        min-width: 280px;
+        width: 75vw;
+        max-width: 320px;
         scroll-snap-align: center;
         flex-shrink: 0;
     }

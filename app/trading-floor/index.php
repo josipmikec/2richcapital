@@ -721,13 +721,18 @@ $home_feed_posts = tf_add_engagement_data($home_feed_posts, $wpdb, $likes_table,
         .profile-inline-copy strong { display:block; font-size:12px; color:#ececec; }
         .profile-inline-copy span { display:block; margin-top:2px; font-size:11px; color:#767b84; }
         @media (max-width: 720px) {
-            .profile-social-strip, .profile-feed-grid { grid-template-columns:1fr; }
-            .profile-tabs { flex-direction:column; align-items:flex-start; width: 100%; }
-            .profile-tab-list { width: 100%; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+            #floor-profile-panel { max-width: 100vw; overflow-x: hidden; box-sizing: border-box; }
+            .profile-social-strip, .profile-feed-grid { grid-template-columns:1fr; max-width: 100%; }
+            .profile-tabs { flex-direction:column; align-items:flex-start; width: 100%; max-width: 100%; box-sizing: border-box; }
+            .profile-tab-list { width: 100%; max-width: 100%; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; box-sizing: border-box; }
             .profile-tab-list::-webkit-scrollbar { display: none; }
-            .profile-hero { padding:16px; gap:16px; flex-direction:column; align-items:flex-start; }
-            .profile-info { width: 100%; }
-            .profile-profile-actions { width: 100%; }
+            .profile-hero { padding:16px; gap:16px; flex-direction:column; align-items:flex-start; width: 100%; max-width: 100%; box-sizing: border-box; }
+            .profile-info { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+            .profile-profile-actions { width: 100%; max-width: 100%; flex-wrap: wrap; box-sizing: border-box; }
+            .profile-highlights { max-width: 100vw; box-sizing: border-box; margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
+            .profile-stats-row { max-width: 100%; flex-wrap: wrap; }
+            .profile-handle-row { flex-wrap: wrap; max-width: 100%; }
+            .profile-bio-copy { word-break: break-word; white-space: normal; }
         }
         .profile-stats-row { display:flex; gap:18px; margin-top:10px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
         .profile-stat { display:inline-flex; align-items:baseline; gap:6px; text-align:left; border:0; padding:0; margin:0; background:transparent; font:inherit; color:inherit; appearance:none; -webkit-appearance:none; box-shadow:none; }

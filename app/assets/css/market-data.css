@@ -925,3 +925,50 @@
     position: relative;
     background: #0f0f0f;
 }
+
+/* ---- Calendar Table Refactoring ---- */
+.md-calendar-list-header {
+    display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #8f95a3; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; padding-right: 24px; gap: 16px;
+}
+.md-calendar-item {
+    display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 16px;
+}
+.cal-col-time { width: 80px; flex-shrink: 0; color: #f5f5f5; font-weight: 500; font-size: 13px; }
+.cal-col-impact { width: 80px; flex-shrink: 0; }
+.md-calendar-item .md-impact-pill { display: inline-flex; justify-content: center; width: 100%; font-size: 11px; }
+.cal-col-currency { width: 70px; flex-shrink: 0; color: #8f95a3; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.cal-col-event { flex-grow: 1; color: #f5f5f5; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-col-data { display: flex; gap: 24px; flex-shrink: 0; font-size: 13px; align-items: center; width: 180px; justify-content: flex-end; }
+.cal-col-link { display: flex; align-items: center; justify-content: center; width: 28px; height: 24px; color: #f2ca50; text-decoration: none; background: rgba(242,202,80,0.05); border-radius: 4px; border: 1px solid rgba(242,202,80,0.2); transition: all 0.2s ease; }
+.cal-col-link:hover { background: rgba(242,202,80,0.15); }
+.cal-col-fcst { width: 50px; text-align: right; color: #f5f5f5; font-weight: 500; }
+.cal-col-prev { width: 50px; text-align: right; color: #f5f5f5; font-weight: 500; }
+
+@media (max-width: 768px) {
+    .md-calendar-list-header { display: none; }
+    .md-calendar-item {
+        display: grid;
+        grid-template-columns: auto auto 1fr auto;
+        grid-template-areas: 
+            "time cur imp link"
+            "event event event event"
+            "fcst prev . .";
+        gap: 8px 12px;
+        align-items: center;
+        padding: 16px;
+    }
+    .cal-col-time { grid-area: time; width: auto; font-size: 12px; }
+    .cal-col-currency { grid-area: cur; width: auto; font-size: 12px; }
+    .cal-col-impact { grid-area: imp; width: auto; }
+    .md-calendar-item .md-impact-pill { width: auto; padding: 2px 8px; }
+    .cal-col-data { display: contents; }
+    .cal-col-link { grid-area: link; justify-self: end; }
+    
+    .cal-col-event { grid-area: event; width: auto; white-space: normal; font-size: 14px; line-height: 1.4; margin-top: 2px; }
+    
+    .cal-col-fcst { grid-area: fcst; width: auto; text-align: left; font-size: 12px; color: #aaa; font-weight: 500; display: flex; gap: 6px; }
+    .cal-col-fcst::before { content: "Fcst:"; color: #666; font-weight: 400; }
+    
+    .cal-col-prev { grid-area: prev; width: auto; text-align: left; font-size: 12px; color: #aaa; font-weight: 500; display: flex; gap: 6px; }
+    .cal-col-prev::before { content: "Prev:"; color: #666; font-weight: 400; }
+}
