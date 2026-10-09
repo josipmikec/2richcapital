@@ -432,7 +432,7 @@
 
 .md-cal-range-pills .md-cal-filter-btn {
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 9px;
 }
 
 /* ==========================================
@@ -444,13 +444,13 @@
   align-items: center;
   gap: 6px;
   font-family: "Montserrat", sans-serif;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #555;
-  padding: 7px 13px;
-  border: 1px solid #1e1e1e;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
   background: none;
   cursor: pointer;
@@ -614,8 +614,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #444;
-  padding: 5px 11px;
-  border: 1px solid #1e1e1e;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
   background: none;
   cursor: pointer;
