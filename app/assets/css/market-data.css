@@ -945,6 +945,7 @@
 .cal-col-prev { width: 50px; text-align: right; color: #f5f5f5; font-weight: 500; }
 
 @media (max-width: 768px) {
+    .md-calendar-list { max-height: 75vh; }
     .md-calendar-list-header { display: none; }
     .md-calendar-item {
         display: grid;
@@ -955,7 +956,7 @@
             "fcst prev . .";
         gap: 8px 12px;
         align-items: center;
-        padding: 16px;
+        padding: 16px 0;
     }
     .cal-col-time { grid-area: time; width: auto; font-size: 12px; }
     .cal-col-currency { grid-area: cur; width: auto; font-size: 12px; }
