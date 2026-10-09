@@ -30,7 +30,7 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
     <style>
 <?php if ($is_popout): ?>
         /* Popout Mode: Expand chart to fill window, option to hide navbar */
-        .sidebar, .md-page-header, .md-tabs, #btnPopoutChart, .md-watchlist-sidebar { display: none !important; }
+        .sidebar, .md-page-header, .md-tabs, #btnPopoutChart { display: none !important; }
         html { height: -webkit-fill-available; }
         body { 
             background: #0f0f0f !important; 
@@ -542,7 +542,8 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
             </div>
             
             <script>
-            if (localStorage.getItem('md_watchlist_closed') === '1') {
+            const isPopoutMode = window.location.search.includes('popout=true');
+            if (localStorage.getItem('md_watchlist_closed') === '1' || isPopoutMode) {
                 document.getElementById('mdWatchlistSidebar').style.display = 'none';
                 // force immediate layout change without transition by briefly turning off transition
                 const sb = document.getElementById('mdWatchlistSidebar');
