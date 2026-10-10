@@ -27,6 +27,7 @@ $wpdb->query("INSERT IGNORE INTO {$resolved_table} (flag_key,label,description,i
 $wpdb->query("INSERT IGNORE INTO {$resolved_table} (flag_key,label,description,is_enabled) VALUES ('card-journal-planner','Journal Planner Tab','Planner overlay on journal dashboard card',1)");
 $wpdb->query("INSERT IGNORE INTO {$resolved_table} (flag_key,label,description,is_enabled) VALUES ('trading-floor-stories','Trading Floor Stories','Stories row availability and temporary overlay',1)");
 $wpdb->query("INSERT IGNORE INTO {$resolved_table} (flag_key,label,description,is_enabled) VALUES ('global-shield','Global Shield (App Shutdown)','Disable access to the entire app for all non-admins',0)");
+$wpdb->query("INSERT IGNORE INTO {$resolved_table} (flag_key,label,description,is_enabled) VALUES ('partners','Partners Dashboard','Partners and Referrals section',1)");
 $resolved_table = rich_find_feature_table($wpdb);
 $flash = '';
 $roles = rich_feature_roles();
@@ -76,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $flags = $wpdb->get_results("SELECT * FROM {$resolved_table} ORDER BY label ASC", ARRAY_A);
-$core_flags = ['dashboard','trading-floor','journal','market-data'];
+$core_flags = ['dashboard','trading-floor','journal','market-data','partners'];
 $core_feature_flags = [];
 $dashboard_card_flags = [];
 $trading_floor_flags = [];

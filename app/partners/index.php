@@ -9,6 +9,7 @@ require_once dirname(__DIR__, 2) . '/wp-load.php';
 require_once dirname(__DIR__) . '/auth/feature-flags.php';
 
 rich_feature_bootstrap();
+rich_feature_guard('partners', 'Partners Dashboard');
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['authenticated'])) {
     header('Location: https://app.2rich.capital/login/');
@@ -31,7 +32,7 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Referrals & Partners - 2RICH CAPITAL</title>
+    <title>Partners - 2RICH CAPITAL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -677,11 +678,11 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
                     <span>Account</span>
                 </li>
                 
-            <li class="menu-item" onclick="window.location.href='/referrals'">
+            <li class="menu-item" onclick="window.location.href='/partners'">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
-                <span>Referrals & Partners</span>
+                <span>Partners</span>
             </li>
             
             <?php if (rich_is_staff()): ?>
