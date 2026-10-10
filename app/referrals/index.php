@@ -31,7 +31,7 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Referrals - 2RICH CAPITAL</title>
+    <title>Referrals & Partners - 2RICH CAPITAL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -560,6 +560,35 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
 .neg { color: #ff7b7b; }
 
     </style>
+
+    <style>
+        .account-tab-nav {
+            display: flex;
+            gap: 8px;
+            padding: 16px 32px;
+            border-bottom: 1px solid #1e1e1e;
+            background: #0f0f0f;
+            overflow-x: auto;
+        }
+        .account-tab {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #888;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            border-radius: 8px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .account-tab:hover { color: #bbb; background: rgba(255,255,255,0.03); }
+        .account-tab.active { color: #F2CA50; border-color: rgba(242,202,80,0.3); background: rgba(242,202,80,0.04); }
+        .section-pane { display: none; }
+        .section-pane.active { display: block; }
+    </style>
 </head>
 <body>
 
@@ -652,14 +681,9 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
-                <span>Referrals</span>
+                <span>Referrals & Partners</span>
             </li>
-            <li class="menu-item" onclick="window.location.href='/partners'">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-                <span>Partners</span>
-            </li>
+            
             <?php if (rich_is_staff()): ?>
                 <li class="menu-item" onclick="window.location.href='/admin'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -673,88 +697,128 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
         </aside>
 
         <main class="main-content">
-        <div style="padding: 32px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box;">
-            <div style="margin-bottom: 32px;">
-                <h1 style="font-size:28px; font-weight:800; color:#fff; margin:0 0 8px 0; text-transform:uppercase; letter-spacing:0.05em;">Referrals</h1>
-                <p style="color:#aaa; font-size:14px; margin:0;">Invite traders to 2RICH CAPITAL and earn 20% recurring commissions.</p>
-            </div>
 
-            <!-- Stats Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px;">
-                <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Total Referrals</div>
-                    <div style="font-size:32px; font-weight:800; color:#fff;">12</div>
-                </div>
-                <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Active Members</div>
-                    <div style="font-size:32px; font-weight:800; color:#6ee7b7;">8</div>
-                </div>
-                <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Total Earnings</div>
-                    <div style="font-size:32px; font-weight:800; color:#f2ca50;">$450.00</div>
-                </div>
-            </div>
-
-            <!-- Referral Link Box -->
-            <div style="background:rgba(242,202,80,0.03); border:1px solid rgba(242,202,80,0.15); border-radius:16px; padding:32px; margin-bottom:32px; display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
-                <div style="flex:1; min-width:280px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#fff; margin:0 0 8px 0;">Your Unique Invite Link</h2>
-                    <p style="font-size:13px; color:#aaa; margin:0; line-height: 1.5;">Share this link with your network. When they sign up and subscribe to any paid plan, you will receive a 20% recurring commission for the lifetime of their membership.</p>
-                </div>
-                <div style="display:flex; flex:2; min-width:300px; background:#000; border:1px solid #222; border-radius:8px; overflow:hidden;">
-                    <input type="text" id="refLinkInput" readonly value="<?php echo htmlspecialchars($ref_link); ?>" style="flex:1; background:transparent; border:none; color:#f5f5f5; padding:16px; font-family:monospace; font-size:14px; outline:none;">
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('refLinkInput').value); this.innerText='Copied!'; setTimeout(() => this.innerText='Copy', 2000);" style="background:#f2ca50; color:#000; border:none; padding:0 24px; font-weight:700; font-size:12px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#e0b83e'" onmouseout="this.style.background='#f2ca50'">Copy</button>
-                </div>
-            </div>
-
-            <!-- Referrals Table -->
-            <div style="background:#111; border:1px solid #1e1e1e; border-radius:16px; overflow:hidden;">
-                <div style="padding:20px 24px; border-bottom:1px solid #1e1e1e; background:rgba(255,255,255,0.01);">
-                    <h3 style="margin:0; font-size:14px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.05em;">Referred Users</h3>
-                </div>
-                <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; text-align:left; min-width:600px;">
-                        <thead>
-                            <tr>
-                                <th style="padding:16px 24px; font-size:11px; color:#666; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; border-bottom:1px solid #1e1e1e;">User</th>
-                                <th style="padding:16px 24px; font-size:11px; color:#666; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; border-bottom:1px solid #1e1e1e;">Joined Date</th>
-                                <th style="padding:16px 24px; font-size:11px; color:#666; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; border-bottom:1px solid #1e1e1e;">Status</th>
-                                <th style="padding:16px 24px; font-size:11px; color:#666; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; border-bottom:1px solid #1e1e1e;">Commission Earned</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                                <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
-                                    <div style="font-size:14px; font-weight:600; color:#fff;">John Doe</div>
-                                    <div style="font-size:12px; color:#888;">john@example.com</div>
-                                </td>
-                                <td style="padding:16px 24px; font-size:13px; color:#ccc; border-bottom:1px solid #1e1e1e;">Oct 1, 2026</td>
-                                <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
-                                    <span style="background:rgba(110,231,183,0.1); color:#6ee7b7; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Active</span>
-                                </td>
-                                <td style="padding:16px 24px; font-size:14px; font-weight:600; color:#f2ca50; border-bottom:1px solid #1e1e1e;">$50.00</td>
-                            </tr>
-                            <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                                <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
-                                    <div style="font-size:14px; font-weight:600; color:#fff;">Alex Smith</div>
-                                    <div style="font-size:12px; color:#888;">alex@example.com</div>
-                                </td>
-                                <td style="padding:16px 24px; font-size:13px; color:#ccc; border-bottom:1px solid #1e1e1e;">Oct 5, 2026</td>
-                                <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
-                                    <span style="background:rgba(252,211,77,0.1); color:#fcd34d; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Pending</span>
-                                </td>
-                                <td style="padding:16px 24px; font-size:14px; font-weight:600; color:#666; border-bottom:1px solid #1e1e1e;">$0.00</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="account-tab-nav">
+            <button class="account-tab active" data-section="referrals" onclick="switchSection('referrals')">Referrals</button>
+            <button class="account-tab" data-section="partners" onclick="switchSection('partners')">Partners Program</button>
         </div>
 
-    </main>
-</div>
+        <div style="padding: 32px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+            
+            <!-- REFERRALS SECTION -->
+            <div id="sec-referrals" class="section-pane active">
+                <div style="margin-bottom: 32px;">
+                    <h1 style="font-size:28px; font-weight:800; color:#fff; margin:0 0 8px 0; text-transform:uppercase; letter-spacing:0.05em;">Referrals</h1>
+                    <p style="color:#aaa; font-size:14px; margin:0;">Invite traders to 2RICH CAPITAL and earn 20% recurring commissions.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px;">
+                    <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Total Referrals</div>
+                        <div style="font-size:32px; font-weight:800; color:#fff;">12</div>
+                    </div>
+                    <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Active Members</div>
+                        <div style="font-size:32px; font-weight:800; color:#6ee7b7;">8</div>
+                    </div>
+                    <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Total Earnings</div>
+                        <div style="font-size:32px; font-weight:800; color:#f2ca50;">$450.00</div>
+                    </div>
+                </div>
+
+                <div style="background:rgba(242,202,80,0.03); border:1px solid rgba(242,202,80,0.15); border-radius:16px; padding:32px; margin-bottom:32px; display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:280px;">
+                        <h2 style="font-size:18px; font-weight:700; color:#fff; margin:0 0 8px 0;">Your Unique Invite Link</h2>
+                        <p style="font-size:13px; color:#aaa; margin:0; line-height: 1.5;">Share this link with your network. When they sign up and subscribe to any paid plan, you will receive a 20% recurring commission for the lifetime of their membership.</p>
+                    </div>
+                    <div style="display:flex; flex:2; min-width:300px; background:#000; border:1px solid #222; border-radius:8px; overflow:hidden;">
+                        <input type="text" id="refLinkInput" readonly value="<?php echo htmlspecialchars($ref_link); ?>" style="flex:1; background:transparent; border:none; color:#f5f5f5; padding:16px; font-family:monospace; font-size:14px; outline:none;">
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('refLinkInput').value); this.innerText='Copied!'; setTimeout(() => this.innerText='Copy', 2000);" style="background:#f2ca50; color:#000; border:none; padding:0 24px; font-weight:700; font-size:12px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#e0b83e'" onmouseout="this.style.background='#f2ca50'">Copy</button>
+                    </div>
+                </div>
+
+                <div style="background:#111; border:1px solid #1e1e1e; border-radius:16px; overflow:hidden;">
+                    <div style="padding:20px 24px; border-bottom:1px solid #1e1e1e; background:rgba(255,255,255,0.01);">
+                        <h3 style="margin:0; font-size:14px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.05em;">Referred Users</h3>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; text-align:left; min-width:600px;">
+                            <thead>
+                                <tr>
+                                    <th style="padding:16px 24px; font-size:11px; color:#666; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; border-bottom:1px solid #1e1e1e;">User</th>
+                                    <th style="padding:16px 24px; font-size:11px; color:#666; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; border-bottom:1px solid #1e1e1e;">Joined Date</th>
+                                    <th style="padding:16px 24px; font-size:11px; color:#666; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; border-bottom:1px solid #1e1e1e;">Status</th>
+                                    <th style="padding:16px 24px; font-size:11px; color:#666; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; border-bottom:1px solid #1e1e1e;">Commission Earned</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                                    <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
+                                        <div style="font-size:14px; font-weight:600; color:#fff;">John Doe</div>
+                                        <div style="font-size:12px; color:#888;">john@example.com</div>
+                                    </td>
+                                    <td style="padding:16px 24px; font-size:13px; color:#ccc; border-bottom:1px solid #1e1e1e;">Oct 1, 2026</td>
+                                    <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
+                                        <span style="background:rgba(110,231,183,0.1); color:#6ee7b7; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Active</span>
+                                    </td>
+                                    <td style="padding:16px 24px; font-size:14px; font-weight:600; color:#f2ca50; border-bottom:1px solid #1e1e1e;">$50.00</td>
+                                </tr>
+                                <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                                    <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
+                                        <div style="font-size:14px; font-weight:600; color:#fff;">Alex Smith</div>
+                                        <div style="font-size:12px; color:#888;">alex@example.com</div>
+                                    </td>
+                                    <td style="padding:16px 24px; font-size:13px; color:#ccc; border-bottom:1px solid #1e1e1e;">Oct 5, 2026</td>
+                                    <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
+                                        <span style="background:rgba(252,211,77,0.1); color:#fcd34d; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Pending</span>
+                                    </td>
+                                    <td style="padding:16px 24px; font-size:14px; font-weight:600; color:#666; border-bottom:1px solid #1e1e1e;">$0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARTNERS SECTION -->
+            <div id="sec-partners" class="section-pane">
+                <div style="margin-bottom: 32px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+                    <div>
+                        <h1 style="font-size:28px; font-weight:800; color:#fff; margin:0 0 8px 0; text-transform:uppercase; letter-spacing:0.05em;">Partners Program</h1>
+                        <p style="color:#aaa; font-size:14px; margin:0;">High-tier affiliate stats and application portal.</p>
+                    </div>
+                </div>
+
+                <div style="background:linear-gradient(135deg, rgba(242,202,80,0.1) 0%, rgba(0,0,0,0) 100%); border:1px solid rgba(242,202,80,0.2); border-radius:16px; padding:40px; margin-bottom:32px; text-align:center;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f2ca50" stroke-width="1.5" style="margin-bottom:16px;">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <h2 style="font-size:24px; font-weight:800; color:#fff; margin:0 0 12px 0;">Become a Verified Partner</h2>
+                    <p style="font-size:14px; color:#aaa; max-width:600px; margin:0 auto 24px auto; line-height:1.6;">
+                        If you have a large audience, trading community, or substantial reach, apply to our Partners Program to unlock custom landing pages, higher commission tiers (up to 40%), and VIP support.
+                    </p>
+                    <button onclick="alert('Application portal coming soon!')" style="background:#f2ca50; color:#000; border:none; padding:14px 32px; border-radius:8px; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">Apply Now</button>
+                </div>
+
+                <div style="background:#111; border:1px solid #1e1e1e; border-radius:16px; padding:32px; text-align:center; opacity:0.5;">
+                    <h3 style="margin:0 0 8px 0; font-size:16px; color:#fff;">Partner Analytics</h3>
+                    <p style="margin:0; font-size:13px; color:#666;">This section will unlock once your partner application is approved.</p>
+                </div>
+            </div>
+
+        </div>
 <?php include_once dirname(__DIR__) . '/components/general-settings-modal.php'; ?>
 <?php include_once dirname(__DIR__) . '/components/upgrade-modal.php'; ?>
+
+<script>
+    function switchSection(name) {
+        document.querySelectorAll('.section-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.account-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('sec-' + name).classList.add('active');
+        document.querySelector('.account-tab[data-section="' + name + '"]').classList.add('active');
+    }
+</script>
 <script>
     // Remove active class from dashboard
     document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
