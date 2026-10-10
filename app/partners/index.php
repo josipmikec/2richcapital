@@ -26,6 +26,34 @@ if (!$ref_code) {
     update_user_meta($user_id, 'rich_referral_code', $ref_code);
 }
 $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
+
+global $wpdb;
+$referrals = $wpdb->get_results($wpdb->prepare(
+    "SELECT u.ID, u.user_email, u.display_name, u.user_registered, um2.meta_value as sub_status
+     FROM {$wpdb->users} u 
+     INNER JOIN {$wpdb->usermeta} um ON um.user_id = u.ID AND um.meta_key = 'rich_referred_by'
+     LEFT JOIN {$wpdb->usermeta} um2 ON um2.user_id = u.ID AND um2.meta_key = 'rich_subscription_status'
+     WHERE um.meta_value = %d
+     ORDER BY u.user_registered DESC",
+    $user_id
+), ARRAY_A);
+
+$active_referrals = 0;
+foreach ($referrals as $ref) {
+    if (($ref['sub_status'] ?? '') === 'active') {
+        $active_referrals++;
+    }
+}
+// Assume $50 per active referral for placeholder earnings, as we don't have a payout table yet
+$total_earnings = $active_referrals * 50;
+
+$partner_status = get_user_meta($user_id, 'rich_partner_status', true);
+
+// Handle partner application POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'apply_partner') {
+    update_user_meta($user_id, 'rich_partner_status', 'pending');
+    $partner_status = 'pending';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -716,15 +744,15 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px;">
                     <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                         <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Total Referrals</div>
-                        <div style="font-size:32px; font-weight:800; color:#fff;">12</div>
+                        <div style="font-size:32px; font-weight:800; color:#fff;"><?php echo count($referrals); ?></div>
                     </div>
                     <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                         <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Active Members</div>
-                        <div style="font-size:32px; font-weight:800; color:#6ee7b7;">8</div>
+                        <div style="font-size:32px; font-weight:800; color:#6ee7b7;"><?php echo $active_referrals; ?></div>
                     </div>
                     <div style="background:#111; border:1px solid #1e1e1e; border-radius:12px; padding:24px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                         <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:8px;">Total Earnings</div>
-                        <div style="font-size:32px; font-weight:800; color:#f2ca50;">$450.00</div>
+                        <div style="font-size:32px; font-weight:800; color:#f2ca50;">$<?php echo number_format($total_earnings, 2); ?></div>
                     </div>
                 </div>
 
@@ -754,28 +782,29 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php if (empty($referrals)): ?>
+                                <tr>
+                                    <td colspan="4" style="padding:24px; text-align:center; color:#888; font-size:13px;">No referrals yet. Share your link to get started!</td>
+                                </tr>
+                                <?php else: foreach ($referrals as $ref): 
+                                    $is_active = (($ref['sub_status'] ?? '') === 'active');
+                                ?>
                                 <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
-                                        <div style="font-size:14px; font-weight:600; color:#fff;">John Doe</div>
-                                        <div style="font-size:12px; color:#888;">john@example.com</div>
+                                        <div style="font-size:14px; font-weight:600; color:#fff;"><?php echo esc_html($ref['display_name']); ?></div>
+                                        <div style="font-size:12px; color:#888;"><?php echo esc_html($ref['user_email']); ?></div>
                                     </td>
-                                    <td style="padding:16px 24px; font-size:13px; color:#ccc; border-bottom:1px solid #1e1e1e;">Oct 1, 2026</td>
+                                    <td style="padding:16px 24px; font-size:13px; color:#ccc; border-bottom:1px solid #1e1e1e;"><?php echo date('M j, Y', strtotime($ref['user_registered'])); ?></td>
                                     <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
-                                        <span style="background:rgba(110,231,183,0.1); color:#6ee7b7; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Active</span>
+                                        <?php if ($is_active): ?>
+                                            <span style="background:rgba(110,231,183,0.1); color:#6ee7b7; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Active</span>
+                                        <?php else: ?>
+                                            <span style="background:rgba(255,255,255,0.05); color:#888; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Inactive</span>
+                                        <?php endif; ?>
                                     </td>
-                                    <td style="padding:16px 24px; font-size:14px; font-weight:600; color:#f2ca50; border-bottom:1px solid #1e1e1e;">$50.00</td>
+                                    <td style="padding:16px 24px; font-size:14px; font-weight:600; color:<?php echo $is_active ? '#f2ca50' : '#666'; ?>; border-bottom:1px solid #1e1e1e;">$<?php echo $is_active ? '50.00' : '0.00'; ?></td>
                                 </tr>
-                                <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                                    <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
-                                        <div style="font-size:14px; font-weight:600; color:#fff;">Alex Smith</div>
-                                        <div style="font-size:12px; color:#888;">alex@example.com</div>
-                                    </td>
-                                    <td style="padding:16px 24px; font-size:13px; color:#ccc; border-bottom:1px solid #1e1e1e;">Oct 5, 2026</td>
-                                    <td style="padding:16px 24px; border-bottom:1px solid #1e1e1e;">
-                                        <span style="background:rgba(252,211,77,0.1); color:#fcd34d; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Pending</span>
-                                    </td>
-                                    <td style="padding:16px 24px; font-size:14px; font-weight:600; color:#666; border-bottom:1px solid #1e1e1e;">$0.00</td>
-                                </tr>
+                                <?php endforeach; endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -799,10 +828,19 @@ $ref_link = "https://app.2rich.capital/register/?ref=" . $ref_code;
                     <p style="font-size:14px; color:#aaa; max-width:600px; margin:0 auto 24px auto; line-height:1.6;">
                         If you have a large audience, trading community, or substantial reach, apply to our Partners Program to unlock custom landing pages, higher commission tiers (up to 40%), and VIP support.
                     </p>
-                    <button onclick="alert('Application portal coming soon!')" style="background:#f2ca50; color:#000; border:none; padding:14px 32px; border-radius:8px; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">Apply Now</button>
+                    <?php if ($partner_status === 'approved'): ?>
+                        <div style="background:rgba(110,231,183,0.1); color:#6ee7b7; border:1px solid rgba(110,231,183,0.2); padding:16px; border-radius:8px; font-weight:600; font-size:14px;">You are an approved Partner!</div>
+                    <?php elseif ($partner_status === 'pending'): ?>
+                        <div style="background:rgba(252,211,77,0.1); color:#fcd34d; border:1px solid rgba(252,211,77,0.2); padding:16px; border-radius:8px; font-weight:600; font-size:14px;">Your application is currently under review. We will be in touch soon.</div>
+                    <?php else: ?>
+                        <form method="post" action="">
+                            <input type="hidden" name="action" value="apply_partner">
+                            <button type="submit" style="background:#f2ca50; color:#000; border:none; padding:14px 32px; border-radius:8px; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">Apply Now</button>
+                        </form>
+                    <?php endif; ?>
                 </div>
 
-                <div style="background:#111; border:1px solid #1e1e1e; border-radius:16px; padding:32px; text-align:center; opacity:0.5;">
+                <div style="background:#111; border:1px solid #1e1e1e; border-radius:16px; padding:32px; text-align:center; <?php echo ($partner_status === 'approved') ? '' : 'opacity:0.5; pointer-events:none;'; ?>">
                     <h3 style="margin:0 0 8px 0; font-size:16px; color:#fff;">Partner Analytics</h3>
                     <p style="margin:0; font-size:13px; color:#666;">This section will unlock once your partner application is approved.</p>
                 </div>

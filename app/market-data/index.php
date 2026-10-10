@@ -690,24 +690,6 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
                     <div class="md-calendar-loading">Loading upcoming events...</div>
                 </div>
             </div>
-
-            <div class="md-features">
-                <div class="md-feature-card">
-                    <div class="md-feature-label">Impact Filter</div>
-                    <div class="md-feature-title">High / Medium / Low</div>
-                    <div class="md-feature-desc">Filter by event impact level to focus on only the releases most likely to move your instruments.</div>
-                </div>
-                <div class="md-feature-card">
-                    <div class="md-feature-label">Auto-Refresh</div>
-                    <div class="md-feature-title">Every 60s / 20s Near Events</div>
-                    <div class="md-feature-desc">Calendar refreshes every 60 seconds normally, and every 20 seconds when an event is within 5 minutes of release.</div>
-                </div>
-                <div class="md-feature-card">
-                    <div class="md-feature-label">Execution</div>
-                    <div class="md-feature-title">News-Aware Trading</div>
-                    <div class="md-feature-desc">Use the calendar before entries and around session opens to avoid getting caught in event-driven volatility.</div>
-                </div>
-            </div>
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════════

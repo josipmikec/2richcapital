@@ -31,6 +31,7 @@ $fullname         = trim($_POST['fullname'] ?? '');
 $email            = trim($_POST['email'] ?? '');
 $password         = $_POST['password'] ?? '';
 $confirm_password = $_POST['confirm_password'] ?? '';
+$referral_code    = trim($_POST['referral_code'] ?? '');
 
 if (empty($fullname) || empty($email) || empty($password)) {
     echo json_encode(['success' => false, 'message' => 'All fields are required']);
@@ -73,6 +74,18 @@ try {
 
     $user = new WP_User($user_id);
     $user->set_role('subscriber');
+
+    if (!empty($referral_code)) {
+        global $wpdb;
+        // Find user by referral code
+        $referrer_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = 'rich_referral_code' AND meta_value = %s LIMIT 1",
+            $referral_code
+        ));
+        if ($referrer_id) {
+            update_user_meta($user_id, 'rich_referred_by', $referrer_id);
+        }
+    }
 
     // ── Send welcome email ────────────────────────────────────────────────
     send_welcome_email($email, $fullname, $username);
