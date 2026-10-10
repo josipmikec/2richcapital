@@ -76,6 +76,12 @@ try {
             exit;
         }
 
+        // Handle referral tracking
+        $ref_code = $_COOKIE['rich_ref'] ?? '';
+        if ($ref_code) {
+            update_user_meta($user_id, 'rich_referred_by', sanitize_text_field($ref_code));
+        }
+
         $user = get_userdata($user_id);
 
         // Also create rich_user_profiles entry

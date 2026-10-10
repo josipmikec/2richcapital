@@ -204,6 +204,24 @@
                 <button type="submit" class="submit-btn">CREATE ACCOUNT &rarr;</button>
             </form>
 
+            <div style="text-align: center; margin: 20px 0 16px; color: #555; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">or</div>
+            
+            <div class="google-login-wrapper" style="display: flex; justify-content: center; width: 100%; margin-bottom: 24px;">
+                <div id="g_id_onload"
+                     data-client_id="1007994993845-tic37ijmpp4ph650c423u23ilp50be8e.apps.googleusercontent.com"
+                     data-context="signup"
+                     data-ux_mode="popup"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="icon"
+                     data-shape="circle"
+                     data-theme="outline"
+                     data-size="large">
+                </div>
+            </div>
+
             <div class="signup-section">
                 <p class="signup-text">Already have an account?</p>
                 <a href="/login" class="signup-link">Log in</a>
@@ -344,7 +362,31 @@
         </div>
     </div>
 
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
+        function handleGoogleLogin(response) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.style.display = 'none';
+            fetch('../auth/google-login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: response.credential })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect || '/dashboard';
+                } else {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = data.message || 'Google Login failed';
+                }
+            })
+            .catch(err => {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'A network error occurred. Please try again.';
+            });
+        }
+
     document.addEventListener('DOMContentLoaded', function() {
 
         // ── Register Form ──

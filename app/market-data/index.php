@@ -94,6 +94,44 @@ $is_popout  = isset($_GET['popout']) && $_GET['popout'] === 'true';
         }
 <?php endif; ?>
 
+        /* ── Stretch to bottom in normal mode ─────────────────────────── */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            padding-bottom: 16px !important;
+        }
+        .md-pane {
+            flex: 1;
+            min-height: 0;
+            display: none;
+            flex-direction: column;
+        }
+        .md-pane.active {
+            display: flex;
+        }
+        #tv_charts_grid {
+            flex: 1 !important;
+            min-height: 0 !important;
+            height: auto !important;
+        }
+        .md-chart-wrap {
+            margin: 0 !important;
+        }
+        .md-calendar-card {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 0 !important;
+        }
+        .md-calendar-list {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
         .md-watchlist-btn, .md-watchlist-add {
             border: 1px solid #1e1e1e; background: rgba(255,255,255,0.03); color: #888; border-radius: 8px;
             min-height: 30px; padding: 6px 10px; font: 700 9px/1 "Montserrat", sans-serif; letter-spacing: .08em; text-transform: uppercase;
